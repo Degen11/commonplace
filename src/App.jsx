@@ -232,6 +232,12 @@ function exportJSON(quotes){
   const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
   download(JSON.stringify(data, null, 2), "keeper-export.json", "application/json");
 }
+function copyToClipboard(quotes){
+  const grouped={};quotes.forEach(q=>{(grouped[q.category]=grouped[q.category]||[]).push(q)});
+  let text="";
+  Object.entries(grouped).forEach(([cat,qs])=>{text+=`${cat}\n${"─".repeat(cat.length)}\n`;qs.forEach(q=>{const f=q.favorite?" ★":"";QUOTED_CATS.has(q.category)?text+=`"${q.text}" — ${q.source}${f}\n`:text+=`${q.text} — ${q.source}${f}\n`});text+="\n"});
+  return navigator.clipboard.writeText(text.trim());
+}
 
 // ===================== MAIN COMPONENT =====================
 export default function Keeper() {
@@ -262,6 +268,7 @@ export default function Keeper() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const addMoreRef = useRef(null);
   const exportRef = useRef(null);
   const sortRef = useRef(null);
@@ -504,6 +511,31 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
           <div style={Z.feat}><span style={Z.fi}>⚡</span><span>Common quotes matched instantly</span></div>
           <div style={Z.feat}><span style={Z.fi}>📄</span><span>Export as CSV, Markdown, or JSON</span></div>
         </div>
+
+        {/* Before / After preview */}
+        <div style={Z.previewWrap}>
+          <div style={Z.previewBox}>
+            <div style={Z.previewLabel}>What you paste</div>
+            <div style={Z.previewContent}>
+              <p style={Z.previewLine}>you miss 100% of the shots you don't take</p>
+              <p style={Z.previewLine}>all those moments will be lost in time</p>
+              <p style={Z.previewLine}>the unexamined life is not worth living</p>
+              <p style={Z.previewLine}>"Be the change" (Gandhi)</p>
+              <p style={Z.previewLine}>is this the real life is this just fantasy</p>
+            </div>
+          </div>
+          <div style={Z.previewArrow}>→</div>
+          <div style={Z.previewBox}>
+            <div style={Z.previewLabel}>What you get</div>
+            <div style={Z.previewContent}>
+              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"You miss 100% of the shots you don't take"</span><span style={Z.previewSrc}>Wayne Gretzky</span></div>
+              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F3E8FF", color: "#7C3AED" }}>Film</span><span style={Z.previewText}>"All those moments will be lost in time"</span><span style={Z.previewSrc}>Blade Runner (1982)</span></div>
+              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"The unexamined life is not worth living"</span><span style={Z.previewSrc}>Socrates</span></div>
+              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"Be the change"</span><span style={Z.previewSrc}>Mahatma Gandhi</span></div>
+              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#FFE4E6", color: "#E11D48" }}>Music</span><span style={Z.previewText}>"Is this the real life, is this just fantasy"</span><span style={Z.previewSrc}>Bohemian Rhapsody — Queen</span></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -564,6 +596,8 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
             {showExport && (
               <div style={Z.expDrop}>
+                <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); setShowExport(false); }}>{copied ? "✓ Copied!" : "📋 Copy to clipboard"}</button>
+                <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📄 CSV</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); setShowExport(false); }}>{"{ }"} JSON</button>
@@ -732,6 +766,10 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             onClick={() => { setCatFilter("All"); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
         </div>
       )}
+
+      <footer style={Z.footer}>
+        <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={Z.footerLink}>Degen Hill</a></span>
+      </footer>
     </div>
   );
 }
@@ -834,6 +872,18 @@ const Z = {
   confirmCancel:{padding:"8px 16px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#37352F",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   confirmYes:{padding:"8px 16px",borderRadius:6,border:"none",background:"#EB5757",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   empty:{textAlign:"center",padding:"60px 24px"},
+  previewWrap:{display:"flex",gap:20,alignItems:"stretch",width:"100%",maxWidth:680,marginTop:48,animation:"fadeUp .5s ease",flexWrap:"wrap"},
+  previewBox:{flex:1,minWidth:240,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:10,padding:16,overflow:"hidden"},
+  previewLabel:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:10},
+  previewContent:{display:"flex",flexDirection:"column",gap:6},
+  previewLine:{fontSize:13,color:"#787774",lineHeight:1.6,fontFamily:"'SF Mono',Menlo,monospace",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},
+  previewArrow:{display:"flex",alignItems:"center",fontSize:24,color:"#D3D3D0",fontWeight:300,flexShrink:0,padding:"0 4px"},
+  previewResult:{display:"flex",alignItems:"center",gap:6,fontSize:12,lineHeight:1.5,minWidth:0},
+  previewTag:{fontSize:10,fontWeight:600,padding:"1px 6px",borderRadius:3,whiteSpace:"nowrap",flexShrink:0},
+  previewText:{color:"#37352F",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,minWidth:0},
+  previewSrc:{color:"#9B9A97",fontSize:11,whiteSpace:"nowrap",flexShrink:0},
+  footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#D3D3D0",borderTop:"1px solid #F7F6F3",marginTop:40},
+  footerLink:{color:"#9B9A97",textDecoration:"none"},
 };
 
 const CZ = {

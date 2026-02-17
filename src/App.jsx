@@ -813,7 +813,7 @@ const Z = {
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   tHead:{display:"flex",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F1F1EF",fontSize:11,color:"#9B9A97",fontWeight:500,textTransform:"uppercase",letterSpacing:.5},
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F7F6F3",transition:"background .1s",minHeight:48},
-  favRow:{borderLeft:"3px solid #F59E0B",paddingLeft:8,background:"#FFFDF5"},
+  favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .1s",flexShrink:0},
   checkOn:{background:"#2383E2",borderColor:"#2383E2"},
@@ -838,7 +838,7 @@ const Z = {
 
 const CZ = {
   card:{background:"#fff",border:"1px solid #F1F1EF",borderRadius:8,padding:16,transition:"all .15s"},
-  favCard:{borderLeft:"3px solid #F59E0B",background:"#FFFDF5"},
+  favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0,transition:"opacity .15s"},
   txt:{fontSize:15,lineHeight:1.6,color:"#37352F",marginBottom:10},

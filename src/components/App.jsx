@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Data
 import { localLookup } from "../data/localQuotes";
@@ -930,6 +931,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
 
       <Footer />
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }

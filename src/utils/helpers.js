@@ -4,9 +4,7 @@ import { QUOTED_CATS } from "../data/constants";
 export function basicFormat(text) {
   let t = text.trim();
   if (!t) return t;
-  // Capitalize first character
   t = t.charAt(0).toUpperCase() + t.slice(1);
-  // Fix standalone lowercase "i" and common contractions
   t = t.replace(/\bi\b/g, "I");
   t = t.replace(/\bi'm\b/gi, "I'm").replace(/\bi'll\b/gi, "I'll")
         .replace(/\bi've\b/gi, "I've").replace(/\bi'd\b/gi, "I'd");
@@ -16,19 +14,14 @@ export function basicFormat(text) {
 export function smartSplit(text) {
   const byNewline = text.split("\n").map(l => l.trim()).filter(Boolean);
   if (byNewline.length > 1) return byNewline;
-
-  // Numbered list: "1. quote 2. quote"
   if (/\d+\.\s/.test(text)) {
     const parts = text.split(/\d+\.\s+/).filter(Boolean);
     if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
   }
-
-  // Bullet-style separators
   if (/[•·]\s/.test(text)) {
     const parts = text.split(/[•·]\s+/).filter(Boolean);
     if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
   }
-
   return byNewline;
 }
 
@@ -56,13 +49,9 @@ export function smartParse(line) {
   let t = line.trim();
   if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith('\u201C') && t.endsWith('\u201D')) || (t.startsWith("'") && t.endsWith("'")))
     t = t.slice(1, -1).trim();
-
-  // Parenthetical attribution: "quote" (Author) or quote (Author)
   const parenMatch = t.match(/^(.+?)\s*\(([^)]{2,50})\)\s*$/);
   if (parenMatch && parenMatch[1].length > parenMatch[2].length)
     return { text: parenMatch[1].replace(/^["'\u201C]+|["'\u201D]+$/g, "").trim(), hint: parenMatch[2].trim() };
-
-  // Dash/tilde separators
   const seps = [/\s*\u2014\s*/, /\s*\u2013\s*/, /\s*--\s*/, /\s+-\s+/, /\s*~\s*/];
   for (const sep of seps) {
     const parts = t.split(sep);
@@ -119,6 +108,23 @@ export function exportMD(quotes) {
 export function exportJSON(quotes) {
   const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
   download(JSON.stringify(data, null, 2), "keeper-export.json", "application/json");
+}
+
+export function exportTXT(quotes) {
+  const grouped = {};
+  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  let text = "";
+  Object.entries(grouped).forEach(([cat, qs]) => {
+    text += `${cat.toUpperCase()}\n${"─".repeat(cat.length)}\n\n`;
+    qs.forEach(q => {
+      const f = q.favorite ? " ★" : "";
+      QUOTED_CATS.has(q.category)
+        ? text += `"${q.text}" — ${q.source}${f}\n`
+        : text += `${q.text} — ${q.source}${f}\n`;
+    });
+    text += "\n";
+  });
+  download(text.trim(), "keeper-export.txt", "text/plain");
 }
 
 export function richCopyToClipboard(quotes) {

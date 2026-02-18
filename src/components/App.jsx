@@ -5,11 +5,14 @@ import { localLookup } from "../data/localQuotes";
 import { DEFAULT_CATEGORIES, QUOTED_CATS, CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor } from "../data/constants";
 
 // Utils
-import { normalize, similarity, smartParse, smartSplit, basicFormat, displayText, exportCSV, exportMD, exportJSON, copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData } from "../utils/helpers";
+import { normalize, similarity, smartParse, smartSplit, basicFormat, displayText, exportCSV, exportMD, exportJSON, exportTXT, copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData } from "../utils/helpers";
 
 // Components & styles
 import Toast from "../components/Toast";
 import { baseCSS, Z, CZ } from "../components/styles";
+
+const LS_QUOTES = "keeper_quotes";
+const LS_CATS = "keeper_cats";
 
 // ===================== MAIN COMPONENT =====================
 export default function Keeper() {
@@ -20,6 +23,7 @@ export default function Keeper() {
   const [customCats, setCustomCats] = useState([]);
   const [progress, setProgress] = useState(null);
   const [view, setView] = useState(() => window.innerWidth < 640 ? "cards" : "table");
+  const [compact, setCompact] = useState(false);
   const [catFilter, setCatFilter] = useState("All");
   const [favFilter, setFavFilter] = useState(false);
   const [search, setSearch] = useState("");
@@ -35,6 +39,7 @@ export default function Keeper() {
   const [showNewCat, setShowNewCat] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSort, setShowSort] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [showAddMore, setShowAddMore] = useState(false);
@@ -48,38 +53,68 @@ export default function Keeper() {
   const [isSharedView, setIsSharedView] = useState(false);
   const [formattingEnabled, setFormattingEnabled] = useState(false);
   const [identifiedFeed, setIdentifiedFeed] = useState([]);
+  const [savedSession, setSavedSession] = useState(null);
+  const [inputTab, setInputTab] = useState("paste");
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [importedFileName, setImportedFileName] = useState(null);
+  const [pendingDupes, setPendingDupes] = useState([]);
+  const [dupeDecisions, setDupeDecisions] = useState({});
+
   const undoRef = useRef(null);
   const addMoreRef = useRef(null);
   const exportRef = useRef(null);
   const sortRef = useRef(null);
+  const pendingContinuationRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
-  // Phase transition with fade
+  // ── Phase transition ──
   const goPhase = useCallback((next) => {
     setFadeClass("phase-out");
     setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
   }, []);
 
-  // Load shared link on mount
+  // ── LocalStorage persistence ──
+  useEffect(() => {
+    if (quotes.length > 0 && !isSharedView) {
+      try {
+        localStorage.setItem(LS_QUOTES, JSON.stringify(quotes));
+        localStorage.setItem(LS_CATS, JSON.stringify(customCats));
+      } catch(e) {}
+    }
+  }, [quotes, customCats, isSharedView]);
+
+  // ── Mount: shared link OR restore session ──
   useEffect(() => {
     const hash = window.location.hash.slice(1);
     if (hash.startsWith("s=")) {
       const decoded = decodeShareData(hash.slice(2));
-      if (decoded && decoded.length > 0) {
+      if (decoded?.length > 0) {
         setQuotes(decoded); setPhase("results"); setIsSharedView(true);
+        return;
       }
     }
+    try {
+      const saved = localStorage.getItem(LS_QUOTES);
+      if (saved) {
+        const q = JSON.parse(saved);
+        if (q?.length > 0) {
+          const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
+          setSavedSession({ quotes: q, customCats: cats });
+        }
+      }
+    } catch(e) {}
   }, []);
 
-  // Responsive
+  // ── Responsive ──
   useEffect(() => {
     const h = () => { const m = window.innerWidth < 640; setIsMobile(m); if (m && view === "table") setView("cards"); };
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, [view]);
 
-  // Click-outside for dropdowns
+  // ── Click-outside for dropdowns ──
   useEffect(() => {
     const h = e => {
       if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false);
@@ -91,6 +126,34 @@ export default function Keeper() {
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 
+  // ── File import ──
+  const handleFileImport = (file) => {
+    if (!file) return;
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (!["txt", "csv"].includes(ext)) { showToast("Only .txt and .csv files are supported"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      let content = e.target.result;
+      if (ext === "csv") {
+        const lines = content.split("\n").slice(1);
+        content = lines.map(l => {
+          const match = l.match(/^"([^"]+)"/);
+          return match ? match[1] : l.split(",")[0].trim();
+        }).filter(Boolean).join("\n");
+      }
+      setRawInput(content);
+      setImportedFileName(file.name);
+      showToast(`Loaded ${smartSplit(content).length} entries from ${file.name}`);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDropZone = (e) => {
+    e.preventDefault(); setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileImport(file);
+  };
+
   // ── API ──
   const identifyBatch = useCallback(async (items, withFormatting = false) => {
     if (items.length === 0) return [];
@@ -99,10 +162,8 @@ export default function Keeper() {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
       return `[${i}] ${it.text}${hintStr}`;
     }).join("\n");
-
     const extraField = withFormatting ? `,"cleanText":"the text with typos fixed and proper capitalization"` : "";
     const extraInstr = withFormatting ? " For cleanText: fix typos, fix 'i' → 'I', capitalize the first word, preserve original meaning." : "";
-
     const r = await fetch("/api/identify", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -124,21 +185,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
   }, [allCats]);
 
   // ── Processing pipeline ──
-  const processEntries = async (inputText, appendMode = false) => {
-    const lines = smartSplit(inputText.trim());
-    if (!lines.length) return;
-
-    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
-    const parsed = lines.map(l => smartParse(l));
-
-    const existingTexts = appendMode ? quotes.map(q => normalize(q.text)) : [];
-    const unique = []; const seen = new Set(existingTexts); let dupes = 0;
-    parsed.forEach(p => {
-      const norm = normalize(p.text);
-      if ([...seen].some(s => similarity(s, norm) > 0.55)) dupes++;
-      else { unique.push(p); seen.add(norm); }
-    });
-
+  const runProcessing = async (unique, appendMode) => {
     const localMatches = []; const needsApi = [];
     unique.forEach((p, i) => {
       const match = localLookup(p.text, p.hint);
@@ -146,12 +193,10 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
       else needsApi.push({ ...p, idx: i });
     });
 
-    // Seed feed with local matches immediately
     if (localMatches.length > 0) {
       setIdentifiedFeed(localMatches.map(m => ({
         text: formattingEnabled ? basicFormat(m.text) : m.text,
-        source: m.result.source,
-        category: m.result.category,
+        source: m.result.source, category: m.result.category,
       })));
     }
 
@@ -165,7 +210,6 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
         try {
           const results = await identifyBatch(chunk, formattingEnabled);
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-          // Append batch results to feed
           setIdentifiedFeed(prev => [...prev, ...results.map(r => {
             const item = chunk[r.i];
             return { text: (formattingEnabled && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
@@ -195,8 +239,59 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
     });
 
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
-    setStats({ local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length, dupes });
+    setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
     setProgress(null); setIsProcessing(false); goPhase("results");
+  };
+
+  const processEntries = async (inputText, appendMode = false) => {
+    const lines = smartSplit(inputText.trim());
+    if (!lines.length) return;
+
+    const parsed = lines.map(l => smartParse(l));
+    const existingTexts = appendMode ? quotes.map(q => normalize(q.text)) : [];
+    const unique = []; const seen = new Set(existingTexts); const nearDupes = [];
+
+    parsed.forEach(p => {
+      const norm = normalize(p.text);
+      const matchedNorm = [...seen].find(s => similarity(s, norm) > 0.55);
+      if (matchedNorm) {
+        const matchedQuote = appendMode ? quotes.find(q => normalize(q.text) === matchedNorm) : null;
+        nearDupes.push({ incoming: p, matchedText: matchedQuote?.text || matchedNorm, matchedSource: matchedQuote?.source || null });
+      } else {
+        unique.push(p); seen.add(norm);
+      }
+    });
+
+    // If near-dupes found, pause and show review modal
+    if (nearDupes.length > 0) {
+      setPendingDupes(nearDupes);
+      setDupeDecisions(Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])));
+      pendingContinuationRef.current = { unique, seen, appendMode, totalParsed: parsed.length };
+      return;
+    }
+
+    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
+    setStats({ dupes: 0, total: unique.length });
+    await runProcessing(unique, appendMode);
+  };
+
+  const handleDupesContinue = async () => {
+    const { unique, seen, appendMode, totalParsed } = pendingContinuationRef.current;
+    let keptCount = 0;
+    pendingDupes.forEach((dupe, i) => {
+      if (dupeDecisions[i] === "keep") {
+        const norm = normalize(dupe.incoming.text);
+        if (![...seen].some(s => similarity(s, norm) > 0.55)) {
+          unique.push(dupe.incoming); seen.add(norm); keptCount++;
+        }
+      }
+    });
+    const dupes = pendingDupes.length - keptCount;
+    setPendingDupes([]); setDupeDecisions({});
+    pendingContinuationRef.current = null;
+    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
+    setStats({ dupes, total: unique.length });
+    await runProcessing(unique, appendMode);
   };
 
   const retryFailed = async () => {
@@ -211,9 +306,11 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
 
   const handleClear = () => {
     window.history.replaceState(null, "", window.location.pathname); setIsSharedView(false);
+    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
+    setShowStats(false); setImportedFileName(null); setInputTab("paste");
   };
 
   const handleDelete = (id) => {
@@ -231,8 +328,14 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
   };
 
   const handleShare = () => {
-    const url = `${window.location.origin}${window.location.pathname}#s=${encodeShareData(quotes)}`;
-    navigator.clipboard.writeText(url).then(() => showToast("Shareable link copied to clipboard!"));
+    const encoded = encodeShareData(quotes);
+    const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
+    if (encoded.length > 6000) {
+      showToast(`⚠ Link may be too long for some browsers (${quotes.length} entries). Consider exporting instead.`);
+    }
+    navigator.clipboard.writeText(url).then(() => {
+      if (encoded.length <= 6000) showToast("Shareable link copied to clipboard!");
+    });
   };
 
   // ── Inline actions ──
@@ -286,6 +389,15 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
     { key: "category", label: "By category" },
   ];
 
+  // ── Stats computation ──
+  const computedStats = quotes.length > 0 ? (() => {
+    const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
+    const topSrcs = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const sorted = [...quotes].sort((a, b) => a.text.length - b.text.length);
+    const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);
+    return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
+  })() : null;
+
   // ── Sub-components ──
   const FavBtn = ({ q }) => <button style={{ ...Z.actBtn, color: q.favorite ? "#F59E0B" : "#9B9A97" }} onClick={() => setQuotes(p => p.map(x => x.id === q.id ? { ...x, favorite: !x.favorite } : x))}>{q.favorite ? "★" : "☆"}</button>;
   const EditBtn = ({ q }) => <button style={Z.actBtn} onClick={() => startEdit(q)}>✎</button>;
@@ -311,6 +423,58 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
     </footer>
   );
 
+  // ========================== DUPE REVIEW MODAL ==========================
+  if (pendingDupes.length > 0) {
+    const keptCount = Object.values(dupeDecisions).filter(d => d === "keep").length;
+    return (
+      <div style={Z.dupeModalOverlay}>
+        <div style={Z.dupeModalBox}>
+          <div style={Z.dupeModalHeader}>
+            <p style={Z.dupeModalTitle}>Similar entries found</p>
+            <p style={Z.dupeModalSub}>
+              {pendingDupes.length} of your entries look similar to ones already in the collection. Choose what to do with each.
+            </p>
+          </div>
+          <div style={Z.dupeList}>
+            {pendingDupes.map((dupe, i) => {
+              const decision = dupeDecisions[i] || "skip";
+              return (
+                <div key={i} style={{ ...Z.dupeCard, opacity: decision === "skip" ? 0.6 : 1, transition: "opacity .15s" }}>
+                  <div style={Z.dupePair}>
+                    <div style={{ ...Z.dupeSide, ...Z.dupeExisting }}>
+                      <div style={Z.dupeSideLabel}>Already in collection</div>
+                      <div style={Z.dupeSideText}>{dupe.matchedText}</div>
+                      {dupe.matchedSource && <div style={Z.dupeSideSource}>{dupe.matchedSource}</div>}
+                    </div>
+                    <div style={{ ...Z.dupeSide, ...Z.dupeIncoming }}>
+                      <div style={Z.dupeSideLabel}>New entry</div>
+                      <div style={Z.dupeSideText}>{dupe.incoming.text}</div>
+                      {dupe.incoming.hint && <div style={Z.dupeSideSource}>{dupe.incoming.hint}</div>}
+                    </div>
+                  </div>
+                  <div style={Z.dupeActions}>
+                    <button style={{ ...Z.dupeSkipBtn, ...(decision === "skip" ? { background: "#F1F1EF", fontWeight: 600, color: "#37352F" } : {}) }}
+                      onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "skip" }))}>Skip</button>
+                    <button style={{ ...Z.dupeKeepBtn, ...(decision === "keep" ? { background: "#16A34A" } : {}) }}
+                      onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "keep" }))}>Keep both</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={Z.dupeModalFooter}>
+            <span style={Z.dupeKeptCount}>
+              {keptCount > 0 ? `${keptCount} will be added` : `All ${pendingDupes.length} will be skipped`}
+            </span>
+            <button style={Z.dupeContinueBtn} onClick={handleDupesContinue}>
+              Continue →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ========================== INPUT PHASE ==========================
   if (phase === "input") return (
     <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
@@ -319,13 +483,64 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
           <h1 style={Z.heroTitle}>Keeper</h1>
           <p style={Z.heroSub}>Paste your messy quotes, phrases, and fragments.<br />We'll organize everything and identify the sources.</p>
         </div>
+
+        {savedSession && (
+          <div style={Z.restoreBanner}>
+            <span>📂 You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button style={Z.restoreBtn} onClick={() => {
+                setQuotes(savedSession.quotes);
+                setCustomCats(savedSession.customCats || []);
+                setSavedSession(null);
+                goPhase("results");
+              }}>Restore session</button>
+              <button style={Z.restoreDismiss} onClick={() => {
+                try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
+                setSavedSession(null);
+              }}>Dismiss</button>
+            </div>
+          </div>
+        )}
+
         <div style={Z.inputCard}>
-          <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
-            placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
+          {/* Tabs */}
+          <div style={Z.tabRow}>
+            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("paste")}>
+              ✏️ Type / Paste
+            </button>
+            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("import")}>
+              📁 Import File
+            </button>
+          </div>
+
+          {inputTab === "paste" && (
+            <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
+              placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
+          )}
+
+          {inputTab === "import" && (
+            <div
+              className="drop-zone"
+              style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
+              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDropZone}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
+                onChange={e => { handleFileImport(e.target.files[0]); e.target.value = ""; }} />
+              <div style={Z.dropIcon}>{isDragOver ? "📂" : "📄"}</div>
+              <div style={Z.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
+              <div style={Z.dropSub}>or click to browse — one quote per line</div>
+              {importedFileName && (
+                <div style={Z.dropFileName}>✓ {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
+              )}
+            </div>
+          )}
+
           <div style={Z.inputFooter}>
             {(() => {
-              const entryLines = rawInput.trim() ? smartSplit(rawInput.trim()) : [];
-              const count = entryLines.length;
+              const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <span style={Z.entryMeta}>
@@ -344,13 +559,14 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
               );
             })()}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {!rawInput.trim() && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
+              {!rawInput.trim() && inputTab === "paste" && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
               <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }} onClick={handleProcess} disabled={!rawInput.trim() || isProcessing}>
                 {isProcessing ? "Processing..." : "Organize my collection →"}
               </button>
             </div>
           </div>
         </div>
+
         <div style={Z.howWrap}>
           <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>📋</div><div style={Z.howLabel}>Paste</div><div style={Z.howDesc}>Dump your messy quotes, one per line</div></div>
           <div style={Z.howArrow}>→</div>
@@ -427,7 +643,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
         <div style={Z.modalOverlay} onClick={() => setConfirmClear(false)}>
           <div style={Z.confirmBox} onClick={e => e.stopPropagation()}>
             <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Start fresh?</p>
-            <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>This will clear all {quotes.length} organized entries. Make sure you've exported anything you want to keep.</p>
+            <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>This will clear all {quotes.length} entries and remove them from your saved session.</p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button style={Z.confirmCancel} onClick={() => setConfirmClear(false)}>Cancel</button>
               <button style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
@@ -456,14 +672,20 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
           {!isMobile && (
             <div style={Z.viewTog}>
-              <button style={{ ...Z.viewBtn, ...(view === "table" ? Z.viewOn : {}) }} onClick={() => setView("table")} title="Table">
+              <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }} title="Table">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+              </button>
+              <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }} title="Compact">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
               </button>
               <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")} title="Cards">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
               </button>
             </div>
           )}
+          <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
+            {showStats ? "Hide stats" : "Stats"}
+          </button>
           <div ref={exportRef} style={{ position: "relative" }}>
             <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
             {showExport && (
@@ -471,8 +693,10 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
+                {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
                 <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📄 CSV</button>
+                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); setShowExport(false); }}>📄 Plain text</button>
+                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📊 CSV</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); setShowExport(false); }}>{"{ }"} JSON</button>
               </div>
@@ -483,6 +707,68 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
           <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
         </div>
       </div>
+
+      {/* Stats panel */}
+      {showStats && computedStats && (
+        <div style={Z.statsPanel}>
+          <div style={Z.statsPanelTitle}>
+            <span>Collection breakdown</span>
+            <button style={Z.statsPanelClose} onClick={() => setShowStats(false)}>✕</button>
+          </div>
+          <div style={Z.statsGrid}>
+            <div style={Z.statsSection}>
+              <div style={Z.statsSectionTitle}>By category</div>
+              {Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
+                const pct = (count / quotes.length) * 100;
+                const col = getCatColor(cat, customCats);
+                return (
+                  <div key={cat} style={Z.statsBarRow}>
+                    <div style={Z.statsBarLabel}><span>{cat}</span><span style={{ color: "#9B9A97" }}>{count}</span></div>
+                    <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${pct}%`, background: col.text }} /></div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={Z.statsSection}>
+              <div style={Z.statsSectionTitle}>Top sources</div>
+              {computedStats.topSrcs.map(([src, count]) => (
+                <div key={src} style={Z.statsBarRow}>
+                  <div style={Z.statsBarLabel}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{src}</span><span style={{ color: "#9B9A97", flexShrink: 0 }}>{count}</span></div>
+                  <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${(count / quotes.length) * 100}%`, background: "#37352F" }} /></div>
+                </div>
+              ))}
+              <div style={{ marginTop: 12, display: "flex", gap: 20 }}>
+                <div>
+                  <div style={Z.statNumber}>{quotes.length}</div>
+                  <div style={Z.statNumberSub}>total entries</div>
+                </div>
+                <div>
+                  <div style={Z.statNumber}>{computedStats.avgWords}</div>
+                  <div style={Z.statNumberSub}>avg words</div>
+                </div>
+              </div>
+            </div>
+            {computedStats.shortest && (
+              <div style={Z.statsSection}>
+                <div style={Z.statsSectionTitle}>Shortest</div>
+                <div style={Z.statsHighlight}>
+                  <div style={Z.statsHighlightLabel}>{computedStats.shortest.source}</div>
+                  "{computedStats.shortest.text}"
+                </div>
+              </div>
+            )}
+            {computedStats.longest && (
+              <div style={Z.statsSection}>
+                <div style={Z.statsSectionTitle}>Longest</div>
+                <div style={Z.statsHighlight}>
+                  <div style={Z.statsHighlightLabel}>{computedStats.longest.source}</div>
+                  "{computedStats.longest.text.slice(0, 120)}{computedStats.longest.text.length > 120 ? "…" : ""}"
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {apiError && (
         <div style={Z.errorBar}>
@@ -499,7 +785,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
           <span>⚡ <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
           <span>🤖 <strong>{stats.api}</strong> identified by AI</span>
           {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626" }}>❌ <strong>{stats.failed}</strong> failed</span></>}
-          {stats.dupes > 0 && <><span style={Z.statDot} /><span>🔁 <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} removed</span></>}
+          {stats.dupes > 0 && <><span style={Z.statDot} /><span>🔁 <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
           <button style={Z.statsDismiss} onClick={() => setStats(null)}>✕</button>
         </div>
       )}
@@ -507,9 +793,9 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
       {showAddMore && (
         <div style={Z.addMorePanel}>
           <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
-            placeholder="Paste additional quotes, one per line. Duplicates of existing entries will be skipped." />
+            placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: "#9B9A97" }}>{addMoreInput.trim() ? `${addMoreInput.trim().split("\n").filter(l => l.trim()).length} entries` : "These will be added to your existing collection"}</span>
+            <span style={{ fontSize: 12, color: "#9B9A97" }}>{addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}</span>
             <div style={{ display: "flex", gap: 6 }}>
               <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
               <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
@@ -587,16 +873,17 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
           {filtered.map(q => {
             const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
             const needsAtt = q.confidence === "low" || q.category === "Unknown";
+            const rowStyle = compact ? Z.rowCompact : Z.row;
             return (
               <div key={q.id} className="qrow" draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
-                style={{ ...Z.row, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .25s ease" }}>
+                style={{ ...rowStyle, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .25s ease" }}>
                 <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
                   <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
                 </div>
                 <div style={{ flex: 1, minWidth: 200, paddingRight: 12, cursor: isEd ? "default" : "text" }} onClick={() => { if (!isEd) startEdit(q); }}>
-                  {isEd ? <EditForm q={q} /> : <p style={Z.entryText}>{displayText(q)}</p>}
+                  {isEd ? <EditForm q={q} /> : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>}
                 </div>
-                <div className="src-col" style={Z.srcCol}><span style={Z.srcText} title={q.source}>{q.source}</span><ConfDot q={q} /></div>
+                <div className="src-col" style={Z.srcCol}><span style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }} title={q.source}>{q.source}</span><ConfDot q={q} /></div>
                 <div style={{ width: 80 }}><span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span></div>
                 <div className="row-actions" style={Z.rowAct}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
               </div>
@@ -614,8 +901,8 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
             return (
               <div key={q.id} draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
                 style={{ ...CZ.card, ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}), ...(q.favorite ? CZ.favCard : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .3s ease" }}
-                onMouseEnter={e => { const a = e.currentTarget.querySelector('.ca'); if (a) a.style.opacity = 1; }}
-                onMouseLeave={e => { const a = e.currentTarget.querySelector('.ca'); if (a) a.style.opacity = 0; }}>
+                onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
+                onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}>
                 <div style={CZ.top}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>

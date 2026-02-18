@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 // Data
 import { localLookup } from "../data/localQuotes";
@@ -928,6 +929,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
       )}
 
       <Footer />
+      <Analytics />
     </div>
   );
 }

@@ -11,11 +11,11 @@ import { normalize, similarity, smartParse, smartSplit, basicFormat, displayText
 import Toast from "../components/Toast";
 import { baseCSS, Z, CZ } from "../components/styles";
 
-const LS_QUOTES = "keeper_quotes";
-const LS_CATS = "keeper_cats";
+const LS_QUOTES = "commonplace_quotes";
+const LS_CATS = "commonplace_cats";
 
 // ===================== MAIN COMPONENT =====================
-export default function Keeper() {
+export default function Commonplace() {
   const [phase, setPhase] = useState("input");
   const [fadeClass, setFadeClass] = useState("phase-in");
   const [rawInput, setRawInput] = useState("");
@@ -480,7 +480,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
     <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
       <div style={Z.landing}>
         <div style={Z.hero}>
-          <h1 style={Z.heroTitle}>Keeper</h1>
+          <h1 style={Z.heroTitle}>Commonplace</h1>
           <p style={Z.heroSub}>Paste your messy quotes, phrases, and fragments.<br />We'll organize everything and identify the sources.</p>
         </div>
 
@@ -662,7 +662,7 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
       {/* Header */}
       <div style={Z.header}>
         <div>
-          <h1 style={Z.title}>Keeper</h1>
+          <h1 style={Z.title}>Commonplace</h1>
           <p style={Z.sub}>
             {quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized
             {topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}

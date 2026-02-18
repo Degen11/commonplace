@@ -1,10 +1,10 @@
-# Keeper
+# Commonplace
 
-Paste your messy quotes, phrases, and fragments. Keeper organizes everything and identifies the sources.
+Paste your messy quotes, phrases, and fragments. Commonplace organizes everything and identifies the sources.
 
 ## What it does
 
-You dump in a pile of text — one entry per line — and Keeper figures out what each one is. Movie quotes get tagged as Film, song lyrics as Music, famous sayings get attributed to the right person. Everything comes back sorted, categorized, and ready to export.
+You dump in a pile of text — one entry per line — and Commonplace figures out what each one is. Movie quotes get tagged as Film, song lyrics as Music, famous sayings get attributed to the right person. Everything comes back sorted, categorized, and ready to export.
 
 **How it works:**
 

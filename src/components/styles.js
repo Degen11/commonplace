@@ -149,7 +149,27 @@ export const Z = {
   confirmCancel:{padding:"8px 16px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#37352F",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   confirmYes:{padding:"8px 16px",borderRadius:6,border:"none",background:"#EB5757",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
 
-  // Misc
+  // Feed (live processing)
+  feedWrap:{marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
+  feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#fff",border:"1px solid #F1F1EF",borderRadius:7,fontSize:12,animation:"fadeUp .2s ease"},
+  feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:10,flexShrink:0},
+  feedItemText:{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#37352F"},
+  feedItemSrc:{color:"#9B9A97",flexShrink:0,maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},
+
+  // Formatting toggle
+  fmtToggleWrap:{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#9B9A97",userSelect:"none",cursor:"pointer"},
+  fmtToggleTrack:{width:30,height:17,borderRadius:50,transition:"background .2s",flexShrink:0,position:"relative",cursor:"pointer"},
+  fmtToggleThumb:{position:"absolute",top:2,width:13,height:13,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,.2)",transition:"left .2s"},
+
+  // Entry count / warning
+  entryMeta:{fontSize:12,color:"#9B9A97"},
+  warnBadge:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,color:"#B45309",background:"#FEF3C7",padding:"2px 8px",borderRadius:50,fontWeight:500},
+
+  // Attention nudge
+  attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FFF7ED",border:"1px solid #FED7AA",borderRadius:8,margin:"10px 0",fontSize:13,color:"#92400E",animation:"slideD .2s ease",gap:8},
+  attentionCount:{fontWeight:700,fontSize:15,color:"#EA580C"},
+  attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#EA580C",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+
   empty:{textAlign:"center",padding:"60px 24px"},
   footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#D3D3D0",borderTop:"1px solid #F7F6F3",marginTop:40},
   footerLink:{color:"#9B9A97",textDecoration:"none"},

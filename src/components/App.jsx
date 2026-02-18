@@ -5,7 +5,7 @@ import { localLookup } from "../data/localQuotes";
 import { DEFAULT_CATEGORIES, QUOTED_CATS, CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor } from "../data/constants";
 
 // Utils
-import { normalize, similarity, smartParse, displayText, exportCSV, exportMD, exportJSON, copyToClipboard, encodeShareData, decodeShareData } from "../utils/helpers";
+import { normalize, similarity, smartParse, smartSplit, basicFormat, displayText, exportCSV, exportMD, exportJSON, copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData } from "../utils/helpers";
 
 // Components & styles
 import Toast from "../components/Toast";
@@ -46,6 +46,8 @@ export default function Keeper() {
   const [dragId, setDragId] = useState(null);
   const [failedEntries, setFailedEntries] = useState([]);
   const [isSharedView, setIsSharedView] = useState(false);
+  const [formattingEnabled, setFormattingEnabled] = useState(false);
+  const [identifiedFeed, setIdentifiedFeed] = useState([]);
   const undoRef = useRef(null);
   const addMoreRef = useRef(null);
   const exportRef = useRef(null);
@@ -90,7 +92,7 @@ export default function Keeper() {
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 
   // ── API ──
-  const identifyBatch = useCallback(async (items) => {
+  const identifyBatch = useCallback(async (items, withFormatting = false) => {
     if (items.length === 0) return [];
     const cl = allCats.filter(c => c !== "Unknown").join("|");
     const quotesBlock = items.map((it, i) => {
@@ -98,15 +100,18 @@ export default function Keeper() {
       return `[${i}] ${it.text}${hintStr}`;
     }).join("\n");
 
+    const extraField = withFormatting ? `,"cleanText":"the text with typos fixed and proper capitalization"` : "";
+    const extraInstr = withFormatting ? " For cleanText: fix typos, fix 'i' → 'I', capitalize the first word, preserve original meaning." : "";
+
     const r = await fetch("/api/identify", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001", max_tokens: 4000,
         system: `You identify quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
-Each element: {"i":index,"source":"Source - Speaker/Author","category":"${cl}|Unknown","confidence":"high|medium|low"}
+Each element: {"i":index,"source":"Source - Speaker/Author","category":"${cl}|Unknown","confidence":"high|medium|low"${extraField}}
 Film=movies, TV=television, Book=novels/nonfiction/poetry, Music=lyrics, Speech=speeches, Person=real person.
 Phrase=expressions, idioms, adverbial phrases not from a specific source.
-Unknown if unsure. Be concise with sources. Return one object per input.`,
+Unknown if unsure. Be concise with sources.${extraInstr} Return one object per input.`,
         messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
       }),
     });
@@ -120,10 +125,10 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
 
   // ── Processing pipeline ──
   const processEntries = async (inputText, appendMode = false) => {
-    const lines = inputText.trim().split("\n").map(l => l.trim()).filter(Boolean);
+    const lines = smartSplit(inputText.trim());
     if (!lines.length) return;
 
-    setIsProcessing(true); setFailedEntries([]); goPhase("processing"); setApiError(null);
+    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
     const parsed = lines.map(l => smartParse(l));
 
     const existingTexts = appendMode ? quotes.map(q => normalize(q.text)) : [];
@@ -141,6 +146,15 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
       else needsApi.push({ ...p, idx: i });
     });
 
+    // Seed feed with local matches immediately
+    if (localMatches.length > 0) {
+      setIdentifiedFeed(localMatches.map(m => ({
+        text: formattingEnabled ? basicFormat(m.text) : m.text,
+        source: m.result.source,
+        category: m.result.category,
+      })));
+    }
+
     setProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need AI...`, phase: "local" });
 
     const apiResults = new Map(); let apiFailed = false; const failed = []; const BATCH_SIZE = 20;
@@ -149,8 +163,13 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
         const chunk = needsApi.slice(i, i + BATCH_SIZE);
         setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
         try {
-          const results = await identifyBatch(chunk);
+          const results = await identifyBatch(chunk, formattingEnabled);
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
+          // Append batch results to feed
+          setIdentifiedFeed(prev => [...prev, ...results.map(r => {
+            const item = chunk[r.i];
+            return { text: (formattingEnabled && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
+          })]);
         } catch {
           apiFailed = true; chunk.forEach(c => failed.push(c));
           setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
@@ -162,10 +181,17 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
 
     const newQuotes = unique.map((p, i) => {
       const local = localMatches.find(m => m.idx === i);
-      if (local) return { id: (Date.now() + i).toString(), text: p.text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
+      if (local) {
+        const text = formattingEnabled ? basicFormat(p.text) : p.text;
+        return { id: (Date.now() + i).toString(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
+      }
       const api = apiResults.get(i);
-      if (api) return { id: (Date.now() + i).toString(), text: p.text, source: api.source || p.hint || "Unknown", category: allCats.includes(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
-      return { id: (Date.now() + i).toString(), text: p.text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
+      if (api) {
+        const text = (formattingEnabled && api.cleanText) ? api.cleanText : p.text;
+        return { id: (Date.now() + i).toString(), text, source: api.source || p.hint || "Unknown", category: allCats.includes(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
+      }
+      const text = formattingEnabled ? basicFormat(p.text) : p.text;
+      return { id: (Date.now() + i).toString(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
     });
 
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
@@ -297,7 +323,26 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
           <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
             placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
           <div style={Z.inputFooter}>
-            <span style={Z.inputCount}>{rawInput.trim() ? `${rawInput.trim().split("\n").filter(l => l.trim()).length} entries detected` : "Quotes, phrases, expressions — all welcome"}</span>
+            {(() => {
+              const entryLines = rawInput.trim() ? smartSplit(rawInput.trim()) : [];
+              const count = entryLines.length;
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span style={Z.entryMeta}>
+                    {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"} detected` : "Quotes, phrases, expressions — all welcome"}
+                  </span>
+                  {count > 50 && (
+                    <span style={Z.warnBadge}>⚠ {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
+                  )}
+                  <label style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
+                    <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#37352F" : "#E3E2DE" }}>
+                      <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
+                    </div>
+                    Clean up formatting
+                  </label>
+                </div>
+              );
+            })()}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               {!rawInput.trim() && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
               <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }} onClick={handleProcess} disabled={!rawInput.trim() || isProcessing}>
@@ -352,6 +397,20 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             <div style={Z.procTop}><span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span><span style={{ color: "#9B9A97" }}>{Math.round((progress.done / progress.total) * 100)}%</span></div>
             <div style={Z.track}><div style={{ ...Z.fill, width: `${(progress.done / progress.total) * 100}%` }} /></div>
             <p style={Z.procCurrent}>{progress.current}</p>
+          </div>
+        )}
+        {identifiedFeed.length > 0 && (
+          <div style={Z.feedWrap}>
+            {[...identifiedFeed].reverse().map((item, i) => {
+              const col = getCatColor(item.category, customCats);
+              return (
+                <div key={i} style={Z.feedItem}>
+                  <span style={{ ...Z.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
+                  <span style={Z.feedItemText}>{item.text}</span>
+                  <span style={Z.feedItemSrc}>{item.source}</span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -410,6 +469,7 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             {showExport && (
               <div style={Z.expDrop}>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
+                <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
                 <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📄 CSV</button>
@@ -511,9 +571,12 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
       </div>
 
       {unknownCount > 0 && sortBy !== "confidence" && (
-        <div style={Z.hintBar}>
-          <span>{unknownCount} {unknownCount === 1 ? "entry needs" : "entries need"} attention</span>
-          <button style={Z.hintBtn} onClick={() => setSortBy("confidence")}>Sort to top ↑</button>
+        <div style={Z.attentionBar}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={Z.attentionCount}>{unknownCount}</span>
+            <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
+          </div>
+          <button style={Z.attentionBtn} onClick={() => setSortBy("confidence")}>Review now ↑</button>
         </div>
       )}
 

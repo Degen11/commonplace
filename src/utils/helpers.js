@@ -1,5 +1,37 @@
 import { QUOTED_CATS } from "../data/constants";
 
+// ===================== TEXT FORMATTING =====================
+export function basicFormat(text) {
+  let t = text.trim();
+  if (!t) return t;
+  // Capitalize first character
+  t = t.charAt(0).toUpperCase() + t.slice(1);
+  // Fix standalone lowercase "i" and common contractions
+  t = t.replace(/\bi\b/g, "I");
+  t = t.replace(/\bi'm\b/gi, "I'm").replace(/\bi'll\b/gi, "I'll")
+        .replace(/\bi've\b/gi, "I've").replace(/\bi'd\b/gi, "I'd");
+  return t;
+}
+
+export function smartSplit(text) {
+  const byNewline = text.split("\n").map(l => l.trim()).filter(Boolean);
+  if (byNewline.length > 1) return byNewline;
+
+  // Numbered list: "1. quote 2. quote"
+  if (/\d+\.\s/.test(text)) {
+    const parts = text.split(/\d+\.\s+/).filter(Boolean);
+    if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
+  }
+
+  // Bullet-style separators
+  if (/[•·]\s/.test(text)) {
+    const parts = text.split(/[•·]\s+/).filter(Boolean);
+    if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
+  }
+
+  return byNewline;
+}
+
 // ===================== TEXT PROCESSING =====================
 export function normalize(s) {
   return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
@@ -87,6 +119,25 @@ export function exportMD(quotes) {
 export function exportJSON(quotes) {
   const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
   download(JSON.stringify(data, null, 2), "keeper-export.json", "application/json");
+}
+
+export function richCopyToClipboard(quotes) {
+  const grouped = {};
+  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  let text = "";
+  Object.entries(grouped).forEach(([cat, qs]) => {
+    text += `✦ ${cat.toUpperCase()}\n\n`;
+    qs.forEach(q => {
+      const f = q.favorite ? " ★" : "";
+      if (QUOTED_CATS.has(q.category)) {
+        text += `\u201C${q.text}\u201D\n`;
+        text += `    \u2014 ${q.source}${f}\n\n`;
+      } else {
+        text += `${q.text} \u2014 ${q.source}${f}\n\n`;
+      }
+    });
+  });
+  return navigator.clipboard.writeText(text.trim());
 }
 
 export function copyToClipboard(quotes) {

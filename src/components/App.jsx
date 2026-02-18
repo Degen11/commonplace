@@ -4,7 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Data
 import { localLookup } from "../data/localQuotes";
-import { DEFAULT_CATEGORIES, QUOTED_CATS, CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor } from "../data/constants";
+import { DEFAULT_CATEGORIES, SOURCE_CATEGORIES, VIBE_TAGS, QUOTED_CATS, CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor } from "../data/constants";
 
 // Utils
 import { normalize, similarity, smartParse, smartSplit, basicFormat, displayText, exportCSV, exportMD, exportJSON, exportTXT, copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData } from "../utils/helpers";
@@ -159,7 +159,8 @@ export default function Commonplace() {
   // ── API ──
   const identifyBatch = useCallback(async (items, withFormatting = false) => {
     if (items.length === 0) return [];
-    const cl = allCats.filter(c => c !== "Unknown").join("|");
+    const sourceCats = ["Film","TV","Book","Music","Speech","Person","Phrase"];
+    const allCatStr  = [...sourceCats, ...VIBE_TAGS, ...customCats.filter(c => !sourceCats.includes(c) && !VIBE_TAGS.includes(c)), "Unknown"].join("|");
     const quotesBlock = items.map((it, i) => {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
       return `[${i}] ${it.text}${hintStr}`;
@@ -171,10 +172,10 @@ export default function Commonplace() {
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001", max_tokens: 4000,
         system: `You identify quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
-Each element: {"i":index,"source":"Source - Speaker/Author","category":"${cl}|Unknown","confidence":"high|medium|low"${extraField}}
-Film=movies, TV=television, Book=novels/nonfiction/poetry, Music=lyrics, Speech=speeches, Person=real person.
-Phrase=expressions, idioms, adverbial phrases not from a specific source.
-Unknown if unsure. Be concise with sources.${extraInstr} Return one object per input.`,
+Each element: {"i":index,"source":"Source - Speaker/Author","category":"${allCatStr}","confidence":"high|medium|low"${extraField}}
+Source categories (use when origin is known): Film=movies, TV=television, Book=novels/nonfiction/poetry, Music=lyrics, Speech=speeches, Person=real person, Phrase=common expression or idiom with no specific origin.
+Vibe tags (use when source is Unknown or unattributable — pick the best fit): Aphorism=short punchy universal truth, Philosophical=abstract ideas about reality/existence/meaning, Observation=comment on human behavior or the world, Comedic=humorous or witty, Poetic=lyrical or emotionally vivid, Existential=questions of purpose/being/mortality, Motivational=inspires action or perseverance, Cynical=skeptical or darkly realistic, Identity=relates to self-concept or who someone is, Reflection=introspective or personal insight.
+IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — never leave category as Unknown when a vibe tag fits. Only use Unknown as a genuine last resort. Be concise with sources.${extraInstr} Return one object per input.`,
         messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
       }),
     });
@@ -234,7 +235,8 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
       const api = apiResults.get(i);
       if (api) {
         const text = (formattingEnabled && api.cleanText) ? api.cleanText : p.text;
-        return { id: (Date.now() + i).toString(), text, source: api.source || p.hint || "Unknown", category: allCats.includes(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
+        const validCats = new Set([...allCats, ...VIBE_TAGS]);
+        return { id: (Date.now() + i).toString(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
       }
       const text = formattingEnabled ? basicFormat(p.text) : p.text;
       return { id: (Date.now() + i).toString(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };

@@ -8,7 +8,7 @@ You dump in a pile of text — one entry per line — and Keeper figures out wha
 
 **How it works:**
 
-A local database of ~130 common quotes handles instant matching with zero API calls. Anything it doesn't recognize gets batched and sent to Claude Haiku for identification. The result is fast, cheap, and accurate.
+A local database of hundreds of common quotes handles instant matching with zero API calls. Anything it doesn't recognize gets batched and sent to Claude Haiku for identification. The result is fast, cheap, and accurate.
 
 **Example input:**
 ```

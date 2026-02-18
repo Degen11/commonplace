@@ -1,0 +1,123 @@
+import { QUOTED_CATS } from "../data/constants";
+
+// ===================== TEXT PROCESSING =====================
+export function normalize(s) {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function wordSet(s) {
+  return new Set(normalize(s).split(" ").filter(w => w.length > 2));
+}
+
+export function similarity(a, b) {
+  const na = normalize(a), nb = normalize(b);
+  if (na === nb) return 1;
+  if (na.includes(nb) || nb.includes(na)) return 0.9;
+  const wa = wordSet(a), wb = wordSet(b);
+  if (!wa.size || !wb.size) return 0;
+  let overlap = 0;
+  wa.forEach(w => { if (wb.has(w)) overlap++; });
+  return (overlap * 2) / (wa.size + wb.size);
+}
+
+export function smartParse(line) {
+  let t = line.trim();
+  if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith('\u201C') && t.endsWith('\u201D')) || (t.startsWith("'") && t.endsWith("'")))
+    t = t.slice(1, -1).trim();
+
+  // Parenthetical attribution: "quote" (Author) or quote (Author)
+  const parenMatch = t.match(/^(.+?)\s*\(([^)]{2,50})\)\s*$/);
+  if (parenMatch && parenMatch[1].length > parenMatch[2].length)
+    return { text: parenMatch[1].replace(/^["'\u201C]+|["'\u201D]+$/g, "").trim(), hint: parenMatch[2].trim() };
+
+  // Dash/tilde separators
+  const seps = [/\s*\u2014\s*/, /\s*\u2013\s*/, /\s*--\s*/, /\s+-\s+/, /\s*~\s*/];
+  for (const sep of seps) {
+    const parts = t.split(sep);
+    if (parts.length >= 2) {
+      const last = parts[parts.length - 1].trim();
+      const rest = parts.slice(0, -1).join(" — ").trim();
+      if (last.length < 60 && rest.length > last.length)
+        return { text: rest.replace(/^["'\u201C]+|["'\u201D]+$/g, "").trim(), hint: last.replace(/^["'\u201C]+|["'\u201D]+$/g, "").trim() };
+    }
+  }
+  return { text: t.replace(/^["'\u201C]+|["'\u201D]+$/g, "").trim(), hint: null };
+}
+
+// ===================== DISPLAY =====================
+export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text}\u201D` : q.text;
+
+// ===================== EXPORT =====================
+function download(content, name, type) {
+  const b = new Blob([content], { type });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement("a");
+  a.href = u; a.download = name; a.click();
+  URL.revokeObjectURL(u);
+}
+
+export function exportCSV(quotes) {
+  const rows = [["Text", "Source", "Category", "Favorite"]];
+  quotes.forEach(q => rows.push([
+    `"${q.text.replace(/"/g, '""')}"`,
+    `"${q.source.replace(/"/g, '""')}"`,
+    q.category,
+    q.favorite ? "yes" : "no",
+  ]));
+  download(rows.map(r => r.join(",")).join("\n"), "keeper-export.csv", "text/csv");
+}
+
+export function exportMD(quotes) {
+  const grouped = {};
+  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  let md = "# Keeper Export\n\n";
+  Object.entries(grouped).forEach(([cat, qs]) => {
+    md += `## ${cat}\n\n`;
+    qs.forEach(q => {
+      const f = q.favorite ? " ⭐" : "";
+      QUOTED_CATS.has(q.category)
+        ? md += `> \u201C${q.text}\u201D\n> \u2014 *${q.source}*${f}\n\n`
+        : md += `- **${q.text}** \u2014 ${q.source}${f}\n`;
+    });
+    md += "\n";
+  });
+  download(md, "keeper-export.md", "text/markdown");
+}
+
+export function exportJSON(quotes) {
+  const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
+  download(JSON.stringify(data, null, 2), "keeper-export.json", "application/json");
+}
+
+export function copyToClipboard(quotes) {
+  const grouped = {};
+  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  let text = "";
+  Object.entries(grouped).forEach(([cat, qs]) => {
+    text += `${cat}\n${"─".repeat(cat.length)}\n`;
+    qs.forEach(q => {
+      const f = q.favorite ? " ★" : "";
+      QUOTED_CATS.has(q.category) ? text += `"${q.text}" — ${q.source}${f}\n` : text += `${q.text} — ${q.source}${f}\n`;
+    });
+    text += "\n";
+  });
+  return navigator.clipboard.writeText(text.trim());
+}
+
+// ===================== SHAREABLE LINKS =====================
+export function encodeShareData(quotes) {
+  const minimal = quotes.map(q => [q.text, q.source, q.category, q.favorite ? 1 : 0]);
+  return btoa(unescape(encodeURIComponent(JSON.stringify(minimal))));
+}
+
+export function decodeShareData(hash) {
+  try {
+    const json = decodeURIComponent(escape(atob(hash)));
+    const arr = JSON.parse(json);
+    return arr.map((q, i) => ({
+      id: (Date.now() + i).toString(),
+      text: q[0], source: q[1], category: q[2],
+      confidence: "high", favorite: !!q[3],
+    }));
+  } catch { return null; }
+}

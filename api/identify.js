@@ -1,3 +1,28 @@
+// Simple in-memory rate limiter
+const rateMap = new Map();
+const RATE_LIMIT = 30; // max requests per window
+const RATE_WINDOW = 60 * 1000; // 1 minute
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = rateMap.get(ip);
+  if (!entry || now - entry.start > RATE_WINDOW) {
+    rateMap.set(ip, { start: now, count: 1 });
+    return true;
+  }
+  entry.count++;
+  if (entry.count > RATE_LIMIT) return false;
+  return true;
+}
+
+// Clean up old entries periodically (prevent memory leak)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateMap) {
+    if (now - entry.start > RATE_WINDOW * 2) rateMap.delete(ip);
+  }
+}, RATE_WINDOW * 2);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -7,9 +32,14 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
+  // Rate limit by IP
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
+  }
+
   // Validate the request
   const body = req.body;
-
   if (!body || !body.messages || !Array.isArray(body.messages)) {
     return res.status(400).json({ error: 'Invalid request format' });
   }
@@ -19,10 +49,10 @@ export default async function handler(req, res) {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: Math.min(body.max_tokens || 4000, 4000),
     system: body.system || '',
-    messages: body.messages.slice(0, 1), // Only allow single message
+    messages: body.messages.slice(0, 1),
   };
 
-  // Limit input size to prevent abuse (roughly 20 quotes max per batch)
+  // Limit input size to prevent abuse
   const userContent = safeBody.messages[0]?.content || '';
   if (userContent.length > 10000) {
     return res.status(400).json({ error: 'Input too large. Send fewer quotes per batch.' });

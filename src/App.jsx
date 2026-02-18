@@ -166,9 +166,7 @@ function localLookup(text, hint) {
   if (hint) {
     const h = hint.trim();
     const knownAuthors = LOCAL_DB.filter(e => e.s.toLowerCase().includes(h.toLowerCase()));
-    if (knownAuthors.length > 0) {
-      return { source: h, category: knownAuthors[0].c, confidence: "medium", local: true };
-    }
+    if (knownAuthors.length > 0) return { source: h, category: knownAuthors[0].c, confidence: "medium", local: true };
     return null;
   }
   return null;
@@ -185,16 +183,25 @@ const CAT_COLORS = {
 const CPAL=[{bg:"#D1FAE5",text:"#059669"},{bg:"#FDE68A55",text:"#B45309"},{bg:"#C7D2FE",text:"#4338CA"},{bg:"#FECACA55",text:"#DC2626"},{bg:"#CCFBF1",text:"#0D9488"},{bg:"#FED7AA55",text:"#EA580C"}];
 const gc=(c,cust)=>CAT_COLORS[c]||(cust.indexOf(c)>=0?CPAL[cust.indexOf(c)%CPAL.length]:CAT_COLORS.Unknown);
 const CONF_ORDER = { low: 0, medium: 1, high: 2 };
+const CONF_LABELS = { low: "Low confidence — likely needs manual correction", medium: "Medium confidence — might be inaccurate", high: "High confidence" };
+const EXAMPLE_QUOTES = `You can't handle the truth
+The world breaks everyone — Hemingway
+"Be the change" (Gandhi)
+To infinity and beyond
+Not all those who wander are lost — Tolkien
+I think therefore I am
+Get busy living or get busy dying
+Is this the real life is this just fantasy
+Winter is coming
+The only thing we have to fear is fear itself`;
 
 function smartParse(line) {
   let t = line.trim();
   if ((t.startsWith('"')&&t.endsWith('"'))||(t.startsWith('\u201C')&&t.endsWith('\u201D'))||(t.startsWith("'")&&t.endsWith("'")))
     t = t.slice(1,-1).trim();
-  // Check for parenthetical attribution: "quote" (Author) or quote (Author)
   const parenMatch = t.match(/^(.+?)\s*\(([^)]{2,50})\)\s*$/);
-  if (parenMatch && parenMatch[1].length > parenMatch[2].length) {
+  if (parenMatch && parenMatch[1].length > parenMatch[2].length)
     return { text: parenMatch[1].replace(/^["'\u201C]+|["'\u201D]+$/g,"").trim(), hint: parenMatch[2].trim() };
-  }
   const seps = [/\s*\u2014\s*/,/\s*\u2013\s*/,/\s*--\s*/,/\s+-\s+/,/\s*~\s*/];
   for (const sep of seps) {
     const parts = t.split(sep);
@@ -239,15 +246,48 @@ function copyToClipboard(quotes){
   return navigator.clipboard.writeText(text.trim());
 }
 
+// Shareable link encoding
+function encodeShareData(quotes) {
+  const minimal = quotes.map(q => [q.text, q.source, q.category, q.favorite ? 1 : 0]);
+  const json = JSON.stringify(minimal);
+  return btoa(unescape(encodeURIComponent(json)));
+}
+function decodeShareData(hash) {
+  try {
+    const json = decodeURIComponent(escape(atob(hash)));
+    const arr = JSON.parse(json);
+    return arr.map((q, i) => ({
+      id: (Date.now() + i).toString(), text: q[0], source: q[1], category: q[2],
+      confidence: "high", favorite: !!q[3],
+    }));
+  } catch { return null; }
+}
+
+// ===================== TOAST COMPONENT =====================
+function Toast({ message, action, onAction, onDismiss }) {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, action ? 5000 : 2500);
+    return () => clearTimeout(t);
+  }, [onDismiss, action]);
+  return (
+    <div style={Z.toast}>
+      <span>{message}</span>
+      {action && <button style={Z.toastAction} onClick={onAction}>{action}</button>}
+    </div>
+  );
+}
+
 // ===================== MAIN COMPONENT =====================
 export default function Keeper() {
   const [phase, setPhase] = useState("input");
+  const [fadeClass, setFadeClass] = useState("phase-in");
   const [rawInput, setRawInput] = useState("");
   const [quotes, setQuotes] = useState([]);
   const [customCats, setCustomCats] = useState([]);
   const [progress, setProgress] = useState(null);
   const [view, setView] = useState(() => window.innerWidth < 640 ? "cards" : "table");
   const [catFilter, setCatFilter] = useState("All");
+  const [favFilter, setFavFilter] = useState(false);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("default");
   const [editingId, setEditingId] = useState(null);
@@ -268,13 +308,36 @@ export default function Keeper() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [dragId, setDragId] = useState(null);
+  const [failedEntries, setFailedEntries] = useState([]);
+  const [isSharedView, setIsSharedView] = useState(false);
+  const undoRef = useRef(null);
   const addMoreRef = useRef(null);
   const exportRef = useRef(null);
   const sortRef = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
   const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text}\u201D` : q.text;
+
+  // Phase transition with fade
+  const goPhase = useCallback((next) => {
+    setFadeClass("phase-out");
+    setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
+  }, []);
+
+  // Load shared link on mount
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash.startsWith("s=")) {
+      const decoded = decodeShareData(hash.slice(2));
+      if (decoded && decoded.length > 0) {
+        setQuotes(decoded);
+        setPhase("results");
+        setIsSharedView(true);
+      }
+    }
+  }, []);
 
   // Responsive
   useEffect(() => {
@@ -294,6 +357,10 @@ export default function Keeper() {
     };
     document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
   }, []);
+
+  const showToast = (message, action, onAction) => {
+    setToast({ message, action, onAction });
+  };
 
   // Batched API call via Haiku
   const identifyBatch = useCallback(async (items) => {
@@ -317,7 +384,6 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
           messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
         }),
       });
-
       if (!r.ok) throw new Error(`API returned ${r.status}`);
       const d = await r.json();
       if (d.error) throw new Error(d.error.message || "API error");
@@ -335,7 +401,8 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
     if (!lines.length) return;
 
     setIsProcessing(true);
-    setPhase("processing");
+    setFailedEntries([]);
+    goPhase("processing");
     setApiError(null);
     const parsed = lines.map(l => smartParse(l));
 
@@ -346,8 +413,7 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
     parsed.forEach(p => {
       const norm = normalize(p.text);
       const isDupe = [...seen].some(s => similarity(s, norm) > 0.55);
-      if (!isDupe) { unique.push(p); seen.add(norm); }
-      else dupes++;
+      if (!isDupe) { unique.push(p); seen.add(norm); } else dupes++;
     });
 
     const localMatches = [];
@@ -362,77 +428,94 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
 
     const apiResults = new Map();
     let apiFailed = false;
+    const failed = [];
     const BATCH_SIZE = 20;
 
     if (needsApi.length > 0) {
       for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
         const chunk = needsApi.slice(i, i + BATCH_SIZE);
         setProgress({
-          total: unique.length,
-          done: localMatches.length + i,
+          total: unique.length, done: localMatches.length + i,
           current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`,
           phase: "api"
         });
-
         try {
           const results = await identifyBatch(chunk);
-          results.forEach(r => {
-            const item = chunk[r.i];
-            if (item) apiResults.set(item.idx, r);
-          });
+          results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
         } catch (err) {
           apiFailed = true;
-          setApiError(`AI identification failed for ${needsApi.length - i} entries. ${localMatches.length > 0 ? `${localMatches.length} were identified locally.` : ""} You can edit unidentified entries manually.`);
+          chunk.forEach(c => failed.push(c));
+          setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
           break;
         }
       }
     }
 
+    if (failed.length > 0) setFailedEntries(failed);
+
     const newQuotes = unique.map((p, i) => {
       const local = localMatches.find(m => m.idx === i);
-      if (local) {
-        return { id: (Date.now() + i).toString(), text: p.text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
-      }
+      if (local) return { id: (Date.now() + i).toString(), text: p.text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
       const api = apiResults.get(i);
-      if (api) {
-        return {
-          id: (Date.now() + i).toString(), text: p.text,
-          source: api.source || p.hint || "Unknown",
-          category: allCats.includes(api.category) ? api.category : "Unknown",
-          confidence: api.confidence || "low", favorite: false,
-        };
-      }
-      return {
-        id: (Date.now() + i).toString(), text: p.text,
-        source: p.hint || "Unknown", category: "Unknown",
-        confidence: "low", favorite: false,
-      };
+      if (api) return { id: (Date.now() + i).toString(), text: p.text, source: api.source || p.hint || "Unknown", category: allCats.includes(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
+      return { id: (Date.now() + i).toString(), text: p.text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
     });
 
-    if (appendMode) {
-      setQuotes(prev => [...prev, ...newQuotes]);
-    } else {
-      setQuotes(newQuotes);
-    }
+    if (appendMode) setQuotes(prev => [...prev, ...newQuotes]);
+    else setQuotes(newQuotes);
 
     setStats({ local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length, dupes });
     setProgress(null);
     setIsProcessing(false);
-    setPhase("results");
+    goPhase("results");
+  };
+
+  const retryFailed = async () => {
+    if (failedEntries.length === 0) return;
+    setApiError(null);
+    const text = failedEntries.map(e => {
+      const hintStr = e.hint ? ` — ${e.hint}` : "";
+      return `${e.text}${hintStr}`;
+    }).join("\n");
+    setFailedEntries([]);
+    await processEntries(text, true);
   };
 
   const handleProcess = () => processEntries(rawInput, false);
   const handleAddMore = () => {
     if (!addMoreInput.trim()) return;
     processEntries(addMoreInput, true);
-    setAddMoreInput("");
-    setShowAddMore(false);
+    setAddMoreInput(""); setShowAddMore(false);
   };
 
   const handleClear = () => {
-    setPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
-    setCatFilter("All"); setSearch(""); setStats(null); setApiError(null);
-    setConfirmClear(false); setShowAddMore(false); setSortBy("default");
+    window.history.replaceState(null, "", window.location.pathname);
+    setIsSharedView(false);
+    goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
+    setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
+    setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
+  };
+
+  const handleDelete = (id) => {
+    const deleted = quotes.find(q => q.id === id);
+    const idx = quotes.findIndex(q => q.id === id);
+    setQuotes(p => p.filter(q => q.id !== id));
+    undoRef.current = { quote: deleted, index: idx };
+    showToast("Entry deleted", "Undo", () => {
+      if (undoRef.current) {
+        const { quote, index } = undoRef.current;
+        setQuotes(p => { const n = [...p]; n.splice(Math.min(index, n.length), 0, quote); return n; });
+        undoRef.current = null;
+      }
+    });
+  };
+
+  const handleShare = () => {
+    const encoded = encodeShareData(quotes);
+    const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      showToast("Shareable link copied to clipboard!");
+    });
   };
 
   const toggleSel = id => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -443,21 +526,36 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
   const addCat = () => { const n = newCatName.trim(); if (!n || allCats.includes(n)) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
   const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
+  // Drag reorder
+  const handleDragStart = (id) => setDragId(id);
+  const handleDragOver = (e, targetId) => {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) return;
+    setQuotes(prev => {
+      const arr = [...prev];
+      const fromIdx = arr.findIndex(q => q.id === dragId);
+      const toIdx = arr.findIndex(q => q.id === targetId);
+      if (fromIdx < 0 || toIdx < 0) return prev;
+      const [moved] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      return arr;
+    });
+  };
+  const handleDragEnd = () => setDragId(null);
+
   let filtered = quotes.filter(q => {
     if (catFilter !== "All" && q.category !== catFilter) return false;
+    if (favFilter && !q.favorite) return false;
     if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
-  if (sortBy === "confidence") {
-    filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
-  } else if (sortBy === "alpha") {
-    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
-  } else if (sortBy === "category") {
-    filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
-  }
+  if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
+  else if (sortBy === "alpha") filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
+  else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
 
   const cc = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
+  const favCount = quotes.filter(q => q.favorite).length;
   const selAll = () => { const ids = filtered.map(q => q.id); ids.every(id => selected.has(id)) ? setSelected(new Set()) : setSelected(new Set(ids)); };
   const showBulkBar = selected.size > 0;
   const unknownCount = quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length;
@@ -471,9 +569,15 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
 
   const FavBtn = ({ q }) => <button style={{ ...Z.actBtn, color: q.favorite ? "#F59E0B" : "#9B9A97" }} onClick={() => setQuotes(p => p.map(x => x.id === q.id ? { ...x, favorite: !x.favorite } : x))}>{q.favorite ? "★" : "☆"}</button>;
   const EditBtn = ({ q }) => <button style={Z.actBtn} onClick={() => startEdit(q)}>✎</button>;
-  const DelBtn = ({ q }) => <button style={{ ...Z.actBtn, color: "#EB5757" }} onClick={() => setQuotes(p => p.filter(x => x.id !== q.id))}>✕</button>;
+  const DelBtn = ({ q }) => <button style={{ ...Z.actBtn, color: "#EB5757" }} onClick={() => handleDelete(q.id)}>✕</button>;
+
+  const ConfDot = ({ q }) => {
+    if (!q.confidence || q.confidence === "high") return null;
+    return <span title={CONF_LABELS[q.confidence]} style={{ ...Z.confDot, background: q.confidence === "medium" ? "#FFB74D" : "#D6D6D4", cursor: "help" }} />;
+  };
+
   const EditForm = ({ q, inCard }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: inCard ? 8 : 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: inCard ? 8 : 0 }} onClick={e => e.stopPropagation()}>
       <textarea style={{ ...Z.textarea, minHeight: 40, fontSize: 13, padding: 8 }} value={editText} onChange={e => setEditText(e.target.value)} />
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <input style={Z.editIn} value={editSource} onChange={e => setEditSource(e.target.value)} placeholder="Source..." />
@@ -484,9 +588,18 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
     </div>
   );
 
+  const Footer = () => (
+    <footer style={Z.footer}>
+      <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={Z.footerLink}>Degen Hill</a></span>
+    </footer>
+  );
+
+  // Category summary for header
+  const topCats = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
+
   // ============ INPUT ============
   if (phase === "input") return (
-    <div style={Z.wrap}><style>{baseCSS}</style>
+    <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
       <div style={Z.landing}>
         <div style={Z.hero}>
           <h1 style={Z.heroTitle}>Keeper</h1>
@@ -497,19 +610,35 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
           <div style={Z.inputFooter}>
             <span style={Z.inputCount}>{rawInput.trim() ? `${rawInput.trim().split("\n").filter(l => l.trim()).length} entries detected` : "Quotes, phrases, expressions — all welcome"}</span>
-            <button
-              style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
-              onClick={handleProcess}
-              disabled={!rawInput.trim() || isProcessing}
-            >
-              {isProcessing ? "Processing..." : "Organize my collection →"}
-            </button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {!rawInput.trim() && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
+              <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
+                onClick={handleProcess} disabled={!rawInput.trim() || isProcessing}>
+                {isProcessing ? "Processing..." : "Organize my collection →"}
+              </button>
+            </div>
           </div>
         </div>
-        <div style={Z.features}>
-          <div style={Z.feat}><span style={Z.fi}>🔍</span><span>AI identifies sources</span></div>
-          <div style={Z.feat}><span style={Z.fi}>⚡</span><span>Common quotes matched instantly</span></div>
-          <div style={Z.feat}><span style={Z.fi}>📄</span><span>Export as CSV, Markdown, or JSON</span></div>
+
+        {/* How it works */}
+        <div style={Z.howWrap}>
+          <div className="how-step" style={Z.howStep}>
+            <div style={Z.howIcon}>📋</div>
+            <div style={Z.howLabel}>Paste</div>
+            <div style={Z.howDesc}>Dump your messy quotes, one per line</div>
+          </div>
+          <div style={Z.howArrow}>→</div>
+          <div className="how-step" style={Z.howStep}>
+            <div style={Z.howIcon}>🤖</div>
+            <div style={Z.howLabel}>Identify</div>
+            <div style={Z.howDesc}>AI matches sources and categories</div>
+          </div>
+          <div style={Z.howArrow}>→</div>
+          <div className="how-step" style={Z.howStep}>
+            <div style={Z.howIcon}>✨</div>
+            <div style={Z.howLabel}>Organized</div>
+            <div style={Z.howDesc}>Export clean, attributed collections</div>
+          </div>
         </div>
 
         {/* Before / After preview */}
@@ -536,13 +665,14 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     </div>
   );
 
   // ============ PROCESSING ============
   if (phase === "processing") return (
-    <div style={Z.wrap}><style>{baseCSS}</style>
+    <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
       <div style={Z.procWrap}>
         <h2 style={Z.procTitle}>Organizing your collection...</h2>
         <p style={Z.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
@@ -559,7 +689,10 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
 
   // ============ RESULTS ============
   return (
-    <div style={Z.wrap}><style>{baseCSS}</style>
+    <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+
+      {/* Toast */}
+      {toast && <Toast message={toast.message} action={toast.action} onAction={() => { if (toast.onAction) toast.onAction(); setToast(null); }} onDismiss={() => setToast(null)} />}
 
       {/* Confirm clear modal */}
       {confirmClear && (
@@ -575,11 +708,23 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
         </div>
       )}
 
+      {/* Shared view banner */}
+      {isSharedView && (
+        <div style={Z.shareBanner}>
+          <span>👀 You're viewing a shared collection ({quotes.length} entries)</span>
+          <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); window.history.replaceState(null, "", window.location.pathname); }}>Make it yours</button>
+        </div>
+      )}
+
       {/* Header */}
       <div style={Z.header}>
         <div>
           <h1 style={Z.title}>Keeper</h1>
-          <p style={Z.sub}>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</p>
+          <p style={Z.sub}>
+            {quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized
+            {topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
+            {topCats.map(([c, n], i) => <span key={c} style={{ color: gc(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
+          </p>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
           {!isMobile && (
@@ -596,7 +741,8 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
             {showExport && (
               <div style={Z.expDrop}>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); setShowExport(false); }}>{copied ? "✓ Copied!" : "📋 Copy to clipboard"}</button>
+                <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
+                <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
                 <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📄 CSV</button>
                 <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
@@ -610,11 +756,14 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
         </div>
       </div>
 
-      {/* API error */}
+      {/* API error + retry */}
       {apiError && (
         <div style={Z.errorBar}>
           <span>⚠️ {apiError}</span>
-          <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
+            <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
+          </div>
         </div>
       )}
 
@@ -680,12 +829,17 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
         </div>
       </div>
 
-      {/* Category pills */}
+      {/* Category pills + fav filter */}
       <div style={Z.cats}>
-        <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" ? Z.catOn : {}) }}>All</button>
+        <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
+        {favCount > 0 && (
+          <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
+            ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
+          </button>
+        )}
         {allCats.filter(c => cc[c]).map(c => {
           const col = gc(c, customCats); const on = catFilter === c;
-          return <button key={c} onClick={() => setCatFilter(c)} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}) }}>
+          return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}) }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}<span style={{ opacity: .5, fontSize: 11 }}>{cc[c]}</span>
             {customCats.includes(c) && <span style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
           </button>;
@@ -709,17 +863,22 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
       {/* TABLE */}
       {view === "table" && (
         <div style={{ overflowX: "auto" }}>
-          {filtered.length > 0 && <div style={Z.tHead}><div style={{ width: 32 }} /><div style={{ flex: 1, minWidth: 200 }}>Content</div><div style={{ width: 140 }}>Source</div><div style={{ width: 80 }}>Category</div><div style={{ width: 56 }} /></div>}
+          {filtered.length > 0 && <div style={Z.tHead}><div style={{ width: 32 }} /><div style={{ flex: 1, minWidth: 200 }}>Content</div><div style={{ width: 200 }}>Source</div><div style={{ width: 80 }}>Category</div><div style={{ width: 56 }} /></div>}
           {filtered.map(q => {
             const col = gc(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
             const needsAtt = q.confidence === "low" || q.category === "Unknown";
+            const isDragging = dragId === q.id;
             return (
-              <div key={q.id} className="qrow" style={{ ...Z.row, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), animation: "fadeUp .25s ease" }}>
+              <div key={q.id} className="qrow" draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
+                style={{ ...Z.row, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(isDragging ? { opacity: .4 } : {}), animation: "fadeUp .25s ease" }}>
                 <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
                   <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
                 </div>
-                <div style={{ flex: 1, minWidth: 200, paddingRight: 12 }}>{isEd ? <EditForm q={q} /> : <p style={Z.entryText}>{displayText(q)}</p>}</div>
-                <div style={Z.srcCol}><span style={Z.srcText}>{q.source}</span>{q.confidence && q.confidence !== "high" && <span style={{ ...Z.confDot, background: q.confidence === "medium" ? "#FFB74D" : "#D6D6D4" }} />}</div>
+                <div style={{ flex: 1, minWidth: 200, paddingRight: 12, cursor: isEd ? "default" : "text" }}
+                  onClick={() => { if (!isEd) startEdit(q); }}>
+                  {isEd ? <EditForm q={q} /> : <p style={Z.entryText}>{displayText(q)}</p>}
+                </div>
+                <div className="src-col" style={Z.srcCol}><span style={Z.srcText} title={q.source}>{q.source}</span><ConfDot q={q} /></div>
                 <div style={{ width: 80 }}><span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span></div>
                 <div className="row-actions" style={Z.rowAct}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
               </div>
@@ -735,7 +894,8 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
             const col = gc(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
             const needsAtt = q.confidence === "low" || q.category === "Unknown";
             return (
-              <div key={q.id} style={{ ...CZ.card, ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}), ...(q.favorite ? CZ.favCard : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), animation: "fadeUp .3s ease" }}
+              <div key={q.id} draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
+                style={{ ...CZ.card, ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}), ...(q.favorite ? CZ.favCard : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .3s ease" }}
                 onMouseEnter={e => { const a = e.currentTarget.querySelector('.ca'); if (a) a.style.opacity = 1; }}
                 onMouseLeave={e => { const a = e.currentTarget.querySelector('.ca'); if (a) a.style.opacity = 0; }}>
                 <div style={CZ.top}>
@@ -748,9 +908,7 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
                 {isEd ? <EditForm q={q} inCard /> : (
                   <>
                     <p style={CZ.txt}>{displayText(q)}</p>
-                    <div style={CZ.srcRow}><span style={{ color: "#D3D3D0" }}>—</span><span style={CZ.src}>{q.source}</span>
-                      {q.confidence && q.confidence !== "high" && <span style={{ ...Z.confDot, background: q.confidence === "medium" ? "#FFB74D" : "#D6D6D4" }} />}
-                    </div>
+                    <div style={CZ.srcRow}><span style={{ color: "#D3D3D0" }}>—</span><span style={CZ.src}>{q.source}</span><ConfDot q={q} /></div>
                   </>
                 )}
               </div>
@@ -763,13 +921,11 @@ Unknown if unsure. Be concise with sources. Return one object per input.`,
         <div style={Z.empty}>
           <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>
           <button style={{ background: "none", border: "none", color: "#2383E2", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
-            onClick={() => { setCatFilter("All"); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
+            onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
         </div>
       )}
 
-      <footer style={Z.footer}>
-        <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={Z.footerLink}>Degen Hill</a></span>
-      </footer>
+      <Footer />
     </div>
   );
 }
@@ -781,24 +937,36 @@ const baseCSS = `
   @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
+  .qrow{cursor:grab}.qrow:active{cursor:grabbing}
   .qrow:hover{background:#FAFAFA !important}.qrow:hover .row-actions{opacity:1 !important}.qrow:hover .checkbox{opacity:1 !important}
+  .qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
   .dd-opt:hover{background:#F1F1EF !important}
+  .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
+  .proc-btn{transition:all .15s ease}
+  .try-btn:hover{background:#F1F1EF !important}
+  .how-step{transition:transform .2s ease}.how-step:hover{transform:translateY(-2px)}
 `;
 
 const Z = {
-  wrap:{maxWidth:960,margin:"0 auto",padding:"0 24px 80px",fontFamily:"'Inter',-apple-system,sans-serif",fontSize:14,color:"#37352F",minHeight:"100vh",background:"#fff"},
+  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:"'Inter',-apple-system,sans-serif",fontSize:14,color:"#37352F",minHeight:"100vh",background:"#fff"},
   landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:80},
   hero:{textAlign:"center",marginBottom:40},
   heroTitle:{fontSize:48,fontWeight:700,letterSpacing:-2,color:"#37352F",lineHeight:1},
   heroSub:{fontSize:16,color:"#9B9A97",marginTop:12,lineHeight:1.7},
-  inputCard:{width:"100%",maxWidth:680,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12,padding:20,animation:"fadeUp .4s ease"},
+  inputCard:{width:"100%",maxWidth:800,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12,padding:20,animation:"fadeUp .4s ease"},
   bigTextarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:8,padding:16,fontSize:15,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:240,lineHeight:1.7,background:"#fff"},
   inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,flexWrap:"wrap",gap:10},
   inputCount:{fontSize:13,color:"#9B9A97"},
-  processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:"#37352F",color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit",transition:"opacity .15s"},
-  features:{display:"flex",gap:32,marginTop:40,flexWrap:"wrap",justifyContent:"center"},
-  feat:{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"#9B9A97"},
-  fi:{fontSize:18},
+  processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:"#37352F",color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  tryBtn:{padding:"8px 16px",border:"1px solid #E3E2DE",borderRadius:8,background:"#fff",color:"#9B9A97",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
+  howWrap:{display:"flex",gap:24,marginTop:48,flexWrap:"wrap",justifyContent:"center",alignItems:"flex-start",width:"100%",maxWidth:600},
+  howStep:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flex:1,minWidth:120,textAlign:"center"},
+  howIcon:{fontSize:28,marginBottom:4},
+  howLabel:{fontSize:14,fontWeight:600,color:"#37352F"},
+  howDesc:{fontSize:12,color:"#9B9A97",lineHeight:1.4},
+  howArrow:{display:"flex",alignItems:"center",fontSize:20,color:"#D3D3D0",fontWeight:300,paddingTop:16},
   procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
   procTitle:{fontSize:24,fontWeight:700,letterSpacing:-.5,marginBottom:8},
   procSub:{fontSize:14,color:"#9B9A97",marginBottom:32},
@@ -817,9 +985,10 @@ const Z = {
   viewTog:{display:"flex",border:"1px solid #E3E2DE",borderRadius:6,overflow:"hidden"},
   viewBtn:{padding:"5px 8px",border:"none",background:"#fff",cursor:"pointer",color:"#9B9A97",display:"flex",alignItems:"center",justifyContent:"center"},
   viewOn:{background:"#F1F1EF",color:"#37352F"},
-  expDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.1)",border:"1px solid #E3E2DE",minWidth:160,zIndex:100,padding:4,animation:"slideD .15s ease"},
+  expDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.1)",border:"1px solid #E3E2DE",minWidth:180,zIndex:100,padding:4,animation:"slideD .15s ease"},
   expOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:13,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   errorBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,margin:"12px 0",fontSize:13,color:"#991B1B",animation:"slideD .2s ease",gap:12,flexWrap:"wrap"},
+  retryBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #DC2626",background:"#fff",color:"#DC2626",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBar:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#F0FDF4",border:"1px solid #DCFCE7",borderRadius:8,margin:"12px 0",fontSize:13,color:"#37352F",flexWrap:"wrap",animation:"slideD .2s ease"},
   statDot:{width:3,height:3,borderRadius:"50%",background:"#D3D3D0"},
   statsDismiss:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:14,marginLeft:"auto"},
@@ -850,15 +1019,15 @@ const Z = {
   newCatIn:{border:"1px solid #2383E2",borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   tHead:{display:"flex",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F1F1EF",fontSize:11,color:"#9B9A97",fontWeight:500,textTransform:"uppercase",letterSpacing:.5},
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F7F6F3",transition:"background .1s",minHeight:48},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F7F6F3",transition:"background .1s, opacity .15s",minHeight:48},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .1s",flexShrink:0},
   checkOn:{background:"#2383E2",borderColor:"#2383E2"},
   entryText:{fontSize:14,lineHeight:1.55,color:"#37352F"},
-  srcCol:{width:140,display:"flex",alignItems:"center",gap:4,paddingRight:8},
-  srcText:{fontSize:12,color:"#9B9A97",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},
-  confDot:{width:5,height:5,borderRadius:"50%",flexShrink:0},
+  srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8},
+  srcText:{fontSize:12,color:"#9B9A97",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",transition:"all .15s"},
+  confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
   rowAct:{width:56,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4},
@@ -872,8 +1041,8 @@ const Z = {
   confirmCancel:{padding:"8px 16px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#37352F",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   confirmYes:{padding:"8px 16px",borderRadius:6,border:"none",background:"#EB5757",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   empty:{textAlign:"center",padding:"60px 24px"},
-  previewWrap:{display:"flex",gap:20,alignItems:"stretch",width:"100%",maxWidth:680,marginTop:48,animation:"fadeUp .5s ease",flexWrap:"wrap"},
-  previewBox:{flex:1,minWidth:240,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:10,padding:16,overflow:"hidden"},
+  previewWrap:{display:"flex",gap:20,alignItems:"stretch",width:"100%",maxWidth:800,marginTop:48,animation:"fadeUp .5s ease",flexWrap:"wrap"},
+  previewBox:{flex:1,minWidth:260,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:10,padding:16,overflow:"hidden"},
   previewLabel:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:10},
   previewContent:{display:"flex",flexDirection:"column",gap:6},
   previewLine:{fontSize:13,color:"#787774",lineHeight:1.6,fontFamily:"'SF Mono',Menlo,monospace",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},
@@ -884,10 +1053,14 @@ const Z = {
   previewSrc:{color:"#9B9A97",fontSize:11,whiteSpace:"nowrap",flexShrink:0},
   footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#D3D3D0",borderTop:"1px solid #F7F6F3",marginTop:40},
   footerLink:{color:"#9B9A97",textDecoration:"none"},
+  toast:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"#37352F",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,fontWeight:500,display:"flex",alignItems:"center",gap:12,zIndex:2000,boxShadow:"0 4px 16px rgba(0,0,0,.2)",animation:"toastIn .2s ease",fontFamily:"'Inter',-apple-system,sans-serif"},
+  toastAction:{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,color:"#fff",padding:"3px 10px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#EFF6FF",border:"1px solid #DBEAFE",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
+  shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"#fff",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 };
 
 const CZ = {
-  card:{background:"#fff",border:"1px solid #F1F1EF",borderRadius:8,padding:16,transition:"all .15s"},
+  card:{background:"#fff",border:"1px solid #F1F1EF",borderRadius:8,padding:16,transition:"all .15s",cursor:"grab"},
   favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0,transition:"opacity .15s"},

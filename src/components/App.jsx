@@ -264,7 +264,6 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
       }
     });
 
-    // If near-dupes found, pause and show review modal
     if (nearDupes.length > 0) {
       setPendingDupes(nearDupes);
       setDupeDecisions(Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])));
@@ -425,513 +424,518 @@ Unknown if unsure. Be concise with sources.${extraInstr} Return one object per i
     </footer>
   );
 
-  // ========================== DUPE REVIEW MODAL ==========================
-  if (pendingDupes.length > 0) {
-    const keptCount = Object.values(dupeDecisions).filter(d => d === "keep").length;
-    return (
-      <div style={Z.dupeModalOverlay}>
-        <div style={Z.dupeModalBox}>
-          <div style={Z.dupeModalHeader}>
-            <p style={Z.dupeModalTitle}>Similar entries found</p>
-            <p style={Z.dupeModalSub}>
-              {pendingDupes.length} of your entries look similar to ones already in the collection. Choose what to do with each.
-            </p>
-          </div>
-          <div style={Z.dupeList}>
-            {pendingDupes.map((dupe, i) => {
-              const decision = dupeDecisions[i] || "skip";
-              return (
-                <div key={i} style={{ ...Z.dupeCard, opacity: decision === "skip" ? 0.6 : 1, transition: "opacity .15s" }}>
-                  <div style={Z.dupePair}>
-                    <div style={{ ...Z.dupeSide, ...Z.dupeExisting }}>
-                      <div style={Z.dupeSideLabel}>Already in collection</div>
-                      <div style={Z.dupeSideText}>{dupe.matchedText}</div>
-                      {dupe.matchedSource && <div style={Z.dupeSideSource}>{dupe.matchedSource}</div>}
-                    </div>
-                    <div style={{ ...Z.dupeSide, ...Z.dupeIncoming }}>
-                      <div style={Z.dupeSideLabel}>New entry</div>
-                      <div style={Z.dupeSideText}>{dupe.incoming.text}</div>
-                      {dupe.incoming.hint && <div style={Z.dupeSideSource}>{dupe.incoming.hint}</div>}
-                    </div>
-                  </div>
-                  <div style={Z.dupeActions}>
-                    <button style={{ ...Z.dupeSkipBtn, ...(decision === "skip" ? { background: "#F1F1EF", fontWeight: 600, color: "#37352F" } : {}) }}
-                      onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "skip" }))}>Skip</button>
-                    <button style={{ ...Z.dupeKeepBtn, ...(decision === "keep" ? { background: "#16A34A" } : {}) }}
-                      onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "keep" }))}>Keep both</button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div style={Z.dupeModalFooter}>
-            <span style={Z.dupeKeptCount}>
-              {keptCount > 0 ? `${keptCount} will be added` : `All ${pendingDupes.length} will be skipped`}
-            </span>
-            <button style={Z.dupeContinueBtn} onClick={handleDupesContinue}>
-              Continue →
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ========================== INPUT PHASE ==========================
-  if (phase === "input") return (
-    <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
-      <div style={Z.landing}>
-        <div style={Z.hero}>
-          <h1 style={Z.heroTitle}>Commonplace</h1>
-          <p style={Z.heroSub}>Paste your messy quotes, phrases, and fragments.<br />We'll organize everything and identify the sources.</p>
-        </div>
-
-        {savedSession && (
-          <div style={Z.restoreBanner}>
-            <span>📂 You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button style={Z.restoreBtn} onClick={() => {
-                setQuotes(savedSession.quotes);
-                setCustomCats(savedSession.customCats || []);
-                setSavedSession(null);
-                goPhase("results");
-              }}>Restore session</button>
-              <button style={Z.restoreDismiss} onClick={() => {
-                try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
-                setSavedSession(null);
-              }}>Dismiss</button>
-            </div>
-          </div>
-        )}
-
-        <div style={Z.inputCard}>
-          {/* Tabs */}
-          <div style={Z.tabRow}>
-            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("paste")}>
-              ✏️ Type / Paste
-            </button>
-            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("import")}>
-              📁 Import File
-            </button>
-          </div>
-
-          {inputTab === "paste" && (
-            <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
-              placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
-          )}
-
-          {inputTab === "import" && (
-            <div
-              className="drop-zone"
-              style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
-              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={handleDropZone}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
-                onChange={e => { handleFileImport(e.target.files[0]); e.target.value = ""; }} />
-              <div style={Z.dropIcon}>{isDragOver ? "📂" : "📄"}</div>
-              <div style={Z.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
-              <div style={Z.dropSub}>or click to browse — one quote per line</div>
-              {importedFileName && (
-                <div style={Z.dropFileName}>✓ {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
-              )}
-            </div>
-          )}
-
-          <div style={Z.inputFooter}>
-            {(() => {
-              const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
-              return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <span style={Z.entryMeta}>
-                    {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"} detected` : "Quotes, phrases, expressions — all welcome"}
-                  </span>
-                  {count > 50 && (
-                    <span style={Z.warnBadge}>⚠ {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
-                  )}
-                  <label style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
-                    <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#37352F" : "#E3E2DE" }}>
-                      <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
-                    </div>
-                    Clean up formatting
-                  </label>
-                </div>
-              );
-            })()}
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {!rawInput.trim() && inputTab === "paste" && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
-              <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }} onClick={handleProcess} disabled={!rawInput.trim() || isProcessing}>
-                {isProcessing ? "Processing..." : "Organize my collection →"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div style={Z.howWrap}>
-          <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>📋</div><div style={Z.howLabel}>Paste</div><div style={Z.howDesc}>Dump your messy quotes, one per line</div></div>
-          <div style={Z.howArrow}>→</div>
-          <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>🤖</div><div style={Z.howLabel}>Identify</div><div style={Z.howDesc}>AI matches sources and categories</div></div>
-          <div style={Z.howArrow}>→</div>
-          <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>✨</div><div style={Z.howLabel}>Organized</div><div style={Z.howDesc}>Export clean, attributed collections</div></div>
-        </div>
-        <div style={Z.previewWrap}>
-          <div style={Z.previewBox}>
-            <div style={Z.previewLabel}>What you paste</div>
-            <div style={Z.previewContent}>
-              <p style={Z.previewLine}>you miss 100% of the shots you don't take</p>
-              <p style={Z.previewLine}>all those moments will be lost in time</p>
-              <p style={Z.previewLine}>the unexamined life is not worth living</p>
-              <p style={Z.previewLine}>"Be the change" (Gandhi)</p>
-              <p style={Z.previewLine}>is this the real life is this just fantasy</p>
-            </div>
-          </div>
-          <div style={Z.previewArrow}>→</div>
-          <div style={Z.previewBox}>
-            <div style={Z.previewLabel}>What you get</div>
-            <div style={Z.previewContent}>
-              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"You miss 100% of the shots you don't take"</span><span style={Z.previewSrc}>Wayne Gretzky</span></div>
-              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F3E8FF", color: "#7C3AED" }}>Film</span><span style={Z.previewText}>"All those moments will be lost in time"</span><span style={Z.previewSrc}>Blade Runner (1982)</span></div>
-              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"The unexamined life is not worth living"</span><span style={Z.previewSrc}>Socrates</span></div>
-              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"Be the change"</span><span style={Z.previewSrc}>Mahatma Gandhi</span></div>
-              <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#FFE4E6", color: "#E11D48" }}>Music</span><span style={Z.previewText}>"Is this the real life, is this just fantasy"</span><span style={Z.previewSrc}>Bohemian Rhapsody — Queen</span></div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    </div>
-  );
-
-  // ========================== PROCESSING PHASE ==========================
-  if (phase === "processing") return (
-    <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
-      <div style={Z.procWrap}>
-        <h2 style={Z.procTitle}>Organizing your collection...</h2>
-        <p style={Z.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
-        {progress && (
-          <div style={Z.procCard}>
-            <div style={Z.procTop}><span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span><span style={{ color: "#9B9A97" }}>{Math.round((progress.done / progress.total) * 100)}%</span></div>
-            <div style={Z.track}><div style={{ ...Z.fill, width: `${(progress.done / progress.total) * 100}%` }} /></div>
-            <p style={Z.procCurrent}>{progress.current}</p>
-          </div>
-        )}
-        {identifiedFeed.length > 0 && (
-          <div style={Z.feedWrap}>
-            {[...identifiedFeed].reverse().map((item, i) => {
-              const col = getCatColor(item.category, customCats);
-              return (
-                <div key={i} style={Z.feedItem}>
-                  <span style={{ ...Z.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
-                  <span style={Z.feedItemText}>{item.text}</span>
-                  <span style={Z.feedItemSrc}>{item.source}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // ========================== RESULTS PHASE ==========================
+  // ========================== SINGLE RETURN ==========================
   return (
-    <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+    <>
+      <Analytics />
+      <SpeedInsights />
 
-      {toast && <Toast message={toast.message} action={toast.action} onAction={() => { if (toast.onAction) toast.onAction(); setToast(null); }} onDismiss={() => setToast(null)} />}
-
-      {confirmClear && (
-        <div style={Z.modalOverlay} onClick={() => setConfirmClear(false)}>
-          <div style={Z.confirmBox} onClick={e => e.stopPropagation()}>
-            <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Start fresh?</p>
-            <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>This will clear all {quotes.length} entries and remove them from your saved session.</p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button style={Z.confirmCancel} onClick={() => setConfirmClear(false)}>Cancel</button>
-              <button style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
+      {/* ── Dupe review modal ── */}
+      {pendingDupes.length > 0 && (() => {
+        const keptCount = Object.values(dupeDecisions).filter(d => d === "keep").length;
+        return (
+          <div style={Z.dupeModalOverlay}>
+            <div style={Z.dupeModalBox}>
+              <div style={Z.dupeModalHeader}>
+                <p style={Z.dupeModalTitle}>Similar entries found</p>
+                <p style={Z.dupeModalSub}>
+                  {pendingDupes.length} of your entries look similar to ones already in the collection. Choose what to do with each.
+                </p>
+              </div>
+              <div style={Z.dupeList}>
+                {pendingDupes.map((dupe, i) => {
+                  const decision = dupeDecisions[i] || "skip";
+                  return (
+                    <div key={i} style={{ ...Z.dupeCard, opacity: decision === "skip" ? 0.6 : 1, transition: "opacity .15s" }}>
+                      <div style={Z.dupePair}>
+                        <div style={{ ...Z.dupeSide, ...Z.dupeExisting }}>
+                          <div style={Z.dupeSideLabel}>Already in collection</div>
+                          <div style={Z.dupeSideText}>{dupe.matchedText}</div>
+                          {dupe.matchedSource && <div style={Z.dupeSideSource}>{dupe.matchedSource}</div>}
+                        </div>
+                        <div style={{ ...Z.dupeSide, ...Z.dupeIncoming }}>
+                          <div style={Z.dupeSideLabel}>New entry</div>
+                          <div style={Z.dupeSideText}>{dupe.incoming.text}</div>
+                          {dupe.incoming.hint && <div style={Z.dupeSideSource}>{dupe.incoming.hint}</div>}
+                        </div>
+                      </div>
+                      <div style={Z.dupeActions}>
+                        <button style={{ ...Z.dupeSkipBtn, ...(decision === "skip" ? { background: "#F1F1EF", fontWeight: 600, color: "#37352F" } : {}) }}
+                          onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "skip" }))}>Skip</button>
+                        <button style={{ ...Z.dupeKeepBtn, ...(decision === "keep" ? { background: "#16A34A" } : {}) }}
+                          onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "keep" }))}>Keep both</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={Z.dupeModalFooter}>
+                <span style={Z.dupeKeptCount}>
+                  {keptCount > 0 ? `${keptCount} will be added` : `All ${pendingDupes.length} will be skipped`}
+                </span>
+                <button style={Z.dupeContinueBtn} onClick={handleDupesContinue}>
+                  Continue →
+                </button>
+              </div>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Input phase ── */}
+      {phase === "input" && (
+        <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+          <div style={Z.landing}>
+            <div style={Z.hero}>
+              <h1 style={Z.heroTitle}>Commonplace</h1>
+              <p style={Z.heroSub}>Paste your messy quotes, phrases, and fragments.<br />We'll organize everything and identify the sources.</p>
+            </div>
+
+            {savedSession && (
+              <div style={Z.restoreBanner}>
+                <span>📂 You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button style={Z.restoreBtn} onClick={() => {
+                    setQuotes(savedSession.quotes);
+                    setCustomCats(savedSession.customCats || []);
+                    setSavedSession(null);
+                    goPhase("results");
+                  }}>Restore session</button>
+                  <button style={Z.restoreDismiss} onClick={() => {
+                    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
+                    setSavedSession(null);
+                  }}>Dismiss</button>
+                </div>
+              </div>
+            )}
+
+            <div style={Z.inputCard}>
+              <div style={Z.tabRow}>
+                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("paste")}>
+                  ✏️ Type / Paste
+                </button>
+                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("import")}>
+                  📁 Import File
+                </button>
+              </div>
+
+              {inputTab === "paste" && (
+                <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
+                  placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
+              )}
+
+              {inputTab === "import" && (
+                <div
+                  className="drop-zone"
+                  style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
+                  onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={handleDropZone}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
+                    onChange={e => { handleFileImport(e.target.files[0]); e.target.value = ""; }} />
+                  <div style={Z.dropIcon}>{isDragOver ? "📂" : "📄"}</div>
+                  <div style={Z.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
+                  <div style={Z.dropSub}>or click to browse — one quote per line</div>
+                  {importedFileName && (
+                    <div style={Z.dropFileName}>✓ {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
+                  )}
+                </div>
+              )}
+
+              <div style={Z.inputFooter}>
+                {(() => {
+                  const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <span style={Z.entryMeta}>
+                        {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"} detected` : "Quotes, phrases, expressions — all welcome"}
+                      </span>
+                      {count > 50 && (
+                        <span style={Z.warnBadge}>⚠ {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
+                      )}
+                      <label style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
+                        <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#37352F" : "#E3E2DE" }}>
+                          <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
+                        </div>
+                        Clean up formatting
+                      </label>
+                    </div>
+                  );
+                })()}
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {!rawInput.trim() && inputTab === "paste" && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
+                  <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }} onClick={handleProcess} disabled={!rawInput.trim() || isProcessing}>
+                    {isProcessing ? "Processing..." : "Organize my collection →"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={Z.howWrap}>
+              <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>📋</div><div style={Z.howLabel}>Paste</div><div style={Z.howDesc}>Dump your messy quotes, one per line</div></div>
+              <div style={Z.howArrow}>→</div>
+              <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>🤖</div><div style={Z.howLabel}>Identify</div><div style={Z.howDesc}>AI matches sources and categories</div></div>
+              <div style={Z.howArrow}>→</div>
+              <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>✨</div><div style={Z.howLabel}>Organized</div><div style={Z.howDesc}>Export clean, attributed collections</div></div>
+            </div>
+            <div style={Z.previewWrap}>
+              <div style={Z.previewBox}>
+                <div style={Z.previewLabel}>What you paste</div>
+                <div style={Z.previewContent}>
+                  <p style={Z.previewLine}>you miss 100% of the shots you don't take</p>
+                  <p style={Z.previewLine}>all those moments will be lost in time</p>
+                  <p style={Z.previewLine}>the unexamined life is not worth living</p>
+                  <p style={Z.previewLine}>"Be the change" (Gandhi)</p>
+                  <p style={Z.previewLine}>is this the real life is this just fantasy</p>
+                </div>
+              </div>
+              <div style={Z.previewArrow}>→</div>
+              <div style={Z.previewBox}>
+                <div style={Z.previewLabel}>What you get</div>
+                <div style={Z.previewContent}>
+                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"You miss 100% of the shots you don't take"</span><span style={Z.previewSrc}>Wayne Gretzky</span></div>
+                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F3E8FF", color: "#7C3AED" }}>Film</span><span style={Z.previewText}>"All those moments will be lost in time"</span><span style={Z.previewSrc}>Blade Runner (1982)</span></div>
+                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"The unexamined life is not worth living"</span><span style={Z.previewSrc}>Socrates</span></div>
+                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"Be the change"</span><span style={Z.previewSrc}>Mahatma Gandhi</span></div>
+                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#FFE4E6", color: "#E11D48" }}>Music</span><span style={Z.previewText}>"Is this the real life, is this just fantasy"</span><span style={Z.previewSrc}>Bohemian Rhapsody — Queen</span></div>
+                </div>
+              </div>
+            </div>
+            <Footer />
           </div>
         </div>
       )}
 
-      {isSharedView && (
-        <div style={Z.shareBanner}>
-          <span>👀 You're viewing a shared collection ({quotes.length} entries)</span>
-          <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); window.history.replaceState(null, "", window.location.pathname); }}>Make it yours</button>
-        </div>
-      )}
-
-      {/* Header */}
-      <div style={Z.header}>
-        <div>
-          <h1 style={Z.title}>Commonplace</h1>
-          <p style={Z.sub}>
-            {quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized
-            {topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
-            {topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          {!isMobile && (
-            <div style={Z.viewTog}>
-              <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }} title="Table">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
-              </button>
-              <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }} title="Compact">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
-              </button>
-              <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")} title="Cards">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
-              </button>
-            </div>
-          )}
-          <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
-            {showStats ? "Hide stats" : "Stats"}
-          </button>
-          <div ref={exportRef} style={{ position: "relative" }}>
-            <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-            {showExport && (
-              <div style={Z.expDrop}>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
-                {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
-                <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); setShowExport(false); }}>📄 Plain text</button>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📊 CSV</button>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
-                <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); setShowExport(false); }}>{"{ }"} JSON</button>
+      {/* ── Processing phase ── */}
+      {phase === "processing" && (
+        <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+          <div style={Z.procWrap}>
+            <h2 style={Z.procTitle}>Organizing your collection...</h2>
+            <p style={Z.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
+            {progress && (
+              <div style={Z.procCard}>
+                <div style={Z.procTop}><span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span><span style={{ color: "#9B9A97" }}>{Math.round((progress.done / progress.total) * 100)}%</span></div>
+                <div style={Z.track}><div style={{ ...Z.fill, width: `${(progress.done / progress.total) * 100}%` }} /></div>
+                <p style={Z.procCurrent}>{progress.current}</p>
+              </div>
+            )}
+            {identifiedFeed.length > 0 && (
+              <div style={Z.feedWrap}>
+                {[...identifiedFeed].reverse().map((item, i) => {
+                  const col = getCatColor(item.category, customCats);
+                  return (
+                    <div key={i} style={Z.feedItem}>
+                      <span style={{ ...Z.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
+                      <span style={Z.feedItemText}>{item.text}</span>
+                      <span style={Z.feedItemSrc}>{item.source}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
-          {!isMobile && quotes.length > 0 && <button style={Z.hdrBtn} onClick={selAll}>{selected.size === filtered.length && filtered.length > 0 ? "Deselect" : "Select all"}</button>}
-          <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
-          <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
         </div>
-      </div>
+      )}
 
-      {/* Stats panel */}
-      {showStats && computedStats && (
-        <div style={Z.statsPanel}>
-          <div style={Z.statsPanelTitle}>
-            <span>Collection breakdown</span>
-            <button style={Z.statsPanelClose} onClick={() => setShowStats(false)}>✕</button>
+      {/* ── Results phase ── */}
+      {phase === "results" && (
+        <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+
+          {toast && <Toast message={toast.message} action={toast.action} onAction={() => { if (toast.onAction) toast.onAction(); setToast(null); }} onDismiss={() => setToast(null)} />}
+
+          {confirmClear && (
+            <div style={Z.modalOverlay} onClick={() => setConfirmClear(false)}>
+              <div style={Z.confirmBox} onClick={e => e.stopPropagation()}>
+                <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Start fresh?</p>
+                <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>This will clear all {quotes.length} entries and remove them from your saved session.</p>
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button style={Z.confirmCancel} onClick={() => setConfirmClear(false)}>Cancel</button>
+                  <button style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isSharedView && (
+            <div style={Z.shareBanner}>
+              <span>👀 You're viewing a shared collection ({quotes.length} entries)</span>
+              <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); window.history.replaceState(null, "", window.location.pathname); }}>Make it yours</button>
+            </div>
+          )}
+
+          {/* Header */}
+          <div style={Z.header}>
+            <div>
+              <h1 style={Z.title}>Commonplace</h1>
+              <p style={Z.sub}>
+                {quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized
+                {topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
+                {topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+              {!isMobile && (
+                <div style={Z.viewTog}>
+                  <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }} title="Table">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                  </button>
+                  <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }} title="Compact">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                  </button>
+                  <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")} title="Cards">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
+                  </button>
+                </div>
+              )}
+              <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
+                {showStats ? "Hide stats" : "Stats"}
+              </button>
+              <div ref={exportRef} style={{ position: "relative" }}>
+                <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                {showExport && (
+                  <div style={Z.expDrop}>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
+                    {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
+                    <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); setShowExport(false); }}>📄 Plain text</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📊 CSV</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); setShowExport(false); }}>{"{ }"} JSON</button>
+                  </div>
+                )}
+              </div>
+              {!isMobile && quotes.length > 0 && <button style={Z.hdrBtn} onClick={selAll}>{selected.size === filtered.length && filtered.length > 0 ? "Deselect" : "Select all"}</button>}
+              <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
+              <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
+            </div>
           </div>
-          <div style={Z.statsGrid}>
-            <div style={Z.statsSection}>
-              <div style={Z.statsSectionTitle}>By category</div>
-              {Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
-                const pct = (count / quotes.length) * 100;
-                const col = getCatColor(cat, customCats);
+
+          {/* Stats panel */}
+          {showStats && computedStats && (
+            <div style={Z.statsPanel}>
+              <div style={Z.statsPanelTitle}>
+                <span>Collection breakdown</span>
+                <button style={Z.statsPanelClose} onClick={() => setShowStats(false)}>✕</button>
+              </div>
+              <div style={Z.statsGrid}>
+                <div style={Z.statsSection}>
+                  <div style={Z.statsSectionTitle}>By category</div>
+                  {Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
+                    const pct = (count / quotes.length) * 100;
+                    const col = getCatColor(cat, customCats);
+                    return (
+                      <div key={cat} style={Z.statsBarRow}>
+                        <div style={Z.statsBarLabel}><span>{cat}</span><span style={{ color: "#9B9A97" }}>{count}</span></div>
+                        <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${pct}%`, background: col.text }} /></div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={Z.statsSection}>
+                  <div style={Z.statsSectionTitle}>Top sources</div>
+                  {computedStats.topSrcs.map(([src, count]) => (
+                    <div key={src} style={Z.statsBarRow}>
+                      <div style={Z.statsBarLabel}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{src}</span><span style={{ color: "#9B9A97", flexShrink: 0 }}>{count}</span></div>
+                      <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${(count / quotes.length) * 100}%`, background: "#37352F" }} /></div>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 12, display: "flex", gap: 20 }}>
+                    <div>
+                      <div style={Z.statNumber}>{quotes.length}</div>
+                      <div style={Z.statNumberSub}>total entries</div>
+                    </div>
+                    <div>
+                      <div style={Z.statNumber}>{computedStats.avgWords}</div>
+                      <div style={Z.statNumberSub}>avg words</div>
+                    </div>
+                  </div>
+                </div>
+                {computedStats.shortest && (
+                  <div style={Z.statsSection}>
+                    <div style={Z.statsSectionTitle}>Shortest</div>
+                    <div style={Z.statsHighlight}>
+                      <div style={Z.statsHighlightLabel}>{computedStats.shortest.source}</div>
+                      "{computedStats.shortest.text}"
+                    </div>
+                  </div>
+                )}
+                {computedStats.longest && (
+                  <div style={Z.statsSection}>
+                    <div style={Z.statsSectionTitle}>Longest</div>
+                    <div style={Z.statsHighlight}>
+                      <div style={Z.statsHighlightLabel}>{computedStats.longest.source}</div>
+                      "{computedStats.longest.text.slice(0, 120)}{computedStats.longest.text.length > 120 ? "…" : ""}"
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {apiError && (
+            <div style={Z.errorBar}>
+              <span>⚠️ {apiError}</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
+                <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
+              </div>
+            </div>
+          )}
+
+          {stats && (
+            <div style={Z.statsBar}>
+              <span>⚡ <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
+              <span>🤖 <strong>{stats.api}</strong> identified by AI</span>
+              {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626" }}>❌ <strong>{stats.failed}</strong> failed</span></>}
+              {stats.dupes > 0 && <><span style={Z.statDot} /><span>🔁 <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
+              <button style={Z.statsDismiss} onClick={() => setStats(null)}>✕</button>
+            </div>
+          )}
+
+          {showAddMore && (
+            <div style={Z.addMorePanel}>
+              <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
+                placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                <span style={{ fontSize: 12, color: "#9B9A97" }}>{addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}</span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
+                  <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showBulkBar && (
+            <div style={Z.bulkBar}>
+              <span style={Z.bulkN}>{selected.size} selected</span>
+              <div style={Z.bulkF}>
+                <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
+                <button style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
+                <button style={Z.bulkDelBtn} onClick={bulkDel}>Delete</button>
+                <button style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
+              </div>
+            </div>
+          )}
+
+          <div style={Z.toolbar}>
+            <div style={Z.srchW}><span style={Z.srchI}>🔍</span>
+              <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
+              {search && <button style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
+            </div>
+            <div ref={sortRef} style={{ position: "relative" }}>
+              <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
+                Sort{sortBy !== "default" ? " ✓" : ""}<span style={{ fontSize: 10, marginLeft: 4, opacity: .4 }}>▾</span>
+              </button>
+              {showSort && (
+                <div style={Z.sortDrop}>
+                  {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...Z.sortOpt, ...(sortBy === o.key ? Z.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={Z.cats}>
+            <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
+            {favCount > 0 && (
+              <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
+                ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
+              </button>
+            )}
+            {allCats.filter(c => cc[c]).map(c => {
+              const col = getCatColor(c, customCats); const on = catFilter === c;
+              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}) }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}<span style={{ opacity: .5, fontSize: 11 }}>{cc[c]}</span>
+                {customCats.includes(c) && <span style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
+              </button>;
+            })}
+            {showNewCat ? (
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
+                <button style={Z.newCatSv} onClick={addCat}>Add</button>
+              </div>
+            ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+          </div>
+
+          {unknownCount > 0 && sortBy !== "confidence" && (
+            <div style={Z.attentionBar}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={Z.attentionCount}>{unknownCount}</span>
+                <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
+              </div>
+              <button style={Z.attentionBtn} onClick={() => setSortBy("confidence")}>Review now ↑</button>
+            </div>
+          )}
+
+          {/* TABLE VIEW */}
+          {view === "table" && (
+            <div style={{ overflowX: "auto" }}>
+              {filtered.length > 0 && <div style={Z.tHead}><div style={{ width: 32 }} /><div style={{ flex: 1, minWidth: 200 }}>Content</div><div style={{ width: 200 }}>Source</div><div style={{ width: 80 }}>Category</div><div style={{ width: 56 }} /></div>}
+              {filtered.map(q => {
+                const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
+                const needsAtt = q.confidence === "low" || q.category === "Unknown";
+                const rowStyle = compact ? Z.rowCompact : Z.row;
                 return (
-                  <div key={cat} style={Z.statsBarRow}>
-                    <div style={Z.statsBarLabel}><span>{cat}</span><span style={{ color: "#9B9A97" }}>{count}</span></div>
-                    <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${pct}%`, background: col.text }} /></div>
+                  <div key={q.id} className="qrow" draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
+                    style={{ ...rowStyle, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .25s ease" }}>
+                    <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
+                      <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 200, paddingRight: 12, cursor: isEd ? "default" : "text" }} onClick={() => { if (!isEd) startEdit(q); }}>
+                      {isEd ? <EditForm q={q} /> : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>}
+                    </div>
+                    <div className="src-col" style={Z.srcCol}><span style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }} title={q.source}>{q.source}</span><ConfDot q={q} /></div>
+                    <div style={{ width: 80 }}><span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span></div>
+                    <div className="row-actions" style={Z.rowAct}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
                   </div>
                 );
               })}
             </div>
-            <div style={Z.statsSection}>
-              <div style={Z.statsSectionTitle}>Top sources</div>
-              {computedStats.topSrcs.map(([src, count]) => (
-                <div key={src} style={Z.statsBarRow}>
-                  <div style={Z.statsBarLabel}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{src}</span><span style={{ color: "#9B9A97", flexShrink: 0 }}>{count}</span></div>
-                  <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${(count / quotes.length) * 100}%`, background: "#37352F" }} /></div>
-                </div>
-              ))}
-              <div style={{ marginTop: 12, display: "flex", gap: 20 }}>
-                <div>
-                  <div style={Z.statNumber}>{quotes.length}</div>
-                  <div style={Z.statNumberSub}>total entries</div>
-                </div>
-                <div>
-                  <div style={Z.statNumber}>{computedStats.avgWords}</div>
-                  <div style={Z.statNumberSub}>avg words</div>
-                </div>
-              </div>
-            </div>
-            {computedStats.shortest && (
-              <div style={Z.statsSection}>
-                <div style={Z.statsSectionTitle}>Shortest</div>
-                <div style={Z.statsHighlight}>
-                  <div style={Z.statsHighlightLabel}>{computedStats.shortest.source}</div>
-                  "{computedStats.shortest.text}"
-                </div>
-              </div>
-            )}
-            {computedStats.longest && (
-              <div style={Z.statsSection}>
-                <div style={Z.statsSectionTitle}>Longest</div>
-                <div style={Z.statsHighlight}>
-                  <div style={Z.statsHighlightLabel}>{computedStats.longest.source}</div>
-                  "{computedStats.longest.text.slice(0, 120)}{computedStats.longest.text.length > 120 ? "…" : ""}"
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+          )}
 
-      {apiError && (
-        <div style={Z.errorBar}>
-          <span>⚠️ {apiError}</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
-            <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
-          </div>
-        </div>
-      )}
-
-      {stats && (
-        <div style={Z.statsBar}>
-          <span>⚡ <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
-          <span>🤖 <strong>{stats.api}</strong> identified by AI</span>
-          {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626" }}>❌ <strong>{stats.failed}</strong> failed</span></>}
-          {stats.dupes > 0 && <><span style={Z.statDot} /><span>🔁 <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-          <button style={Z.statsDismiss} onClick={() => setStats(null)}>✕</button>
-        </div>
-      )}
-
-      {showAddMore && (
-        <div style={Z.addMorePanel}>
-          <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
-            placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: "#9B9A97" }}>{addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}</span>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
-              <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showBulkBar && (
-        <div style={Z.bulkBar}>
-          <span style={Z.bulkN}>{selected.size} selected</span>
-          <div style={Z.bulkF}>
-            <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
-            <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
-            <button style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
-            <button style={Z.bulkDelBtn} onClick={bulkDel}>Delete</button>
-            <button style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
-          </div>
-        </div>
-      )}
-
-      <div style={Z.toolbar}>
-        <div style={Z.srchW}><span style={Z.srchI}>🔍</span>
-          <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
-          {search && <button style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
-        </div>
-        <div ref={sortRef} style={{ position: "relative" }}>
-          <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
-            Sort{sortBy !== "default" ? " ✓" : ""}<span style={{ fontSize: 10, marginLeft: 4, opacity: .4 }}>▾</span>
-          </button>
-          {showSort && (
-            <div style={Z.sortDrop}>
-              {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...Z.sortOpt, ...(sortBy === o.key ? Z.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
+          {/* CARD VIEW */}
+          {view === "cards" && (
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
+              {filtered.map(q => {
+                const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
+                const needsAtt = q.confidence === "low" || q.category === "Unknown";
+                return (
+                  <div key={q.id} draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
+                    style={{ ...CZ.card, ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}), ...(q.favorite ? CZ.favCard : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .3s ease" }}
+                    onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
+                    onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}>
+                    <div style={CZ.top}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
+                        <span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span>
+                      </div>
+                      <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
+                    </div>
+                    {isEd ? <EditForm q={q} inCard /> : (
+                      <><p style={CZ.txt}>{displayText(q)}</p><div style={CZ.srcRow}><span style={{ color: "#D3D3D0" }}>—</span><span style={CZ.src}>{q.source}</span><ConfDot q={q} /></div></>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
-        </div>
-      </div>
 
-      <div style={Z.cats}>
-        <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
-        {favCount > 0 && (
-          <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
-            ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
-          </button>
-        )}
-        {allCats.filter(c => cc[c]).map(c => {
-          const col = getCatColor(c, customCats); const on = catFilter === c;
-          return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}) }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}<span style={{ opacity: .5, fontSize: 11 }}>{cc[c]}</span>
-            {customCats.includes(c) && <span style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
-          </button>;
-        })}
-        {showNewCat ? (
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
-            <button style={Z.newCatSv} onClick={addCat}>Add</button>
-          </div>
-        ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
-      </div>
+          {filtered.length === 0 && (
+            <div style={Z.empty}>
+              <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>
+              <button style={{ background: "none", border: "none", color: "#2383E2", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
+                onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
+            </div>
+          )}
 
-      {unknownCount > 0 && sortBy !== "confidence" && (
-        <div style={Z.attentionBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={Z.attentionCount}>{unknownCount}</span>
-            <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
-          </div>
-          <button style={Z.attentionBtn} onClick={() => setSortBy("confidence")}>Review now ↑</button>
+          <Footer />
         </div>
       )}
-
-      {/* TABLE VIEW */}
-      {view === "table" && (
-        <div style={{ overflowX: "auto" }}>
-          {filtered.length > 0 && <div style={Z.tHead}><div style={{ width: 32 }} /><div style={{ flex: 1, minWidth: 200 }}>Content</div><div style={{ width: 200 }}>Source</div><div style={{ width: 80 }}>Category</div><div style={{ width: 56 }} /></div>}
-          {filtered.map(q => {
-            const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
-            const needsAtt = q.confidence === "low" || q.category === "Unknown";
-            const rowStyle = compact ? Z.rowCompact : Z.row;
-            return (
-              <div key={q.id} className="qrow" draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
-                style={{ ...rowStyle, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .25s ease" }}>
-                <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
-                  <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
-                </div>
-                <div style={{ flex: 1, minWidth: 200, paddingRight: 12, cursor: isEd ? "default" : "text" }} onClick={() => { if (!isEd) startEdit(q); }}>
-                  {isEd ? <EditForm q={q} /> : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>}
-                </div>
-                <div className="src-col" style={Z.srcCol}><span style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }} title={q.source}>{q.source}</span><ConfDot q={q} /></div>
-                <div style={{ width: 80 }}><span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span></div>
-                <div className="row-actions" style={Z.rowAct}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* CARD VIEW */}
-      {view === "cards" && (
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-          {filtered.map(q => {
-            const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
-            const needsAtt = q.confidence === "low" || q.category === "Unknown";
-            return (
-              <div key={q.id} draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
-                style={{ ...CZ.card, ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}), ...(q.favorite ? CZ.favCard : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .3s ease" }}
-                onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
-                onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}>
-                <div style={CZ.top}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
-                    <span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span>
-                  </div>
-                  <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
-                </div>
-                {isEd ? <EditForm q={q} inCard /> : (
-                  <><p style={CZ.txt}>{displayText(q)}</p><div style={CZ.srcRow}><span style={{ color: "#D3D3D0" }}>—</span><span style={CZ.src}>{q.source}</span><ConfDot q={q} /></div></>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {filtered.length === 0 && (
-        <div style={Z.empty}>
-          <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>
-          <button style={{ background: "none", border: "none", color: "#2383E2", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
-            onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
-        </div>
-      )}
-
-      <Footer />
-      <Analytics />
-      <SpeedInsights />
-    </div>
+    </>
   );
 }

@@ -71,7 +71,7 @@ export const Z = {
 
   // How it works — new grid style
   howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
-  howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,fontStyle:"italic",color:"#9A9590",marginBottom:20,display:"flex",alignItems:"center",gap:12},
+  howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:18,fontStyle:"italic",color:"#9A9590",marginBottom:20,display:"flex",alignItems:"center",gap:12},
   howSectionTitleLine:{flex:1,height:1,background:"#E8E3DA"},
   howGrid:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,background:"#E8E3DA",borderRadius:12,overflow:"hidden"},
   howCard:{background:"#F5F1EB",padding:"28px 24px",display:"flex",flexDirection:"column",gap:10},
@@ -80,7 +80,7 @@ export const Z = {
   howCardDesc:{fontSize:13,lineHeight:1.65,color:"#6A6660",fontWeight:300},
 
   // Feature pills
-  featPills:{display:"flex",flexWrap:"wrap",gap:7,marginTop:16},
+  featPills:{display:"flex",flexWrap:"wrap",gap:7,marginTop:16,justifyContent:"center"},
   featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
   featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
 

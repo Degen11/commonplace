@@ -85,13 +85,13 @@ export function exportCSV(quotes) {
     q.category,
     q.favorite ? "yes" : "no",
   ]));
-  download(rows.map(r => r.join(",")).join("\n"), "keeper-export.csv", "text/csv");
+  download(rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv");
 }
 
 export function exportMD(quotes) {
   const grouped = {};
   quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
-  let md = "# Keeper Export\n\n";
+  let md = "# Commonplace Export\n\n";
   Object.entries(grouped).forEach(([cat, qs]) => {
     md += `## ${cat}\n\n`;
     qs.forEach(q => {
@@ -102,12 +102,12 @@ export function exportMD(quotes) {
     });
     md += "\n";
   });
-  download(md, "keeper-export.md", "text/markdown");
+  download(md, "commonplace-export.md", "text/markdown");
 }
 
 export function exportJSON(quotes) {
   const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
-  download(JSON.stringify(data, null, 2), "keeper-export.json", "application/json");
+  download(JSON.stringify(data, null, 2), "commonplace-export.json", "application/json");
 }
 
 export function exportTXT(quotes) {
@@ -124,7 +124,7 @@ export function exportTXT(quotes) {
     });
     text += "\n";
   });
-  download(text.trim(), "keeper-export.txt", "text/plain");
+  download(text.trim(), "commonplace-export.txt", "text/plain");
 }
 
 export function richCopyToClipboard(quotes) {

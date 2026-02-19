@@ -73,17 +73,17 @@ function AnimInner({ onComplete = () => {} }) {
   const ui = useMemo(() => {
     const isDark = theme === "dark";
     const isMix = theme === "mix";
-    const isLight = theme === "light";
 
-    // We crossfade between “dark terminal” and “light table” using transitions
+    // Light theme uses your app background (#FAF8F4), not pure white
     return {
       // Outer surface (animates instead of hard switch)
-      surfaceBg: isDark ? "#1A1918" : isMix ? "#2A2826" : "#FFFFFF",
+      surfaceBg: isDark ? "#1A1918" : isMix ? "#2A2826" : "#FAF8F4",
       surfaceShadow: isDark
         ? "0 8px 40px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.12)"
         : "0 8px 40px rgba(26,24,20,0.10), 0 2px 8px rgba(26,24,20,0.08)",
-      // Chrome
-      chromeBg: isDark ? "#141312" : isMix ? "#1B1A19" : "#FAFAFA",
+
+      // Chrome (keep it “terminal-ish” but soften in light theme)
+      chromeBg: isDark ? "#141312" : isMix ? "#1B1A19" : "#F5F1EB",
       chromeBorder: isDark ? "#2A2826" : "rgba(55,53,47,0.08)",
       chromeText: isDark ? "#6B6764" : "#9B9A97",
       dots: isDark ? "#9A9591" : "#9B9A97",

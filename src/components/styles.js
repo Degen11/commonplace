@@ -1,11 +1,15 @@
 // ===================== BASE CSS =====================
 export const baseCSS = `
-  *{box-sizing:border-box;margin:0;padding:0}body{background:#fff;color:#37352F}::selection{background:#2383E233}
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#FAF8F4;color:#1A1814}
+  ::selection{background:#2383E233}
   textarea:focus,input:focus,select:focus{outline:none}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   .qrow{cursor:grab}.qrow:active{cursor:grabbing}
   .qrow:hover{background:#FAFAFA !important}.qrow:hover .row-actions{opacity:1 !important}.qrow:hover .checkbox{opacity:1 !important}
@@ -13,28 +17,38 @@ export const baseCSS = `
   .dd-opt:hover{background:#F1F1EF !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
   .proc-btn{transition:all .15s ease}
-  .try-btn:hover{background:#F1F1EF !important}
-  .how-step{transition:transform .2s ease}.how-step:hover{transform:translateY(-2px)}
-  .tab-btn:hover{background:#F1F1EF !important}
+  .try-btn:hover{background:#F0EDE6 !important}
+  .tab-btn:hover{background:#EDE9E1 !important}
   .drop-zone{transition:all .2s ease}
+  .how-card{transition:background .2s ease,transform .2s ease}
+  .how-card:hover{background:#fff !important;transform:translateY(-2px)}
+  .feat-pill{transition:all .18s ease}
+  .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
+  .nav-link{transition:color .15s ease}
+  .nav-link:hover{color:#1A1814 !important}
 `;
 
 // ===================== MAIN STYLES =====================
 export const Z = {
   // Layout
-  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:"'Inter',-apple-system,sans-serif",fontSize:14,color:"#37352F",minHeight:"100vh",background:"#fff"},
+  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:"'DM Sans',-apple-system,sans-serif",fontSize:14,color:"#1A1814",minHeight:"100vh",background:"#FAF8F4"},
+
+  // Nav
+  nav:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"26px 0 22px",borderBottom:"1px solid #E8E3DA"},
+  navLogo:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:19,fontWeight:700,letterSpacing:"-0.3px",color:"#1A1814",textDecoration:"none"},
+  navRight:{display:"flex",alignItems:"center",gap:28,fontSize:13,color:"#9A9590"},
 
   // Landing
-  landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:80},
-  hero:{textAlign:"center",marginBottom:40},
-  heroTitle:{fontSize:48,fontWeight:700,letterSpacing:-2,color:"#37352F",lineHeight:1},
-  heroSub:{fontSize:16,color:"#9B9A97",marginTop:12,lineHeight:1.7},
-  inputCard:{width:"100%",maxWidth:800,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12,padding:20,animation:"fadeUp .4s ease"},
+  landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:64},
+  hero:{textAlign:"center",marginBottom:44,animation:"fadeUp .5s ease"},
+  heroTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:52,fontWeight:700,letterSpacing:-2,color:"#1A1814",lineHeight:1.05},
+  heroSub:{fontSize:16,color:"#6A6660",marginTop:14,lineHeight:1.75,fontWeight:300},
+  inputCard:{width:"100%",maxWidth:800,background:"#fff",border:"1px solid #E8E3DA",borderRadius:14,padding:20,animation:"fadeUp .45s ease",boxShadow:"0 2px 16px rgba(26,24,20,0.06)"},
 
   // Input tabs
-  tabRow:{display:"flex",gap:2,marginBottom:14,background:"#F1F1EF",borderRadius:8,padding:3},
-  tabBtn:{flex:1,padding:"7px 0",border:"none",borderRadius:6,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",background:"transparent",color:"#9B9A97",transition:"all .15s"},
-  tabBtnActive:{background:"#fff",color:"#37352F",boxShadow:"0 1px 3px rgba(0,0,0,.08)"},
+  tabRow:{display:"flex",gap:2,marginBottom:14,background:"#F0EDE6",borderRadius:8,padding:3},
+  tabBtn:{flex:1,padding:"7px 0",border:"none",borderRadius:6,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",background:"transparent",color:"#9A9590",transition:"all .15s"},
+  tabBtnActive:{background:"#fff",color:"#1A1814",boxShadow:"0 1px 3px rgba(0,0,0,.08)"},
 
   // Drop zone
   dropZone:{border:"2px dashed #E3E2DE",borderRadius:10,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"#fff"},
@@ -55,30 +69,28 @@ export const Z = {
   restoreBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   restoreDismiss:{padding:"5px 10px",borderRadius:6,border:"1px solid #BFDBFE",background:"transparent",color:"#2383E2",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
 
-  // How it works
-  howWrap:{display:"flex",gap:24,marginTop:48,flexWrap:"wrap",justifyContent:"center",alignItems:"flex-start",width:"100%",maxWidth:600},
-  howStep:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flex:1,minWidth:120,textAlign:"center"},
-  howIcon:{fontSize:28,marginBottom:4},
-  howLabel:{fontSize:14,fontWeight:600,color:"#37352F"},
-  howDesc:{fontSize:12,color:"#9B9A97",lineHeight:1.4},
-  howArrow:{display:"flex",alignItems:"center",fontSize:20,color:"#D3D3D0",fontWeight:300,paddingTop:16},
+  // How it works — new grid style
+  howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
+  howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:13,fontStyle:"italic",color:"#9A9590",marginBottom:20,display:"flex",alignItems:"center",gap:12},
+  howSectionTitleLine:{flex:1,height:1,background:"#E8E3DA"},
+  howGrid:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,background:"#E8E3DA",borderRadius:12,overflow:"hidden"},
+  howCard:{background:"#F5F1EB",padding:"28px 24px",display:"flex",flexDirection:"column",gap:10},
+  howCardIcon:{fontSize:24},
+  howCardTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,fontWeight:700,letterSpacing:"-0.2px",color:"#1A1814"},
+  howCardDesc:{fontSize:13,lineHeight:1.65,color:"#6A6660",fontWeight:300},
 
-  // Preview
-  previewWrap:{display:"flex",gap:16,alignItems:"stretch",width:"100%",maxWidth:860,marginTop:52,animation:"fadeUp .5s ease",flexWrap:"wrap"},
-  previewBoxBefore:{flex:1,minWidth:260,background:"#1C1B1A",borderRadius:12,padding:20,overflow:"hidden",boxShadow:"0 4px 24px rgba(0,0,0,.18)"},
-  previewBoxAfter:{flex:1,minWidth:260,background:"#fff",border:"1px solid #E3E2DE",borderRadius:12,padding:20,overflow:"hidden",boxShadow:"0 4px 24px rgba(55,53,47,.08)"},
-  previewLabel:{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:14},
-  previewLabelBefore:{color:"#6B6966"},
-  previewLabelAfter:{color:"#9B9A97"},
-  previewContent:{display:"flex",flexDirection:"column",gap:8},
-  previewLine:{fontSize:12.5,color:"#7C7C79",lineHeight:1.5,fontFamily:"'SF Mono',Menlo,monospace",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},
-  previewLineDot:{display:"inline-block",width:6,height:6,borderRadius:"50%",background:"#3D3D3A",marginRight:8,flexShrink:0,verticalAlign:"middle"},
-  previewArrow:{display:"flex",alignItems:"center",fontSize:20,color:"#D3D3D0",fontWeight:300,flexShrink:0,padding:"0 2px"},
-  previewResult:{display:"flex",alignItems:"center",gap:7,fontSize:12,lineHeight:1.5,minWidth:0,padding:"5px 0",borderBottom:"1px solid #F7F6F3"},
-  previewResultLast:{display:"flex",alignItems:"center",gap:7,fontSize:12,lineHeight:1.5,minWidth:0,padding:"5px 0"},
-  previewTag:{fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0},
-  previewText:{color:"#37352F",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,minWidth:0,fontSize:12.5},
-  previewSrc:{color:"#B0AEAB",fontSize:11,whiteSpace:"nowrap",flexShrink:0},
+  // Feature pills
+  featPills:{display:"flex",flexWrap:"wrap",gap:7,marginTop:16},
+  featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
+  featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
+
+  // Old preview keys kept as no-ops to avoid crashes if referenced
+  howWrap:{display:"none"},
+  howStep:{},howIcon:{},howLabel:{},howDesc:{},howArrow:{},
+  previewWrap:{display:"none"},
+  previewBoxBefore:{},previewBoxAfter:{},previewLabel:{},previewLabelBefore:{},previewLabelAfter:{},
+  previewContent:{},previewLine:{},previewLineDot:{},previewArrow:{},
+  previewResult:{},previewResultLast:{},previewTag:{},previewText:{},previewSrc:{},
 
   // Processing
   procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
@@ -237,8 +249,8 @@ export const Z = {
 
   // Misc
   empty:{textAlign:"center",padding:"60px 24px"},
-  footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#D3D3D0",borderTop:"1px solid #F7F6F3",marginTop:40},
-  footerLink:{color:"#9B9A97",textDecoration:"none"},
+  footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#C8C4BC",borderTop:"1px solid #EAE6DE",marginTop:40},
+  footerLink:{color:"#9A9590",textDecoration:"none"},
   toast:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"#37352F",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,fontWeight:500,display:"flex",alignItems:"center",gap:12,zIndex:2000,boxShadow:"0 4px 16px rgba(0,0,0,.2)",animation:"toastIn .2s ease",fontFamily:"'Inter',-apple-system,sans-serif"},
   toastAction:{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,color:"#fff",padding:"3px 10px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 };

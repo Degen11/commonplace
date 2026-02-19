@@ -21,6 +21,7 @@ import Toast from "./Toast";
 import EditForm from "./EditForm";
 import DupeModal from "./DupeModal";
 import StatsPanel from "./StatsPanel";
+import TransformPreview from "./TransformPreview";
 import { FavBtn, EditBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { baseCSS, Z, CZ } from "./styles";
 
@@ -567,6 +568,15 @@ Return exactly one JSON object per input item.`,
       {/* ── Input phase ── */}
       {phase === "input" && (
         <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+
+          {/* Nav */}
+          <nav style={Z.nav}>
+            <span style={Z.navLogo}>Commonplace</span>
+            <div style={Z.navRight}>
+              <a className="nav-link" href="#how" style={{ color: "#9A9590", textDecoration: "none" }}>How it works</a>
+            </div>
+          </nav>
+
           <div style={Z.landing}>
             <div style={Z.hero}>
               <h1 style={Z.heroTitle}>Commonplace</h1>
@@ -632,7 +642,7 @@ Return exactly one JSON object per input item.`,
                         <span style={Z.warnBadge}>⚠ {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
                       )}
                       <label style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
-                        <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#37352F" : "#E3E2DE" }}>
+                        <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#1A1814" : "#E0DCD4" }}>
                           <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
                         </div>
                         Clean up formatting
@@ -649,42 +659,45 @@ Return exactly one JSON object per input item.`,
               </div>
             </div>
 
-            <div style={Z.howWrap}>
-              <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>📋</div><div style={Z.howLabel}>Paste</div><div style={Z.howDesc}>Dump your messy quotes, one per line</div></div>
-              <div style={Z.howArrow}>→</div>
-              <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>🤖</div><div style={Z.howLabel}>Identify</div><div style={Z.howDesc}>AI matches sources and categories</div></div>
-              <div style={Z.howArrow}>→</div>
-              <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>✨</div><div style={Z.howLabel}>Organized</div><div style={Z.howDesc}>Export clean, attributed collections</div></div>
-            </div>
+            {/* ── Animated transform preview ── */}
+            <TransformPreview />
 
-            <div style={Z.previewWrap}>
-              {/* BEFORE — dark terminal look */}
-              <div style={Z.previewBoxBefore}>
-                <div style={{ ...Z.previewLabel, ...Z.previewLabelBefore }}>Raw input</div>
-                <div style={Z.previewContent}>
-                  {["you miss 100% of the shots you don't take","all those moments will be lost in time","the unexamined life is not worth living",'"Be the change" (Gandhi)',"is this the real life is this just fantasy"].map((line, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center" }}>
-                      <span style={Z.previewLineDot} />
-                      <p style={Z.previewLine}>{line}</p>
-                    </div>
-                  ))}
+            {/* ── How it works ── */}
+            <div id="how" style={Z.howSection}>
+              <div style={Z.howSectionTitle}>
+                <span style={Z.howSectionTitleLine} />
+                How it works
+                <span style={Z.howSectionTitleLine} />
+              </div>
+              <div style={Z.howGrid}>
+                <div className="how-card" style={Z.howCard}>
+                  <div style={Z.howCardIcon}>📋</div>
+                  <div style={Z.howCardTitle}>Paste anything</div>
+                  <div style={Z.howCardDesc}>One entry per line. Attribution hints via dashes, parentheses, or tildes — or nothing at all. Messy is fine.</div>
+                </div>
+                <div className="how-card" style={Z.howCard}>
+                  <div style={Z.howCardIcon}>⚡</div>
+                  <div style={Z.howCardTitle}>Local first</div>
+                  <div style={Z.howCardDesc}>600+ common quotes matched instantly from a built-in database. Zero API calls, zero cost, millisecond results.</div>
+                </div>
+                <div className="how-card" style={Z.howCard}>
+                  <div style={Z.howCardIcon}>🤖</div>
+                  <div style={Z.howCardTitle}>AI for the rest</div>
+                  <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
                 </div>
               </div>
 
-              <div style={Z.previewArrow}>→</div>
-
-              {/* AFTER — clean card */}
-              <div style={Z.previewBoxAfter}>
-                <div style={{ ...Z.previewLabel, ...Z.previewLabelAfter }}>Organized</div>
-                <div style={Z.previewContent}>
-                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"You miss 100% of the shots you don't take"</span><span style={Z.previewSrc}>Wayne Gretzky</span></div>
-                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F3E8FF", color: "#7C3AED" }}>Film</span><span style={Z.previewText}>"All those moments will be lost in time"</span><span style={Z.previewSrc}>Blade Runner (1982)</span></div>
-                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"The unexamined life is not worth living"</span><span style={Z.previewSrc}>Socrates</span></div>
-                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"Be the change"</span><span style={Z.previewSrc}>Mahatma Gandhi</span></div>
-                  <div style={Z.previewResultLast}><span style={{ ...Z.previewTag, background: "#FFE4E6", color: "#E11D48" }}>Music</span><span style={Z.previewText}>"Is this the real life, is this just fantasy"</span><span style={Z.previewSrc}>Queen</span></div>
-                </div>
+              {/* Feature pills */}
+              <div style={Z.featPills}>
+                {["Inline editing","Bulk category assignment","Drag to reorder","CSV / Markdown / JSON export","Shareable links","Session restore","Custom categories","Duplicate detection","Smart formatting cleanup","Did you mean? suggestions"].map(f => (
+                  <span key={f} className="feat-pill" style={Z.featPill}>
+                    <span style={Z.featPillDot} />
+                    {f}
+                  </span>
+                ))}
               </div>
             </div>
+
             <Footer styles={Z} />
           </div>
         </div>

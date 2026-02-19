@@ -34,6 +34,15 @@ const SORT_OPTIONS = [
   { key: "category",   label: "By category" },
 ];
 
+// ── Footer — extracted to avoid re-definition on every render ──
+function Footer({ styles }) {
+  return (
+    <footer style={styles.footer}>
+      <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={styles.footerLink}>Degen Hill</a></span>
+    </footer>
+  );
+}
+
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
   const [phase, setPhase]                     = useState("input");
@@ -285,7 +294,9 @@ Return exactly one JSON object per input item.`,
     const text = QUOTED_CATS.has(q.category)
       ? `"${q.text}" — ${q.source}`
       : `${q.text} — ${q.source}`;
-    navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
+    navigator.clipboard.writeText(text)
+      .then(() => showToast("Copied!"))
+      .catch(() => showToast("Couldn't copy — try manually selecting the text."));
   };
 
   // ── Processing pipeline ──
@@ -415,6 +426,7 @@ Return exactly one JSON object per input item.`,
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
     setShowStats(false); setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
+    setPendingDupes([]); setDupeDecisions({}); pendingContinuationRef.current = null;
   };
 
   const handleDelete = (id) => {
@@ -447,7 +459,7 @@ Return exactly one JSON object per input item.`,
   const toggleSel  = id => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const startEdit  = q  => setEditingId(q.id);
   const saveEdit   = (id, text, source, category) => {
-    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category } : q));
+    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
     setEditingId(null);
   };
   const applyBulk  = () => {
@@ -456,12 +468,13 @@ Return exactly one JSON object per input item.`,
       const u = { ...q };
       if (bulkEditCat) u.category = bulkEditCat;
       if (bulkEditSource.trim()) u.source = bulkEditSource.trim();
+      if (bulkEditCat || bulkEditSource.trim()) u.confidence = "high";
       return u;
     }));
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
   };
   const bulkDel = () => { setQuotes(p => p.filter(q => !selected.has(q.id))); setSelected(new Set()); };
-  const addCat  = () => { const n = newCatName.trim(); if (!n || allCats.includes(n)) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
+  const addCat  = () => { const n = newCatName.trim(); if (!n || allCats.some(c => c.toLowerCase() === n.toLowerCase())) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
   const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
   // ── Drag reorder ──
@@ -516,12 +529,6 @@ Return exactly one JSON object per input item.`,
     onCopy:         copyQuote,
     onReidentify:   reIdentify,
   };
-
-  const Footer = () => (
-    <footer style={Z.footer}>
-      <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={Z.footerLink}>Degen Hill</a></span>
-    </footer>
-  );
 
   // ========================== RENDER ==========================
   return (
@@ -653,7 +660,7 @@ Return exactly one JSON object per input item.`,
                 </div>
               </div>
             </div>
-            <Footer />
+            <Footer styles={Z} />
           </div>
         </div>
       )}
@@ -1003,7 +1010,7 @@ Return exactly one JSON object per input item.`,
             </div>
           )}
 
-          <Footer />
+          <Footer styles={Z} />
         </div>
       )}
     </>

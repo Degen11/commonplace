@@ -9,10 +9,10 @@ const RAW_LINES = [
 ];
 
 const RESULT_CARDS = [
-  { tag: "Person", tagBg: "#F0ABFC22", tagColor: "#A21CAF", text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
+  { tag: "Person", tagBg: "#FEF3C7", tagColor: "#B45309", text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
   { tag: "Film",   tagBg: "#F3E8FF",   tagColor: "#7C3AED", text: "All those moments will be lost in time",    source: "Blade Runner (1982)" },
-  { tag: "Person", tagBg: "#F0ABFC22", tagColor: "#A21CAF", text: "The unexamined life is not worth living",   source: "Socrates" },
-  { tag: "Person", tagBg: "#F0ABFC22", tagColor: "#A21CAF", text: "Be the change",                            source: "Mahatma Gandhi" },
+  { tag: "Person", tagBg: "#FEF3C7", tagColor: "#B45309", text: "The unexamined life is not worth living", source: "Socrates" },
+  { tag: "Person", tagBg: "#FEF3C7", tagColor: "#B45309", text: "Be the change", source: "Mahatma Gandhi" },
   { tag: "Music",  tagBg: "#FFE4E6",   tagColor: "#E11D48", text: "Is this the real life, is this just fantasy", source: "Queen" },
 ];
 

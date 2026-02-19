@@ -213,8 +213,8 @@ export const Z = {
 
   // Table
   tHead:{display:"flex",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F1F1EF",fontSize:11,color:"#9B9A97",fontWeight:500,textTransform:"uppercase",letterSpacing:.5},
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F7F6F3",transition:"background .1s, opacity .15s",minHeight:48},
-  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #F7F6F3",transition:"background .1s, opacity .15s",minHeight:34},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F7F6F3",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FBFBFA"},
+  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #F7F6F3",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FBFBFA"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .1s",flexShrink:0},

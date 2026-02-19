@@ -17,35 +17,43 @@ const RESULT_CARDS = [
 ];
 
 // Inner animation — remounts each loop via key prop
-function AnimInner({ onComplete }) {
+function AnimInner({ onComplete = () => {} }) {
   const [visibleLines, setVisibleLines] = useState([]);
   const [visibleCards, setVisibleCards] = useState([]);
   const [phase, setPhase] = useState("before"); // before | processing | after
 
-  useEffect(() => {
-    const ts = [];
-    const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
+useEffect(() => {
+  const ts = [];
+  const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
 
-    // Type lines in one by one
-    RAW_LINES.forEach((_, i) => t(300 + i * 500, () => setVisibleLines(p => [...p, i])));
+  setVisibleLines([]);
+  setVisibleCards([]);
+  setPhase("before");
 
-    const doneTyping = 300 + RAW_LINES.length * 500 + 900;
+  RAW_LINES.forEach((_, i) => t(300 + i * 500, () => {
+    setVisibleLines(p => [...p, i]);
+  }));
 
-    // Show processing state
-    t(doneTyping, () => setPhase("processing"));
+  const doneTyping = 300 + RAW_LINES.length * 500 + 900;
 
-    // Swap to results
-    const showAt = doneTyping + 1100;
-    t(showAt, () => {
-      setPhase("after");
-      RESULT_CARDS.forEach((_, i) => t(showAt + i * 300, () => setVisibleCards(p => [...p, i])));
-    });
+  t(doneTyping, () => setPhase("processing"));
 
-    // Hold then loop
-    t(showAt + RESULT_CARDS.length * 300 + 2600, onComplete);
+  const showAt = doneTyping + 1100;
 
-    return () => ts.forEach(clearTimeout);
-  }, []);
+  t(showAt, () => {
+    setPhase("after");
+
+    RESULT_CARDS.forEach((_, i) => t(i * 300, () => {
+      setVisibleCards(p => [...p, i]);
+    }));
+  });
+
+  t(showAt + RESULT_CARDS.length * 300 + 2600, () => {
+  onComplete();
+});
+
+  return () => ts.forEach(clearTimeout);
+}, [onComplete]);
 
   const dotStyle = (delay) => ({
     width: 6, height: 6, borderRadius: "50%", background: "#9A9591",

@@ -191,11 +191,30 @@ export default function Commonplace() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001", max_tokens: 4000,
-        system: `You identify quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
+        system: `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
 Each element: {"i":index,"source":"Source - Speaker/Author","category":"${allCatStr}","confidence":"high|medium|low"${extraField}}
-Source categories (use when origin is known): Film=movies, TV=television, Book=novels/nonfiction/poetry, Music=lyrics, Speech=speeches, Person=real person, Phrase=common expression or idiom with no specific origin.
-Vibe tags (use when source is Unknown or unattributable — pick the best fit): Aphorism=short punchy universal truth, Philosophical=abstract ideas about reality/existence/meaning, Observation=comment on human behavior or the world, Comedic=humorous or witty, Poetic=lyrical or emotionally vivid, Existential=questions of purpose/being/mortality, Motivational=inspires action or perseverance, Cynical=skeptical or darkly realistic, Identity=relates to self-concept or who someone is, Reflection=introspective or personal insight.
-IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — never leave category as Unknown when a vibe tag fits. Only use Unknown as a genuine last resort. Be concise with sources.${extraInstr} Return one object per input.`,
+
+CATEGORY DEFINITIONS:
+- Film: movies and screenplays
+- TV: television shows and series
+- Book: novels, non-fiction, poetry, plays
+- Music: song lyrics
+- Speech: famous speeches, interviews, public statements
+- Person: attributed to a real person (not from a specific work)
+- Phrase: common idiom or expression with no single clear origin
+
+VIBE TAGS (use when source is not identifiable — always pick the best fit, never skip):
+Aphorism=short punchy universal truth | Philosophical=abstract ideas about existence/reality | Observation=comment on human behavior or the world | Comedic=humorous or witty | Poetic=lyrical or emotionally vivid | Existential=questions of purpose/being/mortality | Motivational=inspires action or perseverance | Cynical=skeptical or darkly realistic | Identity=relates to self-concept | Reflection=introspective or personal insight
+
+IDENTIFICATION RULES — follow strictly:
+1. Commit to your best guess. If you are 40% or more confident of an origin, provide it with confidence "low" or "medium" rather than defaulting to Unknown source.
+2. Consider paraphrases. If a quote is a loose version of a famous line, attribute it to that origin with confidence "medium" or "low".
+3. Check all domains. Before giving up, mentally check: is this from a film? TV show? Novel? Song? A philosopher, politician, or historical figure? A common saying?
+4. Partial attribution is better than none. "Attributed to Mark Twain (origin disputed)" is more useful than Unknown.
+5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
+6. Always assign a vibe tag as the category whenever source is Unknown. category="Unknown" with no vibe tag is never acceptable.
+7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".${extraInstr}
+Return exactly one JSON object per input item.`,
         messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
       }),
     });

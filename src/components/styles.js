@@ -207,7 +207,7 @@ export const Z = {
   srcText:{fontSize:12,color:"#9B9A97",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",transition:"all .15s"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{width:56,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end"},
+  rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4},
 
   // Edit form

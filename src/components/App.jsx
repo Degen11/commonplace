@@ -4,70 +4,85 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Data
 import { localLookup } from "../data/localQuotes";
-import { DEFAULT_CATEGORIES, SOURCE_CATEGORIES, VIBE_TAGS, QUOTED_CATS, CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor } from "../data/constants";
+import {
+  DEFAULT_CATEGORIES, SOURCE_CATEGORIES, VIBE_TAGS, QUOTED_CATS,
+  CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor
+} from "../data/constants";
 
 // Utils
-import { normalize, similarity, smartParse, smartSplit, basicFormat, displayText, exportCSV, exportMD, exportJSON, exportTXT, copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData } from "../utils/helpers";
+import {
+  normalize, similarity, smartParse, smartSplit, basicFormat, displayText,
+  exportCSV, exportMD, exportJSON, exportTXT,
+  copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData
+} from "../utils/helpers";
 
-// Components & styles
-import Toast from "../components/Toast";
-import { baseCSS, Z, CZ } from "../components/styles";
+// Components
+import Toast from "./Toast";
+import EditForm from "./EditForm";
+import DupeModal from "./DupeModal";
+import StatsPanel from "./StatsPanel";
+import { FavBtn, EditBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
+import { baseCSS, Z, CZ } from "./styles";
 
 const LS_QUOTES = "commonplace_quotes";
-const LS_CATS = "commonplace_cats";
+const LS_CATS   = "commonplace_cats";
+
+const SORT_OPTIONS = [
+  { key: "default",    label: "Default order" },
+  { key: "confidence", label: "Needs attention first" },
+  { key: "alpha",      label: "Alphabetical" },
+  { key: "category",   label: "By category" },
+];
 
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
-  const [phase, setPhase] = useState("input");
-  const [fadeClass, setFadeClass] = useState("phase-in");
-  const [rawInput, setRawInput] = useState("");
-  const [quotes, setQuotes] = useState([]);
-  const [customCats, setCustomCats] = useState([]);
-  const [progress, setProgress] = useState(null);
-  const [view, setView] = useState(() => window.innerWidth < 640 ? "cards" : "table");
-  const [compact, setCompact] = useState(false);
-  const [catFilter, setCatFilter] = useState("All");
-  const [favFilter, setFavFilter] = useState(false);
-  const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("default");
-  const [editingId, setEditingId] = useState(null);
-  const [editText, setEditText] = useState("");
-  const [editSource, setEditSource] = useState("");
-  const [editCategory, setEditCategory] = useState("");
-  const [selected, setSelected] = useState(new Set());
-  const [bulkEditCat, setBulkEditCat] = useState("");
-  const [bulkEditSource, setBulkEditSource] = useState("");
-  const [newCatName, setNewCatName] = useState("");
-  const [showNewCat, setShowNewCat] = useState(false);
-  const [showExport, setShowExport] = useState(false);
-  const [showSort, setShowSort] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [stats, setStats] = useState(null);
-  const [apiError, setApiError] = useState(null);
-  const [showAddMore, setShowAddMore] = useState(false);
-  const [addMoreInput, setAddMoreInput] = useState("");
-  const [confirmClear, setConfirmClear] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [dragId, setDragId] = useState(null);
-  const [failedEntries, setFailedEntries] = useState([]);
-  const [isSharedView, setIsSharedView] = useState(false);
+  const [phase, setPhase]                     = useState("input");
+  const [fadeClass, setFadeClass]             = useState("phase-in");
+  const [rawInput, setRawInput]               = useState("");
+  const [quotes, setQuotes]                   = useState([]);
+  const [customCats, setCustomCats]           = useState([]);
+  const [progress, setProgress]               = useState(null);
+  const [view, setView]                       = useState(() => window.innerWidth < 640 ? "cards" : "table");
+  const [compact, setCompact]                 = useState(false);
+  const [catFilter, setCatFilter]             = useState("All");
+  const [favFilter, setFavFilter]             = useState(false);
+  const [search, setSearch]                   = useState("");
+  const [sortBy, setSortBy]                   = useState("default");
+  const [editingId, setEditingId]             = useState(null);
+  const [selected, setSelected]               = useState(new Set());
+  const [bulkEditCat, setBulkEditCat]         = useState("");
+  const [bulkEditSource, setBulkEditSource]   = useState("");
+  const [newCatName, setNewCatName]           = useState("");
+  const [showNewCat, setShowNewCat]           = useState(false);
+  const [showExport, setShowExport]           = useState(false);
+  const [showSort, setShowSort]               = useState(false);
+  const [showStats, setShowStats]             = useState(false);
+  const [stats, setStats]                     = useState(null);
+  const [apiError, setApiError]               = useState(null);
+  const [showAddMore, setShowAddMore]         = useState(false);
+  const [addMoreInput, setAddMoreInput]       = useState("");
+  const [confirmClear, setConfirmClear]       = useState(false);
+  const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
+  const [isProcessing, setIsProcessing]       = useState(false);
+  const [toast, setToast]                     = useState(null);
+  const [dragId, setDragId]                   = useState(null);
+  const [failedEntries, setFailedEntries]     = useState([]);
+  const [isSharedView, setIsSharedView]       = useState(false);
   const [formattingEnabled, setFormattingEnabled] = useState(false);
-  const [identifiedFeed, setIdentifiedFeed] = useState([]);
-  const [savedSession, setSavedSession] = useState(null);
-  const [inputTab, setInputTab] = useState("paste");
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [identifiedFeed, setIdentifiedFeed]   = useState([]);
+  const [savedSession, setSavedSession]       = useState(null);
+  const [inputTab, setInputTab]               = useState("paste");
+  const [isDragOver, setIsDragOver]           = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
-  const [pendingDupes, setPendingDupes] = useState([]);
-  const [dupeDecisions, setDupeDecisions] = useState({});
+  const [pendingDupes, setPendingDupes]       = useState([]);
+  const [dupeDecisions, setDupeDecisions]     = useState({});
 
-  const undoRef = useRef(null);
-  const addMoreRef = useRef(null);
-  const exportRef = useRef(null);
-  const sortRef = useRef(null);
+  const undoRef               = useRef(null);
+  const addMoreRef            = useRef(null);
+  const exportRef             = useRef(null);
+  const sortRef               = useRef(null);
   const pendingContinuationRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const fileInputRef          = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -111,7 +126,11 @@ export default function Commonplace() {
 
   // ── Responsive ──
   useEffect(() => {
-    const h = () => { const m = window.innerWidth < 640; setIsMobile(m); if (m && view === "table") setView("cards"); };
+    const h = () => {
+      const m = window.innerWidth < 640;
+      setIsMobile(m);
+      if (m && view === "table") setView("cards");
+    };
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, [view]);
@@ -156,11 +175,11 @@ export default function Commonplace() {
     if (file) handleFileImport(file);
   };
 
-  // ── API ──
+  // ── API: batch identification ──
   const identifyBatch = useCallback(async (items, withFormatting = false) => {
     if (items.length === 0) return [];
     const sourceCats = ["Film","TV","Book","Music","Speech","Person","Phrase"];
-    const allCatStr  = [...sourceCats, ...VIBE_TAGS, ...customCats.filter(c => !sourceCats.includes(c) && !VIBE_TAGS.includes(c)), "Unknown"].join("|");
+    const allCatStr = [...sourceCats, ...VIBE_TAGS, ...customCats.filter(c => !sourceCats.includes(c) && !VIBE_TAGS.includes(c)), "Unknown"].join("|");
     const quotesBlock = items.map((it, i) => {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
       return `[${i}] ${it.text}${hintStr}`;
@@ -168,7 +187,8 @@ export default function Commonplace() {
     const extraField = withFormatting ? `,"cleanText":"the text with typos fixed and proper capitalization"` : "";
     const extraInstr = withFormatting ? " For cleanText: fix typos, fix 'i' → 'I', capitalize the first word, preserve original meaning." : "";
     const r = await fetch("/api/identify", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001", max_tokens: 4000,
         system: `You identify quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
@@ -185,7 +205,36 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
     const t = d.content.map(x => x.text || "").join("");
     const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
     return Array.isArray(parsed) ? parsed : [];
-  }, [allCats]);
+  }, [customCats]);
+
+  // ── Re-identify a single entry ──
+  const reIdentify = async (q) => {
+    const item = { text: q.text, hint: q.source && q.source !== "Unknown" ? q.source : null };
+    try {
+      const results = await identifyBatch([item]);
+      if (results.length > 0) {
+        const r = results[0];
+        const validCats = new Set([...allCats, ...VIBE_TAGS]);
+        setQuotes(prev => prev.map(x => x.id === q.id ? {
+          ...x,
+          source: r.source || x.source,
+          category: validCats.has(r.category) ? r.category : x.category,
+          confidence: r.confidence || x.confidence,
+        } : x));
+        showToast("Re-identified!");
+      }
+    } catch {
+      showToast("Couldn't reach AI. Try again.");
+    }
+  };
+
+  // ── Copy single quote to clipboard ──
+  const copyQuote = (q) => {
+    const text = QUOTED_CATS.has(q.category)
+      ? `"${q.text}" — ${q.source}`
+      : `${q.text} — ${q.source}`;
+    navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
+  };
 
   // ── Processing pipeline ──
   const runProcessing = async (unique, appendMode) => {
@@ -279,7 +328,7 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
   };
 
   const handleDupesContinue = async () => {
-    const { unique, seen, appendMode, totalParsed } = pendingContinuationRef.current;
+    const { unique, seen, appendMode } = pendingContinuationRef.current;
     let keptCount = 0;
     pendingDupes.forEach((dupe, i) => {
       if (dupeDecisions[i] === "keep") {
@@ -304,8 +353,8 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
     setFailedEntries([]); await processEntries(text, true);
   };
 
-  const handleProcess = () => processEntries(rawInput, false);
-  const handleAddMore = () => { if (!addMoreInput.trim()) return; processEntries(addMoreInput, true); setAddMoreInput(""); setShowAddMore(false); };
+  const handleProcess  = () => processEntries(rawInput, false);
+  const handleAddMore  = () => { if (!addMoreInput.trim()) return; processEntries(addMoreInput, true); setAddMoreInput(""); setShowAddMore(false); };
 
   const handleClear = () => {
     window.history.replaceState(null, "", window.location.pathname); setIsSharedView(false);
@@ -333,32 +382,42 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
   const handleShare = () => {
     const encoded = encodeShareData(quotes);
     const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
-    if (encoded.length > 6000) {
-      showToast(`⚠ Link may be too long for some browsers (${quotes.length} entries). Consider exporting instead.`);
-    }
+    if (encoded.length > 6000) showToast(`⚠ Link may be too long for some browsers (${quotes.length} entries). Consider exporting instead.`);
     navigator.clipboard.writeText(url).then(() => {
       if (encoded.length <= 6000) showToast("Shareable link copied to clipboard!");
     });
   };
 
   // ── Inline actions ──
-  const toggleSel = id => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const startEdit = q => { setEditingId(q.id); setEditText(q.text); setEditSource(q.source); setEditCategory(q.category); };
-  const saveEdit = id => { setQuotes(p => p.map(q => q.id === id ? { ...q, text: editText, source: editSource, category: editCategory } : q)); setEditingId(null); };
-  const applyBulk = () => { setQuotes(p => p.map(q => { if (!selected.has(q.id)) return q; const u = { ...q }; if (bulkEditCat) u.category = bulkEditCat; if (bulkEditSource.trim()) u.source = bulkEditSource.trim(); return u; })); setSelected(new Set()); setBulkEditCat(""); setBulkEditSource(""); };
+  const toggleSel  = id => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const startEdit  = q  => setEditingId(q.id);
+  const saveEdit   = (id, text, source, category) => {
+    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category } : q));
+    setEditingId(null);
+  };
+  const applyBulk  = () => {
+    setQuotes(p => p.map(q => {
+      if (!selected.has(q.id)) return q;
+      const u = { ...q };
+      if (bulkEditCat) u.category = bulkEditCat;
+      if (bulkEditSource.trim()) u.source = bulkEditSource.trim();
+      return u;
+    }));
+    setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
+  };
   const bulkDel = () => { setQuotes(p => p.filter(q => !selected.has(q.id))); setSelected(new Set()); };
-  const addCat = () => { const n = newCatName.trim(); if (!n || allCats.includes(n)) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
-  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
+  const addCat  = () => { const n = newCatName.trim(); if (!n || allCats.includes(n)) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
+  const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
   // ── Drag reorder ──
   const handleDragStart = (id) => setDragId(id);
-  const handleDragOver = (e, targetId) => {
+  const handleDragOver  = (e, targetId) => {
     e.preventDefault();
     if (!dragId || dragId === targetId) return;
     setQuotes(prev => {
       const arr = [...prev];
       const fromIdx = arr.findIndex(q => q.id === dragId);
-      const toIdx = arr.findIndex(q => q.id === targetId);
+      const toIdx   = arr.findIndex(q => q.id === targetId);
       if (fromIdx < 0 || toIdx < 0) return prev;
       const [moved] = arr.splice(fromIdx, 1);
       arr.splice(toIdx, 0, moved);
@@ -375,114 +434,53 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
     return true;
   });
   if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
-  else if (sortBy === "alpha") filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
+  else if (sortBy === "alpha")    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
   else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
 
-  const cc = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
-  const favCount = quotes.filter(q => q.favorite).length;
-  const selAll = () => { const ids = filtered.map(q => q.id); ids.every(id => selected.has(id)) ? setSelected(new Set()) : setSelected(new Set(ids)); };
-  const showBulkBar = selected.size > 0;
+  const cc           = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
+  const favCount     = quotes.filter(q => q.favorite).length;
+  const selAll       = () => { const ids = filtered.map(q => q.id); ids.every(id => selected.has(id)) ? setSelected(new Set()) : setSelected(new Set(ids)); };
+  const showBulkBar  = selected.size > 0;
   const unknownCount = quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length;
-  const topCats = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const topCats      = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
 
-  const SORT_OPTIONS = [
-    { key: "default", label: "Default order" },
-    { key: "confidence", label: `Needs attention first${unknownCount > 0 ? ` (${unknownCount})` : ""}` },
-    { key: "alpha", label: "Alphabetical" },
-    { key: "category", label: "By category" },
-  ];
-
-  // ── Stats computation ──
+  // ── Stats ──
   const computedStats = quotes.length > 0 ? (() => {
     const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
-    const topSrcs = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const sorted = [...quotes].sort((a, b) => a.text.length - b.text.length);
+    const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const sorted   = [...quotes].sort((a, b) => a.text.length - b.text.length);
     const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);
     return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
   })() : null;
 
-  // ── Sub-components ──
-  const FavBtn = ({ q }) => <button style={{ ...Z.actBtn, color: q.favorite ? "#F59E0B" : "#9B9A97" }} onClick={() => setQuotes(p => p.map(x => x.id === q.id ? { ...x, favorite: !x.favorite } : x))}>{q.favorite ? "★" : "☆"}</button>;
-  const EditBtn = ({ q }) => <button style={Z.actBtn} onClick={() => startEdit(q)}>✎</button>;
-  const DelBtn = ({ q }) => <button style={{ ...Z.actBtn, color: "#EB5757" }} onClick={() => handleDelete(q.id)}>✕</button>;
-  const ConfDot = ({ q }) => {
-    if (!q.confidence || q.confidence === "high") return null;
-    return <span title={CONF_LABELS[q.confidence]} style={{ ...Z.confDot, background: q.confidence === "medium" ? "#FFB74D" : "#D6D6D4", cursor: "help" }} />;
+  // Shared action props to keep JSX cleaner
+  const actionProps = {
+    onFav:          id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
+    onEdit:         startEdit,
+    onDelete:       handleDelete,
+    onCopy:         copyQuote,
+    onReidentify:   reIdentify,
   };
-  const EditForm = ({ q, inCard }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: inCard ? 8 : 0 }} onClick={e => e.stopPropagation()}>
-      <textarea style={{ ...Z.textarea, minHeight: 40, fontSize: 13, padding: 8 }} value={editText} onChange={e => setEditText(e.target.value)} />
-      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-        <input style={Z.editIn} value={editSource} onChange={e => setEditSource(e.target.value)} placeholder="Source..." />
-        <select style={Z.editSel} value={editCategory} onChange={e => setEditCategory(e.target.value)}>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
-        <button style={Z.editSave} onClick={() => saveEdit(q.id)}>Save</button>
-        <button style={Z.editCancel} onClick={() => setEditingId(null)}>Cancel</button>
-      </div>
-    </div>
-  );
+
   const Footer = () => (
     <footer style={Z.footer}>
       <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={Z.footerLink}>Degen Hill</a></span>
     </footer>
   );
 
-  // ========================== SINGLE RETURN ==========================
+  // ========================== RENDER ==========================
   return (
     <>
       <Analytics />
       <SpeedInsights />
 
-      {/* ── Dupe review modal ── */}
-      {pendingDupes.length > 0 && (() => {
-        const keptCount = Object.values(dupeDecisions).filter(d => d === "keep").length;
-        return (
-          <div style={Z.dupeModalOverlay}>
-            <div style={Z.dupeModalBox}>
-              <div style={Z.dupeModalHeader}>
-                <p style={Z.dupeModalTitle}>Similar entries found</p>
-                <p style={Z.dupeModalSub}>
-                  {pendingDupes.length} of your entries look similar to ones already in the collection. Choose what to do with each.
-                </p>
-              </div>
-              <div style={Z.dupeList}>
-                {pendingDupes.map((dupe, i) => {
-                  const decision = dupeDecisions[i] || "skip";
-                  return (
-                    <div key={i} style={{ ...Z.dupeCard, opacity: decision === "skip" ? 0.6 : 1, transition: "opacity .15s" }}>
-                      <div style={Z.dupePair}>
-                        <div style={{ ...Z.dupeSide, ...Z.dupeExisting }}>
-                          <div style={Z.dupeSideLabel}>Already in collection</div>
-                          <div style={Z.dupeSideText}>{dupe.matchedText}</div>
-                          {dupe.matchedSource && <div style={Z.dupeSideSource}>{dupe.matchedSource}</div>}
-                        </div>
-                        <div style={{ ...Z.dupeSide, ...Z.dupeIncoming }}>
-                          <div style={Z.dupeSideLabel}>New entry</div>
-                          <div style={Z.dupeSideText}>{dupe.incoming.text}</div>
-                          {dupe.incoming.hint && <div style={Z.dupeSideSource}>{dupe.incoming.hint}</div>}
-                        </div>
-                      </div>
-                      <div style={Z.dupeActions}>
-                        <button style={{ ...Z.dupeSkipBtn, ...(decision === "skip" ? { background: "#F1F1EF", fontWeight: 600, color: "#37352F" } : {}) }}
-                          onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "skip" }))}>Skip</button>
-                        <button style={{ ...Z.dupeKeepBtn, ...(decision === "keep" ? { background: "#16A34A" } : {}) }}
-                          onClick={() => setDupeDecisions(prev => ({ ...prev, [i]: "keep" }))}>Keep both</button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={Z.dupeModalFooter}>
-                <span style={Z.dupeKeptCount}>
-                  {keptCount > 0 ? `${keptCount} will be added` : `All ${pendingDupes.length} will be skipped`}
-                </span>
-                <button style={Z.dupeContinueBtn} onClick={handleDupesContinue}>
-                  Continue →
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      {/* Dupe review modal */}
+      <DupeModal
+        pendingDupes={pendingDupes}
+        dupeDecisions={dupeDecisions}
+        setDupeDecisions={setDupeDecisions}
+        onContinue={handleDupesContinue}
+      />
 
       {/* ── Input phase ── */}
       {phase === "input" && (
@@ -513,12 +511,8 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
 
             <div style={Z.inputCard}>
               <div style={Z.tabRow}>
-                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("paste")}>
-                  ✏️ Type / Paste
-                </button>
-                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("import")}>
-                  📁 Import File
-                </button>
+                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("paste")}>✏️ Type / Paste</button>
+                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("import")}>📁 Import File</button>
               </div>
 
               {inputTab === "paste" && (
@@ -527,9 +521,7 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
               )}
 
               {inputTab === "import" && (
-                <div
-                  className="drop-zone"
-                  style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
+                <div className="drop-zone" style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
                   onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={handleDropZone}
@@ -582,6 +574,7 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
               <div style={Z.howArrow}>→</div>
               <div className="how-step" style={Z.howStep}><div style={Z.howIcon}>✨</div><div style={Z.howLabel}>Organized</div><div style={Z.howDesc}>Export clean, attributed collections</div></div>
             </div>
+
             <div style={Z.previewWrap}>
               <div style={Z.previewBox}>
                 <div style={Z.previewLabel}>What you paste</div>
@@ -717,65 +710,14 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
           </div>
 
           {/* Stats panel */}
-          {showStats && computedStats && (
-            <div style={Z.statsPanel}>
-              <div style={Z.statsPanelTitle}>
-                <span>Collection breakdown</span>
-                <button style={Z.statsPanelClose} onClick={() => setShowStats(false)}>✕</button>
-              </div>
-              <div style={Z.statsGrid}>
-                <div style={Z.statsSection}>
-                  <div style={Z.statsSectionTitle}>By category</div>
-                  {Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
-                    const pct = (count / quotes.length) * 100;
-                    const col = getCatColor(cat, customCats);
-                    return (
-                      <div key={cat} style={Z.statsBarRow}>
-                        <div style={Z.statsBarLabel}><span>{cat}</span><span style={{ color: "#9B9A97" }}>{count}</span></div>
-                        <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${pct}%`, background: col.text }} /></div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={Z.statsSection}>
-                  <div style={Z.statsSectionTitle}>Top sources</div>
-                  {computedStats.topSrcs.map(([src, count]) => (
-                    <div key={src} style={Z.statsBarRow}>
-                      <div style={Z.statsBarLabel}><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{src}</span><span style={{ color: "#9B9A97", flexShrink: 0 }}>{count}</span></div>
-                      <div style={Z.statsBarTrack}><div style={{ ...Z.statsBarFill, width: `${(count / quotes.length) * 100}%`, background: "#37352F" }} /></div>
-                    </div>
-                  ))}
-                  <div style={{ marginTop: 12, display: "flex", gap: 20 }}>
-                    <div>
-                      <div style={Z.statNumber}>{quotes.length}</div>
-                      <div style={Z.statNumberSub}>total entries</div>
-                    </div>
-                    <div>
-                      <div style={Z.statNumber}>{computedStats.avgWords}</div>
-                      <div style={Z.statNumberSub}>avg words</div>
-                    </div>
-                  </div>
-                </div>
-                {computedStats.shortest && (
-                  <div style={Z.statsSection}>
-                    <div style={Z.statsSectionTitle}>Shortest</div>
-                    <div style={Z.statsHighlight}>
-                      <div style={Z.statsHighlightLabel}>{computedStats.shortest.source}</div>
-                      "{computedStats.shortest.text}"
-                    </div>
-                  </div>
-                )}
-                {computedStats.longest && (
-                  <div style={Z.statsSection}>
-                    <div style={Z.statsSectionTitle}>Longest</div>
-                    <div style={Z.statsHighlight}>
-                      <div style={Z.statsHighlightLabel}>{computedStats.longest.source}</div>
-                      "{computedStats.longest.text.slice(0, 120)}{computedStats.longest.text.length > 120 ? "…" : ""}"
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+          {showStats && (
+            <StatsPanel
+              quotes={quotes}
+              computedStats={computedStats}
+              cc={cc}
+              customCats={customCats}
+              onClose={() => setShowStats(false)}
+            />
           )}
 
           {apiError && (
@@ -849,10 +791,12 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
                 ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
               </button>
             )}
-            {allCats.filter(c => cc[c]).map(c => {
+            {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
               const col = getCatColor(c, customCats); const on = catFilter === c;
-              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}) }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}<span style={{ opacity: .5, fontSize: 11 }}>{cc[c]}</span>
+              const count = cc[c];
+              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}) }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
+                {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                 {customCats.includes(c) && <span style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
               </button>;
             })}
@@ -877,23 +821,60 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
           {/* TABLE VIEW */}
           {view === "table" && (
             <div style={{ overflowX: "auto" }}>
-              {filtered.length > 0 && <div style={Z.tHead}><div style={{ width: 32 }} /><div style={{ flex: 1, minWidth: 200 }}>Content</div><div style={{ width: 200 }}>Source</div><div style={{ width: 80 }}>Category</div><div style={{ width: 56 }} /></div>}
+              {filtered.length > 0 && (
+                <div style={Z.tHead}>
+                  <div style={{ width: 32 }} />
+                  <div style={{ flex: 1, minWidth: 200 }}>Content</div>
+                  <div style={{ width: 200 }}>Source</div>
+                  <div style={{ width: 80 }}>Category</div>
+                  <div style={{ width: 110 }} />
+                </div>
+              )}
               {filtered.map(q => {
-                const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
+                const col = getCatColor(q.category, customCats);
+                const isSel = selected.has(q.id);
+                const isEd  = editingId === q.id;
                 const needsAtt = q.confidence === "low" || q.category === "Unknown";
-                const rowStyle = compact ? Z.rowCompact : Z.row;
                 return (
-                  <div key={q.id} className="qrow" draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
-                    style={{ ...rowStyle, ...(isSel ? { background: "#F0F7FF" } : {}), ...(q.favorite ? Z.favRow : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .25s ease" }}>
+                  <div key={q.id} className="qrow"
+                    draggable={!isEd}
+                    onDragStart={() => handleDragStart(q.id)}
+                    onDragOver={e => handleDragOver(e, q.id)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      ...(compact ? Z.rowCompact : Z.row),
+                      ...(isSel ? { background: "#F0F7FF" } : {}),
+                      ...(q.favorite ? Z.favRow : {}),
+                      ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+                      ...(dragId === q.id ? { opacity: .4 } : {}),
+                      animation: "fadeUp .25s ease",
+                    }}
+                  >
                     <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
-                      <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
+                      <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>
+                        {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+                      </div>
                     </div>
                     <div style={{ flex: 1, minWidth: 200, paddingRight: 12, cursor: isEd ? "default" : "text" }} onClick={() => { if (!isEd) startEdit(q); }}>
-                      {isEd ? <EditForm q={q} /> : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>}
+                      {isEd
+                        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
+                        : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
+                      }
                     </div>
-                    <div className="src-col" style={Z.srcCol}><span style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }} title={q.source}>{q.source}</span><ConfDot q={q} /></div>
-                    <div style={{ width: 80 }}><span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span></div>
-                    <div className="row-actions" style={Z.rowAct}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
+                    <div className="src-col" style={Z.srcCol}>
+                      <span style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }} title={q.source}>{q.source}</span>
+                      <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+                    </div>
+                    <div style={{ width: 80 }}>
+                      <span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span>
+                    </div>
+                    <div className="row-actions" style={Z.rowAct}>
+                      <FavBtn q={q} onFav={actionProps.onFav} />
+                      <CopyBtn q={q} onCopy={actionProps.onCopy} />
+                      <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} />
+                      <EditBtn q={q} onEdit={actionProps.onEdit} />
+                      <DelBtn q={q} onDelete={actionProps.onDelete} />
+                    </div>
                   </div>
                 );
               })}
@@ -904,23 +885,55 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
           {view === "cards" && (
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
               {filtered.map(q => {
-                const col = getCatColor(q.category, customCats), isSel = selected.has(q.id), isEd = editingId === q.id;
+                const col = getCatColor(q.category, customCats);
+                const isSel = selected.has(q.id);
+                const isEd  = editingId === q.id;
                 const needsAtt = q.confidence === "low" || q.category === "Unknown";
                 return (
-                  <div key={q.id} draggable={!isEd} onDragStart={() => handleDragStart(q.id)} onDragOver={e => handleDragOver(e, q.id)} onDragEnd={handleDragEnd}
-                    style={{ ...CZ.card, ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}), ...(q.favorite ? CZ.favCard : {}), ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}), ...(dragId === q.id ? { opacity: .4 } : {}), animation: "fadeUp .3s ease" }}
+                  <div key={q.id}
+                    draggable={!isEd}
+                    onDragStart={() => handleDragStart(q.id)}
+                    onDragOver={e => handleDragOver(e, q.id)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      ...CZ.card,
+                      ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
+                      ...(q.favorite ? CZ.favCard : {}),
+                      ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+                      ...(dragId === q.id ? { opacity: .4 } : {}),
+                      animation: "fadeUp .3s ease",
+                    }}
                     onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
-                    onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}>
+                    onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
+                  >
                     <div style={CZ.top}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>{isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}</div>
+                        <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>
+                          {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+                        </div>
                         <span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span>
                       </div>
-                      <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}><FavBtn q={q} /><EditBtn q={q} /><DelBtn q={q} /></div>
+                      <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
+                        <FavBtn q={q} onFav={actionProps.onFav} />
+                        <CopyBtn q={q} onCopy={actionProps.onCopy} />
+                        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} />
+                        <EditBtn q={q} onEdit={actionProps.onEdit} />
+                        <DelBtn q={q} onDelete={actionProps.onDelete} />
+                      </div>
                     </div>
-                    {isEd ? <EditForm q={q} inCard /> : (
-                      <><p style={CZ.txt}>{displayText(q)}</p><div style={CZ.srcRow}><span style={{ color: "#D3D3D0" }}>—</span><span style={CZ.src}>{q.source}</span><ConfDot q={q} /></div></>
-                    )}
+                    {isEd
+                      ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
+                      : (
+                        <>
+                          <p style={CZ.txt}>{displayText(q)}</p>
+                          <div style={CZ.srcRow}>
+                            <span style={{ color: "#D3D3D0" }}>—</span>
+                            <span style={CZ.src}>{q.source}</span>
+                            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+                          </div>
+                        </>
+                      )
+                    }
                   </div>
                 );
               })}

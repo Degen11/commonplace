@@ -1,16 +1,17 @@
 # Commonplace
 
-Paste your messy quotes, phrases, and fragments. Commonplace organizes everything and identifies the sources.
+**Paste your messy quotes. Get back a clean, attributed collection.**
 
-## What it does
+Commonplace takes a raw pile of quotes, phrases, and fragments — one per line — and figures out where each one came from. Movie quotes get tagged as Film. Song lyrics as Music. Famous sayings get attributed to the right person, with confidence ratings on everything.
 
-You dump in a pile of text — one entry per line — and Commonplace figures out what each one is. Movie quotes get tagged as Film, song lyrics as Music, famous sayings get attributed to the right person. Everything comes back sorted, categorized, and ready to export.
+---
 
-**How it works:**
+## How it works
 
-A local database of hundreds of common quotes handles instant matching with zero API calls. Anything it doesn't recognize gets batched and sent to Claude Haiku for identification. The result is fast, cheap, and accurate.
+### 1. Paste anything
 
-**Example input:**
+No formatting required. Throw in whatever you have:
+
 ```
 You can't handle the truth
 The world breaks everyone — Hemingway
@@ -19,59 +20,52 @@ To infinity and beyond
 Not all those who wander are lost
 ```
 
-**What you get back:**
+Commonplace handles attribution hints via em dashes, hyphens, tildes, and parentheses. If you already know the source, include it and it'll be preserved.
 
-Each entry identified with its source, categorized (Film, TV, Book, Music, Speech, Person, Phrase), and confidence-rated. Edit anything that's wrong, add custom categories, favorite the ones you love, then export as CSV, Markdown, or JSON.
+### 2. Instant local matching
 
-## Features
+A curated database of 600+ well-known quotes runs first — no API call, no cost, instant results. The most common film lines, song lyrics, speeches, literary quotes, and philosophical phrases are all covered. If your quote is in there, it comes back in milliseconds with high confidence.
 
-- **AI-powered identification** — Claude Haiku identifies sources and categories
-- **Local database** — 130+ common quotes matched instantly, no API needed
-- **Smart parsing** — handles attribution via em dashes, hyphens, tildes, and parentheses
-- **Batch processing** — groups of 20 sent in single API calls to minimize cost
-- **Deduplication** — catches duplicates within a batch and across additions
-- **Three export formats** — CSV, Markdown (grouped by category), JSON
-- **Add more without clearing** — append new entries to an existing collection
-- **Bulk edit** — select multiple entries, reassign categories or sources at once
-- **Sort by confidence** — surface entries that need manual attention
-- **Custom categories** — add your own beyond the defaults
-- **Mobile responsive** — auto-switches to card view on small screens
+### 3. AI identification for everything else
+
+Anything the local database doesn't recognize gets batched and sent to Claude Haiku. Haiku identifies the source, assigns a category, and rates its confidence. Batches of 20 go out in a single API call to keep costs minimal.
+
+### 4. Review and clean up
+
+Everything comes back in a table or card view. Low-confidence entries are flagged so you know what to double-check. You can:
+
+- Edit any text, source, or category inline
+- Use the **Did you mean?** hint when your text is close to a known quote
+- Hit **Re-identify** on any entry to get a fresh AI pass
+- Bulk-edit categories or sources across multiple entries at once
+- Add custom categories beyond the built-in ones
+
+### 5. Export
+
+When you're done, export as **CSV**, **Markdown** (grouped by category), **JSON**, or plain text. Copy everything to clipboard in one shot, or generate a shareable link to send your collection to someone else.
+
+---
+
+## Categories
+
+**Source categories** — used when the origin is known:
+`Film` · `TV` · `Book` · `Music` · `Speech` · `Person` · `Phrase`
+
+**Vibe tags** — used when the source is unknown, to describe the nature of the entry:
+`Aphorism` · `Philosophical` · `Observation` · `Comedic` · `Poetic` · `Existential` · `Motivational` · `Cynical` · `Identity` · `Reflection`
+
+---
 
 ## Cost
 
-The local database handles the most common quotes for free. For everything else, Haiku is extremely cheap — roughly $0.014 per batch of 20 quotes. Processing 10,000 quotes costs about $1.40.
+The local database covers the most common quotes for free. For everything else, Haiku is extremely cheap — roughly $0.014 per batch of 20 quotes. Processing 1,000 quotes costs under $1.
 
-## Setup
+---
 
-**Prerequisites:** An [Anthropic API key](https://console.anthropic.com/) with credits loaded.
+## Tech
 
-1. Fork or clone this repo
-2. Deploy to [Vercel](https://vercel.com) (auto-detects Vite)
-3. Add your API key in Vercel: **Settings → Environment Variables → `ANTHROPIC_API_KEY`**
-4. Deploy and you're live
+React 18, Vite, Vercel serverless functions, Claude Haiku. No CSS framework — zero external style dependencies.
 
-The `api/identify.js` serverless function proxies requests to Anthropic so your API key never touches the browser. It's hardened to lock the model to Haiku, cap token usage, and limit input size.
+---
 
-## Project structure
-
-```
-├── api/
-│   └── identify.js       # Serverless proxy to Anthropic API
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── App.jsx            # Entire app (single component)
-│   └── main.jsx           # React entry point
-├── index.html
-├── package.json
-├── vercel.json
-└── vite.config.js
-```
-
-## Tech stack
-
-React 18, Vite, Vercel serverless functions, Claude Haiku API. No CSS framework — all inline styles for zero dependencies.
-
-## License
-
-MIT
+*© Degen Hill. All rights reserved.*

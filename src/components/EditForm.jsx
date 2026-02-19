@@ -1,14 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Z } from "./styles";
+import LOCAL_DB from "../data/localQuotes";
+import { normalize } from "../utils/helpers";
 
-// Standalone component with its own local state.
-// Previously this was defined INSIDE the parent render function,
-// which caused React to treat it as a new component type on every
-// keystroke → unmount/remount → only one character could be typed.
+// Finds the closest local DB match to the current text.
+// Returns null if nothing is close enough to be worth suggesting.
+function findSuggestion(text) {
+  if (!text || text.length < 8) return null;
+  const norm = normalize(text);
+
+  // Score every entry by word overlap
+  let best = null; let bestScore = 0;
+  for (const entry of LOCAL_DB) {
+    if (entry.norm === norm) return null; // exact match — no suggestion needed
+    const wa = new Set(norm.split(" ").filter(w => w.length > 2));
+    const wb = new Set(entry.norm.split(" ").filter(w => w.length > 2));
+    if (!wa.size || !wb.size) continue;
+    let overlap = 0;
+    wa.forEach(w => { if (wb.has(w)) overlap++; });
+    const score = (overlap * 2) / (wa.size + wb.size);
+    if (score > bestScore) { bestScore = score; best = entry; }
+  }
+  // Only suggest if similarity is meaningful but not exact
+  if (bestScore >= 0.55 && bestScore < 1) return best;
+  return null;
+}
+
 export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
   const [text, setText] = useState(q.text);
   const [source, setSource] = useState(q.source);
   const [category, setCategory] = useState(q.category);
+  const [dismissed, setDismissed] = useState(false);
+
+  const suggestion = useMemo(() => {
+    if (dismissed) return null;
+    return findSuggestion(text);
+  }, [text, dismissed]);
+
+  const applySuggestion = () => {
+    setText(suggestion.t);
+    setSource(suggestion.s);
+    setCategory(suggestion.c);
+    setDismissed(true);
+  };
 
   return (
     <div
@@ -18,9 +52,42 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
       <textarea
         style={{ ...Z.textarea, minHeight: 40, fontSize: 13, padding: 8 }}
         value={text}
-        onChange={e => setText(e.target.value)}
+        onChange={e => { setText(e.target.value); setDismissed(false); }}
         autoFocus
       />
+
+      {suggestion && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+          padding: "6px 10px", background: "#FEF9C3", borderRadius: 6,
+          border: "1px solid #FDE68A", fontSize: 12,
+        }}>
+          <span style={{ color: "#92400E", flexShrink: 0 }}>💡 Did you mean:</span>
+          <span style={{ color: "#78350F", fontStyle: "italic", flex: 1 }}>
+            "{suggestion.t}" — {suggestion.s}
+          </span>
+          <button
+            onClick={applySuggestion}
+            style={{
+              padding: "2px 10px", borderRadius: 5, border: "none", cursor: "pointer",
+              background: "#D97706", color: "#fff", fontSize: 11, fontWeight: 600,
+              fontFamily: "inherit", flexShrink: 0,
+            }}
+          >
+            Use this
+          </button>
+          <button
+            onClick={() => setDismissed(true)}
+            style={{
+              padding: "2px 6px", borderRadius: 5, border: "none", cursor: "pointer",
+              background: "transparent", color: "#92400E", fontSize: 11, fontFamily: "inherit",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <input
           style={Z.editIn}

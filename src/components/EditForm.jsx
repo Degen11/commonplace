@@ -38,7 +38,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
   }, [text, dismissed]);
 
   const applySuggestion = () => {
-    setText(suggestion.t);
+    setText(suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1));
     setSource(suggestion.s);
     setCategory(suggestion.c);
     setDismissed(true);
@@ -64,7 +64,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         }}>
           <span style={{ color: "#92400E", flexShrink: 0 }}>💡 Did you mean:</span>
           <span style={{ color: "#78350F", fontStyle: "italic", flex: 1 }}>
-            "{suggestion.t}" — {suggestion.s}
+            "{suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1)}" — {suggestion.s}
           </span>
           <button
             onClick={applySuggestion}

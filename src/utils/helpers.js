@@ -172,7 +172,7 @@ export function decodeShareData(hash) {
     const json = decodeURIComponent(escape(atob(hash)));
     const arr = JSON.parse(json);
     return arr.map((q, i) => ({
-      id: (Date.now() + i).toString(),
+      id: crypto.randomUUID(),
       text: q[0], source: q[1], category: q[2],
       confidence: "high", favorite: !!q[3],
     }));

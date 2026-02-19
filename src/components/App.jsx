@@ -473,15 +473,35 @@ Return exactly one JSON object per input item.`,
     }));
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
   };
-  const bulkDel = () => { setQuotes(p => p.filter(q => !selected.has(q.id))); setSelected(new Set()); };
+  const bulkDel = () => {
+    const deletedQuotes = quotes.filter(q => selected.has(q.id));
+    const deletedIds = new Set(selected);
+    setQuotes(p => p.filter(q => !deletedIds.has(q.id)));
+    setSelected(new Set());
+    showToast(`${deletedQuotes.length} entries deleted`, "Undo", () => {
+      setQuotes(p => {
+        // Re-insert deleted quotes at their original positions
+        const restored = [...p];
+        deletedQuotes.forEach(dq => {
+          const origIdx = quotes.findIndex(q => q.id === dq.id);
+          restored.splice(Math.min(origIdx, restored.length), 0, dq);
+        });
+        return restored;
+      });
+    });
+  };
   const addCat  = () => { const n = newCatName.trim(); if (!n || allCats.some(c => c.toLowerCase() === n.toLowerCase())) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
   const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
   // ── Drag reorder ──
-  const handleDragStart = (id) => setDragId(id);
+  const lastDragTarget = useRef(null);
+  const handleDragStart = (id) => { setDragId(id); lastDragTarget.current = null; };
   const handleDragOver  = (e, targetId) => {
     e.preventDefault();
     if (!dragId || dragId === targetId) return;
+    // Only reorder when crossing into a new target — not on every pixel
+    if (lastDragTarget.current === targetId) return;
+    lastDragTarget.current = targetId;
     setQuotes(prev => {
       const arr = [...prev];
       const fromIdx = arr.findIndex(q => q.id === dragId);
@@ -492,7 +512,7 @@ Return exactly one JSON object per input item.`,
       return arr;
     });
   };
-  const handleDragEnd = () => setDragId(null);
+  const handleDragEnd = () => { setDragId(null); lastDragTarget.current = null; };
 
   // ── Filtering & sorting ──
   let filtered = quotes.filter(q => {
@@ -727,9 +747,12 @@ Return exactly one JSON object per input item.`,
             <div>
               <h1 style={Z.title}>Commonplace</h1>
               <p style={Z.sub}>
-                {quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized
-                {topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
-                {topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
+                {filtered.length < quotes.length
+                  ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
+                  : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
+                }
+                {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
+                {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
               </p>
             </div>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

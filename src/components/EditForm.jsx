@@ -53,6 +53,10 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         style={{ ...Z.textarea, minHeight: 40, fontSize: 13, padding: 8 }}
         value={text}
         onChange={e => { setText(e.target.value); setDismissed(false); }}
+        onKeyDown={e => {
+          if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSave(q.id, text, source, category); }
+        }}
         autoFocus
       />
 
@@ -94,6 +98,10 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
           value={source}
           onChange={e => setSource(e.target.value)}
           placeholder="Source..."
+          onKeyDown={e => {
+            if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
+            if (e.key === "Enter") { e.preventDefault(); onSave(q.id, text, source, category); }
+          }}
         />
         <select
           style={Z.editSel}

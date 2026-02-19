@@ -111,7 +111,7 @@ export const Z = {
 
   // Results header
   header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"40px 0 16px",borderBottom:"1px solid #F1F1EF",flexWrap:"wrap",gap:12},
-  title:{fontSize:32,fontWeight:700,letterSpacing:-1,color:"#37352F",lineHeight:1},
+  title:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:32,fontWeight:700,letterSpacing:-1,color:"#37352F",lineHeight:1},
   sub:{fontSize:13,color:"#9B9A97",marginTop:6},
   hdrBtn:{padding:"6px 12px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   exportBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,fontWeight:600,color:"#37352F",cursor:"pointer",fontFamily:"inherit"},
@@ -119,6 +119,7 @@ export const Z = {
   startOverBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",color:"#37352F",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",color:"#37352F",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtnActive:{border:"1px solid #7C3AED",background:"#F5F3FF",color:"#7C3AED"},
+
 
   // View toggles (table / compact / cards)
   viewTog:{display:"flex",border:"1px solid #E3E2DE",borderRadius:6,overflow:"hidden"},

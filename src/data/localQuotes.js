@@ -658,25 +658,29 @@ function normalizeForLookup(s) {
   return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
 }
 
-export function localLookup(text, hint) {
+export function localLookup(text, hint, options = {}) {
+  const { exactOnly = false } = options;
   const norm = normalizeForLookup(text);
   const exact = LOCAL_MAP.get(norm);
   if (exact) return { source: exact.s, category: exact.c, confidence: "high", local: true };
 
-  for (const entry of LOCAL_DB) {
-    if (norm.includes(entry.norm) && entry.norm.length > 15)
-      return { source: entry.s, category: entry.c, confidence: "high", local: true };
-    if (entry.norm.includes(norm) && norm.length > 15)
-      return { source: entry.s, category: entry.c, confidence: "medium", local: true };
+  if (!exactOnly) {
+    for (const entry of LOCAL_DB) {
+      if (norm.includes(entry.norm) && entry.norm.length > 15)
+        return { source: entry.s, category: entry.c, confidence: "high", local: true };
+      if (entry.norm.includes(norm) && norm.length > 15)
+        return { source: entry.s, category: entry.c, confidence: "medium", local: true };
+    }
+
+    if (hint) {
+      const h = hint.trim();
+      const knownAuthors = LOCAL_DB.filter(e => e.s.toLowerCase().includes(h.toLowerCase()));
+      if (knownAuthors.length > 0)
+        return { source: h, category: knownAuthors[0].c, confidence: "medium", local: true };
+      return null;
+    }
   }
 
-  if (hint) {
-    const h = hint.trim();
-    const knownAuthors = LOCAL_DB.filter(e => e.s.toLowerCase().includes(h.toLowerCase()));
-    if (knownAuthors.length > 0)
-      return { source: h, category: knownAuthors[0].c, confidence: "medium", local: true };
-    return null;
-  }
   return null;
 }
 

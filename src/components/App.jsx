@@ -245,8 +245,10 @@ Return exactly one JSON object per input item.`,
 
   // ── Re-identify a single entry ──
   const reIdentify = async (q) => {
-    // Check local DB first — free, instant, and always accurate
-    const local = localLookup(q.text, null);
+    // Check local DB first — exact matches only. We skip substring matching
+    // here because the user may have deliberately edited the text, and a
+    // partial match would just return the old answer without asking the AI.
+    const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       setQuotes(prev => prev.map(x => x.id === q.id ? {
         ...x,

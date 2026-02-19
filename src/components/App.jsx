@@ -209,7 +209,9 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
 
   // ── Re-identify a single entry ──
   const reIdentify = async (q) => {
-    const item = { text: q.text, hint: q.source && q.source !== "Unknown" ? q.source : null };
+    // No hint passed — we want a genuinely fresh identification, not one
+    // anchored to whatever source was previously assigned.
+    const item = { text: q.text, hint: null };
     try {
       const results = await identifyBatch([item]);
       if (results.length > 0) {
@@ -217,9 +219,9 @@ IMPORTANT: If source is Unknown, always assign the most fitting vibe tag — nev
         const validCats = new Set([...allCats, ...VIBE_TAGS]);
         setQuotes(prev => prev.map(x => x.id === q.id ? {
           ...x,
-          source: r.source || x.source,
-          category: validCats.has(r.category) ? r.category : x.category,
-          confidence: r.confidence || x.confidence,
+          source: r.source || "Unknown",
+          category: validCats.has(r.category) ? r.category : "Unknown",
+          confidence: r.confidence || "low",
         } : x));
         showToast("Re-identified!");
       }

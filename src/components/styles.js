@@ -71,7 +71,7 @@ export const Z = {
 
   // How it works — new grid style
   howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
-  howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:13,fontStyle:"italic",color:"#9A9590",marginBottom:20,display:"flex",alignItems:"center",gap:12},
+  howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,fontStyle:"italic",color:"#9A9590",marginBottom:20,display:"flex",alignItems:"center",gap:12},
   howSectionTitleLine:{flex:1,height:1,background:"#E8E3DA"},
   howGrid:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,background:"#E8E3DA",borderRadius:12,overflow:"hidden"},
   howCard:{background:"#F5F1EB",padding:"28px 24px",display:"flex",flexDirection:"column",gap:10},

@@ -12,8 +12,8 @@ export const baseCSS = `
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   .qrow{cursor:grab}.qrow:active{cursor:grabbing}
-  .qrow:hover{background:#FAFAFA !important}.qrow:hover .row-actions{opacity:1 !important}.qrow:hover .checkbox{opacity:1 !important}
-  .qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
+  .qrow:hover{background:rgba(55,53,47,0.04) !important}.qrow:hover .row-actions{opacity:1 !important}
+  .qrow:hover .checkbox{opacity:1 !important}.qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
   .dd-opt:hover{background:#F1F1EF !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
   .proc-btn{transition:all .15s ease}
@@ -214,8 +214,8 @@ export const Z = {
 
   // Table
   tHead:{display:"flex",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",fontSize:11,color:"#9B9A97",fontWeight:500,textTransform:"uppercase",letterSpacing:.5},
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FBFBFA"},
-  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FBFBFA"},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
+  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .1s",flexShrink:0},

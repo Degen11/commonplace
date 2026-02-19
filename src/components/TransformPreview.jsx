@@ -140,8 +140,8 @@ function AnimInner({ onComplete = () => {} }) {
           <span
             style={{
               fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
-              fontSize: 16,
-              fontWeight: 600,
+              fontSize: 14,
+              fontWeight: 500,
               color: ui.chromeText,
               marginLeft: 6,
               transition: "color 520ms ease",

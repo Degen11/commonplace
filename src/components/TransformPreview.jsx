@@ -43,7 +43,7 @@ function AnimInner({ onComplete = () => {} }) {
     const showAt = doneTyping + 1100;
 
     // Start a “mix” phase *slightly before* cards appear so the flip isn’t jarring
-    t(showAt - 180, () => setTheme("mix"));
+    t(showAt - 300, () => setTheme("mix"));
 
     t(showAt, () => {
       setPhase("after");

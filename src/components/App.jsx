@@ -156,10 +156,27 @@ export default function Commonplace() {
     reader.onload = (e) => {
       let content = e.target.result;
       if (ext === "csv") {
-        const lines = content.split("\n").slice(1);
-        content = lines.map(l => {
-          const match = l.match(/^"([^"]+)"/);
-          return match ? match[1] : l.split(",")[0].trim();
+        const lines = content.split("\n");
+        const header = lines[0]?.toLowerCase() || "";
+        // Try to find a column named "text", "quote", or similar — fall back to column 0
+        const headers = header.split(",").map(h => h.replace(/"/g, "").trim());
+        const textCol = ["text","quote","quotes","content","entry"].reduce((found, key) => {
+          const idx = headers.indexOf(key);
+          return found >= 0 ? found : idx;
+        }, -1);
+        const colIdx = textCol >= 0 ? textCol : 0;
+        const dataLines = lines.slice(1); // skip header row
+        content = dataLines.map(l => {
+          // parse quoted CSV fields properly
+          const fields = [];
+          let cur = "", inQuote = false;
+          for (let i = 0; i < l.length; i++) {
+            if (l[i] === '"') { inQuote = !inQuote; }
+            else if (l[i] === "," && !inQuote) { fields.push(cur.trim()); cur = ""; }
+            else { cur += l[i]; }
+          }
+          fields.push(cur.trim());
+          return fields[colIdx]?.trim() || "";
         }).filter(Boolean).join("\n");
       }
       setRawInput(content);
@@ -228,6 +245,18 @@ Return exactly one JSON object per input item.`,
 
   // ── Re-identify a single entry ──
   const reIdentify = async (q) => {
+    // Check local DB first — free, instant, and always accurate
+    const local = localLookup(q.text, null);
+    if (local) {
+      setQuotes(prev => prev.map(x => x.id === q.id ? {
+        ...x,
+        source: local.source,
+        category: local.category,
+        confidence: local.confidence,
+      } : x));
+      showToast("Re-identified!");
+      return;
+    }
     // No hint passed — we want a genuinely fresh identification, not one
     // anchored to whatever source was previously assigned.
     const item = { text: q.text, hint: null };
@@ -300,16 +329,16 @@ Return exactly one JSON object per input item.`,
       const local = localMatches.find(m => m.idx === i);
       if (local) {
         const text = formattingEnabled ? basicFormat(p.text) : p.text;
-        return { id: (Date.now() + i).toString(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
+        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
       }
       const api = apiResults.get(i);
       if (api) {
         const text = (formattingEnabled && api.cleanText) ? api.cleanText : p.text;
         const validCats = new Set([...allCats, ...VIBE_TAGS]);
-        return { id: (Date.now() + i).toString(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
+        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
       }
       const text = formattingEnabled ? basicFormat(p.text) : p.text;
-      return { id: (Date.now() + i).toString(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
+      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
     });
 
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
@@ -383,7 +412,7 @@ Return exactly one JSON object per input item.`,
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
-    setShowStats(false); setImportedFileName(null); setInputTab("paste");
+    setShowStats(false); setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
   };
 
   const handleDelete = (id) => {
@@ -406,6 +435,9 @@ Return exactly one JSON object per input item.`,
     if (encoded.length > 6000) showToast(`⚠ Link may be too long for some browsers (${quotes.length} entries). Consider exporting instead.`);
     navigator.clipboard.writeText(url).then(() => {
       if (encoded.length <= 6000) showToast("Shareable link copied to clipboard!");
+    }).catch(() => {
+      showToast("Couldn't copy — try manually copying from the address bar.");
+      window.location.hash = `s=${encoded}`;
     });
   };
 

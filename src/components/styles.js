@@ -11,9 +11,18 @@ export const baseCSS = `
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
-  .qrow{cursor:grab}.qrow:active{cursor:grabbing}
-  .qrow:hover{background:rgba(55,53,47,0.04) !important}.qrow:hover .row-actions{opacity:1 !important}
-  .qrow:hover .checkbox{opacity:1 !important}.qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
+
+  /* Row interactions (optimized) */
+  .qrow{cursor:grab;transition:background 0.18s ease, box-shadow 0.18s ease}
+  .qrow:active{cursor:grabbing}
+  .qrow:hover{background:rgba(55,53,47,0.035) !important;box-shadow:0 1px 0 rgba(55,53,47,0.06)}
+  .qrow:hover .row-actions{opacity:1 !important}
+  .qrow:hover .checkbox{opacity:1 !important}
+  .qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
+
+  /* Checkbox hover affordance */
+  .checkbox:hover .check{border-color:#2383E2 !important;background:rgba(35,131,226,0.08)}
+
   .dd-opt:hover{background:#F1F1EF !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
   .proc-btn{transition:all .15s ease}
@@ -120,7 +129,6 @@ export const Z = {
   statsBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",color:"#37352F",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtnActive:{border:"1px solid #7C3AED",background:"#F5F3FF",color:"#7C3AED"},
 
-
   // View toggles (table / compact / cards)
   viewTog:{display:"flex",border:"1px solid #E3E2DE",borderRadius:6,overflow:"hidden"},
   viewBtn:{padding:"5px 8px",border:"none",background:"#fff",cursor:"pointer",color:"#9B9A97",display:"flex",alignItems:"center",justifyContent:"center"},
@@ -138,8 +146,8 @@ export const Z = {
   statDot:{width:3,height:3,borderRadius:"50%",background:"#D3D3D0"},
   statsDismiss:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:14,marginLeft:"auto"},
   addMorePanel:{background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:8,padding:14,margin:"12px 0",animation:"slideD .2s ease"},
-  attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FFF7ED",border:"1px solid #FED7AA",borderRadius:8,margin:"10px 0",fontSize:13,color:"#92400E",animation:"slideD .2s ease",gap:8}, 
-  attentionCount:{fontWeight:700,fontSize:15,color:"#EA580C"}, 
+  attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FFF7ED",border:"1px solid #FED7AA",borderRadius:8,margin:"10px 0",fontSize:13,color:"#92400E",animation:"slideD .2s ease",gap:8},
+  attentionCount:{fontWeight:700,fontSize:15,color:"#EA580C"},
   attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#EA580C",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
   shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#EFF6FF",border:"1px solid #DBEAFE",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
@@ -213,7 +221,17 @@ export const Z = {
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
   // Table
-  tHead:{display:"flex",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",fontSize:11,color:"#9B9A97",fontWeight:500,textTransform:"uppercase",letterSpacing:.5},
+  tHead:{
+    display:"flex",
+    alignItems:"center",
+    padding:"8px 0",
+    borderBottom:"1px solid rgba(55,53,47,0.08)",
+    fontSize:11,
+    color:"rgba(155,154,151,0.9)",
+    fontWeight:500,
+    textTransform:"uppercase",
+    letterSpacing:0.6
+  },
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
@@ -228,7 +246,6 @@ export const Z = {
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
   rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4},
-
 
   // Edit form
   textarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:60,lineHeight:1.6,background:"#fff"},

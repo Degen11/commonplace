@@ -60,37 +60,54 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         autoFocus
       />
 
-      {suggestion && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-          padding: "6px 10px", background: "#FEF9C3", borderRadius: 6,
-          border: "1px solid #FDE68A", fontSize: 12,
-        }}>
-          <span style={{ color: "#92400E", flexShrink: 0 }}>💡 Did you mean:</span>
-          <span style={{ color: "#78350F", fontStyle: "italic", flex: 1 }}>
-            "{suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1)}" — {suggestion.s}
-          </span>
-          <button
-            onClick={applySuggestion}
-            style={{
-              padding: "2px 10px", borderRadius: 5, border: "none", cursor: "pointer",
-              background: "#D97706", color: "#fff", fontSize: 11, fontWeight: 600,
-              fontFamily: "inherit", flexShrink: 0,
-            }}
-          >
-            Use this
-          </button>
-          <button
-            onClick={() => setDismissed(true)}
-            style={{
-              padding: "2px 6px", borderRadius: 5, border: "none", cursor: "pointer",
-              background: "transparent", color: "#92400E", fontSize: 11, fontFamily: "inherit",
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
+   {suggestion && (
+  <div style={{
+    display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
+    padding:"6px 10px",
+    background:"#ECFDF5",          // soft green background
+    borderRadius:6,
+    border:"1px solid #A7F3D0",    // subtle green border
+    fontSize:12,
+  }}>
+    <span style={{ color:"#065F46", flexShrink:0 }}>💡 Did you mean:</span>
+    <span style={{ color:"#064E3B", fontStyle:"italic", flex:1 }}>
+      "{suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1)}" — {suggestion.s}
+    </span>
+    <button
+      onClick={applySuggestion}
+      style={{
+        padding:"2px 10px",
+        borderRadius:5,
+        border:"none",
+        cursor:"pointer",
+        background:"#059669",      // dark green button
+        color:"#fff",
+        fontSize:11,
+        fontWeight:600,
+        fontFamily:"inherit",
+        flexShrink:0,
+      }}
+    >
+      Use this
+    </button>
+    <button
+      onClick={() => setDismissed(true)}
+      style={{
+        padding:"2px 6px",
+        borderRadius:5,
+        border:"none",
+        cursor:"pointer",
+        background:"transparent",
+        color:"#065F46",
+        fontSize:11,
+        fontFamily:"inherit",
+      }}
+    >
+      ✕
+    </button>
+  </div>
+)}
+
 
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <input

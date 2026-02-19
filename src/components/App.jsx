@@ -658,25 +658,30 @@ Return exactly one JSON object per input item.`,
             </div>
 
             <div style={Z.previewWrap}>
-              <div style={Z.previewBox}>
-                <div style={Z.previewLabel}>What you paste</div>
+              {/* BEFORE — dark terminal look */}
+              <div style={Z.previewBoxBefore}>
+                <div style={{ ...Z.previewLabel, ...Z.previewLabelBefore }}>Raw input</div>
                 <div style={Z.previewContent}>
-                  <p style={Z.previewLine}>you miss 100% of the shots you don't take</p>
-                  <p style={Z.previewLine}>all those moments will be lost in time</p>
-                  <p style={Z.previewLine}>the unexamined life is not worth living</p>
-                  <p style={Z.previewLine}>"Be the change" (Gandhi)</p>
-                  <p style={Z.previewLine}>is this the real life is this just fantasy</p>
+                  {["you miss 100% of the shots you don't take","all those moments will be lost in time","the unexamined life is not worth living",'"Be the change" (Gandhi)',"is this the real life is this just fantasy"].map((line, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                      <span style={Z.previewLineDot} />
+                      <p style={Z.previewLine}>{line}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
+
               <div style={Z.previewArrow}>→</div>
-              <div style={Z.previewBox}>
-                <div style={Z.previewLabel}>What you get</div>
+
+              {/* AFTER — clean card */}
+              <div style={Z.previewBoxAfter}>
+                <div style={{ ...Z.previewLabel, ...Z.previewLabelAfter }}>Organized</div>
                 <div style={Z.previewContent}>
                   <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"You miss 100% of the shots you don't take"</span><span style={Z.previewSrc}>Wayne Gretzky</span></div>
                   <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F3E8FF", color: "#7C3AED" }}>Film</span><span style={Z.previewText}>"All those moments will be lost in time"</span><span style={Z.previewSrc}>Blade Runner (1982)</span></div>
                   <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"The unexamined life is not worth living"</span><span style={Z.previewSrc}>Socrates</span></div>
                   <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#F0ABFC33", color: "#A21CAF" }}>Person</span><span style={Z.previewText}>"Be the change"</span><span style={Z.previewSrc}>Mahatma Gandhi</span></div>
-                  <div style={Z.previewResult}><span style={{ ...Z.previewTag, background: "#FFE4E6", color: "#E11D48" }}>Music</span><span style={Z.previewText}>"Is this the real life, is this just fantasy"</span><span style={Z.previewSrc}>Bohemian Rhapsody — Queen</span></div>
+                  <div style={Z.previewResultLast}><span style={{ ...Z.previewTag, background: "#FFE4E6", color: "#E11D48" }}>Music</span><span style={Z.previewText}>"Is this the real life, is this just fantasy"</span><span style={Z.previewSrc}>Queen</span></div>
                 </div>
               </div>
             </div>

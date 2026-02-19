@@ -262,7 +262,8 @@ function AnimInner({ onComplete = () => {} }) {
                   <span
                     style={{
                       fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
-                      fontSize: 11,
+                      fontSize: 14,
+                      fontWeight: 500,
                       color: ui.cardSrc,
                       whiteSpace: "nowrap",
                       flexShrink: 0,

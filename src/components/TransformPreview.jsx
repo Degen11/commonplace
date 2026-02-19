@@ -143,7 +143,7 @@ useEffect(() => {
                 transition: "opacity 0.4s, transform 0.4s",
               }}>
                 <span style={{
-                  fontSize: 9, fontWeight: 700,
+                  fontSize: 9, fontWeight: 800,
                   padding: "2px 7px", borderRadius: 4,
                   background: card.tagBg, color: card.tagColor,
                   letterSpacing: 0.6, whiteSpace: "nowrap", flexShrink: 0,

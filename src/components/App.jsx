@@ -40,9 +40,9 @@ const SORT_OPTIONS = [
 const REORDERABLE_COLS = ["content", "source", "category"];
 
 const COL_CONFIG = {
-  content:  { label: "Content",  style: { flex: 1, minWidth: 200 } },
-  source:   { label: "Source",   style: { width: 200 } },
-  category: { label: "Category", style: { width: 80 } },
+  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0 } },
+  source:   { label: "Source",   style: { width: 200, paddingLeft: 0 } },
+  category: { label: "Category", style: { width: 80, paddingLeft: 0 } },
 };
 
 // ── Footer ──
@@ -1086,6 +1086,7 @@ Return exactly one JSON object per input item.`,
                       className="col-drag-header"
                       style={{
                         ...COL_CONFIG[colKey].style,
+                        paddingLeft: 0,  // ← ADD THIS - ensures alignment with content
                         opacity: dragColId === colKey ? 0.4 : 1,
                         outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
                         outlineOffset: 2,

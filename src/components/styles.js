@@ -307,17 +307,19 @@ export const Z = {
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
-  // Table
+   // Table
   tHead:{
     display:"flex",
     alignItems:"center",
-    padding:"8px 0",
+    padding:"12px 0 8px 0",  // Increased top padding, removed horizontal padding
     borderBottom:"1px solid rgba(55,53,47,0.08)",
     fontSize:11,
-    color:"rgba(155,154,151,0.9)",
-    fontWeight:500,
+    color:"#3C5775",  // Accent color
+    fontWeight:600,   // Increased to 600
     textTransform:"uppercase",
     letterSpacing:0.6,
+    background:"rgba(60,87,117,0.03)",  // Subtle tint
+    marginBottom:0,
   },
   // Fix 1: use specific transition properties instead of "all" so border-color
   // interpolates cleanly back to gray (#D3D3D0) when checkOn is removed —

@@ -826,7 +826,6 @@ Return exactly one JSON object per input item.`,
                   <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
                 </div>
               </div>
-                            </div>
               
               {/* Features section title with lines */}
               <div style={Z.howSectionTitle}>

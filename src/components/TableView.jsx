@@ -59,6 +59,7 @@ export default function TableView({
   filtered,
   selected,
   toggleSel,
+  selAll,
   editingId,
   setEditingId,
   inlineEdit,
@@ -170,7 +171,15 @@ export default function TableView({
     <div style={{ overflowX: "auto" }}>
       {filtered.length > 0 && (
         <div style={Z.tHead}>
-          <div style={{ width: 32 }} />
+          <div style={{ width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <input
+              type="checkbox"
+              checked={filtered.length > 0 && filtered.every(q => selected.has(q.id))}
+              onChange={selAll}
+              style={{ cursor: 'pointer', width: 14, height: 14 }}
+              title="Select all"
+            />
+          </div>
           {columnOrder.map(colKey => (
             <div
               key={colKey}
@@ -217,7 +226,7 @@ export default function TableView({
             <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
               <div
                 style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
-                onClick={() => toggleSel(q.id)}
+                onClick={(e) => toggleSel(q.id, e.shiftKey)}
                 onMouseDown={e => e.preventDefault()}
               >
                 {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}

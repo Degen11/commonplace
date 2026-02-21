@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
@@ -92,7 +92,6 @@ export default function Commonplace() {
   const [importedFileName, setImportedFileName] = useState(null);
   const [pendingDupes, setPendingDupes]       = useState([]);
   const [dupeDecisions, setDupeDecisions]     = useState({});
-  const [reidentifying, setReidentifying]     = useState(null);
 
   // Column order state — persisted to localStorage
   const [columnOrder, setColumnOrder] = useState(() => {
@@ -108,7 +107,6 @@ export default function Commonplace() {
   });
 
   const undoRef                = useRef(null);
-  const bulkUndoRef            = useRef(null);
   const addMoreRef             = useRef(null);
   const exportRef              = useRef(null);
   const sortRef                = useRef(null);
@@ -180,36 +178,6 @@ export default function Commonplace() {
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
-
-  // ── Click-outside to cancel inline edit ──
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (inlineEdit && !e.target.closest('.inline-src') && !e.target.closest('.inline-cat') && !e.target.closest('input') && !e.target.closest('select')) {
-        setInlineEdit(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [inlineEdit]);
-
-  // ── Keyboard shortcuts ──
-  useEffect(() => {
-    const handleKeyboard = (e) => {
-      // Escape to clear search
-      if (e.key === 'Escape' && search && !e.target.matches('input, textarea, select')) {
-        setSearch("");
-        e.preventDefault();
-      }
-      // Cmd/Ctrl + A to select all (when not in input)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a' && !e.target.matches('input, textarea, select')) {
-        e.preventDefault();
-        const ids = filtered.map(q => q.id);
-        ids.every(id => selected.has(id)) ? setSelected(new Set()) : setSelected(new Set(ids));
-      }
-    };
-    document.addEventListener('keydown', handleKeyboard);
-    return () => document.removeEventListener('keydown', handleKeyboard);
-  }, [search, filtered, selected]);
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 
@@ -310,14 +278,12 @@ Return exactly one JSON object per input item.`,
 
   // ── Re-identify a single entry ──
   const reIdentify = async (q) => {
-    setReidentifying(q.id);
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       setQuotes(prev => prev.map(x => x.id === q.id ? {
         ...x, source: local.source, category: local.category, confidence: local.confidence,
       } : x));
       showToast("Re-identified!");
-      setReidentifying(null);
       return;
     }
     const item = { text: q.text, hint: null };
@@ -337,7 +303,6 @@ Return exactly one JSON object per input item.`,
     } catch {
       showToast("Couldn't reach AI. Try again.");
     }
-    setReidentifying(null);
   };
 
   // ── Copy single quote to clipboard ──
@@ -445,17 +410,10 @@ Return exactly one JSON object per input item.`,
     const { unique, seen, appendMode } = pendingContinuationRef.current;
     let keptCount = 0;
     pendingDupes.forEach((dupe, i) => {
-      const decision = dupeDecisions[i];
-      if (decision === "keep" || decision === "merge") {
+      if (dupeDecisions[i] === "keep") {
         const norm = normalize(dupe.incoming.text);
         if (![...seen].some(s => similarity(s, norm) > 0.55)) {
-          // If merging, combine the sources
-          if (decision === "merge" && dupe.matchedSource && dupe.incoming.hint) {
-            dupe.incoming.hint = `${dupe.matchedSource} / ${dupe.incoming.hint}`;
-          }
-          unique.push(dupe.incoming); 
-          seen.add(norm); 
-          keptCount++;
+          unique.push(dupe.incoming); seen.add(norm); keptCount++;
         }
       }
     });
@@ -528,33 +486,15 @@ Return exactly one JSON object per input item.`,
     setInlineEdit(null);
   };
   const applyBulk  = () => {
-    const originalQuotes = quotes.filter(q => selected.has(q.id)).map(q => ({ ...q }));
-    const selectedIds = new Set(selected);
-    
     setQuotes(p => p.map(q => {
-      if (!selectedIds.has(q.id)) return q;
+      if (!selected.has(q.id)) return q;
       const u = { ...q };
       if (bulkEditCat) u.category = bulkEditCat;
       if (bulkEditSource.trim()) u.source = bulkEditSource.trim();
       if (bulkEditCat || bulkEditSource.trim()) u.confidence = "high";
       return u;
     }));
-    
-    bulkUndoRef.current = { originalQuotes, selectedIds };
-    setSelected(new Set()); 
-    setBulkEditCat(""); 
-    setBulkEditSource("");
-    
-    showToast(`Updated ${originalQuotes.length} entries`, "Undo", () => {
-      if (bulkUndoRef.current) {
-        const { originalQuotes: originals } = bulkUndoRef.current;
-        setQuotes(p => p.map(q => {
-          const original = originals.find(o => o.id === q.id);
-          return original ? original : q;
-        }));
-        bulkUndoRef.current = null;
-      }
-    });
+    setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
   };
   const bulkDel = () => {
     const deletedQuotes = quotes.filter(q => selected.has(q.id));
@@ -595,21 +535,16 @@ Return exactly one JSON object per input item.`,
   };
   const handleDragEnd = () => { setDragId(null); lastDragTarget.current = null; };
 
-  // ── Filtering & sorting (optimized with useMemo) ──
-  const filtered = useMemo(() => {
-    let results = quotes.filter(q => {
-      if (catFilter !== "All" && q.category !== catFilter) return false;
-      if (favFilter && !q.favorite) return false;
-      if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-    
-    if (sortBy === "confidence") results = [...results].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
-    else if (sortBy === "alpha")    results = [...results].sort((a, b) => a.text.localeCompare(b.text));
-    else if (sortBy === "category") results = [...results].sort((a, b) => a.category.localeCompare(b.category));
-    
-    return results;
-  }, [quotes, catFilter, favFilter, search, sortBy]);
+  // ── Filtering & sorting ──
+  let filtered = quotes.filter(q => {
+    if (catFilter !== "All" && q.category !== catFilter) return false;
+    if (favFilter && !q.favorite) return false;
+    if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+  if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
+  else if (sortBy === "alpha")    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
+  else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
 
   const cc           = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
   const favCount     = quotes.filter(q => q.favorite).length;
@@ -631,7 +566,6 @@ Return exactly one JSON object per input item.`,
     onDelete:     handleDelete,
     onCopy:       copyQuote,
     onReidentify: reIdentify,
-    reidentifying: reidentifying,
   };
 
   // ========================== RENDER ==========================
@@ -1076,7 +1010,7 @@ Return exactly one JSON object per input item.`,
                       <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
                         <FavBtn q={q} onFav={actionProps.onFav} />
                         <CopyBtn q={q} onCopy={actionProps.onCopy} />
-                        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} />
+                        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
                         <DelBtn q={q} onDelete={actionProps.onDelete} />
                       </div>
                     </div>

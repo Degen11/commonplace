@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 
+// ─── Commonplace accent ───────────────────────────────────────────────────────
+// Desaturated slate-blue. Cool enough to cut through the warm sand palette,
+// dark enough to feel grounded rather than "tech-blue".
+export const CP_ACCENT = "#3C5775";
+export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)"; // for borders / tints
+
 const RAW_LINES = [
   "you miss 100% of the shots you don't take",
   "all those moments will be lost in time",
@@ -8,101 +14,116 @@ const RAW_LINES = [
   "is this the real life is this just fantasy",
 ];
 
-// “After” pills use your table-ish palette
 const RESULT_CARDS = [
-  { tag: "Person", tagBg: "#FEF3C7", tagColor: "#B45309", text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
-  { tag: "Film",   tagBg: "#F3E8FF", tagColor: "#7C3AED", text: "All those moments will be lost in time", source: "Blade Runner (1982)" },
-  { tag: "Person", tagBg: "#FEF3C7", tagColor: "#B45309", text: "The unexamined life is not worth living", source: "Socrates" },
-  { tag: "Person", tagBg: "#FEF3C7", tagColor: "#B45309", text: "Be the change", source: "Mahatma Gandhi" },
-  { tag: "Music",  tagBg: "#FFE4E6", tagColor: "#E11D48", text: "Is this the real life, is this just fantasy", source: "Queen" },
+  { tag: "Person", tagBg: "#EEF2F7", tagColor: CP_ACCENT,    text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
+  { tag: "Film",   tagBg: "#F3E8FF", tagColor: "#7C3AED",    text: "All those moments will be lost in time",    source: "Blade Runner (1982)" },
+  { tag: "Person", tagBg: "#EEF2F7", tagColor: CP_ACCENT,    text: "The unexamined life is not worth living",   source: "Socrates" },
+  { tag: "Person", tagBg: "#EEF2F7", tagColor: CP_ACCENT,    text: "Be the change",                            source: "Mahatma Gandhi" },
+  { tag: "Music",  tagBg: "#FFE4E6", tagColor: "#E11D48",    text: "Is this the real life, is this just fantasy", source: "Queen" },
 ];
 
-// Inner animation — remounts each loop via key prop
+// ─── Inner animation — remounts each loop via key prop ────────────────────────
 function AnimInner({ onComplete = () => {} }) {
   const [visibleLines, setVisibleLines] = useState([]);
   const [visibleCards, setVisibleCards] = useState([]);
-  const [phase, setPhase] = useState("before"); // before | processing | after
-  const [theme, setTheme] = useState("dark");   // dark -> mix -> light (smooth crossfade)
+  const [phase, setPhase]   = useState("before");  // before | processing | after
+  const [lightness, setLightness] = useState(0);   // 0 = dark, 1 = light (drives interpolation)
 
   useEffect(() => {
     const ts = [];
-    const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
+    const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); return id; };
 
     setVisibleLines([]);
     setVisibleCards([]);
     setPhase("before");
-    setTheme("dark");
+    setLightness(0);
 
+    // Stagger raw lines in
     RAW_LINES.forEach((_, i) => t(300 + i * 500, () => {
       setVisibleLines(p => [...p, i]);
     }));
 
     const doneTyping = 300 + RAW_LINES.length * 500 + 900;
+
     t(doneTyping, () => setPhase("processing"));
 
-    const showAt = doneTyping + 1100;
+    const showAt = doneTyping + 1200;
 
-    // Start a “mix” phase *slightly before* cards appear so the flip isn’t jarring
-    t(showAt - 300, () => setTheme("mix"));
-
-    t(showAt, () => {
+    // Ease the surface toward light *before* the cards arrive so the flip
+    // is smooth and not competing with card animations
+    t(showAt - 500, () => setLightness(0.45));  // midpoint
+    t(showAt,       () => {
       setPhase("after");
-      // Fade the surface to light over a short ramp, instead of instant
-      t(120, () => setTheme("light"));
+      t(60,  () => setLightness(1));            // finish the fade once cards start
 
-      RESULT_CARDS.forEach((_, i) => t(i * 220, () => {
+      RESULT_CARDS.forEach((_, i) => t(i * 230, () => {
         setVisibleCards(p => [...p, i]);
       }));
     });
 
-    t(showAt + RESULT_CARDS.length * 220 + 2400, () => onComplete?.());
+    t(showAt + RESULT_CARDS.length * 230 + 2600, () => onComplete?.());
 
     return () => ts.forEach(clearTimeout);
   }, [onComplete]);
 
+  // ── Dot animation ──
   const dotStyle = (delay, color) => ({
-    width: 6,
-    height: 6,
-    borderRadius: "50%",
-    background: color,
-    display: "inline-block",
+    width: 6, height: 6, borderRadius: "50%",
+    background: color, display: "inline-block",
     animation: "tpDot 1.2s ease-in-out infinite",
     animationDelay: delay,
   });
 
+  // ── Interpolate between dark (0) and light (1) ────────────────────────────
+  // Using a hand-rolled lerp so we control exactly which values cross-fade,
+  // avoiding the jarring instant snap that happened before.
   const ui = useMemo(() => {
-    const isDark = theme === "dark";
-    const isMix = theme === "mix";
+    const l = lightness; // 0–1
 
-    // Light theme uses your app background (#FAF8F4), not pure white
-    return {
-      // Outer surface (animates instead of hard switch)
-      surfaceBg: isDark ? "#1A1918" : isMix ? "#2A2826" : "#FAF8F4",
-      surfaceShadow: isDark
-        ? "0 8px 40px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.12)"
-        : "0 8px 40px rgba(26,24,20,0.10), 0 2px 8px rgba(26,24,20,0.08)",
-
-      // Chrome (keep it “terminal-ish” but soften in light theme)
-      chromeBg: isDark ? "#141312" : isMix ? "#1B1A19" : "#F5F1EB",
-      chromeBorder: isDark ? "#2A2826" : "rgba(55,53,47,0.08)",
-      chromeText: isDark ? "#6B6764" : "#9B9A97",
-      dots: isDark ? "#9A9591" : "#9B9A97",
-
-      // Before list
-      caret: isDark ? "#3D3B38" : "rgba(55,53,47,0.28)",
-      rawText: isDark ? "#8A8581" : "#6A6660",
-
-      // After “table-ish” cards
-      cardBg: isDark ? "#222120" : "#FBFBFA",
-      cardBorder: isDark ? "#2D2B28" : "rgba(55,53,47,0.08)",
-      cardText: isDark ? "#C8C3BC" : "#37352F",
-      cardSrc: isDark ? "#5A5855" : "#9B9A97",
+    const lerp = (a, b) => {
+      // Accepts hex strings and rgba — for simplicity we just return one or the other
+      // and let the CSS transition handle the actual visual smoothing.
+      return l < 0.5 ? a : b;
     };
-  }, [theme]);
+
+    // Outer surface: dark warm → page background
+    const surfaceBg = l === 0
+      ? "#1A1918"
+      : l < 0.5
+        ? "#252220"
+        : "#FFFFFF";  // Pure white — distinct from the #FAF8F4 page, gives real lift
+
+    // Chrome bar
+    const chromeBg = l < 0.5 ? "#141312" : "#F5F1EB";
+
+    return {
+      surfaceBg,
+      surfaceShadow: l < 0.5
+        ? "0 8px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.14)"
+        : "0 2px 0 rgba(60,87,117,0.06), 0 8px 40px rgba(60,87,117,0.10), 0 2px 12px rgba(26,24,20,0.06)",
+
+      chromeBg,
+      chromeBorder: l < 0.5 ? "#2A2826" : "rgba(60,87,117,0.10)",
+      chromeText:   l < 0.5 ? "#6B6764" : CP_ACCENT,
+
+      dots: l < 0.5 ? "#9A9591" : CP_ACCENT,
+
+      caret:   l < 0.5 ? "#3D3B38" : "rgba(55,53,47,0.25)",
+      rawText: l < 0.5 ? "#8A8581" : "#6A6660",
+
+      // ── After cards: white with accent-tinted border + soft shadow ──
+      // This is the key fix — white bg floats off the page, accent border
+      // provides identity, shadow gives depth without being heavy.
+      cardBg:     "#FFFFFF",
+      cardBorder: `rgba(60,87,117,0.14)`,
+      cardShadow: "0 1px 4px rgba(60,87,117,0.07), 0 0 0 1px rgba(60,87,117,0.08)",
+      cardText:   l < 0.5 ? "#C8C3BC" : "#37352F",
+      cardSrc:    l < 0.5 ? "#5A5855" : "#9B9A97",
+    };
+  }, [lightness]);
 
   return (
     <>
-      {/* fallback keyframes in case baseCSS isn't present on the page */}
       <style>{`
         @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
       `}</style>
@@ -116,10 +137,11 @@ function AnimInner({ onComplete = () => {} }) {
           overflow: "hidden",
           background: ui.surfaceBg,
           boxShadow: ui.surfaceShadow,
-          transition: "background 520ms ease, box-shadow 520ms ease",
+          // Longer transition so the surface eases in over 600ms instead of snapping
+          transition: "background 600ms ease, box-shadow 600ms ease",
         }}
       >
-        {/* “Terminal chrome” (also transitions) */}
+        {/* Chrome bar */}
         <div
           style={{
             padding: "11px 18px",
@@ -128,7 +150,7 @@ function AnimInner({ onComplete = () => {} }) {
             display: "flex",
             alignItems: "center",
             gap: 10,
-            transition: "background 520ms ease, border-color 520ms ease",
+            transition: "background 600ms ease, border-color 600ms ease",
           }}
         >
           <div style={{ display: "flex", gap: 6 }}>
@@ -139,20 +161,24 @@ function AnimInner({ onComplete = () => {} }) {
 
           <span
             style={{
-              fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
+              fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
               fontSize: 14,
               fontWeight: 500,
               color: ui.chromeText,
               marginLeft: 6,
-              transition: "color 520ms ease",
+              transition: "color 600ms ease",
             }}
           >
-            {phase === "before" ? "quotes.txt" : phase === "processing" ? "identifying…" : "collection — organized ✓"}
+            {phase === "before"
+              ? "quotes.txt"
+              : phase === "processing"
+                ? "identifying…"
+                : "collection — organized ✓"}
           </span>
 
           {phase === "processing" && (
             <div style={{ marginLeft: "auto", display: "flex", gap: 5, alignItems: "center" }}>
-              <span style={dotStyle("0s", ui.dots)} />
+              <span style={dotStyle("0s",   ui.dots)} />
               <span style={dotStyle("0.2s", ui.dots)} />
               <span style={dotStyle("0.4s", ui.dots)} />
             </div>
@@ -161,7 +187,8 @@ function AnimInner({ onComplete = () => {} }) {
 
         {/* Content */}
         <div style={{ padding: "22px 26px", minHeight: 228 }}>
-          {/* BEFORE / PROCESSING: raw lines */}
+
+          {/* BEFORE / PROCESSING */}
           {phase !== "after" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
               {RAW_LINES.map((line, i) => (
@@ -171,33 +198,34 @@ function AnimInner({ onComplete = () => {} }) {
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    opacity: visibleLines.includes(i) ? (phase === "processing" ? 0.35 : 1) : 0,
+                    opacity: visibleLines.includes(i)
+                      ? (phase === "processing" ? 0.3 : 1)
+                      : 0,
                     transform: visibleLines.includes(i) ? "translateY(0)" : "translateY(8px)",
-                    transition: "opacity 0.35s, transform 0.35s",
+                    transition: "opacity 0.4s ease, transform 0.4s ease",
                   }}
                 >
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                       color: ui.caret,
                       fontSize: 12,
                       flexShrink: 0,
-                      transition: "color 520ms ease",
+                      transition: "color 600ms ease",
                     }}
                   >
                     ›
                   </span>
-
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                       fontSize: 12.5,
                       color: ui.rawText,
                       lineHeight: 1.4,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
-                      transition: "color 520ms ease",
+                      transition: "color 600ms ease",
                     }}
                   >
                     {line}
@@ -207,7 +235,7 @@ function AnimInner({ onComplete = () => {} }) {
             </div>
           )}
 
-          {/* AFTER: result cards */}
+          {/* AFTER — result cards */}
           {phase === "after" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {RESULT_CARDS.map((card, i) => (
@@ -221,11 +249,13 @@ function AnimInner({ onComplete = () => {} }) {
                     background: ui.cardBg,
                     borderRadius: 8,
                     border: `1px solid ${ui.cardBorder}`,
+                    boxShadow: ui.cardShadow,
                     opacity: visibleCards.includes(i) ? 1 : 0,
                     transform: visibleCards.includes(i) ? "translateY(0)" : "translateY(10px)",
-                    transition: "opacity 0.35s ease, transform 0.35s ease, background 520ms ease, border-color 520ms ease",
+                    transition: "opacity 0.38s ease, transform 0.38s ease",
                   }}
                 >
+                  {/* Category tag — now uses accent for "Person" */}
                   <span
                     style={{
                       fontSize: 9,
@@ -238,7 +268,7 @@ function AnimInner({ onComplete = () => {} }) {
                       whiteSpace: "nowrap",
                       flexShrink: 0,
                       textTransform: "uppercase",
-                      fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                     }}
                   >
                     {card.tag}
@@ -246,7 +276,7 @@ function AnimInner({ onComplete = () => {} }) {
 
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                       fontSize: 12,
                       color: ui.cardText,
                       flex: 1,
@@ -254,7 +284,7 @@ function AnimInner({ onComplete = () => {} }) {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
-                      transition: "color 520ms ease",
+                      transition: "color 600ms ease",
                     }}
                   >
                     "{card.text}"
@@ -262,12 +292,12 @@ function AnimInner({ onComplete = () => {} }) {
 
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                       fontSize: 11,
                       color: ui.cardSrc,
                       whiteSpace: "nowrap",
                       flexShrink: 0,
-                      transition: "color 520ms ease",
+                      transition: "color 600ms ease",
                     }}
                   >
                     {card.source}

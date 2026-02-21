@@ -1,9 +1,17 @@
+// ===================== COMMONPLACE ACCENT =====================
+// Desaturated slate-blue — cool contrast to the warm sand palette.
+// Use sparingly: active states, key CTAs, category "Person" tags,
+// focus rings, hover accents on the collection screen.
+export const CP_ACCENT       = "#3C5775";  // primary
+export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";  // tint/border
+export const CP_ACCENT_TEXT  = "#2D4259";  // slightly darker for text-on-white
+
 // ===================== BASE CSS =====================
 export const baseCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#FAF8F4;color:#1A1814}
-  ::selection{background:#2383E233}
+  ::selection{background:rgba(60,87,117,0.18)}
   textarea:focus,input:focus,select:focus{outline:none}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
@@ -27,7 +35,7 @@ export const baseCSS = `
   .inline-cat:hover{opacity:0.75 !important}
 
   /* Checkbox hover affordance */
-  .checkbox:hover .check{border-color:#2383E2 !important;background:rgba(35,131,226,0.08)}
+  .checkbox:hover .check{border-color:#3C5775 !important;background:rgba(60,87,117,0.08)}
 
   .dd-opt:hover{background:#F1F1EF !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
@@ -44,6 +52,8 @@ export const baseCSS = `
 `;
 
 // ===================== MAIN STYLES =====================
+// Note: CP_ACCENT / CP_ACCENT_MUTED / CP_ACCENT_TEXT exported above — import
+// those constants in components that need the accent color directly.
 export const Z = {
   // Layout
   wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:"'DM Sans',-apple-system,sans-serif",fontSize:14,color:"#1A1814",minHeight:"100vh",background:"#FAF8F4"},
@@ -76,13 +86,13 @@ export const Z = {
   bigTextarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:8,padding:16,fontSize:15,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:240,lineHeight:1.7,background:"#fff"},
   inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,flexWrap:"wrap",gap:10},
   inputCount:{fontSize:13,color:"#9B9A97"},
-  processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:"#37352F",color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:CP_ACCENT,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   tryBtn:{padding:"8px 16px",border:"1px solid #E3E2DE",borderRadius:8,background:"#fff",color:"#9B9A97",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
 
   // Restore session banner
-  restoreBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"#F0F7FF",border:"1px solid #DBEAFE",borderRadius:10,marginBottom:20,fontSize:13,color:"#1D4ED8",animation:"slideD .25s ease",flexWrap:"wrap",gap:8,width:"100%",maxWidth:800},
-  restoreBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
-  restoreDismiss:{padding:"5px 10px",borderRadius:6,border:"1px solid #BFDBFE",background:"transparent",color:"#2383E2",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
+  restoreBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"rgba(60,87,117,0.06)",border:"1px solid rgba(60,87,117,0.14)",borderRadius:10,marginBottom:20,fontSize:13,color:CP_ACCENT_TEXT,animation:"slideD .25s ease",flexWrap:"wrap",gap:8,width:"100%",maxWidth:800},
+  restoreBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  restoreDismiss:{padding:"5px 10px",borderRadius:6,border:"1px solid rgba(60,87,117,0.25)",background:"transparent",color:CP_ACCENT,fontSize:12,cursor:"pointer",fontFamily:"inherit"},
 
     // How it works — new grid style
   howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
@@ -198,12 +208,12 @@ export const Z = {
   dupeKeptCount:{fontSize:12,color:"#9B9A97"},
 
   // Bulk edit
-  bulkBar:{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#F0F7FF",borderRadius:8,margin:"12px 0",flexWrap:"wrap",animation:"slideD .2s ease"},
-  bulkN:{fontSize:13,fontWeight:600,color:"#2383E2",whiteSpace:"nowrap"},
+  bulkBar:{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"rgba(60,87,117,0.06)",borderRadius:8,margin:"12px 0",flexWrap:"wrap",animation:"slideD .2s ease"},
+  bulkN:{fontSize:13,fontWeight:600,color:CP_ACCENT,whiteSpace:"nowrap"},
   bulkF:{display:"flex",gap:6,alignItems:"center",flex:1,flexWrap:"wrap"},
   bulkSel:{border:"1px solid #D3D3D0",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"#fff"},
   bulkIn:{border:"1px solid #D3D3D0",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:140},
-  bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   bulkDelBtn:{padding:"5px 12px",borderRadius:6,border:"1px solid #EB5757",background:"#fff",color:"#EB5757",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   bulkX:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:14},
 
@@ -221,10 +231,10 @@ export const Z = {
   // Category pills
   cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #F1F1EF"},
   catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
-  catOn:{background:"#37352F",color:"#fff",borderColor:"#37352F"},
+  catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"},
-  newCatIn:{border:"1px solid #2383E2",borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
-  newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
+  newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
   // Table
   tHead:{
@@ -243,7 +253,7 @@ export const Z = {
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .1s",flexShrink:0},
-  checkOn:{background:"#2383E2",borderColor:"#2383E2"},
+  checkOn:{background:CP_ACCENT,borderColor:CP_ACCENT},
   entryText:{fontSize:14,lineHeight:1.55,color:"#37352F"},
   entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F"},
   srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8},
@@ -255,14 +265,14 @@ export const Z = {
 
   // Edit form
   textarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:60,lineHeight:1.6,background:"#fff"},
-  editIn:{flex:1,minWidth:100,border:"1px solid #2383E2",borderRadius:6,padding:"4px 8px",fontSize:12,fontFamily:"inherit"},
+  editIn:{flex:1,minWidth:100,border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,fontFamily:"inherit"},
   editSel:{border:"1px solid #E3E2DE",borderRadius:6,padding:"4px 8px",fontSize:12,fontFamily:"inherit",background:"#fff"},
-  editSave:{padding:"4px 12px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  editSave:{padding:"4px 12px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   editCancel:{padding:"4px 8px",borderRadius:6,border:"none",background:"transparent",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
 
   // Inline field editing (source / category)
-  inlineSrcInput:{border:"1px solid #2383E2",borderRadius:4,padding:"2px 6px",fontSize:12,fontFamily:"inherit",color:"#37352F",width:"100%",background:"#fff"},
-  inlineCatSel:{border:"1px solid #2383E2",borderRadius:4,padding:"2px 2px",fontSize:11,fontFamily:"inherit",background:"#fff",cursor:"pointer",width:78},
+  inlineSrcInput:{border:`1px solid ${CP_ACCENT}`,borderRadius:4,padding:"2px 6px",fontSize:12,fontFamily:"inherit",color:"#37352F",width:"100%",background:"#fff"},
+  inlineCatSel:{border:`1px solid ${CP_ACCENT}`,borderRadius:4,padding:"2px 2px",fontSize:11,fontFamily:"inherit",background:"#fff",cursor:"pointer",width:78},
 
   // Modal
   modalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},

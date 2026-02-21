@@ -112,6 +112,7 @@ export default function Commonplace() {
   const sortRef                = useRef(null);
   const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
+  const lastSelectedIndex      = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -472,7 +473,43 @@ Return exactly one JSON object per input item.`,
   };
 
   // ── Inline actions ──
-  const toggleSel  = id => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSel = (id, shiftKey = false) => {
+    if (shiftKey && lastSelectedIndex.current !== null) {
+      // Shift-click: select range
+      const currentIndex = filtered.findIndex(q => q.id === id);
+      const lastIndex = lastSelectedIndex.current;
+      const start = Math.min(currentIndex, lastIndex);
+      const end = Math.max(currentIndex, lastIndex);
+      const rangeIds = filtered.slice(start, end + 1).map(q => q.id);
+      setSelected(p => {
+        const n = new Set(p);
+        rangeIds.forEach(rangeId => n.add(rangeId));
+        return n;
+      });
+      lastSelectedIndex.current = currentIndex;
+    } else {
+      // Normal click: toggle single
+      setSelected(p => {
+        const n = new Set(p);
+        n.has(id) ? n.delete(id) : n.add(id);
+        return n;
+      });
+      lastSelectedIndex.current = filtered.findIndex(q => q.id === id);
+    }
+  };
+  const selAll = () => {
+    if (filtered.length === 0) return;
+    const allSelected = filtered.every(q => selected.has(q.id));
+    if (allSelected) {
+      // Deselect all
+      setSelected(new Set());
+      lastSelectedIndex.current = null;
+    } else {
+      // Select all visible
+      setSelected(new Set(filtered.map(q => q.id)));
+      lastSelectedIndex.current = null;
+    }
+  };
   const saveEdit   = (id, text, source, category) => {
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
     setEditingId(null);
@@ -951,6 +988,7 @@ Return exactly one JSON object per input item.`,
               filtered={filtered}
               selected={selected}
               toggleSel={toggleSel}
+              selAll={selAll}
               editingId={editingId}
               setEditingId={setEditingId}
               inlineEdit={inlineEdit}

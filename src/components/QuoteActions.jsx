@@ -9,13 +9,13 @@ export function FavBtn({ q, onFav }) {
       title={q.favorite ? "Unfavorite" : "Favorite"}
     >
       {q.favorite ? (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2.5l1.545 3.131 3.455.503-2.5 2.438.59 3.428L8 10.131 4.91 12l.59-3.428-2.5-2.438 3.455-.503L8 2.5z" 
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 3l1.736 3.519 3.882.564-2.809 2.738.663 3.857L9 12.096l-3.472 1.582.663-3.857-2.809-2.738 3.882-.564L9 3z" 
                 fill="#F59E0B" stroke="#F59E0B" strokeWidth="1.5" strokeLinejoin="round"/>
         </svg>
       ) : (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2.5l1.545 3.131 3.455.503-2.5 2.438.59 3.428L8 10.131 4.91 12l.59-3.428-2.5-2.438 3.455-.503L8 2.5z" 
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 3l1.736 3.519 3.882.564-2.809 2.738.663 3.857L9 12.096l-3.472 1.582.663-3.857-2.809-2.738 3.882-.564L9 3z" 
                 stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
         </svg>
       )}
@@ -58,8 +58,8 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ 
         animation: loading ? "spin 1s linear infinite" : "none",
       }}>
-        <path d="M13.5 8a5.5 5.5 0 11-1.293-3.536" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <path d="M13.5 3.5v4.5h-4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14 8a1 1 0 00-1 1 5.33 5.33 0 11-1.48-3.67h-1.6a1 1 0 000 1.34h3.02a1 1 0 001-.67V2a1 1 0 00-1.34 0v1.18A6.67 6.67 0 1014.67 8 1 1 0 0014 8z" 
+              fill="currentColor"/>
       </svg>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </button>

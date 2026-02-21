@@ -1,7 +1,7 @@
 import { useState } from "react";
 import EditForm from "./EditForm";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
-import { displayText } from "../utils/formatting";
+import { displayText } from "../utils/helpers";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { Z } from "./styles";
 

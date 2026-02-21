@@ -826,9 +826,27 @@ Return exactly one JSON object per input item.`,
                   <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
                 </div>
               </div>
-              <div style={Z.featPills}>
-                {["Inline editing","Bulk category assignment","Drag to reorder","CSV / Markdown / JSON export","Shareable links","Session restore","Custom categories","Duplicate detection","Smart formatting cleanup","Did you mean? suggestions"].map(f => (
-                  <span key={f} className="feat-pill" style={Z.featPill}><span style={Z.featPillDot} />{f}</span>
+              <div style={Z.featuresGrid}>
+                {[
+                  { icon: "✎", title: "Inline editing", desc: "Edit text, source, or category with one click" },
+                  { icon: "📋", title: "Bulk operations", desc: "Update categories or sources across multiple entries" },
+                  { icon: "↕️", title: "Drag to reorder", desc: "Arrange entries exactly how you want them" },
+                  { icon: "📤", title: "Multiple export formats", desc: "CSV, Markdown, JSON, or plain text" },
+                  { icon: "🔗", title: "Shareable links", desc: "Share your curated collection with anyone" },
+                  { icon: "💾", title: "Session restore", desc: "Pick up right where you left off" },
+                  { icon: "🏷️", title: "Custom categories", desc: "Create tags that work for your collection" },
+                  { icon: "🔄", title: "Duplicate detection", desc: "Keep your collection clean and organized" },
+                  { icon: "✨", title: "Smart formatting", desc: "Auto-cleanup and \"Did you mean?\" suggestions" },
+                  { icon: "🎯", title: "Confidence indicators", desc: "See at a glance which entries need review" },
+                  { icon: "🔍", title: "Search & filter", desc: "Find anything instantly across your collection" }
+                ].map(f => (
+                  <div key={f.title} style={Z.featureCard}>
+                    <div style={Z.featureIcon}>{f.icon}</div>
+                    <div style={Z.featureContent}>
+                      <div style={Z.featureTitle}>{f.title}</div>
+                      <div style={Z.featureDesc}>{f.desc}</div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

@@ -116,10 +116,61 @@ export const Z = {
   howCardTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,fontWeight:700,letterSpacing:"-0.2px",color:"#1A1814"},
   howCardDesc:{fontSize:13,lineHeight:1.65,color:"#6A6660",fontWeight:300},
 
-  // Feature pills
+  // Feature pills (keeping for reference, but will be replaced)
   featPills:{display:"flex",flexWrap:"wrap",gap:7,marginTop:16,justifyContent:"center"},
   featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
   featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
+
+  // NEW FEATURE GRID STYLES - Add these right here
+  featuresGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 16,
+    marginTop: 16,
+  },
+
+  featureCard: {
+    background: "#FFFFFF",
+    border: "1px solid #F1F1EF",
+    borderRadius: 14,
+    padding: "20px 16px",
+    display: "flex",
+    gap: 14,
+    transition: "all 0.2s ease",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+    cursor: "default",
+  },
+
+  featureIcon: {
+    fontSize: 22,
+    background: "rgba(60,87,117,0.06)",
+    width: 44,
+    height: 44,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    color: CP_ACCENT,
+    flexShrink: 0,
+  },
+
+  featureContent: {
+    flex: 1,
+  },
+
+  featureTitle: {
+    fontWeight: 600,
+    fontSize: 14,
+    color: "#1A1814",
+    marginBottom: 4,
+  },
+
+  featureDesc: {
+    fontSize: 12,
+    color: "#6A6660",
+    lineHeight: 1.5,
+    fontWeight: 300,
+  },
 
   // Old preview keys kept as no-ops
   howWrap:{display:"none"},

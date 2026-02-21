@@ -344,7 +344,7 @@ export const Z = {
   // Fix 7: pre-wrap so Shift+Enter line breaks render after save
   entryText:{fontSize:14,lineHeight:1.55,color:"#37352F",whiteSpace:"pre-wrap"},
   entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F",whiteSpace:"pre-wrap"},
-  srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8},
+srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:12},  // Changed from 8 to 12
   srcText:{fontSize:12,color:"#9B9A97",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",transition:"all .15s"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},

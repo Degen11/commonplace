@@ -664,7 +664,7 @@ Return exactly one JSON object per input item.`,
         );
       case "source":
         return (
-          <div key="source" className="src-col" style={Z.srcCol}>
+    <div key="source" className="src-col" style={{ width: 200, paddingRight: 12 }}>  // ← Make sure this has paddingRight: 12
             {inlineEdit?.id === q.id && inlineEdit?.field === "source"
               ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
               : <>

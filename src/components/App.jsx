@@ -22,7 +22,7 @@ import EditForm from "./EditForm";
 import DupeModal from "./DupeModal";
 import StatsPanel from "./StatsPanel";
 import TransformPreview from "./TransformPreview";
-import { FavBtn, EditBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
+import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { baseCSS, Z, CZ } from "./styles";
 
 const LS_QUOTES = "commonplace_quotes";
@@ -44,6 +44,47 @@ function Footer({ styles }) {
   );
 }
 
+// ── Inline source text input ──
+function InlineSourceInput({ initial, onSave, onCancel }) {
+  const [val, setVal] = useState(initial);
+  return (
+    <input
+      style={Z.inlineSrcInput}
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onKeyDown={e => {
+        if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onSave(val); }
+        if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
+      }}
+      onBlur={() => onSave(val)}
+      onClick={e => e.stopPropagation()}
+      onFocus={e => e.target.select()}
+      autoFocus
+    />
+  );
+}
+
+// ── Inline category select ──
+function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
+  const [val, setVal] = useState(current);
+  return (
+    <select
+      style={Z.inlineCatSel}
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={() => onSave(val)}
+      onKeyDown={e => {
+        if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onSave(val); }
+        if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
+      }}
+      onClick={e => e.stopPropagation()}
+      autoFocus
+    >
+      {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+    </select>
+  );
+}
+
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
   const [phase, setPhase]                     = useState("input");
@@ -59,6 +100,7 @@ export default function Commonplace() {
   const [search, setSearch]                   = useState("");
   const [sortBy, setSortBy]                   = useState("default");
   const [editingId, setEditingId]             = useState(null);
+  const [inlineEdit, setInlineEdit]           = useState(null); // { id, field: 'source'|'category' }
   const [selected, setSelected]               = useState(new Set());
   const [bulkEditCat, setBulkEditCat]         = useState("");
   const [bulkEditSource, setBulkEditSource]   = useState("");
@@ -458,10 +500,18 @@ Return exactly one JSON object per input item.`,
 
   // ── Inline actions ──
   const toggleSel  = id => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const startEdit  = q  => setEditingId(q.id);
+  const startEdit  = q  => { setInlineEdit(null); setEditingId(q.id); };
   const saveEdit   = (id, text, source, category) => {
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
     setEditingId(null);
+  };
+  const saveInlineField = (id, field, value) => {
+    setQuotes(p => p.map(q => {
+      if (q.id !== id) return q;
+      const newVal = field === "source" ? (value.trim() || q.source) : value;
+      return { ...q, [field]: newVal, confidence: "high" };
+    }));
+    setInlineEdit(null);
   };
   const applyBulk  = () => {
     setQuotes(p => p.map(q => {
@@ -545,7 +595,6 @@ Return exactly one JSON object per input item.`,
   // Shared action props to keep JSX cleaner
   const actionProps = {
     onFav:          id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
-    onEdit:         startEdit,
     onDelete:       handleDelete,
     onCopy:         copyQuote,
     onReidentify:   reIdentify,
@@ -940,7 +989,7 @@ Return exactly one JSON object per input item.`,
                 const needsAtt = q.confidence === "low" || q.category === "Unknown";
                 return (
                   <div key={q.id} className="qrow"
-                    draggable={!isEd}
+                    draggable={!isEd && inlineEdit?.id !== q.id}
                     onDragStart={() => handleDragStart(q.id)}
                     onDragOver={e => handleDragOver(e, q.id)}
                     onDragEnd={handleDragEnd}
@@ -965,17 +1014,43 @@ Return exactly one JSON object per input item.`,
                       }
                     </div>
                     <div className="src-col" style={Z.srcCol}>
-                      <span style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }} title={q.source}>{q.source}</span>
-                      <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+                      {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+                        ? <InlineSourceInput
+                            initial={q.source}
+                            onSave={val => saveInlineField(q.id, "source", val)}
+                            onCancel={() => setInlineEdit(null)}
+                          />
+                        : <>
+                            <span
+                              className="inline-src"
+                              style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                              title={q.source}
+                              onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+                            >{q.source}</span>
+                            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+                          </>
+                      }
                     </div>
                     <div style={{ width: 80 }}>
-                      <span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span>
+                      {inlineEdit?.id === q.id && inlineEdit?.field === "category"
+                        ? <InlineCategorySelect
+                            current={q.category}
+                            allCats={allCats}
+                            onSave={val => saveInlineField(q.id, "category", val)}
+                            onCancel={() => setInlineEdit(null)}
+                          />
+                        : <span
+                            className="inline-cat"
+                            style={{ ...Z.tag, background: col.bg, color: col.text }}
+                            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+                            title="Click to change category"
+                          >{q.category}</span>
+                      }
                     </div>
                     <div className="row-actions" style={Z.rowAct}>
                       <FavBtn q={q} onFav={actionProps.onFav} />
                       <CopyBtn q={q} onCopy={actionProps.onCopy} />
                       <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} />
-                      <EditBtn q={q} onEdit={actionProps.onEdit} />
                       <DelBtn q={q} onDelete={actionProps.onDelete} />
                     </div>
                   </div>
@@ -994,7 +1069,7 @@ Return exactly one JSON object per input item.`,
                 const needsAtt = q.confidence === "low" || q.category === "Unknown";
                 return (
                   <div key={q.id}
-                    draggable={!isEd}
+                    draggable={!isEd && inlineEdit?.id !== q.id}
                     onDragStart={() => handleDragStart(q.id)}
                     onDragOver={e => handleDragOver(e, q.id)}
                     onDragEnd={handleDragEnd}
@@ -1014,13 +1089,25 @@ Return exactly one JSON object per input item.`,
                         <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>
                           {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
                         </div>
-                        <span style={{ ...Z.tag, background: col.bg, color: col.text }}>{q.category}</span>
+                        {inlineEdit?.id === q.id && inlineEdit?.field === "category"
+                          ? <InlineCategorySelect
+                              current={q.category}
+                              allCats={allCats}
+                              onSave={val => saveInlineField(q.id, "category", val)}
+                              onCancel={() => setInlineEdit(null)}
+                            />
+                          : <span
+                              className="inline-cat"
+                              style={{ ...Z.tag, background: col.bg, color: col.text }}
+                              onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+                              title="Click to change category"
+                            >{q.category}</span>
+                        }
                       </div>
                       <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
                         <FavBtn q={q} onFav={actionProps.onFav} />
                         <CopyBtn q={q} onCopy={actionProps.onCopy} />
                         <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} />
-                        <EditBtn q={q} onEdit={actionProps.onEdit} />
                         <DelBtn q={q} onDelete={actionProps.onDelete} />
                       </div>
                     </div>
@@ -1028,10 +1115,24 @@ Return exactly one JSON object per input item.`,
                       ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
                       : (
                         <>
-                          <p style={CZ.txt}>{displayText(q)}</p>
+                          <p
+                            style={{ ...CZ.txt, cursor: "text" }}
+                            onClick={() => { if (!isEd) startEdit(q); }}
+                          >{displayText(q)}</p>
                           <div style={CZ.srcRow}>
                             <span style={{ color: "#D3D3D0" }}>—</span>
-                            <span style={CZ.src}>{q.source}</span>
+                            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+                              ? <InlineSourceInput
+                                  initial={q.source}
+                                  onSave={val => saveInlineField(q.id, "source", val)}
+                                  onCancel={() => setInlineEdit(null)}
+                                />
+                              : <span
+                                  className="inline-src"
+                                  style={CZ.src}
+                                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+                                >{q.source}</span>
+                            }
                             <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
                           </div>
                         </>

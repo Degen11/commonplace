@@ -20,6 +20,12 @@ export const baseCSS = `
   .qrow:hover .checkbox{opacity:1 !important}
   .qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
 
+  /* Inline edit affordances */
+  .inline-src{cursor:text !important;transition:color .12s}
+  .inline-src:hover{color:#37352F !important;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:rgba(55,53,47,0.35)}
+  .inline-cat{cursor:pointer !important;transition:opacity .12s}
+  .inline-cat:hover{opacity:0.75 !important}
+
   /* Checkbox hover affordance */
   .checkbox:hover .check{border-color:#2383E2 !important;background:rgba(35,131,226,0.08)}
 
@@ -253,6 +259,10 @@ export const Z = {
   editSel:{border:"1px solid #E3E2DE",borderRadius:6,padding:"4px 8px",fontSize:12,fontFamily:"inherit",background:"#fff"},
   editSave:{padding:"4px 12px",borderRadius:6,border:"none",background:"#2383E2",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   editCancel:{padding:"4px 8px",borderRadius:6,border:"none",background:"transparent",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
+
+  // Inline field editing (source / category)
+  inlineSrcInput:{border:"1px solid #2383E2",borderRadius:4,padding:"2px 6px",fontSize:12,fontFamily:"inherit",color:"#37352F",width:"100%",background:"#fff"},
+  inlineCatSel:{border:"1px solid #2383E2",borderRadius:4,padding:"2px 2px",fontSize:11,fontFamily:"inherit",background:"#fff",cursor:"pointer",width:78},
 
   // Modal
   modalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},

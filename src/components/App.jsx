@@ -232,56 +232,7 @@ export default function Commonplace() {
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 
-  // Keyboard shortcuts
-useEffect(() => {
-  const handleKeyDown = (e) => {
-    // Cmd/Ctrl + A - select all (only in results phase)
-    if ((e.metaKey || e.ctrlKey) && e.key === 'a' && phase === "results") {
-      e.preventDefault();
-      if (sortedQuotes.length > 0) {
-        const allIds = sortedQuotes.map(q => q.id);
-        const allSelected = allIds.every(id => selected.has(id));
-        if (allSelected) {
-          setSelected(new Set());
-        } else {
-          setSelected(new Set(allIds));
-        }
-      }
-    }
-    
-    // Cmd/Ctrl + F - focus search
-    if ((e.metaKey || e.ctrlKey) && e.key === 'f' && phase === "results") {
-      e.preventDefault();
-      document.querySelector('input[placeholder*="Search"]')?.focus();
-    }
-    
-    // Esc - clear search / close modals
-    if (e.key === 'Escape') {
-      if (search) {
-        setSearch("");
-      }
-      if (showExport) setShowExport(false);
-      if (showSort) setShowSort(false);
-      if (showStats) setShowStats(false);
-      if (editingId) setEditingId(null);
-      if (inlineEdit) setInlineEdit(null);
-    }
-    
-    // ? - show shortcuts help (optional toast)
-    if (e.key === '?' && !e.metaKey && !e.ctrlKey && phase === "results") {
-      e.preventDefault();
-      showToast(
-        "⌘A: Select all • ⌘F: Search • Esc: Clear",
-        null,
-        null
-      );
-    }
-  };
   
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-}, [phase, search, sortedQuotes, selected, showExport, showSort, showStats, editingId, inlineEdit]);
-
   // ── File import ──
   const handleFileImport = (file) => {
     if (!file) return;

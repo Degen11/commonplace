@@ -29,9 +29,20 @@ export const baseCSS = `
   }
   .conf-tooltip:hover::after{opacity:1}
 
-  /* Fix 2 — column header drag handle */
-  .col-drag-header{cursor:grab;user-select:none;transition:background .15s;border-radius:4px;padding:2px 4px;margin:-2px -4px}
-  .col-drag-header:hover{background:rgba(55,53,47,.06)}
+  /* Fix 2 — column header drag handle - FIX SHADOW BLEED */
+  .col-drag-header{
+    cursor:grab;user-select:none;
+    transition:background .15s;
+    border-radius:4px;
+    padding:2px 4px;
+    margin:-2px -4px;
+    position:relative;
+    isolation:isolate;
+  }
+  .col-drag-header:hover{
+    background:rgba(55,53,47,.06);
+    box-shadow:none !important;
+  }
   .col-drag-header:active{cursor:grabbing}
 
   /* Row interactions (optimized) */
@@ -40,7 +51,6 @@ export const baseCSS = `
   .qrow:hover{background:rgba(55,53,47,0.035) !important;box-shadow:0 1px 0 rgba(55,53,47,0.06)}
   .qrow:hover .row-actions{opacity:1 !important}
   .qrow:hover .checkbox{opacity:1 !important}
-  .qrow:hover .src-col span:first-child{white-space:normal !important;overflow:visible !important}
 
   /* Inline edit affordances */
   .inline-src{cursor:text !important;transition:color .12s}
@@ -317,39 +327,34 @@ export const Z = {
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
-   // Table
+   // Table - FIX: Source wraps naturally, no truncation
   tHead:{
     display:"flex",
     alignItems:"center",
-    padding:"12px 0 8px 0",  // Increased top padding, removed horizontal padding
+    padding:"12px 0 8px 0",
     borderBottom:"1px solid rgba(55,53,47,0.08)",
     fontSize:11,
-    color:"#3C5775",  // Accent color
-    fontWeight:600,   // Increased to 600
+    color:"#3C5775",
+    fontWeight:600,
     textTransform:"uppercase",
     letterSpacing:0.6,
-    background:"rgba(60,87,117,0.03)",  // Subtle tint
+    background:"rgba(60,87,117,0.03)",
     marginBottom:0,
   },
-  // Fix 1: use specific transition properties instead of "all" so border-color
-  // interpolates cleanly back to gray (#D3D3D0) when checkOn is removed —
-  // "transition:all" was briefly passing through black on uncheck.
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
-  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
+  row:{display:"flex",alignItems:"flex-start",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
+  rowCompact:{display:"flex",alignItems:"flex-start",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
-  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
-  // Fix 1: specific transition props + outline:none to kill any native focus ring
+  chkW:{width:32,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:2,opacity:0,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:CP_ACCENT,borderColor:CP_ACCENT},
-  // Fix 7: pre-wrap so Shift+Enter line breaks render after save
   entryText:{fontSize:14,lineHeight:1.55,color:"#37352F",whiteSpace:"pre-wrap"},
   entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F",whiteSpace:"pre-wrap"},
-  srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8},
-  srcText:{fontSize:12,color:"#9B9A97",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",transition:"all .15s"},
-  confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
+  // FIX: Source column now wraps text naturally, stable row height
+  srcCol:{width:200,display:"flex",alignItems:"flex-start",gap:4,paddingRight:8,flexWrap:"wrap"},
+  srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1},
+  confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0,marginTop:3},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end"},
-  // Fix 5: inline-flex + lineHeight:1 ensures star is optically centred with SVG icons
+  rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"flex-start",paddingTop:2},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1},
 
   // Edit form
@@ -390,7 +395,6 @@ export const CZ = {
   favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0,transition:"opacity .15s"},
-  // Fix 7: pre-wrap so line breaks in multi-line entries render in cards too
   txt:{fontSize:15,lineHeight:1.6,color:"#37352F",marginBottom:10,whiteSpace:"pre-wrap"},
   srcRow:{display:"flex",alignItems:"center",gap:6},
   src:{fontSize:12,color:"#9B9A97"},

@@ -2,7 +2,7 @@ import { useState } from "react";
 import EditForm from "./EditForm";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
-import { getCatColor, CONF_LABELS } from "../data/constants";
+import { getCatColor, CONF_LABELS, REORDERABLE_COLS } from "../data/constants";
 import { Z } from "./styles";
 
 // ── Inline source text input ──
@@ -47,8 +47,6 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 }
 
 // Column configuration
-const REORDERABLE_COLS = ["content", "source", "category"];
-
 const COL_CONFIG = {
   content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
   source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },

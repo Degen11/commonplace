@@ -5,6 +5,14 @@ const RATE_WINDOW = 60 * 1000; // 1 minute
 
 function checkRateLimit(ip) {
   const now = Date.now();
+  
+  // On-demand cleanup of stale entries
+  for (const [key, entry] of rateMap) {
+    if (now - entry.start > RATE_WINDOW * 2) {
+      rateMap.delete(key);
+    }
+  }
+  
   const entry = rateMap.get(ip);
   if (!entry || now - entry.start > RATE_WINDOW) {
     rateMap.set(ip, { start: now, count: 1 });
@@ -14,14 +22,6 @@ function checkRateLimit(ip) {
   if (entry.count > RATE_LIMIT) return false;
   return true;
 }
-
-// Clean up old entries periodically (prevent memory leak)
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of rateMap) {
-    if (now - entry.start > RATE_WINDOW * 2) rateMap.delete(ip);
-  }
-}, RATE_WINDOW * 2);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid request format' });
   }
 
-  // Lock model to Haiku — ignore whatever the client sends
+  // Lock model to Haiku
   const safeBody = {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: Math.min(body.max_tokens || 4000, 4000),

@@ -6,7 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { localLookup } from "../data/localQuotes";
 import {
   DEFAULT_CATEGORIES, SOURCE_CATEGORIES, VIBE_TAGS, QUOTED_CATS,
-  CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor
+  CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor, REORDERABLE_COLS
 } from "../data/constants";
 
 // Utils
@@ -37,8 +37,7 @@ const SORT_OPTIONS = [
   { key: "category",   label: "By category" },
 ];
 
-// Column config for persistence
-const REORDERABLE_COLS = ["content", "source", "category"];
+// Column config for persistence - now imported from constants
 
 // ── Footer ──
 function Footer({ styles }) {
@@ -77,7 +76,7 @@ export default function Commonplace() {
   const [apiError, setApiError]               = useState(null);
   const [showAddMore, setShowAddMore]         = useState(false);
   const [addMoreInput, setAddMoreInput]       = useState("");
-  const [addMoreFormatting, setAddMoreFormatting] = useState(false); // NEW: formatting toggle for addMore
+  const [addMoreFormatting, setAddMoreFormatting] = useState(false);
   const [confirmClear, setConfirmClear]       = useState(false);
   const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing]       = useState(false);
@@ -116,6 +115,24 @@ export default function Commonplace() {
   const lastSelectedIndex      = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
+
+  // Helper functions
+  const sanitizeCategoryName = (name) => {
+    return name
+      .replace(/[<>\"'&]/g, '')
+      .trim()
+      .slice(0, 50);
+  };
+
+  const startEditing = (id) => {
+    setEditingId(id);
+    setInlineEdit(null);
+  };
+
+  const startInlineEdit = (id, field) => {
+    setInlineEdit({ id, field });
+    setEditingId(null);
+  };
 
   // ── Phase transition ──
   const goPhase = useCallback((next) => {
@@ -221,6 +238,11 @@ export default function Commonplace() {
     return () => document.removeEventListener('keydown', h);
   }, [search, editingId, quotes, catFilter, favFilter]);
 
+  // Reset shift-click index when filters change
+  useEffect(() => {
+    lastSelectedIndex.current = null;
+  }, [catFilter, favFilter, search, sortBy]);
+
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 
   
@@ -282,7 +304,8 @@ export default function Commonplace() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001", max_tokens: 4000,
+        model: "claude-3-5-haiku-20241022",
+        max_tokens: 4000,
         system: `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
 Each element: {"i":index,"source":"Source - Speaker/Author","category":"${allCatStr}","confidence":"high|medium|low"${extraField}}
 
@@ -423,16 +446,28 @@ Return exactly one JSON object per input item.`,
 
     const parsed = lines.map(l => smartParse(l));
     const existingTexts = appendMode ? quotes.map(q => normalize(q.text)) : [];
-    const unique = []; const seen = new Set(existingTexts); const nearDupes = [];
+    
+    const unique = []; 
+    const seen = new Map(existingTexts.map(t => {
+      const q = quotes.find(q => normalize(q.text) === t);
+      return [t, q];
+    }));
+    const nearDupes = [];
 
     parsed.forEach(p => {
       const norm = normalize(p.text);
-      const matchedNorm = [...seen].find(s => similarity(s, norm) > 0.55);
+      const matchedNorm = [...seen.keys()].find(s => similarity(s, norm) > 0.55);
+      
       if (matchedNorm) {
-        const matchedQuote = appendMode ? quotes.find(q => normalize(q.text) === matchedNorm) : null;
-        nearDupes.push({ incoming: p, matchedText: matchedQuote?.text || matchedNorm, matchedSource: matchedQuote?.source || null });
+        const matchedQuote = seen.get(matchedNorm);
+        nearDupes.push({ 
+          incoming: p, 
+          matchedText: matchedQuote?.text || matchedNorm, 
+          matchedSource: matchedQuote?.source || null 
+        });
       } else {
-        unique.push(p); seen.add(norm);
+        unique.push(p); 
+        seen.set(norm, { text: p.text, source: p.hint });
       }
     });
 
@@ -451,18 +486,41 @@ Return exactly one JSON object per input item.`,
   const handleDupesContinue = async () => {
     const { unique, seen, appendMode, useFormatting } = pendingContinuationRef.current;
     let keptCount = 0;
+    
     pendingDupes.forEach((dupe, i) => {
-      if (dupeDecisions[i] === "keep") {
+      const decision = dupeDecisions[i];
+      
+      if (decision === "keep") {
         const norm = normalize(dupe.incoming.text);
-        if (![...seen].some(s => similarity(s, norm) > 0.55)) {
-          unique.push(dupe.incoming); seen.add(norm); keptCount++;
+        if (![...seen.keys()].some(s => similarity(s, norm) > 0.55)) {
+          unique.push(dupe.incoming); 
+          seen.set(norm, { text: dupe.incoming.text, source: dupe.incoming.hint });
+          keptCount++;
+        }
+      } else if (decision === "merge") {
+        const norm = normalize(dupe.incoming.text);
+        if (![...seen.keys()].some(s => similarity(s, norm) > 0.55)) {
+          const mergedSource = dupe.matchedSource && dupe.incoming.hint
+            ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
+            : dupe.incoming.hint || dupe.matchedSource || "Unknown";
+          
+          unique.push({ ...dupe.incoming, hint: mergedSource });
+          seen.set(norm, { text: dupe.incoming.text, source: mergedSource });
+          keptCount++;
         }
       }
     });
+    
     const dupes = pendingDupes.length - keptCount;
-    setPendingDupes([]); setDupeDecisions({});
+    setPendingDupes([]); 
+    setDupeDecisions({});
     pendingContinuationRef.current = null;
-    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
+    
+    setIsProcessing(true); 
+    setFailedEntries([]); 
+    setIdentifiedFeed([]); 
+    goPhase("processing"); 
+    setApiError(null);
     setStats({ dupes, total: unique.length });
     await runProcessing(unique, appendMode, useFormatting);
   };
@@ -470,8 +528,16 @@ Return exactly one JSON object per input item.`,
   const retryFailed = async () => {
     if (!failedEntries.length) return;
     setApiError(null);
-    const text = failedEntries.map(e => `${e.text}${e.hint ? ` — ${e.hint}` : ""}`).join("\n");
-    setFailedEntries([]); await processEntries(text, true, formattingEnabled);
+    
+    const entriesToRetry = [...failedEntries];
+    const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` — ${e.hint}` : ""}`).join("\n");
+    
+    try {
+      await processEntries(text, true, formattingEnabled);
+      setFailedEntries([]);
+    } catch (error) {
+      setApiError(`Retry failed. You can try again or edit manually.`);
+    }
   };
 
   const handleProcess  = () => processEntries(rawInput, false, formattingEnabled);
@@ -595,7 +661,16 @@ Return exactly one JSON object per input item.`,
       });
     });
   };
-  const addCat  = () => { const n = newCatName.trim(); if (!n || allCats.some(c => c.toLowerCase() === n.toLowerCase())) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
+  const addCat  = () => { 
+    const sanitized = sanitizeCategoryName(newCatName);
+    if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
+      showToast("Invalid or duplicate category name");
+      return;
+    }
+    setCustomCats(p => [...p, sanitized]); 
+    setNewCatName(""); 
+    setShowNewCat(false); 
+  };
   const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
   // ── Row drag reorder ──
@@ -923,7 +998,6 @@ Return exactly one JSON object per input item.`,
                   </div>
                 )}
               </div>
-              {/* REMOVED: Select all button - master checkbox handles this */}
               <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
               <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
             </div>
@@ -1101,7 +1175,7 @@ Return exactly one JSON object per input item.`,
                           ? <select style={Z.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
                               {allCats.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                          : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}</span>
+                          : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
                         }
                       </div>
                       <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
@@ -1115,12 +1189,12 @@ Return exactly one JSON object per input item.`,
                       ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
                       : (
                         <>
-                          <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) setEditingId(q.id); }}>{displayText(q)}</p>
+                          <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
                           <div style={CZ.srcRow}>
                             <span style={{ color: "#D3D3D0" }}>—</span>
                             {inlineEdit?.id === q.id && inlineEdit?.field === "source"
                               ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
-                              : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}>{q.source}</span>
+                              : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
                             }
                             <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
                           </div>

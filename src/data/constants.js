@@ -77,3 +77,5 @@ Get busy living or get busy dying
 Is this the real life is this just fantasy
 Winter is coming
 The only thing we have to fear is fear itself`;
+
+export const REORDERABLE_COLS = ["content", "source", "category"];

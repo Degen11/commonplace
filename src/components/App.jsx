@@ -170,15 +170,48 @@ export default function Commonplace() {
     return () => window.removeEventListener("resize", h);
   }, [view]);
 
-  // ── Click-outside for dropdowns ──
+  // ── Click-outside for dropdowns and edit form ──
   useEffect(() => {
     const h = e => {
       if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false);
       if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
+      
+      // Close edit form if clicking outside the table/cards area
+      if (editingId) {
+        const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
+        if (!clickedInside) {
+          setEditingId(null);
+        }
+      }
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
-  }, []);
+  }, [editingId]);
+
+  // ── Keyboard shortcuts ──
+  useEffect(() => {
+    const h = e => {
+      // Don't trigger if user is typing in an input/textarea
+      if (e.target.matches('input, textarea, select')) return;
+      
+      // Escape: Clear search (only if not in edit mode)
+      if (e.key === 'Escape') {
+        if (search && !editingId) {
+          setSearch('');
+        }
+      }
+      
+      // Cmd/Ctrl + A: Select all visible quotes
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        e.preventDefault();
+        if (filtered.length > 0) {
+          setSelected(new Set(filtered.map(q => q.id)));
+        }
+      }
+    };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, [search, editingId, filtered]);
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 

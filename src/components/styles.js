@@ -35,8 +35,8 @@ export const baseCSS = `
     user-select:none;
     transition:background .15s;
     border-radius:4px;
-    padding:2px 4px;
-    margin:-2px -4px;
+    padding:2px 0;
+    margin:-2px 0;
   }
   .col-drag-header:hover{
     background:rgba(55,53,47,.06);

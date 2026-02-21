@@ -1086,7 +1086,6 @@ Return exactly one JSON object per input item.`,
                       className="col-drag-header"
                       style={{
                         ...COL_CONFIG[colKey].style,
-                        paddingLeft: 0,  // ← ADD THIS - ensures alignment with content
                         opacity: dragColId === colKey ? 0.4 : 1,
                         outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
                         outlineOffset: 2,

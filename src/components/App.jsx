@@ -10,14 +10,11 @@ import {
 } from "../data/constants";
 
 // Utils
-import { normalize } from "../utils/parsing";
-import { similarity } from "../utils/similarity";
-import { smartParse, smartSplit } from "../utils/parsing";
-import { basicFormat, displayText } from "../utils/formatting";
 import {
+  normalize, similarity, smartParse, smartSplit, basicFormat, displayText,
   exportCSV, exportMD, exportJSON, exportTXT,
   copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData
-} from "../utils/export";
+} from "../utils/helpers";
 
 // Components
 import Toast from "./Toast";

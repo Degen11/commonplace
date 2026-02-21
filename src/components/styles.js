@@ -59,6 +59,8 @@ export const baseCSS = `
   .drop-zone{transition:all .2s ease}
   .how-card{transition:background .2s ease,transform .2s ease}
   .how-card:hover{background:#fff !important;transform:translateY(-2px)}
+  .feature-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,87,117,0.08);border-color:rgba(60,87,117,0.15) !important}
+  .nav-link{transition:color .15s ease}
   .feat-pill{transition:all .18s ease}
   .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
   .nav-link{transition:color .15s ease}

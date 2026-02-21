@@ -254,7 +254,7 @@ export const Z = {
   statsPanelClose:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:16,padding:"0 4px"},
   statsGrid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20},
   statsSection:{display:"flex",flexDirection:"column",gap:10},
-  statsSectionTitle:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:4},
+  statsSectionTitle:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#1D6FEC",marginBottom:4},
   statsBarRow:{display:"flex",flexDirection:"column",gap:4,marginBottom:6},
   statsBarLabel:{display:"flex",justifyContent:"space-between",fontSize:12,color:"#37352F"},
   statsBarTrack:{height:6,borderRadius:3,background:"#EBEBEA",overflow:"hidden"},

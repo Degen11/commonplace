@@ -520,20 +520,6 @@ const handleDupesContinue = async () => {
   setStats({ dupes, total: unique.length });
   await runProcessing(unique, appendMode, useFormatting);
 };
-    
-    const dupes = pendingDupes.length - keptCount;
-    setPendingDupes([]); 
-    setDupeDecisions({});
-    pendingContinuationRef.current = null;
-    
-    setIsProcessing(true); 
-    setFailedEntries([]); 
-    setIdentifiedFeed([]); 
-    goPhase("processing"); 
-    setApiError(null);
-    setStats({ dupes, total: unique.length });
-    await runProcessing(unique, appendMode, useFormatting);
-  };
 
   const retryFailed = async () => {
     if (!failedEntries.length) return;

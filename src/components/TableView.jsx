@@ -50,9 +50,9 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 const REORDERABLE_COLS = ["content", "source", "category"];
 
 const COL_CONFIG = {
-  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12 } },
-  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12 } },
-  category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 0 } },
+  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
 };
 
 export default function TableView({
@@ -123,7 +123,7 @@ export default function TableView({
     switch(colKey) {
       case "content":
         return (
-          <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12, cursor: isEd ? "default" : "text" }}
+          <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12 }}
             onClick={() => { if (!isEd) setEditingId(q.id); }}>
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />

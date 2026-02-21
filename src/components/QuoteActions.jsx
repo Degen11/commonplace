@@ -52,7 +52,7 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
       onClick={e => { e.stopPropagation(); if (!loading) onReidentify(q); }}
       title={loading ? "Re-identifying..." : "Re-identify source"}
       disabled={loading}
-      onMouseEnter={e => !loading && (e.currentTarget.style.color = "#7C3AED")}
+      onMouseEnter={e => !loading && (e.currentTarget.style.color = "#059669")}
       onMouseLeave={e => !loading && (e.currentTarget.style.color = "#6B6764")}
     >
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ 

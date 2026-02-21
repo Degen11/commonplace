@@ -484,7 +484,7 @@ Return exactly one JSON object per input item.`,
   };
 
 const handleDupesContinue = async () => {
-  const { unique, seen, appendMode, useFormatting } = pendingContinuationRef.current;
+  const { unique, appendMode, useFormatting } = pendingContinuationRef.current;
   let keptCount = 0;
   
   pendingDupes.forEach((dupe, i) => {
@@ -520,7 +520,6 @@ const handleDupesContinue = async () => {
   setStats({ dupes, total: unique.length });
   await runProcessing(unique, appendMode, useFormatting);
 };
-    
     const dupes = pendingDupes.length - keptCount;
     setPendingDupes([]); 
     setDupeDecisions({});

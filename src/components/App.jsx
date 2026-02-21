@@ -77,6 +77,7 @@ export default function Commonplace() {
   const [apiError, setApiError]               = useState(null);
   const [showAddMore, setShowAddMore]         = useState(false);
   const [addMoreInput, setAddMoreInput]       = useState("");
+  const [addMoreFormatting, setAddMoreFormatting] = useState(false); // NEW: formatting toggle for addMore
   const [confirmClear, setConfirmClear]       = useState(false);
   const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing]       = useState(false);
@@ -357,7 +358,7 @@ Return exactly one JSON object per input item.`,
   };
 
   // ── Processing pipeline ──
-  const runProcessing = async (unique, appendMode) => {
+  const runProcessing = async (unique, appendMode, useFormatting = false) => {
     const localMatches = []; const needsApi = [];
     unique.forEach((p, i) => {
       const match = localLookup(p.text, p.hint);
@@ -367,7 +368,7 @@ Return exactly one JSON object per input item.`,
 
     if (localMatches.length > 0) {
       setIdentifiedFeed(localMatches.map(m => ({
-        text: formattingEnabled ? basicFormat(m.text) : m.text,
+        text: useFormatting ? basicFormat(m.text) : m.text,
         source: m.result.source, category: m.result.category,
       })));
     }
@@ -380,11 +381,11 @@ Return exactly one JSON object per input item.`,
         const chunk = needsApi.slice(i, i + BATCH_SIZE);
         setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
         try {
-          const results = await identifyBatch(chunk, formattingEnabled);
+          const results = await identifyBatch(chunk, useFormatting);
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
           setIdentifiedFeed(prev => [...prev, ...results.map(r => {
             const item = chunk[r.i];
-            return { text: (formattingEnabled && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
+            return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
           })]);
         } catch {
           apiFailed = true; chunk.forEach(c => failed.push(c));
@@ -398,16 +399,16 @@ Return exactly one JSON object per input item.`,
     const newQuotes = unique.map((p, i) => {
       const local = localMatches.find(m => m.idx === i);
       if (local) {
-        const text = formattingEnabled ? basicFormat(p.text) : p.text;
+        const text = useFormatting ? basicFormat(p.text) : p.text;
         return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
       }
       const api = apiResults.get(i);
       if (api) {
-        const text = (formattingEnabled && api.cleanText) ? api.cleanText : p.text;
+        const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
         const validCats = new Set([...allCats, ...VIBE_TAGS]);
         return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
       }
-      const text = formattingEnabled ? basicFormat(p.text) : p.text;
+      const text = useFormatting ? basicFormat(p.text) : p.text;
       return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
     });
 
@@ -416,7 +417,7 @@ Return exactly one JSON object per input item.`,
     setProgress(null); setIsProcessing(false); goPhase("results");
   };
 
-  const processEntries = async (inputText, appendMode = false) => {
+  const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
     const lines = smartSplit(inputText.trim());
     if (!lines.length) return;
 
@@ -438,17 +439,17 @@ Return exactly one JSON object per input item.`,
     if (nearDupes.length > 0) {
       setPendingDupes(nearDupes);
       setDupeDecisions(Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])));
-      pendingContinuationRef.current = { unique, seen, appendMode, totalParsed: parsed.length };
+      pendingContinuationRef.current = { unique, seen, appendMode, totalParsed: parsed.length, useFormatting };
       return;
     }
 
     setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
     setStats({ dupes: 0, total: unique.length });
-    await runProcessing(unique, appendMode);
+    await runProcessing(unique, appendMode, useFormatting);
   };
 
   const handleDupesContinue = async () => {
-    const { unique, seen, appendMode } = pendingContinuationRef.current;
+    const { unique, seen, appendMode, useFormatting } = pendingContinuationRef.current;
     let keptCount = 0;
     pendingDupes.forEach((dupe, i) => {
       if (dupeDecisions[i] === "keep") {
@@ -463,18 +464,23 @@ Return exactly one JSON object per input item.`,
     pendingContinuationRef.current = null;
     setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
     setStats({ dupes, total: unique.length });
-    await runProcessing(unique, appendMode);
+    await runProcessing(unique, appendMode, useFormatting);
   };
 
   const retryFailed = async () => {
     if (!failedEntries.length) return;
     setApiError(null);
     const text = failedEntries.map(e => `${e.text}${e.hint ? ` — ${e.hint}` : ""}`).join("\n");
-    setFailedEntries([]); await processEntries(text, true);
+    setFailedEntries([]); await processEntries(text, true, formattingEnabled);
   };
 
-  const handleProcess  = () => processEntries(rawInput, false);
-  const handleAddMore  = () => { if (!addMoreInput.trim()) return; processEntries(addMoreInput, true); setAddMoreInput(""); setShowAddMore(false); };
+  const handleProcess  = () => processEntries(rawInput, false, formattingEnabled);
+  const handleAddMore  = () => { 
+    if (!addMoreInput.trim()) return; 
+    processEntries(addMoreInput, true, addMoreFormatting); 
+    setAddMoreInput(""); 
+    setShowAddMore(false); 
+  };
 
   const handleClear = () => {
     window.history.replaceState(null, "", window.location.pathname); setIsSharedView(false);
@@ -782,26 +788,28 @@ Return exactly one JSON object per input item.`,
                 <span style={Z.howSectionTitleLine} />
               </div>
               
+              {/* UPDATED: 4 columns, SVG icons, no descriptions */}
               <div style={Z.featuresGrid}>
                 {[
-                  { icon: "✎", title: "Inline editing", desc: "Edit text, source, or category with one click" },
-                  { icon: "📋", title: "Bulk operations", desc: "Update categories or sources across multiple entries" },
-                  { icon: "↕️", title: "Drag to reorder", desc: "Arrange entries exactly how you want them" },
-                  { icon: "📤", title: "Multiple export formats", desc: "CSV, Markdown, JSON, or plain text" },
-                  { icon: "🔗", title: "Shareable links", desc: "Share your curated collection with anyone" },
-                  { icon: "💾", title: "Session restore", desc: "Pick up right where you left off" },
-                  { icon: "🏷️", title: "Custom categories", desc: "Create tags that work for your collection" },
-                  { icon: "🔄", title: "Duplicate detection", desc: "Keep your collection clean and organized" },
-                  { icon: "✨", title: "Smart formatting", desc: "Auto-cleanup and \"Did you mean?\" suggestions" },
-                  { icon: "🎯", title: "Confidence indicators", desc: "See at a glance which entries need review" },
-                  { icon: "🔍", title: "Search & filter", desc: "Find anything instantly across your collection" },
-                  { icon: "⌨️", title: "Keyboard shortcuts", desc: "Escape to clear search, Cmd/Ctrl+A to select all" }
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 3v14" stroke="#2383E2" strokeWidth="2" strokeLinecap="round"/></svg>, title: "Inline editing", color: "#2383E2" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="7" height="6" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="11" y="5" width="7" height="6" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="2" y="13" width="7" height="4" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="11" y="13" width="7" height="4" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/></svg>, title: "Bulk operations", color: "#7C3AED" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 3v14M14 3v14" stroke="#EA580C" strokeWidth="1.5" strokeLinecap="round"/><path d="M3 7l3-3 3 3M17 13l-3 3-3-3" stroke="#EA580C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Drag to reorder", color: "#EA580C" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v3m0 5v6m-4-4h8" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/><circle cx="10" cy="10" r="7" stroke="#059669" strokeWidth="1.5" fill="none"/></svg>, title: "Multiple exports", color: "#059669" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 9l3-3 3 3M10 6v8m-7 1h14" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Shareable links", color: "#DC2626" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#0891B2" strokeWidth="1.5" fill="none"/><path d="M10 6v4l3 2" stroke="#0891B2" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Session restore", color: "#0891B2" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2.5" rx="1" stroke="#9333EA" strokeWidth="1.5" fill="none"/><rect x="3" y="9" width="9" height="2.5" rx="1" stroke="#9333EA" strokeWidth="1.5" fill="none"/><rect x="3" y="13" width="6" height="2.5" rx="1" stroke="#9333EA" strokeWidth="1.5" fill="none"/></svg>, title: "Custom categories", color: "#9333EA" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="4" stroke="#0D9488" strokeWidth="1.5" fill="none"/><circle cx="13" cy="13" r="4" stroke="#0D9488" strokeWidth="1.5" fill="none"/></svg>, title: "Duplicate detection", color: "#0D9488" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5l4 4 4-4M15 11l-4 4-4-4" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Smart formatting", color: "#D97706" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2" fill="#E11D48"/><circle cx="10" cy="10" r="6" stroke="#E11D48" strokeWidth="1.5" fill="none"/></svg>, title: "Confidence indicators", color: "#E11D48" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#4338CA" strokeWidth="1.5" fill="none"/><path d="M14 14l3 3" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Search & filter", color: "#4338CA" },
+                  { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="8" width="4" height="8" rx="1" stroke="#0369A1" strokeWidth="1.5" fill="none"/><rect x="8" y="4" width="4" height="12" rx="1" stroke="#0369A1" strokeWidth="1.5" fill="none"/><rect x="13" y="10" width="4" height="6" rx="1" stroke="#0369A1" strokeWidth="1.5" fill="none"/></svg>, title: "Keyboard shortcuts", color: "#0369A1" },
                 ].map(f => (
                  <div key={f.title} className="feature-card" style={Z.featureCard}>
-                    <div style={Z.featureIcon}>{f.icon}</div>
+                    <div style={{ ...Z.featureIcon, background: `${f.color}15` }}>
+                      {f.icon}
+                    </div>
                     <div style={Z.featureContent}>
                       <div style={Z.featureTitle}>{f.title}</div>
-                      <div style={Z.featureDesc}>{f.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -915,7 +923,7 @@ Return exactly one JSON object per input item.`,
                   </div>
                 )}
               </div>
-              {!isMobile && quotes.length > 0 && <button style={Z.hdrBtn} onClick={selAll}>{selected.size === filtered.length && filtered.length > 0 ? "Deselect" : "Select all"}</button>}
+              {/* REMOVED: Select all button - master checkbox handles this */}
               <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
               <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
             </div>
@@ -943,12 +951,23 @@ Return exactly one JSON object per input item.`,
             </div>
           )}
 
+          {/* UPDATED: Add More panel with formatting toggle */}
           {showAddMore && (
             <div style={Z.addMorePanel}>
               <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
                 placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-                <span style={{ fontSize: 12, color: "#9B9A97" }}>{addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+                  <label style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
+                    <div style={{ ...Z.fmtToggleTrack, background: addMoreFormatting ? "#1A1814" : "#E0DCD4" }}>
+                      <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
+                    </div>
+                    Clean up formatting
+                  </label>
+                  <span style={{ fontSize: 12, color: "#9B9A97" }}>
+                    {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
+                  </span>
+                </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
                   <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
@@ -1021,7 +1040,7 @@ Return exactly one JSON object per input item.`,
             </div>
           )}
 
-          {/* TABLE VIEW - Now extracted to TableView component */}
+          {/* TABLE VIEW */}
           {view === "table" && (
             <TableView
               filtered={filtered}

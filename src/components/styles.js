@@ -131,21 +131,23 @@ export const Z = {
   featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
   featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
 
-  // NEW FEATURE GRID STYLES - Add these right here
+  // UPDATED FEATURE GRID STYLES - 4 columns, icon-centered, no descriptions
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 16,
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 12,
     marginTop: 16,
   },
 
   featureCard: {
     background: "#FFFFFF",
     border: "1px solid #F1F1EF",
-    borderRadius: 14,
-    padding: "20px 16px",
+    borderRadius: 12,
+    padding: "16px 12px",
     display: "flex",
-    gap: 14,
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 10,
     transition: "all 0.2s ease",
     boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
     cursor: "default",
@@ -158,34 +160,24 @@ export const Z = {
   },
 
   featureIcon: {
-    fontSize: 22,
-    background: "rgba(60,87,117,0.06)",
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    color: CP_ACCENT,
+    borderRadius: 10,
     flexShrink: 0,
   },
 
   featureContent: {
-    flex: 1,
+    textAlign: "center",
   },
 
   featureTitle: {
     fontWeight: 600,
-    fontSize: 14,
+    fontSize: 13,
     color: "#1A1814",
-    marginBottom: 4,
-  },
-
-  featureDesc: {
-    fontSize: 12,
-    color: "#6A6660",
-    lineHeight: 1.5,
-    fontWeight: 300,
+    lineHeight: 1.3,
   },
 
   // Old preview keys kept as no-ops
@@ -248,9 +240,9 @@ export const Z = {
   shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#EFF6FF",border:"1px solid #DBEAFE",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
   shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"#fff",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 
-  // Stats panel
+  // Stats panel - UPDATED title size
   statsPanel:{background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12,padding:20,margin:"12px 0",animation:"slideD .2s ease"},
-  statsPanelTitle:{fontSize:13,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
+  statsPanelTitle:{fontSize:15,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
   statsPanelClose:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:16,padding:"0 4px"},
   statsGrid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20},
   statsSection:{display:"flex",flexDirection:"column",gap:10},
@@ -264,28 +256,28 @@ export const Z = {
   statNumber:{fontSize:28,fontWeight:700,color:"#37352F",letterSpacing:-1},
   statNumberSub:{fontSize:12,color:"#9B9A97",marginTop:2},
 
-  // Dupe modal
+  // Dupe modal - UPDATED with proper fonts and blue accent
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
-  dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.15)",overflow:"hidden"},
+  dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.15)",overflow:"hidden",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid #F1F1EF"},
-  dupeModalTitle:{fontSize:16,fontWeight:700,color:"#37352F",marginBottom:4},
-  dupeModalSub:{fontSize:13,color:"#9B9A97"},
+  dupeModalTitle:{fontSize:16,fontWeight:700,color:"#37352F",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
+  dupeModalSub:{fontSize:13,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeList:{maxHeight:340,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
   dupeCard:{border:"1px solid #F1F1EF",borderRadius:8,overflow:"hidden"},
   dupePair:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0},
   dupeSide:{padding:"10px 12px",fontSize:12},
   dupeExisting:{background:"#FAFAFA"},
   dupeIncoming:{background:"#fff",borderLeft:"1px solid #F1F1EF"},
-  dupeSideLabel:{fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:4},
-  dupeSideText:{fontSize:13,color:"#37352F",lineHeight:1.5,fontWeight:500},
-  dupeSideSource:{fontSize:11,color:"#9B9A97",marginTop:2},
+  dupeSideLabel:{fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
+  dupeSideText:{fontSize:13,color:"#37352F",lineHeight:1.5,fontWeight:500,fontFamily:"'DM Sans',-apple-system,sans-serif"},
+  dupeSideSource:{fontSize:11,color:"#9B9A97",marginTop:2,fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeActions:{display:"flex",gap:6,padding:"8px 12px",borderTop:"1px solid #F1F1EF",background:"#FAFAFA",justifyContent:"flex-end"},
-  dupeKeepBtn:{padding:"4px 12px",borderRadius:6,border:"none",background:"#37352F",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  dupeMergeBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2383E2",background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  dupeSkipBtn:{padding:"4px 10px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
+  dupeKeepBtn:{padding:"4px 12px",borderRadius:6,border:"none",background:"#37352F",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
+  dupeMergeBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2383E2",background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
+  dupeSkipBtn:{padding:"4px 10px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeModalFooter:{padding:"12px 20px",borderTop:"1px solid #F1F1EF",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8},
-  dupeContinueBtn:{padding:"8px 20px",borderRadius:8,border:"none",background:"#37352F",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
-  dupeKeptCount:{fontSize:12,color:"#9B9A97"},
+  dupeContinueBtn:{padding:"8px 20px",borderRadius:8,border:"none",background:"#2383E2",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
+  dupeKeptCount:{fontSize:12,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
 
   // Bulk edit
   bulkBar:{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"rgba(60,87,117,0.06)",borderRadius:8,margin:"12px 0",flexWrap:"wrap",animation:"slideD .2s ease"},
@@ -335,8 +327,9 @@ export const Z = {
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
+  // UPDATED: Match checkboxes to use same blue as accent
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
-  checkOn:{background:CP_ACCENT,borderColor:CP_ACCENT},
+  checkOn:{background:"#3C5775",borderColor:"#3C5775"},
   entryText:{fontSize:14,lineHeight:1.55,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   // FIX: Source column now wraps text naturally, stable row height
@@ -345,7 +338,8 @@ export const Z = {
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
   rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
-  actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1},
+  // UPDATED: Icon-friendly button styles
+  actBtn:{background:"none",border:"none",cursor:"pointer",color:"#6B6764",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
 
   // Edit form
   textarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:60,lineHeight:1.6,background:"#fff"},

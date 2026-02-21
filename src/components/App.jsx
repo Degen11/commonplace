@@ -1097,10 +1097,10 @@ Return exactly one JSON object per input item.`,
                     }}
                   >
                     <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
-                      {/* Fix 1: outline:none on the check element kills any native focus ring */}
                       <div
                         style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
                         onClick={() => toggleSel(q.id)}
+                        onMouseDown={e => e.preventDefault()}
                       >
                         {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
                       </div>
@@ -1148,7 +1148,7 @@ Return exactly one JSON object per input item.`,
                   >
                     <div style={CZ.top}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)}>
+                        <div className="check-div" style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)} onMouseDown={e => e.preventDefault()}>
                           {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
                         </div>
                         {inlineEdit?.id === q.id && inlineEdit?.field === "category"

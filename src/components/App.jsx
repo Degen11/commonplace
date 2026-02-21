@@ -483,33 +483,43 @@ Return exactly one JSON object per input item.`,
     await runProcessing(unique, appendMode, useFormatting);
   };
 
-  const handleDupesContinue = async () => {
-    const { unique, seen, appendMode, useFormatting } = pendingContinuationRef.current;
-    let keptCount = 0;
+const handleDupesContinue = async () => {
+  const { unique, seen, appendMode, useFormatting } = pendingContinuationRef.current;
+  let keptCount = 0;
+  
+  pendingDupes.forEach((dupe, i) => {
+    const decision = dupeDecisions[i];
+    const norm = normalize(dupe.incoming.text);
     
-    pendingDupes.forEach((dupe, i) => {
-      const decision = dupeDecisions[i];
+    if (decision === "keep") {
+      // Just add it - user explicitly wants to keep it
+      unique.push(dupe.incoming);
+      keptCount++;
+    } else if (decision === "merge") {
+      // Merge sources: keep new text but combine sources
+      const mergedSource = dupe.matchedSource && dupe.incoming.hint
+        ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
+        : dupe.incoming.hint || dupe.matchedSource || "Unknown";
       
-      if (decision === "keep") {
-        const norm = normalize(dupe.incoming.text);
-        if (![...seen.keys()].some(s => similarity(s, norm) > 0.55)) {
-          unique.push(dupe.incoming); 
-          seen.set(norm, { text: dupe.incoming.text, source: dupe.incoming.hint });
-          keptCount++;
-        }
-      } else if (decision === "merge") {
-        const norm = normalize(dupe.incoming.text);
-        if (![...seen.keys()].some(s => similarity(s, norm) > 0.55)) {
-          const mergedSource = dupe.matchedSource && dupe.incoming.hint
-            ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
-            : dupe.incoming.hint || dupe.matchedSource || "Unknown";
-          
-          unique.push({ ...dupe.incoming, hint: mergedSource });
-          seen.set(norm, { text: dupe.incoming.text, source: mergedSource });
-          keptCount++;
-        }
-      }
-    });
+      unique.push({ ...dupe.incoming, hint: mergedSource });
+      keptCount++;
+    }
+    // "skip" does nothing
+  });
+  
+  const dupes = pendingDupes.length - keptCount;
+  setPendingDupes([]); 
+  setDupeDecisions({});
+  pendingContinuationRef.current = null;
+  
+  setIsProcessing(true); 
+  setFailedEntries([]); 
+  setIdentifiedFeed([]); 
+  goPhase("processing"); 
+  setApiError(null);
+  setStats({ dupes, total: unique.length });
+  await runProcessing(unique, appendMode, useFormatting);
+};
     
     const dupes = pendingDupes.length - keptCount;
     setPendingDupes([]); 

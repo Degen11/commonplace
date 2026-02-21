@@ -65,6 +65,16 @@ export const baseCSS = `
   .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
   .nav-link{transition:color .15s ease}
   .nav-link:hover{color:#1A1814 !important}
+  
+  /* Ensure table headers and cells align perfectly */
+  .tHead > div, .qrow > div {
+    padding-left: 0 !important;
+  }
+  
+  /* Keep checkbox column with its own padding */
+  .qrow > div:first-child {
+    padding-left: 0;
+  }
 `;
 
 // ===================== MAIN STYLES =====================

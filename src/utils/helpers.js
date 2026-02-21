@@ -149,53 +149,7 @@ export function basicFormat(text) {
 }
 
 export function smartSplit(text) {
-  // Check for explicit delimiters first
-  
-  // Numbered lists (1., 2., etc.)
-  if (/\d+\.\s/.test(text)) {
-    const parts = text.split(/\d+\.\s+/).filter(Boolean);
-    if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
-  }
-  
-  // Bullet points (•, ·, *, -, etc.)
-  if (/[•·\-*]\s/.test(text)) {
-    const parts = text.split(/[•·\-*]\s+/).filter(Boolean);
-    if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
-  }
-  
-  // Dashes before quotes (— ", – ", etc.)
-  if (/[—–-]\s*["'].+?["']/.test(text)) {
-    // This pattern captures quotes preceded by dashes, but we need a different approach for splitting
-    const parts = text.split(/(?=[—–-]\s*["'])/).filter(Boolean);
-    if (parts.length > 1) return parts.map(p => p.trim()).filter(Boolean);
-  }
-  
-  // Quote blocks (multiple quoted passages separated by line breaks or other delimiters)
-  if (text.includes('"') && text.split('"').length > 3) {
-    // Look for patterns where quotes might be separate items
-    const quoteBlocks = text.split(/\n\s*["']/).filter(Boolean);
-    if (quoteBlocks.length > 1) {
-      return quoteBlocks.map(block => {
-        // Add back the quote mark if it was removed
-        return block.trim().startsWith('"') || block.trim().startsWith("'") 
-          ? block.trim() 
-          : `"${block.trim()}`;
-      });
-    }
-  }
-  
-  // Split by blank lines (two or more consecutive newlines) to preserve multi-line entries
-  const byBlankLines = text.split(/\n\s*\n/).map(l => l.trim()).filter(Boolean);
-  if (byBlankLines.length > 1) return byBlankLines;
-  
-  // Check for other natural separators like em-dashes or section breaks
-  if (text.includes('—') && text.split('—').length > 2) {
-    const parts = text.split(/\s*—\s*/).filter(Boolean);
-    if (parts.length > 1) return parts;
-  }
-  
-  // Single entry - preserve all line breaks
-  return [text.trim()];
+  return text.split("\n").map(l => l.trim()).filter(Boolean);
 }
 
 // ===================== TEXT PROCESSING =====================

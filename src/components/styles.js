@@ -29,19 +29,17 @@ export const baseCSS = `
   }
   .conf-tooltip:hover::after{opacity:1}
 
-  /* Fix 2 — column header drag handle - FIX SHADOW BLEED */
+  /* Fix 2 — column header drag handle - COMPLETELY REMOVE SHADOW */
   .col-drag-header{
-    cursor:grab;user-select:none;
+    cursor:grab;
+    user-select:none;
     transition:background .15s;
     border-radius:4px;
     padding:2px 4px;
     margin:-2px -4px;
-    position:relative;
-    isolation:isolate;
   }
   .col-drag-header:hover{
     background:rgba(55,53,47,.06);
-    box-shadow:none !important;
   }
   .col-drag-header:active{cursor:grabbing}
 
@@ -75,16 +73,6 @@ export const baseCSS = `
   .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
   .nav-link{transition:color .15s ease}
   .nav-link:hover{color:#1A1814 !important}
-  
-  /* Ensure table headers and cells align perfectly */
-  .tHead > div, .qrow > div {
-    padding-left: 0 !important;
-  }
-  
-  /* Keep checkbox column with its own padding */
-  .qrow > div:first-child {
-    padding-left: 0;
-  }
 `;
 
 // ===================== MAIN STYLES =====================

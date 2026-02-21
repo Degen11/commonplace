@@ -229,7 +229,7 @@ export default function TableView({
             <div className="row-actions" style={Z.rowAct}>
               <FavBtn q={q} onFav={actionProps.onFav} />
               <CopyBtn q={q} onCopy={actionProps.onCopy} />
-              <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} />
+              <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
               <DelBtn q={q} onDelete={actionProps.onDelete} />
             </div>
           </div>

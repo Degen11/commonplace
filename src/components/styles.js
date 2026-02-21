@@ -281,6 +281,7 @@ export const Z = {
   dupeSideSource:{fontSize:11,color:"#9B9A97",marginTop:2},
   dupeActions:{display:"flex",gap:6,padding:"8px 12px",borderTop:"1px solid #F1F1EF",background:"#FAFAFA",justifyContent:"flex-end"},
   dupeKeepBtn:{padding:"4px 12px",borderRadius:6,border:"none",background:"#37352F",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  dupeMergeBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2383E2",background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   dupeSkipBtn:{padding:"4px 10px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
   dupeModalFooter:{padding:"12px 20px",borderTop:"1px solid #F1F1EF",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8},
   dupeContinueBtn:{padding:"8px 20px",borderRadius:8,border:"none",background:"#37352F",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},

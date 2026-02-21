@@ -1,10 +1,7 @@
 // ===================== COMMONPLACE ACCENT =====================
-// Desaturated slate-blue — cool contrast to the warm sand palette.
-// Use sparingly: active states, key CTAs, category "Person" tags,
-// focus rings, hover accents on the collection screen.
-export const CP_ACCENT       = "#3C5775";  // primary
-export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";  // tint/border
-export const CP_ACCENT_TEXT  = "#2D4259";  // slightly darker for text-on-white
+export const CP_ACCENT       = "#3C5775";
+export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";
+export const CP_ACCENT_TEXT  = "#2D4259";
 
 // ===================== BASE CSS =====================
 export const baseCSS = `
@@ -19,6 +16,23 @@ export const baseCSS = `
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
+
+  /* Fix 3 — instant CSS tooltip for confidence dots */
+  .conf-tooltip{position:relative;cursor:help}
+  .conf-tooltip::after{
+    content:attr(data-tip);
+    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:#37352F;color:#fff;padding:4px 10px;border-radius:5px;
+    font-size:11px;font-weight:400;letter-spacing:0;white-space:nowrap;
+    opacity:0;pointer-events:none;z-index:200;
+    transition:opacity .08s ease;
+  }
+  .conf-tooltip:hover::after{opacity:1}
+
+  /* Fix 2 — column header drag handle */
+  .col-drag-header{cursor:grab;user-select:none;transition:background .15s;border-radius:4px;padding:2px 4px;margin:-2px -4px}
+  .col-drag-header:hover{background:rgba(55,53,47,.06)}
+  .col-drag-header:active{cursor:grabbing}
 
   /* Row interactions (optimized) */
   .qrow{cursor:grab;transition:background 0.18s ease, box-shadow 0.18s ease}
@@ -52,8 +66,6 @@ export const baseCSS = `
 `;
 
 // ===================== MAIN STYLES =====================
-// Note: CP_ACCENT / CP_ACCENT_MUTED / CP_ACCENT_TEXT exported above — import
-// those constants in components that need the accent color directly.
 export const Z = {
   // Layout
   wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:"'DM Sans',-apple-system,sans-serif",fontSize:14,color:"#1A1814",minHeight:"100vh",background:"#FAF8F4"},
@@ -94,7 +106,7 @@ export const Z = {
   restoreBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   restoreDismiss:{padding:"5px 10px",borderRadius:6,border:"1px solid rgba(60,87,117,0.25)",background:"transparent",color:CP_ACCENT,fontSize:12,cursor:"pointer",fontFamily:"inherit"},
 
-    // How it works — new grid style
+  // How it works
   howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
   howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:26,color:"#9A9590",marginBottom:20,display:"flex",alignItems:"center",gap:12},
   howSectionTitleLine:{flex:1,height:1,background:"#E8E3DA"},
@@ -109,7 +121,7 @@ export const Z = {
   featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
   featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
 
-  // Old preview keys kept as no-ops to avoid crashes if referenced
+  // Old preview keys kept as no-ops
   howWrap:{display:"none"},
   howStep:{},howIcon:{},howLabel:{},howDesc:{},howArrow:{},
   previewWrap:{display:"none"},
@@ -246,22 +258,28 @@ export const Z = {
     color:"rgba(155,154,151,0.9)",
     fontWeight:500,
     textTransform:"uppercase",
-    letterSpacing:0.6
+    letterSpacing:0.6,
   },
+  // Fix 1: use specific transition properties instead of "all" so border-color
+  // interpolates cleanly back to gray (#D3D3D0) when checkOn is removed —
+  // "transition:all" was briefly passing through black on uncheck.
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
-  check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .1s",flexShrink:0},
+  // Fix 1: specific transition props + outline:none to kill any native focus ring
+  check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:CP_ACCENT,borderColor:CP_ACCENT},
-  entryText:{fontSize:14,lineHeight:1.55,color:"#37352F"},
-  entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F"},
+  // Fix 7: pre-wrap so Shift+Enter line breaks render after save
+  entryText:{fontSize:14,lineHeight:1.55,color:"#37352F",whiteSpace:"pre-wrap"},
+  entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F",whiteSpace:"pre-wrap"},
   srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8},
   srcText:{fontSize:12,color:"#9B9A97",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",transition:"all .15s"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
   rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end"},
-  actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4},
+  // Fix 5: inline-flex + lineHeight:1 ensures star is optically centred with SVG icons
+  actBtn:{background:"none",border:"none",cursor:"pointer",color:"#9B9A97",fontSize:14,padding:"2px 4px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1},
 
   // Edit form
   textarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:60,lineHeight:1.6,background:"#fff"},
@@ -301,7 +319,8 @@ export const CZ = {
   favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0,transition:"opacity .15s"},
-  txt:{fontSize:15,lineHeight:1.6,color:"#37352F",marginBottom:10},
+  // Fix 7: pre-wrap so line breaks in multi-line entries render in cards too
+  txt:{fontSize:15,lineHeight:1.6,color:"#37352F",marginBottom:10,whiteSpace:"pre-wrap"},
   srcRow:{display:"flex",alignItems:"center",gap:6},
   src:{fontSize:12,color:"#9B9A97"},
 };

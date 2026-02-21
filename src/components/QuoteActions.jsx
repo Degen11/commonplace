@@ -13,7 +13,7 @@ export function FavBtn({ q, onFav }) {
   );
 }
 
-// Appears on hover — copies the quote formatted nicely to clipboard
+// Fix 4: replaced two-overlapping-rectangles with a cleaner clipboard icon
 export function CopyBtn({ q, onCopy }) {
   return (
     <button
@@ -21,9 +21,11 @@ export function CopyBtn({ q, onCopy }) {
       title="Copy quote"
       onClick={() => onCopy(q)}
     >
-      <svg width="12" height="13" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3.5" y="3.5" width="7" height="8.5" rx="1" stroke="currentColor" strokeWidth="1.25"/>
-        <path d="M3.5 3V2a1 1 0 011-1h5a1 1 0 011 1v7a1 1 0 01-1 1H9" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
+      <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="3.5" width="8.5" height="10" rx="1.25" stroke="currentColor" strokeWidth="1.2"/>
+        <path d="M4 3.5V2.5C4 1.95 4.45 1.5 5 1.5h3.5C9.05 1.5 9.5 1.95 9.5 2.5V3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+        <line x1="3.5" y1="7" x2="8" y2="7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+        <line x1="3.5" y1="9.5" x2="8" y2="9.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
       </svg>
     </button>
   );
@@ -66,13 +68,15 @@ export function DelBtn({ q, onDelete }) {
   );
 }
 
-// ConfDot lives here too since it's always rendered near the action area
+// Fix 3: CSS tooltip via className + data-tip instead of native title attribute
+// (native title has an uncontrollable browser delay; CSS ::after has none)
 export function ConfDot({ q, CONF_LABELS }) {
   if (!q.confidence || q.confidence === "high") return null;
   return (
     <span
-      title={CONF_LABELS[q.confidence]}
-      style={{ ...Z.confDot, background: q.confidence === "medium" ? "#FFB74D" : "#D6D6D4", cursor: "help" }}
+      className="conf-tooltip"
+      data-tip={CONF_LABELS[q.confidence]}
+      style={{ ...Z.confDot, background: q.confidence === "medium" ? "#FFB74D" : "#D6D6D4" }}
     />
   );
 }

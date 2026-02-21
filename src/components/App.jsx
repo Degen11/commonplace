@@ -25,8 +25,9 @@ import TransformPreview from "./TransformPreview";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { baseCSS, Z, CZ } from "./styles";
 
-const LS_QUOTES = "commonplace_quotes";
-const LS_CATS   = "commonplace_cats";
+const LS_QUOTES     = "commonplace_quotes";
+const LS_CATS       = "commonplace_cats";
+const LS_COL_ORDER  = "commonplace_col_order";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
@@ -35,7 +36,16 @@ const SORT_OPTIONS = [
   { key: "category",   label: "By category" },
 ];
 
-// ── Footer — extracted to avoid re-definition on every render ──
+// Fix 2: column config — checkbox and actions are pinned; only these are reorderable
+const REORDERABLE_COLS = ["content", "source", "category"];
+
+const COL_CONFIG = {
+  content:  { label: "Content",  style: { flex: 1, minWidth: 200 } },
+  source:   { label: "Source",   style: { width: 200 } },
+  category: { label: "Category", style: { width: 80 } },
+};
+
+// ── Footer ──
 function Footer({ styles }) {
   return (
     <footer style={styles.footer}>
@@ -100,7 +110,7 @@ export default function Commonplace() {
   const [search, setSearch]                   = useState("");
   const [sortBy, setSortBy]                   = useState("default");
   const [editingId, setEditingId]             = useState(null);
-  const [inlineEdit, setInlineEdit]           = useState(null); // { id, field: 'source'|'category' }
+  const [inlineEdit, setInlineEdit]           = useState(null);
   const [selected, setSelected]               = useState(new Set());
   const [bulkEditCat, setBulkEditCat]         = useState("");
   const [bulkEditSource, setBulkEditSource]   = useState("");
@@ -129,12 +139,30 @@ export default function Commonplace() {
   const [pendingDupes, setPendingDupes]       = useState([]);
   const [dupeDecisions, setDupeDecisions]     = useState({});
 
-  const undoRef               = useRef(null);
-  const addMoreRef            = useRef(null);
-  const exportRef             = useRef(null);
-  const sortRef               = useRef(null);
+  // Fix 2: column order state — persisted to localStorage
+  const [columnOrder, setColumnOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_COL_ORDER);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate — must contain exactly the right keys
+        if (Array.isArray(parsed) && parsed.length === REORDERABLE_COLS.length &&
+            REORDERABLE_COLS.every(c => parsed.includes(c))) return parsed;
+      }
+    } catch(e) {}
+    return [...REORDERABLE_COLS];
+  });
+
+  // Fix 2: header drag state
+  const [dragColId, setDragColId]     = useState(null);
+  const [dragColOver, setDragColOver] = useState(null);
+
+  const undoRef                = useRef(null);
+  const addMoreRef             = useRef(null);
+  const exportRef              = useRef(null);
+  const sortRef                = useRef(null);
   const pendingContinuationRef = useRef(null);
-  const fileInputRef          = useRef(null);
+  const fileInputRef           = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -153,6 +181,11 @@ export default function Commonplace() {
       } catch(e) {}
     }
   }, [quotes, customCats, isSharedView]);
+
+  // Fix 2: persist column order
+  useEffect(() => {
+    try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) {}
+  }, [columnOrder]);
 
   // ── Mount: shared link OR restore session ──
   useEffect(() => {
@@ -210,16 +243,14 @@ export default function Commonplace() {
       if (ext === "csv") {
         const lines = content.split("\n");
         const header = lines[0]?.toLowerCase() || "";
-        // Try to find a column named "text", "quote", or similar — fall back to column 0
         const headers = header.split(",").map(h => h.replace(/"/g, "").trim());
         const textCol = ["text","quote","quotes","content","entry"].reduce((found, key) => {
           const idx = headers.indexOf(key);
           return found >= 0 ? found : idx;
         }, -1);
         const colIdx = textCol >= 0 ? textCol : 0;
-        const dataLines = lines.slice(1); // skip header row
+        const dataLines = lines.slice(1);
         content = dataLines.map(l => {
-          // parse quoted CSV fields properly
           const fields = [];
           let cur = "", inQuote = false;
           for (let i = 0; i < l.length; i++) {
@@ -297,22 +328,14 @@ Return exactly one JSON object per input item.`,
 
   // ── Re-identify a single entry ──
   const reIdentify = async (q) => {
-    // Check local DB first — exact matches only. We skip substring matching
-    // here because the user may have deliberately edited the text, and a
-    // partial match would just return the old answer without asking the AI.
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       setQuotes(prev => prev.map(x => x.id === q.id ? {
-        ...x,
-        source: local.source,
-        category: local.category,
-        confidence: local.confidence,
+        ...x, source: local.source, category: local.category, confidence: local.confidence,
       } : x));
       showToast("Re-identified!");
       return;
     }
-    // No hint passed — we want a genuinely fresh identification, not one
-    // anchored to whatever source was previously assigned.
     const item = { text: q.text, hint: null };
     try {
       const results = await identifyBatch([item]);
@@ -531,7 +554,6 @@ Return exactly one JSON object per input item.`,
     setSelected(new Set());
     showToast(`${deletedQuotes.length} entries deleted`, "Undo", () => {
       setQuotes(p => {
-        // Re-insert deleted quotes at their original positions
         const restored = [...p];
         deletedQuotes.forEach(dq => {
           const origIdx = quotes.findIndex(q => q.id === dq.id);
@@ -544,13 +566,12 @@ Return exactly one JSON object per input item.`,
   const addCat  = () => { const n = newCatName.trim(); if (!n || allCats.some(c => c.toLowerCase() === n.toLowerCase())) return; setCustomCats(p => [...p, n]); setNewCatName(""); setShowNewCat(false); };
   const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
-  // ── Drag reorder ──
+  // ── Row drag reorder ──
   const lastDragTarget = useRef(null);
   const handleDragStart = (id) => { setDragId(id); lastDragTarget.current = null; };
   const handleDragOver  = (e, targetId) => {
     e.preventDefault();
     if (!dragId || dragId === targetId) return;
-    // Only reorder when crossing into a new target — not on every pixel
     if (lastDragTarget.current === targetId) return;
     lastDragTarget.current = targetId;
     setQuotes(prev => {
@@ -564,6 +585,34 @@ Return exactly one JSON object per input item.`,
     });
   };
   const handleDragEnd = () => { setDragId(null); lastDragTarget.current = null; };
+
+  // Fix 2: column drag handlers
+  const handleColDragStart = (e, colId) => {
+    e.stopPropagation();
+    setDragColId(colId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleColDragOver = (e, colId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (colId !== dragColId) setDragColOver(colId);
+  };
+  const handleColDrop = (e, targetColId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragColId || dragColId === targetColId) { setDragColId(null); setDragColOver(null); return; }
+    setColumnOrder(prev => {
+      const arr = [...prev];
+      const from = arr.indexOf(dragColId);
+      const to   = arr.indexOf(targetColId);
+      if (from < 0 || to < 0) return prev;
+      arr.splice(from, 1);
+      arr.splice(to, 0, dragColId);
+      return arr;
+    });
+    setDragColId(null); setDragColOver(null);
+  };
+  const handleColDragEnd = () => { setDragColId(null); setDragColOver(null); };
 
   // ── Filtering & sorting ──
   let filtered = quotes.filter(q => {
@@ -583,7 +632,6 @@ Return exactly one JSON object per input item.`,
   const unknownCount = quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length;
   const topCats      = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
 
-  // ── Stats ──
   const computedStats = quotes.length > 0 ? (() => {
     const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
     const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -592,12 +640,60 @@ Return exactly one JSON object per input item.`,
     return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
   })() : null;
 
-  // Shared action props to keep JSX cleaner
   const actionProps = {
-    onFav:          id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
-    onDelete:       handleDelete,
-    onCopy:         copyQuote,
-    onReidentify:   reIdentify,
+    onFav:        id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
+    onDelete:     handleDelete,
+    onCopy:       copyQuote,
+    onReidentify: reIdentify,
+  };
+
+  // Fix 2: render a single column cell for a given column key and quote row
+  const renderColCell = (colKey, q, isEd) => {
+    const col = getCatColor(q.category, customCats);
+    switch(colKey) {
+      case "content":
+        return (
+          <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12, cursor: isEd ? "default" : "text" }}
+            onClick={() => { if (!isEd) startEdit(q); }}>
+            {isEd
+              ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
+              : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
+            }
+          </div>
+        );
+      case "source":
+        return (
+          <div key="source" className="src-col" style={Z.srcCol}>
+            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+              ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
+              : <>
+                  <span
+                    className="inline-src"
+                    style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                    title={q.source}
+                    onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+                  >{q.source}</span>
+                  <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+                </>
+            }
+          </div>
+        );
+      case "category":
+        return (
+          <div key="category" style={{ width: 80 }}>
+            {inlineEdit?.id === q.id && inlineEdit?.field === "category"
+              ? <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+              : <span
+                  className="inline-cat"
+                  style={{ ...Z.tag, background: col.bg, color: col.text }}
+                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+                  title="Click to change category"
+                >{q.category}</span>
+            }
+          </div>
+        );
+      default: return null;
+    }
   };
 
   // ========================== RENDER ==========================
@@ -606,7 +702,6 @@ Return exactly one JSON object per input item.`,
       <Analytics />
       <SpeedInsights />
 
-      {/* Dupe review modal */}
       <DupeModal
         pendingDupes={pendingDupes}
         dupeDecisions={dupeDecisions}
@@ -617,8 +712,6 @@ Return exactly one JSON object per input item.`,
       {/* ── Input phase ── */}
       {phase === "input" && (
         <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
-
-          {/* Nav */}
           <nav style={Z.nav}>
             <span style={Z.navLogo}>Commonplace</span>
             <div style={Z.navRight}>
@@ -708,10 +801,8 @@ Return exactly one JSON object per input item.`,
               </div>
             </div>
 
-            {/* ── Animated transform preview ── */}
             <TransformPreview />
 
-            {/* ── How it works ── */}
             <div id="how" style={Z.howSection}>
               <div style={Z.howSectionTitle}>
                 <span style={Z.howSectionTitleLine} />
@@ -735,14 +826,9 @@ Return exactly one JSON object per input item.`,
                   <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
                 </div>
               </div>
-
-              {/* Feature pills */}
               <div style={Z.featPills}>
                 {["Inline editing","Bulk category assignment","Drag to reorder","CSV / Markdown / JSON export","Shareable links","Session restore","Custom categories","Duplicate detection","Smart formatting cleanup","Did you mean? suggestions"].map(f => (
-                  <span key={f} className="feat-pill" style={Z.featPill}>
-                    <span style={Z.featPillDot} />
-                    {f}
-                  </span>
+                  <span key={f} className="feat-pill" style={Z.featPill}><span style={Z.featPillDot} />{f}</span>
                 ))}
               </div>
             </div>
@@ -809,7 +895,6 @@ Return exactly one JSON object per input item.`,
             </div>
           )}
 
-          {/* Header */}
           <div style={Z.header}>
             <div>
               <h1 style={Z.title}>Commonplace</h1>
@@ -861,16 +946,7 @@ Return exactly one JSON object per input item.`,
             </div>
           </div>
 
-          {/* Stats panel */}
-          {showStats && (
-            <StatsPanel
-              quotes={quotes}
-              computedStats={computedStats}
-              cc={cc}
-              customCats={customCats}
-              onClose={() => setShowStats(false)}
-            />
-          )}
+          {showStats && <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => setShowStats(false)} />}
 
           {apiError && (
             <div style={Z.errorBar}>
@@ -974,16 +1050,34 @@ Return exactly one JSON object per input item.`,
           {view === "table" && (
             <div style={{ overflowX: "auto" }}>
               {filtered.length > 0 && (
+                // Fix 2: header columns are now draggable
                 <div style={Z.tHead}>
                   <div style={{ width: 32 }} />
-                  <div style={{ flex: 1, minWidth: 200 }}>Content</div>
-                  <div style={{ width: 200 }}>Source</div>
-                  <div style={{ width: 80 }}>Category</div>
+                  {columnOrder.map(colKey => (
+                    <div
+                      key={colKey}
+                      className="col-drag-header"
+                      style={{
+                        ...COL_CONFIG[colKey].style,
+                        opacity: dragColId === colKey ? 0.4 : 1,
+                        outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
+                        outlineOffset: 2,
+                        borderRadius: 4,
+                      }}
+                      draggable
+                      onDragStart={e => handleColDragStart(e, colKey)}
+                      onDragOver={e => handleColDragOver(e, colKey)}
+                      onDrop={e => handleColDrop(e, colKey)}
+                      onDragEnd={handleColDragEnd}
+                    >
+                      {COL_CONFIG[colKey].label}
+                    </div>
+                  ))}
                   <div style={{ width: 110 }} />
                 </div>
               )}
+
               {filtered.map(q => {
-                const col = getCatColor(q.category, customCats);
                 const isSel = selected.has(q.id);
                 const isEd  = editingId === q.id;
                 const needsAtt = q.confidence === "low" || q.category === "Unknown";
@@ -1003,50 +1097,18 @@ Return exactly one JSON object per input item.`,
                     }}
                   >
                     <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
-                      <div style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }} onClick={() => toggleSel(q.id)}>
+                      {/* Fix 1: outline:none on the check element kills any native focus ring */}
+                      <div
+                        style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
+                        onClick={() => toggleSel(q.id)}
+                      >
                         {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
                       </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 200, paddingRight: 12, cursor: isEd ? "default" : "text" }} onClick={() => { if (!isEd) startEdit(q); }}>
-                      {isEd
-                        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
-                        : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
-                      }
-                    </div>
-                    <div className="src-col" style={Z.srcCol}>
-                      {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-                        ? <InlineSourceInput
-                            initial={q.source}
-                            onSave={val => saveInlineField(q.id, "source", val)}
-                            onCancel={() => setInlineEdit(null)}
-                          />
-                        : <>
-                            <span
-                              className="inline-src"
-                              style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
-                              title={q.source}
-                              onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-                            >{q.source}</span>
-                            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-                          </>
-                      }
-                    </div>
-                    <div style={{ width: 80 }}>
-                      {inlineEdit?.id === q.id && inlineEdit?.field === "category"
-                        ? <InlineCategorySelect
-                            current={q.category}
-                            allCats={allCats}
-                            onSave={val => saveInlineField(q.id, "category", val)}
-                            onCancel={() => setInlineEdit(null)}
-                          />
-                        : <span
-                            className="inline-cat"
-                            style={{ ...Z.tag, background: col.bg, color: col.text }}
-                            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-                            title="Click to change category"
-                          >{q.category}</span>
-                      }
-                    </div>
+
+                    {/* Fix 2: render columns in user-defined order */}
+                    {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
+
                     <div className="row-actions" style={Z.rowAct}>
                       <FavBtn q={q} onFav={actionProps.onFav} />
                       <CopyBtn q={q} onCopy={actionProps.onCopy} />
@@ -1090,18 +1152,8 @@ Return exactly one JSON object per input item.`,
                           {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
                         </div>
                         {inlineEdit?.id === q.id && inlineEdit?.field === "category"
-                          ? <InlineCategorySelect
-                              current={q.category}
-                              allCats={allCats}
-                              onSave={val => saveInlineField(q.id, "category", val)}
-                              onCancel={() => setInlineEdit(null)}
-                            />
-                          : <span
-                              className="inline-cat"
-                              style={{ ...Z.tag, background: col.bg, color: col.text }}
-                              onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-                              title="Click to change category"
-                            >{q.category}</span>
+                          ? <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+                          : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}</span>
                         }
                       </div>
                       <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
@@ -1115,23 +1167,12 @@ Return exactly one JSON object per input item.`,
                       ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
                       : (
                         <>
-                          <p
-                            style={{ ...CZ.txt, cursor: "text" }}
-                            onClick={() => { if (!isEd) startEdit(q); }}
-                          >{displayText(q)}</p>
+                          <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEdit(q); }}>{displayText(q)}</p>
                           <div style={CZ.srcRow}>
                             <span style={{ color: "#D3D3D0" }}>—</span>
                             {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-                              ? <InlineSourceInput
-                                  initial={q.source}
-                                  onSave={val => saveInlineField(q.id, "source", val)}
-                                  onCancel={() => setInlineEdit(null)}
-                                />
-                              : <span
-                                  className="inline-src"
-                                  style={CZ.src}
-                                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-                                >{q.source}</span>
+                              ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
+                              : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}>{q.source}</span>
                             }
                             <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
                           </div>

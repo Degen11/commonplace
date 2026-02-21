@@ -2,16 +2,53 @@ import { QUOTED_CATS } from "../data/constants";
 import LOCAL_DB from "../data/localQuotes";
 
 // ── Extract known proper nouns from local DB source strings ──
-// Pulls cased names like "Hemingway", "Gandhi", "Nietzsche", "Shakespeare" etc.
+// Fix 6: only include a word if it appears in 2+ DIFFERENT source strings.
+// Single-occurrence words are likely song/movie title words ("Dreams",
+// "Heroes", "Perfect", "Changes") that shouldn't be capitalized in general text.
 const KNOWN_PROPER_NOUNS = (() => {
-  const nouns = new Set();
+  // Words that are common English words or title-case noise — never treat as proper nouns
   const skipWords = new Set([
+    // Articles / prepositions / conjunctions
     "the","a","an","of","in","on","at","to","for","and","or","but","with",
     "from","by","via","as","is","was","are","be","been","has","have","had",
-    "it","its","this","that","these","those","film","tv","book","music",
-    "speech","person","phrase","various","attributed","often","unknown",
-    "parts","series","season","episode","act","scene","chapter",
+    // Pronouns / determiners
+    "it","its","this","that","these","those","my","his","her","our","your",
+    // Common verbs
+    "get","got","go","goes","make","take","want","know","say","think","see",
+    "come","give","find","tell","ask","seem","feel","look","leave","call",
+    // Category / meta words
+    "film","tv","book","music","speech","person","phrase","various",
+    "attributed","often","unknown","parts","series","season","episode",
+    "act","scene","chapter","vol","pt","ep","version",
+    // Words that appear capitalized in titles but aren't proper nouns
+    "man","men","women","woman","boy","girl","one","two","three","four","five",
+    "six","seven","eight","nine","ten","new","old","big","little","great",
+    "long","good","bad","best","last","first","next","right","left","high",
+    "low","real","true","false","black","white","red","blue","green","dark",
+    "light","hard","soft","hot","cold","fast","slow","free","full","back",
+    "front","night","day","life","time","world","home","house","road","way",
+    "end","start","stop","run","walk","stand","fall","rise","love","hate",
+    "fear","hope","pain","joy","heart","mind","soul","fire","water","air",
+    "earth","sky","sun","moon","star","wild","sweet","beautiful","perfect",
+    "simple","broken","lost","found","gone","dead","alive","young","old",
+    // Common song/movie title words that get extracted but aren't proper nouns
+    "dreams","dream","heroes","hero","changes","change","perfect","thunder",
+    "animal","animals","africa","imagine","creep","humble","gods","plan","plans",
+    "normal","rolling","deep","rolling","somebody","nobody","everybody","anybody",
+    "always","never","forever","sometimes","just","only","every","another",
+    "nothing","something","everything","anything","somewhere","nowhere","here",
+    "where","there","when","while","after","before","until","since","still",
+    "already","again","even","also","too","very","well","down","up","out",
+    "over","under","through","between","against","without","within","about",
+    "their","them","they","him","her","its","who","what","why","how",
+    "all","both","each","few","many","much","more","most","other","some",
+    "such","no","nor","not","same","so","than","then","there","though",
+    "into","during","across","along","off","away",
   ]);
+
+  // Count how many distinct source strings each capitalized word appears in
+  const wordSources = new Map(); // word → Set of source strings it appears in
+
   LOCAL_DB.forEach(entry => {
     const words = entry.s.split(/[\s\-\u2013\u2014,()[\]/&]+/);
     words.forEach(w => {
@@ -22,10 +59,20 @@ const KNOWN_PROPER_NOUNS = (() => {
         !skipWords.has(clean.toLowerCase()) &&
         !/^\d/.test(clean)
       ) {
-        nouns.add(clean);
+        if (!wordSources.has(clean)) wordSources.set(clean, new Set());
+        wordSources.get(clean).add(entry.s);
       }
     });
   });
+
+  // Only trust words that appear in at least 2 different source strings —
+  // this weeds out single-occurrence title words like "Dreams" or "Heroes"
+  // while keeping reliable proper nouns like "Hemingway" or "Shakespeare"
+  const nouns = new Set();
+  wordSources.forEach((sources, word) => {
+    if (sources.size >= 2) nouns.add(word);
+  });
+
   return nouns;
 })();
 
@@ -85,7 +132,7 @@ export function basicFormat(text) {
     );
   });
 
-  // 6. Capitalize known proper nouns from local DB
+  // 6. Capitalize known proper nouns (only high-confidence ones from 2+ sources)
   KNOWN_PROPER_NOUNS.forEach(noun => {
     const lower = noun.toLowerCase();
     t = t.replace(new RegExp("\\b" + lower + "\\b", "g"), noun);
@@ -261,7 +308,7 @@ export function decodeShareData(hash) {
   try {
     const json = decodeURIComponent(escape(atob(hash)));
     const arr = JSON.parse(json);
-    return arr.map((q, i) => ({
+    return arr.map((q) => ({
       id: crypto.randomUUID(),
       text: q[0], source: q[1], category: q[2],
       confidence: "high", favorite: !!q[3],

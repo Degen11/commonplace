@@ -718,7 +718,8 @@ Return exactly one JSON object per input item.`,
                   { icon: "🔄", title: "Duplicate detection", desc: "Keep your collection clean and organized" },
                   { icon: "✨", title: "Smart formatting", desc: "Auto-cleanup and \"Did you mean?\" suggestions" },
                   { icon: "🎯", title: "Confidence indicators", desc: "See at a glance which entries need review" },
-                  { icon: "🔍", title: "Search & filter", desc: "Find anything instantly across your collection" }
+                  { icon: "🔍", title: "Search & filter", desc: "Find anything instantly across your collection" },
+                  { icon: "⌨️", title: "Keyboard shortcuts", desc: "Escape to clear search, Cmd/Ctrl+A to select all" }
                 ].map(f => (
                  <div key={f.title} className="feature-card" style={Z.featureCard}>
                     <div style={Z.featureIcon}>{f.icon}</div>

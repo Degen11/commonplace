@@ -9,8 +9,10 @@ export default function Toast({ message, action, onAction, onDismiss }) {
 
   return (
     <div style={Z.toast}>
-      <span>{message}</span>
-      {action && <button style={Z.toastAction} onClick={onAction}>{action}</button>}
+      <div style={Z.toastContent}>
+        <span>{message}</span>
+        {action && <button style={Z.toastAction} onClick={onAction}>{action}</button>}
+      </div>
     </div>
   );
 }

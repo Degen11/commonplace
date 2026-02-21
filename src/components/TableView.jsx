@@ -172,13 +172,14 @@ export default function TableView({
       {filtered.length > 0 && (
         <div style={Z.tHead}>
           <div style={{ width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <input
-              type="checkbox"
-              checked={filtered.length > 0 && filtered.every(q => selected.has(q.id))}
-              onChange={selAll}
-              style={{ cursor: 'pointer', width: 14, height: 14 }}
+            <div
+              style={{ ...Z.check, ...(filtered.length > 0 && filtered.every(q => selected.has(q.id)) ? Z.checkOn : {}) }}
+              onClick={selAll}
+              onMouseDown={e => e.preventDefault()}
               title="Select all"
-            />
+            >
+              {filtered.length > 0 && filtered.every(q => selected.has(q.id)) && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+            </div>
           </div>
           {columnOrder.map(colKey => (
             <div

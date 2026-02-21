@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Z } from "./styles";
 import LOCAL_DB from "../data/localQuotes";
-import { normalize } from "../utils/helpers";
+import { normalize } from "../utils/parsing";
 
 // Finds the closest local DB match to the current text.
 // Returns null if nothing is close enough to be worth suggesting.

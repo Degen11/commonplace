@@ -204,14 +204,21 @@ export default function Commonplace() {
       // Cmd/Ctrl + A: Select all visible quotes
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
-        if (filtered.length > 0) {
-          setSelected(new Set(filtered.map(q => q.id)));
+        // Compute filtered inline to avoid dependency issues
+        const visibleQuotes = quotes.filter(q => {
+          if (catFilter !== "All" && q.category !== catFilter) return false;
+          if (favFilter && !q.favorite) return false;
+          if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
+          return true;
+        });
+        if (visibleQuotes.length > 0) {
+          setSelected(new Set(visibleQuotes.map(q => q.id)));
         }
       }
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, filtered]);
+  }, [search, editingId, quotes, catFilter, favFilter]);
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 

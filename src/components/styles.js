@@ -141,6 +141,12 @@ export const Z = {
     cursor: "default",
   },
 
+  featureCardHover: {
+    transform: "translateY(-2px)",
+    boxShadow: "0 8px 24px rgba(60,87,117,0.08)",
+    borderColor: "rgba(60,87,117,0.15)",
+  },
+
   featureIcon: {
     fontSize: 22,
     background: "rgba(60,87,117,0.06)",

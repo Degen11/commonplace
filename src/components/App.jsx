@@ -826,6 +826,15 @@ Return exactly one JSON object per input item.`,
                   <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
                 </div>
               </div>
+                            </div>
+              
+              {/* Features section title with lines */}
+              <div style={Z.howSectionTitle}>
+                <span style={Z.howSectionTitleLine} />
+                Powerful features
+                <span style={Z.howSectionTitleLine} />
+              </div>
+              
               <div style={Z.featuresGrid}>
                 {[
                   { icon: "✎", title: "Inline editing", desc: "Edit text, source, or category with one click" },
@@ -840,8 +849,20 @@ Return exactly one JSON object per input item.`,
                   { icon: "🎯", title: "Confidence indicators", desc: "See at a glance which entries need review" },
                   { icon: "🔍", title: "Search & filter", desc: "Find anything instantly across your collection" }
                 ].map(f => (
-                  <div key={f.title} style={Z.featureCard}>
-                    <div style={Z.featureIcon}>{f.icon}</div>
+<div 
+  key={f.title} 
+  style={Z.featureCard} 
+  onMouseEnter={e => {
+    e.currentTarget.style.transform = "translateY(-2px)";
+    e.currentTarget.style.boxShadow = "0 8px 24px rgba(60,87,117,0.08)";
+    e.currentTarget.style.borderColor = "rgba(60,87,117,0.15)";
+  }} 
+  onMouseLeave={e => {
+    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)";
+    e.currentTarget.style.borderColor = "#F1F1EF";
+  }}
+>                    <div style={Z.featureIcon}>{f.icon}</div>
                     <div style={Z.featureContent}>
                       <div style={Z.featureTitle}>{f.title}</div>
                       <div style={Z.featureDesc}>{f.desc}</div>

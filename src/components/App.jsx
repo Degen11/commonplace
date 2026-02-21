@@ -203,7 +203,8 @@ export default function Commonplace() {
       // Cmd/Ctrl + A to select all (when not in input)
       if ((e.metaKey || e.ctrlKey) && e.key === 'a' && !e.target.matches('input, textarea, select')) {
         e.preventDefault();
-        selAll();
+        const ids = filtered.map(q => q.id);
+        ids.every(id => selected.has(id)) ? setSelected(new Set()) : setSelected(new Set(ids));
       }
     };
     document.addEventListener('keydown', handleKeyboard);

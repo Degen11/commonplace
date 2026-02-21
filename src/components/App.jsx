@@ -828,7 +828,7 @@ Return exactly one JSON object per input item.`,
               </div>
               
               {/* Features section title with lines */}
-              <div style={Z.howSectionTitle}>
+              <div style={{...Z.howSectionTitle, marginTop: 48, marginBottom: 20}}>
                 <span style={Z.howSectionTitleLine} />
                 Powerful features
                 <span style={Z.howSectionTitleLine} />

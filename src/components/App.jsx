@@ -1003,7 +1003,7 @@ const handleDupesContinue = async () => {
                   </div>
                 )}
               </div>
-              <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
+              <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }} title="Add more quotes to your existing collection">＋ Add more</button>
               <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
             </div>
           </div>

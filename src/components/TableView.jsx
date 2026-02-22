@@ -1,9 +1,49 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import EditForm from "./EditForm";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { getCatColor, CONF_LABELS, REORDERABLE_COLS } from "../data/constants";
 import { Z } from "./styles";
+
+// ── Long-press hook for mobile selection (change #8) ──
+function useLongPress(onLongPress, ms = 400) {
+  const timerRef = useRef(null);
+  const movedRef = useRef(false);
+  const startPos = useRef({ x: 0, y: 0 });
+
+  const onTouchStart = useCallback((e) => {
+    movedRef.current = false;
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    timerRef.current = setTimeout(() => {
+      if (!movedRef.current) {
+        onLongPress();
+      }
+    }, ms);
+  }, [onLongPress, ms]);
+
+  const onTouchMove = useCallback((e) => {
+    if (timerRef.current) {
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - startPos.current.x);
+      const dy = Math.abs(touch.clientY - startPos.current.y);
+      if (dx > 10 || dy > 10) {
+        movedRef.current = true;
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  return { onTouchStart, onTouchMove, onTouchEnd };
+}
 
 // ── Inline source text input ──
 function InlineSourceInput({ initial, onSave, onCancel }) {
@@ -59,6 +99,56 @@ const COL_CONFIG = {
 // Performance: Extract inline style object
 const CATEGORY_CELL_STYLE = { minWidth: 100, display: 'flex', alignItems: 'center', gap: 6 };
 
+// ── Row component with long-press support (change #8) ──
+function TableRow({
+  q, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
+  inlineEdit, columnOrder, compact, allCats, customCats, actionProps,
+  toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
+  handleDragStart, handleDragOver, handleDragEnd, renderColCell,
+}) {
+  const longPress = useLongPress(
+    useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
+    400
+  );
+
+  return (
+    <div className="qrow"
+      draggable={!isEd && inlineEdit?.id !== q.id}
+      onDragStart={() => handleDragStart(q.id)}
+      onDragOver={e => handleDragOver(e, q.id)}
+      onDragEnd={handleDragEnd}
+      {...(isMobile ? longPress : {})}
+      style={{
+        ...(compact ? Z.rowCompact : Z.row),
+        ...(isSel ? { background: "#F0F7FF" } : {}),
+        ...(q.favorite ? Z.favRow : {}),
+        ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+        ...(dragId === q.id ? { opacity: .4 } : {}),
+        animation: "fadeUp .25s ease",
+      }}
+    >
+      <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
+        <div
+          style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
+          onClick={(e) => toggleSel(q.id, e.shiftKey)}
+          onMouseDown={e => e.preventDefault()}
+        >
+          {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+        </div>
+      </div>
+
+      {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
+
+      <div className="row-actions" style={Z.rowAct}>
+        <FavBtn q={q} onFav={actionProps.onFav} />
+        <CopyBtn q={q} onCopy={actionProps.onCopy} />
+        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
+        <DelBtn q={q} onDelete={actionProps.onDelete} />
+      </div>
+    </div>
+  );
+}
+
 export default function TableView({
   filtered,
   selected,
@@ -81,6 +171,7 @@ export default function TableView({
   columnOrder,
   setColumnOrder,
   sortBy,
+  isMobile,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -218,39 +309,31 @@ export default function TableView({
         const isEd = editingId === q.id;
         const needsAtt = q.confidence === "low" || q.category === "Unknown";
         return (
-          <div key={q.id} className="qrow"
-            draggable={!isEd && inlineEdit?.id !== q.id}
-            onDragStart={() => handleDragStart(q.id)}
-            onDragOver={e => handleDragOver(e, q.id)}
-            onDragEnd={handleDragEnd}
-            style={{
-              ...(compact ? Z.rowCompact : Z.row),
-              ...(isSel ? { background: "#F0F7FF" } : {}),
-              ...(q.favorite ? Z.favRow : {}),
-              ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
-              ...(dragId === q.id ? { opacity: .4 } : {}),
-              animation: "fadeUp .25s ease",
-            }}
-          >
-            <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
-              <div
-                style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
-                onClick={(e) => toggleSel(q.id, e.shiftKey)}
-                onMouseDown={e => e.preventDefault()}
-              >
-                {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
-              </div>
-            </div>
-
-            {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
-
-            <div className="row-actions" style={Z.rowAct}>
-              <FavBtn q={q} onFav={actionProps.onFav} />
-              <CopyBtn q={q} onCopy={actionProps.onCopy} />
-              <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
-              <DelBtn q={q} onDelete={actionProps.onDelete} />
-            </div>
-          </div>
+          <TableRow
+            key={q.id}
+            q={q}
+            isSel={isSel}
+            isEd={isEd}
+            needsAtt={needsAtt}
+            sortBy={sortBy}
+            dragId={dragId}
+            isMobile={isMobile}
+            inlineEdit={inlineEdit}
+            columnOrder={columnOrder}
+            compact={compact}
+            allCats={allCats}
+            customCats={customCats}
+            actionProps={actionProps}
+            toggleSel={toggleSel}
+            setEditingId={setEditingId}
+            setInlineEdit={setInlineEdit}
+            saveEdit={saveEdit}
+            saveInlineField={saveInlineField}
+            handleDragStart={handleDragStart}
+            handleDragOver={handleDragOver}
+            handleDragEnd={handleDragEnd}
+            renderColCell={renderColCell}
+          />
         );
       })}
     </div>

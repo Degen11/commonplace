@@ -29,6 +29,7 @@ import { baseCSS, Z, CZ } from "./styles";
 const LS_QUOTES     = "commonplace_quotes";
 const LS_CATS       = "commonplace_cats";
 const LS_COL_ORDER  = "commonplace_col_order";
+const LS_VIEW       = "commonplace_view";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
@@ -46,6 +47,46 @@ function Footer({ styles }) {
   );
 }
 
+// ── Long-press hook for mobile selection ──
+function useLongPress(onLongPress, ms = 400) {
+  const timerRef = useRef(null);
+  const movedRef = useRef(false);
+  const startPos = useRef({ x: 0, y: 0 });
+
+  const onTouchStart = useCallback((e) => {
+    movedRef.current = false;
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    timerRef.current = setTimeout(() => {
+      if (!movedRef.current) {
+        onLongPress();
+      }
+    }, ms);
+  }, [onLongPress, ms]);
+
+  const onTouchMove = useCallback((e) => {
+    if (timerRef.current) {
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - startPos.current.x);
+      const dy = Math.abs(touch.clientY - startPos.current.y);
+      if (dx > 10 || dy > 10) {
+        movedRef.current = true;
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  return { onTouchStart, onTouchMove, onTouchEnd };
+}
+
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
   const [phase, setPhase]                     = useState("input");
@@ -54,8 +95,29 @@ export default function Commonplace() {
   const [quotes, setQuotes]                   = useState([]);
   const [customCats, setCustomCats]           = useState([]);
   const [progress, setProgress]               = useState(null);
-  const [view, setView]                       = useState(() => window.innerWidth < 640 ? "cards" : "table");
-  const [compact, setCompact]                 = useState(false);
+  const [view, setView]                       = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_VIEW);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.view) {
+          if (window.innerWidth < 640 && parsed.view === "table") return "cards";
+          return parsed.view;
+        }
+      }
+    } catch(e) {}
+    return window.innerWidth < 640 ? "cards" : "table";
+  });
+  const [compact, setCompact]                 = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_VIEW);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.compact === "boolean") return parsed.compact;
+      }
+    } catch(e) {}
+    return false;
+  });
   const [catFilter, setCatFilter]             = useState("All");
   const [favFilter, setFavFilter]             = useState(false);
   const [search, setSearch]                   = useState("");
@@ -153,6 +215,11 @@ export default function Commonplace() {
     try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) {}
   }, [columnOrder]);
 
+  // Persist view preference (change #6)
+  useEffect(() => {
+    try { localStorage.setItem(LS_VIEW, JSON.stringify({ view, compact })); } catch(e) {}
+  }, [view, compact]);
+
   // ── Mount: shared link OR restore session ──
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -204,16 +271,29 @@ export default function Commonplace() {
     return () => document.removeEventListener("mousedown", h);
   }, [editingId]);
 
-  // ── Keyboard shortcuts ──
+  // ── Keyboard shortcuts (changes #2, #3) ──
   useEffect(() => {
     const h = e => {
       // Don't trigger if user is typing in an input/textarea
       if (e.target.matches('input, textarea, select')) return;
       
-      // Escape: Clear search (only if not in edit mode)
+      // Escape: prioritized dismissal chain (change #3, #2)
       if (e.key === 'Escape') {
-        if (search && !editingId) {
+        // Priority 1: Clear selection if any entries are selected
+        if (selected.size > 0) {
+          setSelected(new Set());
+          lastSelectedIndex.current = null;
+          return;
+        }
+        // Priority 2: Close edit form if open and no field is focused (change #2)
+        if (editingId) {
+          setEditingId(null);
+          return;
+        }
+        // Priority 3: Clear search
+        if (search) {
           setSearch('');
+          return;
         }
       }
       
@@ -234,7 +314,7 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter]);
+  }, [search, editingId, quotes, catFilter, favFilter, selected]);
 
   // Reset shift-click index when filters change
   useEffect(() => {
@@ -637,7 +717,10 @@ const handleDupesContinue = async () => {
     }));
     setInlineEdit(null);
   };
+  // Change #1: Undo for bulk edit — snapshot affected quotes before mutation
   const applyBulk  = () => {
+    const affectedIds = new Set(selected);
+    const snapshot = quotes.filter(q => affectedIds.has(q.id)).map(q => ({ ...q }));
     setQuotes(p => p.map(q => {
       if (!selected.has(q.id)) return q;
       const u = { ...q };
@@ -646,7 +729,17 @@ const handleDupesContinue = async () => {
       if (bulkEditCat || bulkEditSource.trim()) u.confidence = "high";
       return u;
     }));
+    const count = selected.size;
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
+    undoRef.current = { bulkSnapshot: snapshot };
+    showToast(`${count} entries updated`, "Undo", () => {
+      if (undoRef.current?.bulkSnapshot) {
+        const snap = undoRef.current.bulkSnapshot;
+        const snapMap = new Map(snap.map(q => [q.id, q]));
+        setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
+        undoRef.current = null;
+      }
+    });
   };
   const bulkDel = () => {
     const deletedQuotes = quotes.filter(q => selected.has(q.id));
@@ -712,6 +805,7 @@ const handleDupesContinue = async () => {
   const showBulkBar  = selected.size > 0;
   const unknownCount = quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length;
   const topCats      = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const hasActiveFilters = catFilter !== "All" || favFilter || search;
 
   const computedStats = quotes.length > 0 ? (() => {
     const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
@@ -995,15 +1089,21 @@ const handleDupesContinue = async () => {
                 <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
                 {showExport && (
                   <div style={Z.expDrop}>
+                    {/* Change #7: Entry count note in export dropdown */}
+                    <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+                      Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
+                      {hasActiveFilters && ` (${filtered.length} currently filtered)`}
+                    </div>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
                     {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
                     <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); setShowExport(false); }}>📄 Plain text</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📊 CSV</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); setShowExport(false); }}>{"{ }"} JSON</button>
+                    {/* Change #4: Toast confirmation for file exports */}
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}>📄 Plain text</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}>📊 CSV</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}>📝 Markdown</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
                   </div>
                 )}
               </div>
@@ -1147,10 +1247,11 @@ const handleDupesContinue = async () => {
               columnOrder={columnOrder}
               setColumnOrder={setColumnOrder}
               sortBy={sortBy}
+              isMobile={isMobile}
             />
           )}
 
-          {/* CARD VIEW */}
+          {/* CARD VIEW — with long-press to select (change #8) */}
           {view === "cards" && (
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
               {filtered.map(q => {
@@ -1159,58 +1260,30 @@ const handleDupesContinue = async () => {
                 const isEd  = editingId === q.id;
                 const needsAtt = q.confidence === "low" || q.category === "Unknown";
                 return (
-                  <div key={q.id}
-                    draggable={!isEd && inlineEdit?.id !== q.id}
-                    onDragStart={() => handleDragStart(q.id)}
-                    onDragOver={e => handleDragOver(e, q.id)}
-                    onDragEnd={handleDragEnd}
-                    style={{
-                      ...CZ.card,
-                      ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
-                      ...(q.favorite ? CZ.favCard : {}),
-                      ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
-                      ...(dragId === q.id ? { opacity: .4 } : {}),
-                      animation: "fadeUp .3s ease",
-                    }}
-                    onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
-                    onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
-                  >
-                    <div style={CZ.top}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div className="check-div" style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)} onMouseDown={e => e.preventDefault()}>
-                          {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
-                        </div>
-                        {inlineEdit?.id === q.id && inlineEdit?.field === "category"
-                          ? <select style={Z.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
-                              {allCats.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                          : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
-                        }
-                      </div>
-                      <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
-                        <FavBtn q={q} onFav={actionProps.onFav} />
-                        <CopyBtn q={q} onCopy={actionProps.onCopy} />
-                        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
-                        <DelBtn q={q} onDelete={actionProps.onDelete} />
-                      </div>
-                    </div>
-                    {isEd
-                      ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
-                      : (
-                        <>
-                          <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
-                          <div style={CZ.srcRow}>
-                            <span style={{ color: "#D3D3D0" }}>—</span>
-                            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-                              ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
-                              : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
-                            }
-                            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-                          </div>
-                        </>
-                      )
-                    }
-                  </div>
+                  <CardItem
+                    key={q.id}
+                    q={q}
+                    col={col}
+                    isSel={isSel}
+                    isEd={isEd}
+                    needsAtt={needsAtt}
+                    sortBy={sortBy}
+                    dragId={dragId}
+                    isMobile={isMobile}
+                    inlineEdit={inlineEdit}
+                    allCats={allCats}
+                    actionProps={actionProps}
+                    toggleSel={toggleSel}
+                    startEditing={startEditing}
+                    startInlineEdit={startInlineEdit}
+                    saveEdit={saveEdit}
+                    saveInlineField={saveInlineField}
+                    setInlineEdit={setInlineEdit}
+                    setEditingId={setEditingId}
+                    handleDragStart={handleDragStart}
+                    handleDragOver={handleDragOver}
+                    handleDragEnd={handleDragEnd}
+                  />
                 );
               })}
             </div>
@@ -1228,5 +1301,76 @@ const handleDupesContinue = async () => {
         </div>
       )}
     </>
+  );
+}
+
+// ── Card item component with long-press support (change #8) ──
+function CardItem({
+  q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
+  inlineEdit, allCats, actionProps,
+  toggleSel, startEditing, startInlineEdit,
+  saveEdit, saveInlineField, setInlineEdit, setEditingId,
+  handleDragStart, handleDragOver, handleDragEnd,
+}) {
+  const longPress = useLongPress(
+    useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
+    400
+  );
+
+  return (
+    <div
+      className="qcard"
+      draggable={!isEd && inlineEdit?.id !== q.id}
+      onDragStart={() => handleDragStart(q.id)}
+      onDragOver={e => handleDragOver(e, q.id)}
+      onDragEnd={handleDragEnd}
+      {...(isMobile ? longPress : {})}
+      style={{
+        ...CZ.card,
+        ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
+        ...(q.favorite ? CZ.favCard : {}),
+        ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+        ...(dragId === q.id ? { opacity: .4 } : {}),
+        animation: "fadeUp .3s ease",
+      }}
+      onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
+      onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
+    >
+      <div style={CZ.top}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="check-div" style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)} onMouseDown={e => e.preventDefault()}>
+            {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+          </div>
+          {inlineEdit?.id === q.id && inlineEdit?.field === "category"
+            ? <select style={Z.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
+                {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
+          }
+        </div>
+        <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
+          <FavBtn q={q} onFav={actionProps.onFav} />
+          <CopyBtn q={q} onCopy={actionProps.onCopy} />
+          <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
+          <DelBtn q={q} onDelete={actionProps.onDelete} />
+        </div>
+      </div>
+      {isEd
+        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
+        : (
+          <>
+            <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
+            <div style={CZ.srcRow}>
+              <span style={{ color: "#D3D3D0" }}>—</span>
+              {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+                ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
+                : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
+              }
+              <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+            </div>
+          </>
+        )
+      }
+    </div>
   );
 }

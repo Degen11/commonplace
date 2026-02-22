@@ -50,7 +50,7 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 const COL_CONFIG = {
   content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
   source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
-  category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
+  category: { label: "Category", style: { width: 100, paddingRight: 16, textAlign: "left" } },
 };
 
 export default function TableView({

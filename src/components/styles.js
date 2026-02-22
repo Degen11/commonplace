@@ -330,7 +330,7 @@ export const Z = {
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
-  check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
+  check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",borderColor:"#D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
   entryText:{fontSize:14,lineHeight:1.65,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.35,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},

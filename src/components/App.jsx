@@ -243,8 +243,17 @@ export default function Commonplace() {
     lastSelectedIndex.current = null;
   }, [catFilter, favFilter, search, sortBy]);
 
-  const showToast = (message, action, onAction) => setToast({ message, action, onAction });
+  // ── Update document title with quote count ──
+  useEffect(() => {
+    const baseTitle = "Commonplace";
+    if (quotes.length > 0) {
+      document.title = `(${quotes.length}) ${baseTitle}`;
+    } else {
+      document.title = baseTitle;
+    }
+  }, [quotes]);
 
+  const showToast = (message, action, onAction) => setToast({ message, action, onAction });
   
   // ── File import ──
   const handleFileImport = (file) => {

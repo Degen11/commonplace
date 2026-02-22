@@ -50,11 +50,11 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 const COL_CONFIG = {
   content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 18, textAlign: "left" } },
   source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 18, textAlign: "left" } },
-  category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  category: { label: "Category", style: { minWidth: 100, paddingLeft: 0, paddingRight: 16, textAlign: "left" } },
 };
 
 // Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { width: 80, display: 'flex', alignItems: 'center', gap: 6 };
+const CATEGORY_CELL_STYLE = { minWidth: 100, display: 'flex', alignItems: 'center', gap: 6 };
 
 export default function TableView({
   filtered,
@@ -160,7 +160,7 @@ export default function TableView({
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
               <span
                 className="inline-cat"
-                style={{ ...Z.tag, background: col.bg, color: col.text }}
+                style={{ ...Z.tag, background: col.bg, color: col.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120 }}
                 onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
                 title="Click to change category"
               >{q.category}</span>

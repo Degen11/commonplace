@@ -1,18 +1,29 @@
+// Allowed origins — add your production domain and local dev
+const ALLOWED_ORIGINS = [
+  'https://commonplace.pro',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://localhost:3000',
+];
+
 // Simple in-memory rate limiter
+// NOTE: This resets on every Vercel cold start and does NOT reliably
+// persist across invocations. For real protection, use Vercel KV or
+// Upstash Redis. Kept here as a minimal speed bump only.
 const rateMap = new Map();
 const RATE_LIMIT = 30; // max requests per window
 const RATE_WINDOW = 60 * 1000; // 1 minute
 
 function checkRateLimit(ip) {
   const now = Date.now();
-  
+
   // On-demand cleanup of stale entries
   for (const [key, entry] of rateMap) {
     if (now - entry.start > RATE_WINDOW * 2) {
       rateMap.delete(key);
     }
   }
-  
+
   const entry = rateMap.get(ip);
   if (!entry || now - entry.start > RATE_WINDOW) {
     rateMap.set(ip, { start: now, count: 1 });
@@ -23,13 +34,53 @@ function checkRateLimit(ip) {
   return true;
 }
 
+// ── Server-side system prompt (never exposed to client) ──
+const SYSTEM_PROMPT = `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
+Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}
+
+CATEGORY DEFINITIONS:
+- Film: movies and screenplays
+- TV: television shows and series
+- Book: novels, non-fiction, poetry, plays
+- Music: song lyrics
+- Speech: famous speeches, interviews, public statements
+- Person: attributed to a real person (not from a specific work)
+- Phrase: common idiom or expression with no single clear origin
+
+VIBE TAGS (use when source is not identifiable — always pick the best fit, never skip):
+Aphorism=short punchy universal truth | Philosophical=abstract ideas about existence/reality | Observation=comment on human behavior or the world | Comedic=humorous or witty | Poetic=lyrical or emotionally vivid | Existential=questions of purpose/being/mortality | Motivational=inspires action or perseverance | Cynical=skeptical or darkly realistic | Identity=relates to self-concept | Reflection=introspective or personal insight
+
+IDENTIFICATION RULES — follow strictly:
+1. Commit to your best guess. If you are 40% or more confident of an origin, provide it with confidence "low" or "medium" rather than defaulting to Unknown source.
+2. Consider paraphrases. If a quote is a loose version of a famous line, attribute it to that origin with confidence "medium" or "low".
+3. Check all domains. Before giving up, mentally check: is this from a film? TV show? Novel? Song? A philosopher, politician, or historical figure? A common saying?
+4. Partial attribution is better than none. "Attributed to Mark Twain (origin disputed)" is more useful than Unknown.
+5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
+6. Always assign a vibe tag as the category whenever source is Unknown. category="Unknown" with no vibe tag is never acceptable.
+7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
+Return exactly one JSON object per input item.`;
+
+// Same prompt but with the cleanText field for formatting mode
+const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
+  'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
+  'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}'
+) + ' For cleanText: fix typos, fix \'i\' → \'I\', capitalize the first word, preserve original meaning.';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return res.status(500).json({ error: 'Service not configured' });
+  }
+
+  // ── Origin validation ──
+  const origin = req.headers['origin'] || '';
+  const referer = req.headers['referer'] || '';
+  const isAllowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o) || referer.startsWith(o));
+  if (!isAllowed) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   // Rate limit by IP
@@ -44,19 +95,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid request format' });
   }
 
-  // Lock model to Haiku
-  const safeBody = {
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: Math.min(body.max_tokens || 4000, 4000),
-    system: body.system || '',
-    messages: body.messages.slice(0, 1),
-  };
-
   // Limit input size to prevent abuse
-  const userContent = safeBody.messages[0]?.content || '';
+  const userContent = body.messages[0]?.content || '';
   if (userContent.length > 10000) {
     return res.status(400).json({ error: 'Input too large. Send fewer quotes per batch.' });
   }
+
+  // ── Detect if client wants formatting mode ──
+  // The client sends a system prompt that includes "cleanText" when formatting is on.
+  // We pick the right server-side prompt based on that signal, but never use the
+  // client-supplied prompt itself.
+  const clientSystem = body.system || '';
+  const wantsFormatting = clientSystem.includes('cleanText');
+
+  // ── Build safe request — all LLM parameters controlled server-side ──
+  const safeBody = {
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 4000,
+    system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
+    messages: body.messages.slice(0, 1), // only first message
+  };
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -70,10 +128,12 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
+      // Log full error server-side for debugging
       const errorData = await response.json().catch(() => ({}));
-      return res.status(response.status).json({
-        error: errorData.error?.message || `API returned ${response.status}`
-      });
+      console.error('Anthropic API error:', response.status, JSON.stringify(errorData));
+
+      // Return generic error to client — never forward upstream details
+      return res.status(502).json({ error: 'AI service temporarily unavailable. Please try again.' });
     }
 
     const data = await response.json();

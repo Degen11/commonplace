@@ -9,19 +9,22 @@ import { Z } from "./styles";
 function InlineSourceInput({ initial, onSave, onCancel }) {
   const [val, setVal] = useState(initial);
   return (
-    <input
-      style={Z.inlineSrcInput}
-      value={val}
-      onChange={e => setVal(e.target.value)}
-      onKeyDown={e => {
-        if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onSave(val); }
-        if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-      }}
-      onBlur={() => onSave(val)}
-      onClick={e => e.stopPropagation()}
-      onFocus={e => e.target.select()}
-      autoFocus
-    />
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <input
+        style={Z.inlineSrcInput}
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onSave(val); }
+          if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
+        }}
+        onBlur={() => onSave(val)}
+        onClick={e => e.stopPropagation()}
+        onFocus={e => e.target.select()}
+        autoFocus
+      />
+      <span style={{ fontSize: 10, color: "#C8C4BC", userSelect: "none" }}>Enter to save · Esc to cancel</span>
+    </div>
   );
 }
 

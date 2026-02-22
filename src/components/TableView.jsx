@@ -48,9 +48,9 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 
 // Column configuration
 const COL_CONFIG = {
-  content:  { label: "Content",  style: { flex: 1, minWidth: 280, paddingRight: 24, textAlign: "left" } },
-  source:   { label: "Source",   style: { width: 160, paddingRight: 16, textAlign: "left" } },
-  category: { label: "Category", style: { width: 90, textAlign: "left" } },
+  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
 };
 
 export default function TableView({
@@ -122,7 +122,7 @@ export default function TableView({
     switch(colKey) {
       case "content":
         return (
-          <div key="content" style={COL_CONFIG.content.style}>
+          <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12 }}
             onClick={() => { if (!isEd) setEditingId(q.id); }}>
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />

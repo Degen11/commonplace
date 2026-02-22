@@ -18,6 +18,7 @@ export const baseCSS = `
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   html{scroll-behavior:smooth}
+  div[style]:focus-visible{outline:none}
 
   /* Fix 3 — instant CSS tooltip for confidence dots */
   .conf-tooltip{position:relative;cursor:help}

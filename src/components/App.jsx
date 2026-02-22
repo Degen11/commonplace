@@ -9,12 +9,11 @@ import {
   CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor, REORDERABLE_COLS
 } from "../data/constants";
 
-// Utils - UPDATED: Import new storage helpers
+// Utils
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat, displayText,
   exportCSV, exportMD, exportJSON, exportTXT,
-  copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData,
-  saveToStorage, getFromStorage, removeFromStorage
+  copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData
 } from "../utils/helpers";
 
 // Components
@@ -37,6 +36,8 @@ const SORT_OPTIONS = [
   { key: "alpha",      label: "Alphabetical" },
   { key: "category",   label: "By category" },
 ];
+
+// Column config for persistence - now imported from constants
 
 // ── Footer ──
 function Footer({ styles }) {
@@ -94,9 +95,14 @@ export default function Commonplace() {
 
   // Column order state — persisted to localStorage
   const [columnOrder, setColumnOrder] = useState(() => {
-    const saved = getFromStorage(LS_COL_ORDER);
-    if (saved && Array.isArray(saved) && saved.length === REORDERABLE_COLS.length &&
-        REORDERABLE_COLS.every(c => saved.includes(c))) return saved;
+    try {
+      const saved = localStorage.getItem(LS_COL_ORDER);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === REORDERABLE_COLS.length &&
+            REORDERABLE_COLS.every(c => parsed.includes(c))) return parsed;
+      }
+    } catch(e) {}
     return [...REORDERABLE_COLS];
   });
 
@@ -107,7 +113,6 @@ export default function Commonplace() {
   const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
   const lastSelectedIndex      = useRef(null);
-  const abortControllerRef     = useRef(null); // NEW: For API cancellation
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -135,26 +140,19 @@ export default function Commonplace() {
     setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
   }, []);
 
-  // ── LocalStorage persistence with error handling ──
+  // ── LocalStorage persistence ──
   useEffect(() => {
     if (quotes.length > 0 && !isSharedView) {
-      const quotesResult = saveToStorage(LS_QUOTES, quotes);
-      const catsResult = saveToStorage(LS_CATS, customCats);
-      
-      // Show toast if storage failed
-      if (!quotesResult.success || !catsResult.success) {
-        showToast(
-          "⚠️ Storage full - your data may not be saved. Export your collection to be safe.",
-          "Export now",
-          () => setShowExport(true)
-        );
-      }
+      try {
+        localStorage.setItem(LS_QUOTES, JSON.stringify(quotes));
+        localStorage.setItem(LS_CATS, JSON.stringify(customCats));
+      } catch(e) {}
     }
   }, [quotes, customCats, isSharedView]);
 
   // Persist column order
   useEffect(() => {
-    saveToStorage(LS_COL_ORDER, columnOrder);
+    try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) {}
   }, [columnOrder]);
 
   // ── Mount: shared link OR restore session ──
@@ -167,11 +165,16 @@ export default function Commonplace() {
         return;
       }
     }
-    const saved = getFromStorage(LS_QUOTES);
-    if (saved?.length > 0) {
-      const cats = getFromStorage(LS_CATS, []);
-      setSavedSession({ quotes: saved, customCats: cats });
-    }
+    try {
+      const saved = localStorage.getItem(LS_QUOTES);
+      if (saved) {
+        const q = JSON.parse(saved);
+        if (q?.length > 0) {
+          const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
+          setSavedSession({ quotes: q, customCats: cats });
+        }
+      }
+    } catch(e) {}
   }, []);
 
   // ── Responsive ──
@@ -191,6 +194,7 @@ export default function Commonplace() {
       if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false);
       if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
       
+      // Close edit form if clicking outside the table/cards area
       if (editingId) {
         const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
         if (!clickedInside) {
@@ -205,16 +209,20 @@ export default function Commonplace() {
   // ── Keyboard shortcuts ──
   useEffect(() => {
     const h = e => {
+      // Don't trigger if user is typing in an input/textarea
       if (e.target.matches('input, textarea, select')) return;
       
+      // Escape: Clear search (only if not in edit mode)
       if (e.key === 'Escape') {
         if (search && !editingId) {
           setSearch('');
         }
       }
       
+      // Cmd/Ctrl + A: Select all visible quotes
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
+        // Compute filtered inline to avoid dependency issues
         const visibleQuotes = quotes.filter(q => {
           if (catFilter !== "All" && q.category !== catFilter) return false;
           if (favFilter && !q.favorite) return false;
@@ -234,16 +242,6 @@ export default function Commonplace() {
   useEffect(() => {
     lastSelectedIndex.current = null;
   }, [catFilter, favFilter, search, sortBy]);
-
-  // NEW: Cleanup abort controller when leaving processing phase or unmounting
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-    };
-  }, [phase]);
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
 
@@ -291,8 +289,8 @@ export default function Commonplace() {
     if (file) handleFileImport(file);
   };
 
-  // ── API: batch identification with abort support ──
-  const identifyBatch = useCallback(async (items, withFormatting = false, signal) => {
+  // ── API: batch identification ──
+  const identifyBatch = useCallback(async (items, withFormatting = false) => {
     if (items.length === 0) return [];
     const sourceCats = ["Film","TV","Book","Music","Speech","Person","Phrase"];
     const allCatStr = [...sourceCats, ...VIBE_TAGS, ...customCats.filter(c => !sourceCats.includes(c) && !VIBE_TAGS.includes(c)), "Unknown"].join("|");
@@ -302,11 +300,9 @@ export default function Commonplace() {
     }).join("\n");
     const extraField = withFormatting ? `,"cleanText":"the text with typos fixed and proper capitalization"` : "";
     const extraInstr = withFormatting ? " For cleanText: fix typos, fix 'i' → 'I', capitalize the first word, preserve original meaning." : "";
-    
     const r = await fetch("/api/identify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      signal, // Pass abort signal
       body: JSON.stringify({
         model: "claude-3-5-haiku-20241022",
         max_tokens: 4000,
@@ -337,7 +333,6 @@ Return exactly one JSON object per input item.`,
         messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
       }),
     });
-    
     if (!r.ok) throw new Error(`API returned ${r.status}`);
     const d = await r.json();
     if (d.error) throw new Error(d.error.message || "API error");
@@ -370,8 +365,7 @@ Return exactly one JSON object per input item.`,
         } : x));
         showToast("Re-identified!");
       }
-    } catch (err) {
-      if (err.name === 'AbortError') return; // Silently ignore aborts
+    } catch {
       showToast("Couldn't reach AI. Try again.");
     }
   };
@@ -386,12 +380,8 @@ Return exactly one JSON object per input item.`,
       .catch(() => showToast("Couldn't copy — try manually selecting the text."));
   };
 
-  // ── Processing pipeline with abort support ──
+  // ── Processing pipeline ──
   const runProcessing = async (unique, appendMode, useFormatting = false) => {
-    // Create new abort controller for this processing session
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-    
     const localMatches = []; const needsApi = [];
     unique.forEach((p, i) => {
       const match = localLookup(p.text, p.hint);
@@ -410,37 +400,23 @@ Return exactly one JSON object per input item.`,
 
     const apiResults = new Map(); let apiFailed = false; const failed = []; const BATCH_SIZE = 20;
     if (needsApi.length > 0) {
-      try {
-        for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
-          // Check if aborted before each batch
-          if (signal.aborted) {
-            throw new Error('Processing cancelled');
-          }
-          
-          const chunk = needsApi.slice(i, i + BATCH_SIZE);
-          setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
-          
-          const results = await identifyBatch(chunk, useFormatting, signal);
+      for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
+        const chunk = needsApi.slice(i, i + BATCH_SIZE);
+        setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
+        try {
+          const results = await identifyBatch(chunk, useFormatting);
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
           setIdentifiedFeed(prev => [...prev, ...results.map(r => {
             const item = chunk[r.i];
             return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
           })]);
+        } catch {
+          apiFailed = true; chunk.forEach(c => failed.push(c));
+          setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
+          break;
         }
-      } catch (err) {
-        if (err.name === 'AbortError' || signal.aborted || err.message === 'Processing cancelled') {
-          // User cancelled - show message and return early
-          setProgress(null); 
-          setIsProcessing(false);
-          showToast("Processing cancelled");
-          return;
-        }
-        apiFailed = true; 
-        needsApi.slice(apiResults.size * BATCH_SIZE).forEach(c => failed.push(c));
-        setApiError(`AI identification failed for ${needsApi.length - apiResults.size} entries. You can edit them manually or retry.`);
       }
     }
-    
     if (failed.length > 0) setFailedEntries(failed);
 
     const newQuotes = unique.map((p, i) => {
@@ -462,9 +438,6 @@ Return exactly one JSON object per input item.`,
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
     setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
     setProgress(null); setIsProcessing(false); goPhase("results");
-    
-    // Clear abort controller after successful completion
-    abortControllerRef.current = null;
   };
 
   const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
@@ -516,11 +489,14 @@ const handleDupesContinue = async () => {
   
   pendingDupes.forEach((dupe, i) => {
     const decision = dupeDecisions[i];
+    const norm = normalize(dupe.incoming.text);
     
     if (decision === "keep") {
+      // Just add it - user explicitly wants to keep it
       unique.push(dupe.incoming);
       keptCount++;
     } else if (decision === "merge") {
+      // Merge sources: keep new text but combine sources
       const mergedSource = dupe.matchedSource && dupe.incoming.hint
         ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
         : dupe.incoming.hint || dupe.matchedSource || "Unknown";
@@ -528,6 +504,7 @@ const handleDupesContinue = async () => {
       unique.push({ ...dupe.incoming, hint: mergedSource });
       keptCount++;
     }
+    // "skip" does nothing
   });
   
   const dupes = pendingDupes.length - keptCount;
@@ -555,9 +532,7 @@ const handleDupesContinue = async () => {
       await processEntries(text, true, formattingEnabled);
       setFailedEntries([]);
     } catch (error) {
-      if (error.name !== 'AbortError') {
-        setApiError(`Retry failed. You can try again or edit manually.`);
-      }
+      setApiError(`Retry failed. You can try again or edit manually.`);
     }
   };
 
@@ -570,15 +545,8 @@ const handleDupesContinue = async () => {
   };
 
   const handleClear = () => {
-    // Cancel any ongoing processing
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    
     window.history.replaceState(null, "", window.location.pathname); setIsSharedView(false);
-    removeFromStorage(LS_QUOTES);
-    removeFromStorage(LS_CATS);
+    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
@@ -615,6 +583,7 @@ const handleDupesContinue = async () => {
   // ── Inline actions ──
   const toggleSel = (id, shiftKey = false) => {
     if (shiftKey && lastSelectedIndex.current !== null) {
+      // Shift-click: select range
       const currentIndex = filtered.findIndex(q => q.id === id);
       const lastIndex = lastSelectedIndex.current;
       const start = Math.min(currentIndex, lastIndex);
@@ -627,6 +596,7 @@ const handleDupesContinue = async () => {
       });
       lastSelectedIndex.current = currentIndex;
     } else {
+      // Normal click: toggle single
       setSelected(p => {
         const n = new Set(p);
         n.has(id) ? n.delete(id) : n.add(id);
@@ -639,9 +609,11 @@ const handleDupesContinue = async () => {
     if (filtered.length === 0) return;
     const allSelected = filtered.every(q => selected.has(q.id));
     if (allSelected) {
+      // Deselect all
       setSelected(new Set());
       lastSelectedIndex.current = null;
     } else {
+      // Select all visible
       setSelected(new Set(filtered.map(q => q.id)));
       lastSelectedIndex.current = null;
     }
@@ -789,8 +761,7 @@ const handleDupesContinue = async () => {
                     goPhase("results");
                   }}>Restore session</button>
                   <button style={Z.restoreDismiss} onClick={() => {
-                    removeFromStorage(LS_QUOTES);
-                    removeFromStorage(LS_CATS);
+                    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
                     setSavedSession(null);
                   }}>Dismiss</button>
                 </div>
@@ -948,36 +919,299 @@ const handleDupesContinue = async () => {
                 })}
               </div>
             )}
-            {/* Cancel button */}
-            <button 
-              style={{ 
-                marginTop: 20, 
-                padding: "8px 20px", 
-                borderRadius: 8, 
-                border: "1px solid #E3E2DE", 
-                background: "#fff", 
-                color: "#DC2626", 
-                fontSize: 13, 
-                fontWeight: 600, 
-                cursor: "pointer", 
-                fontFamily: "inherit" 
-              }}
-              onClick={() => {
-                if (abortControllerRef.current) {
-                  abortControllerRef.current.abort();
-                }
-              }}
-            >
-              Cancel processing
-            </button>
           </div>
         </div>
       )}
 
-      {/* ── Results phase ── (truncated for brevity - the rest continues from the original) */}
+      {/* ── Results phase ── */}
       {phase === "results" && (
         <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
-          {/* ... rest of results phase UI remains the same ... */}
+
+          {toast && <Toast message={toast.message} action={toast.action} onAction={() => { if (toast.onAction) toast.onAction(); setToast(null); }} onDismiss={() => setToast(null)} />}
+
+          {confirmClear && (
+            <div style={Z.modalOverlay} onClick={() => setConfirmClear(false)}>
+              <div style={Z.confirmBox} onClick={e => e.stopPropagation()}>
+                <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Start fresh?</p>
+                <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>This will clear all {quotes.length} entries and remove them from your saved session.</p>
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button style={Z.confirmCancel} onClick={() => setConfirmClear(false)}>Cancel</button>
+                  <button style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isSharedView && (
+            <div style={Z.shareBanner}>
+              <span>👀 You're viewing a shared collection ({quotes.length} entries)</span>
+              <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); window.history.replaceState(null, "", window.location.pathname); }}>Make it yours</button>
+            </div>
+          )}
+
+          <div style={Z.header}>
+            <div>
+              <h1 style={Z.title}>Commonplace</h1>
+              <p style={Z.sub}>
+                {filtered.length < quotes.length
+                  ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
+                  : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
+                }
+                {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
+                {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+              {!isMobile && (
+                <div style={Z.viewTog}>
+                  <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }} title="Table">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                  </button>
+                  <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }} title="Compact">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                  </button>
+                  <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")} title="Cards">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
+                  </button>
+                </div>
+              )}
+              <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
+                {showStats ? "Hide stats" : "Stats"}
+              </button>
+              <div ref={exportRef} style={{ position: "relative" }}>
+                <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                {showExport && (
+                  <div style={Z.expDrop}>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
+                    {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
+                    <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); setShowExport(false); }}>📄 Plain text</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); setShowExport(false); }}>📊 CSV</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); setShowExport(false); }}>📝 Markdown</button>
+                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); setShowExport(false); }}>{"{ }"} JSON</button>
+                  </div>
+                )}
+              </div>
+              <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
+              <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
+            </div>
+          </div>
+
+          {showStats && <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => setShowStats(false)} />}
+
+          {apiError && (
+            <div style={Z.errorBar}>
+              <span>⚠️ {apiError}</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
+                <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
+              </div>
+            </div>
+          )}
+
+          {stats && (
+            <div style={Z.statsBar}>
+              <span>⚡ <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
+              <span>🤖 <strong>{stats.api}</strong> identified by AI</span>
+              {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626" }}>❌ <strong>{stats.failed}</strong> failed</span></>}
+              {stats.dupes > 0 && <><span style={Z.statDot} /><span>🔁 <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
+              <button style={Z.statsDismiss} onClick={() => setStats(null)}>✕</button>
+            </div>
+          )}
+
+          {/* UPDATED: Add More panel with formatting toggle */}
+          {showAddMore && (
+            <div style={Z.addMorePanel}>
+              <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
+                placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+                  <label style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
+                    <div style={{ ...Z.fmtToggleTrack, background: addMoreFormatting ? "#1A1814" : "#E0DCD4" }}>
+                      <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
+                    </div>
+                    Clean up formatting
+                  </label>
+                  <span style={{ fontSize: 12, color: "#9B9A97" }}>
+                    {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
+                  <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showBulkBar && (
+            <div style={Z.bulkBar}>
+              <span style={Z.bulkN}>{selected.size} selected</span>
+              <div style={Z.bulkF}>
+                <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
+                <button style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
+                <button style={Z.bulkDelBtn} onClick={bulkDel}>Delete</button>
+                <button style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
+              </div>
+            </div>
+          )}
+
+          <div style={Z.toolbar}>
+            <div style={Z.srchW}><span style={Z.srchI}>🔍</span>
+              <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
+              {search && <button style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
+            </div>
+            <div ref={sortRef} style={{ position: "relative" }}>
+              <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
+                Sort{sortBy !== "default" ? " ✓" : ""}<span style={{ fontSize: 10, marginLeft: 4, opacity: .4 }}>▾</span>
+              </button>
+              {showSort && (
+                <div style={Z.sortDrop}>
+                  {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...Z.sortOpt, ...(sortBy === o.key ? Z.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={Z.cats}>
+            <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
+            {favCount > 0 && (
+              <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
+                ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
+              </button>
+            )}
+            {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
+              const col = getCatColor(c, customCats); const on = catFilter === c;
+              const count = cc[c];
+              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}) }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
+                {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
+                {customCats.includes(c) && <span style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
+              </button>;
+            })}
+            {showNewCat ? (
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
+                <button style={Z.newCatSv} onClick={addCat}>Add</button>
+              </div>
+            ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+          </div>
+
+          {unknownCount > 0 && sortBy !== "confidence" && (
+            <div style={Z.attentionBar}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={Z.attentionCount}>{unknownCount}</span>
+                <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
+              </div>
+              <button style={Z.attentionBtn} onClick={() => setSortBy("confidence")}>Review now ↑</button>
+            </div>
+          )}
+
+          {/* TABLE VIEW */}
+          {view === "table" && (
+            <TableView
+              filtered={filtered}
+              selected={selected}
+              toggleSel={toggleSel}
+              selAll={selAll}
+              editingId={editingId}
+              setEditingId={setEditingId}
+              inlineEdit={inlineEdit}
+              setInlineEdit={setInlineEdit}
+              saveEdit={saveEdit}
+              saveInlineField={saveInlineField}
+              allCats={allCats}
+              customCats={customCats}
+              actionProps={actionProps}
+              compact={compact}
+              dragId={dragId}
+              handleDragStart={handleDragStart}
+              handleDragOver={handleDragOver}
+              handleDragEnd={handleDragEnd}
+              columnOrder={columnOrder}
+              setColumnOrder={setColumnOrder}
+              sortBy={sortBy}
+            />
+          )}
+
+          {/* CARD VIEW */}
+          {view === "cards" && (
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
+              {filtered.map(q => {
+                const col = getCatColor(q.category, customCats);
+                const isSel = selected.has(q.id);
+                const isEd  = editingId === q.id;
+                const needsAtt = q.confidence === "low" || q.category === "Unknown";
+                return (
+                  <div key={q.id}
+                    draggable={!isEd && inlineEdit?.id !== q.id}
+                    onDragStart={() => handleDragStart(q.id)}
+                    onDragOver={e => handleDragOver(e, q.id)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      ...CZ.card,
+                      ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
+                      ...(q.favorite ? CZ.favCard : {}),
+                      ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+                      ...(dragId === q.id ? { opacity: .4 } : {}),
+                      animation: "fadeUp .3s ease",
+                    }}
+                    onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
+                    onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
+                  >
+                    <div style={CZ.top}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="check-div" style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={() => toggleSel(q.id)} onMouseDown={e => e.preventDefault()}>
+                          {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+                        </div>
+                        {inlineEdit?.id === q.id && inlineEdit?.field === "category"
+                          ? <select style={Z.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
+                              {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
+                        }
+                      </div>
+                      <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
+                        <FavBtn q={q} onFav={actionProps.onFav} />
+                        <CopyBtn q={q} onCopy={actionProps.onCopy} />
+                        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
+                        <DelBtn q={q} onDelete={actionProps.onDelete} />
+                      </div>
+                    </div>
+                    {isEd
+                      ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
+                      : (
+                        <>
+                          <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
+                          <div style={CZ.srcRow}>
+                            <span style={{ color: "#D3D3D0" }}>—</span>
+                            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+                              ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
+                              : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
+                            }
+                            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+                          </div>
+                        </>
+                      )
+                    }
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {filtered.length === 0 && (
+            <div style={Z.empty}>
+              <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>
+              <button style={{ background: "none", border: "none", color: "#2383E2", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
+                onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
+            </div>
+          )}
+
+          <Footer styles={Z} />
         </div>
       )}
     </>

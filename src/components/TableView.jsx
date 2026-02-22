@@ -131,7 +131,6 @@ function TableRow({
         <div
           style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
           onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
-          onMouseDown={e => e.preventDefault()}
         >
           {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
         </div>
@@ -274,7 +273,6 @@ export default function TableView({
             <div
               style={{ ...Z.check, ...(filtered.length > 0 && filtered.every(q => selected.has(q.id)) ? Z.checkOn : {}) }}
               onClick={(e) => { e.currentTarget.blur(); selAll(); }}
-              onMouseDown={e => e.preventDefault()}
               title="Select all"
             >
               {filtered.length > 0 && filtered.every(q => selected.has(q.id)) && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}

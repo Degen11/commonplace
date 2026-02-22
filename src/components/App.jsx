@@ -1341,7 +1341,6 @@ function CardItem({
       <div style={CZ.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div className="check-div" style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id); }}
- onMouseDown={e => e.preventDefault()}>
             {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
           </div>
           {inlineEdit?.id === q.id && inlineEdit?.field === "category"

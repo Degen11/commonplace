@@ -1296,6 +1296,8 @@ const handleDupesContinue = async () => {
                 onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Reset all filters</button>
             </div>
           )}
+          
+          {showBulkBar && <div style={{ height: 64 }} />}
 
           <Footer styles={Z} />
         </div>

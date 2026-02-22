@@ -15,6 +15,7 @@ export const baseCSS = `
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+  @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   html{scroll-behavior:smooth}
 
@@ -281,7 +282,7 @@ export const Z = {
   dupeKeptCount:{fontSize:12,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
 
   // Bulk edit
-  bulkBar:{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"rgba(60,87,117,0.06)",borderRadius:8,margin:"12px 0",flexWrap:"wrap",animation:"slideD .2s ease"},
+  bulkBar:{position:"fixed",bottom:0,left:0,right:0,display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:"rgba(255,255,255,0.97)",borderTop:"1px solid #E3E2DE",boxShadow:"0 -4px 20px rgba(0,0,0,0.08)",flexWrap:"wrap",zIndex:500,animation:"bulkSlideUp .2s ease",backdropFilter:"blur(8px)"},
   bulkN:{fontSize:13,fontWeight:600,color:CP_ACCENT,whiteSpace:"nowrap"},
   bulkF:{display:"flex",gap:6,alignItems:"center",flex:1,flexWrap:"wrap"},
   bulkSel:{border:"1px solid #D3D3D0",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"#fff"},

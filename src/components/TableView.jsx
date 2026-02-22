@@ -148,24 +148,26 @@ export default function TableView({
           </div>
         );
       case "category":
-        return (
-          <div key="category" style={CATEGORY_CELL_STYLE}>
-            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-            {inlineEdit?.id === q.id && inlineEdit?.field === "category"
-              ? <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
-              : <span
-                  className="inline-cat"
-                  style={{ ...Z.tag, background: col.bg, color: col.text }}
-                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-                  title="Click to change category"
-                >{q.category}</span>
-            }
-          </div>
-        );
-      default: 
-        return null;
-    }
-  };
+  return (
+    <div key="category" style={CATEGORY_CELL_STYLE}>
+      {inlineEdit?.id === q.id && inlineEdit?.field === "category" ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+          <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+          <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+        </div>
+      ) : (
+        <>
+          <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+          <span
+            className="inline-cat"
+            style={{ ...Z.tag, background: col.bg, color: col.text }}
+            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+            title="Click to change category"
+          >{q.category}</span>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div style={{ overflowX: "auto" }}>

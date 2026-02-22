@@ -900,7 +900,7 @@ const handleDupesContinue = async () => {
       )}
 
       {/* ── Processing phase ── */}
-      {phase === "processing" && (
+{phase === "processing" && (
         <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
           <div style={Z.procWrap}>
             <h2 style={Z.procTitle}>Organizing your collection...</h2>
@@ -912,6 +912,12 @@ const handleDupesContinue = async () => {
                 <p style={Z.procCurrent}>{progress.current}</p>
               </div>
             )}
+            <button
+              style={{ marginTop: 16, background: "none", border: "1px solid #E3E2DE", borderRadius: 8, padding: "8px 20px", fontSize: 13, color: "#9B9A97", cursor: "pointer", fontFamily: "inherit" }}
+              onClick={() => { setIsProcessing(false); setProgress(null); goPhase("input"); }}
+            >
+              Cancel
+            </button>
             {identifiedFeed.length > 0 && (
               <div style={Z.feedWrap}>
                 {[...identifiedFeed].reverse().map((item, i) => {

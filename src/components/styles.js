@@ -16,6 +16,7 @@ export const baseCSS = `
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
+  html{scroll-behavior:smooth}
 
   /* Fix 3 — instant CSS tooltip for confidence dots */
   .conf-tooltip{position:relative;cursor:help}
@@ -120,7 +121,7 @@ export const Z = {
   howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
   howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:26,color:CP_ACCENT,marginBottom:20,display:"flex",alignItems:"center",gap:12},
   howSectionTitleLine:{flex:1,height:1,background:"#E8E3DA"},
-  howGrid:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,background:"#E8E3DA",borderRadius:12,overflow:"hidden"},
+  howGrid:{display:"grid",gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",gap:2,background:"#E8E3DA",borderRadius:12,overflow:"hidden"},
   howCard:{background:"#F5F1EB",padding:"28px 24px",display:"flex",flexDirection:"column",gap:10},
   howCardIcon:{fontSize:24},
   howCardTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,fontWeight:700,letterSpacing:"-0.2px",color:"#1A1814"},
@@ -134,7 +135,7 @@ export const Z = {
   // UPDATED FEATURE GRID STYLES - 4 columns, icon-centered, no descriptions
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
+    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
     gap: 12,
     marginTop: 16,
   },
@@ -326,7 +327,7 @@ export const Z = {
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
-  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
+  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
   entryText:{fontSize:14,lineHeight:1.65,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
@@ -335,7 +336,7 @@ export const Z = {
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
+  rowAct:{width:110,display:"flex",gap:1,opacity:0.25,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#6B6764",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
 
   // Edit form
@@ -376,7 +377,7 @@ export const CZ = {
   card:{background:"#fff",border:"1px solid #F1F1EF",borderRadius:8,padding:16,transition:"all .15s",cursor:"grab"},
   favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
-  acts:{display:"flex",gap:2,opacity:0,transition:"opacity .15s"},
+  acts:{display:"flex",gap:2,opacity:0.3,transition:"opacity .15s"},
   txt:{fontSize:15,lineHeight:1.6,color:"#37352F",marginBottom:10,whiteSpace:"pre-wrap"},
   srcRow:{display:"flex",alignItems:"center",gap:6},
   src:{fontSize:12,color:"#9B9A97"},

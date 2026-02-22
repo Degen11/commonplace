@@ -49,7 +49,7 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 // Column configuration
 const COL_CONFIG = {
   content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
-  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 24, textAlign: "left" } },
   category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
 };
 

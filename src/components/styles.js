@@ -335,7 +335,7 @@ export const Z = {
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{width:110,display:"flex",gap:4,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
+  rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#6B6764",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
 
   // Edit form

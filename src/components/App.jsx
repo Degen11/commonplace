@@ -231,13 +231,13 @@ export default function Commonplace() {
       if (e.target.matches('input, textarea, select')) return;
       
       // Escape: Cancel processing or clear search
-      if (e.key === 'Escape') {
-        if (phase === 'processing' && abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        } else if (search && !editingId) {
-          setSearch('');
-        }
-      }
+if (e.key === 'Escape') {
+  if (abortControllerRef.current) {
+    abortControllerRef.current.abort();
+  } else if (search && !editingId) {
+    setSearch('');
+  }
+}
       
       // Cmd/Ctrl + A: Select all visible quotes
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
@@ -256,7 +256,6 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter, phase]);
 
   // Reset shift-click index when filters change
   useEffect(() => {

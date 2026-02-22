@@ -131,39 +131,34 @@ export default function TableView({
           </div>
         );
       case "source":
-        return (
-          <div key="source" className="src-col" style={Z.srcCol}>
-            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-              ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
-              : <>
-                  <span
-                    className="inline-src"
-                    style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
-                    title={q.source}
-                    onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-                  >{q.source}</span>
-                  <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-                </>
-            }
-          </div>
-        );
+  return (
+    <div key="source" className="src-col" style={Z.srcCol}>
+      {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+        ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
+        : <span
+            className="inline-src"
+            style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+            title={q.source}
+            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+          >{q.source}</span>
+      }
+    </div>
+  );
       case "category":
-        return (
-          <div key="category" style={{ width: 80 }}>
-            {inlineEdit?.id === q.id && inlineEdit?.field === "category"
-              ? <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
-              : <span
-                  className="inline-cat"
-                  style={{ ...Z.tag, background: col.bg, color: col.text }}
-                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-                  title="Click to change category"
-                >{q.category}</span>
-            }
-          </div>
-        );
-      default: return null;
-    }
-  };
+  return (
+    <div key="category" style={{ width: 80, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+      {inlineEdit?.id === q.id && inlineEdit?.field === "category"
+        ? <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+        : <span
+            className="inline-cat"
+            style={{ ...Z.tag, background: col.bg, color: col.text }}
+            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+            title="Click to change category"
+          >{q.category}</span>
+      }
+    </div>
+  );
 
   return (
     <div style={{ overflowX: "auto" }}>

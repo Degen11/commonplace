@@ -190,11 +190,6 @@ export default function Commonplace() {
     };
   }, [phase]);
 
-  // ── Browser tab count ──
-  useEffect(() => {
-    document.title = quotes.length > 0 ? `(${quotes.length}) Commonplace` : 'Commonplace';
-  }, [quotes.length]);
-
   // ── Responsive ──
   useEffect(() => {
     const h = () => {
@@ -230,14 +225,12 @@ export default function Commonplace() {
       // Don't trigger if user is typing in an input/textarea
       if (e.target.matches('input, textarea, select')) return;
       
-      // Escape: Cancel processing or clear search
-if (e.key === 'Escape') {
-  if (abortControllerRef.current) {
-    abortControllerRef.current.abort();
-  } else if (search && !editingId) {
-    setSearch('');
-  }
-}
+      // Escape: Clear search (only if not in edit mode)
+      if (e.key === 'Escape') {
+        if (search && !editingId) {
+          setSearch('');
+        }
+      }
       
       // Cmd/Ctrl + A: Select all visible quotes
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
@@ -256,6 +249,7 @@ if (e.key === 'Escape') {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
+  }, [search, editingId, quotes, catFilter, favFilter]);
 
   // Reset shift-click index when filters change
   useEffect(() => {
@@ -396,10 +390,7 @@ Return exactly one JSON object per input item.`,
       ? `"${q.text}" — ${q.source}`
       : `${q.text} — ${q.source}`;
     navigator.clipboard.writeText(text)
-      .then(() => {
-        const preview = q.text.length > 40 ? `${q.text.slice(0, 40)}...` : q.text;
-        showToast(`Copied: "${preview}"`);
-      })
+      .then(() => showToast("Copied!"))
       .catch(() => showToast("Couldn't copy — try manually selecting the text."));
   };
 
@@ -973,9 +964,6 @@ const handleDupesContinue = async () => {
             >
               Cancel processing
             </button>
-            <p style={{ fontSize: 12, color: "#9B9A97", marginTop: 12 }}>
-              Press <kbd style={{ padding: "2px 6px", background: "#F1F1EF", borderRadius: 4, fontFamily: "inherit" }}>Esc</kbd> to cancel
-            </p>
           </div>
         </div>
       )}

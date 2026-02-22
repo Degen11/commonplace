@@ -13,7 +13,8 @@ import {
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat, displayText,
   exportCSV, exportMD, exportJSON, exportTXT,
-  copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData
+  copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData,
+  saveToStorage, getFromStorage, removeFromStorage
 } from "../utils/helpers";
 
 // Components
@@ -113,6 +114,7 @@ export default function Commonplace() {
   const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
   const lastSelectedIndex      = useRef(null);
+  const abortControllerRef     = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -143,16 +145,22 @@ export default function Commonplace() {
   // ── LocalStorage persistence ──
   useEffect(() => {
     if (quotes.length > 0 && !isSharedView) {
-      try {
-        localStorage.setItem(LS_QUOTES, JSON.stringify(quotes));
-        localStorage.setItem(LS_CATS, JSON.stringify(customCats));
-      } catch(e) {}
+      const quotesResult = saveToStorage(LS_QUOTES, quotes);
+      const catsResult = saveToStorage(LS_CATS, customCats);
+      
+      if (!quotesResult.success || !catsResult.success) {
+        showToast(
+          "⚠️ Storage full - your data may not be saved. Export your collection to be safe.",
+          "Export now",
+          () => setShowExport(true)
+        );
+      }
     }
   }, [quotes, customCats, isSharedView]);
 
   // Persist column order
   useEffect(() => {
-    try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) {}
+    saveToStorage(LS_COL_ORDER, columnOrder);
   }, [columnOrder]);
 
   // ── Mount: shared link OR restore session ──
@@ -165,17 +173,22 @@ export default function Commonplace() {
         return;
       }
     }
-    try {
-      const saved = localStorage.getItem(LS_QUOTES);
-      if (saved) {
-        const q = JSON.parse(saved);
-        if (q?.length > 0) {
-          const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
-          setSavedSession({ quotes: q, customCats: cats });
-        }
-      }
-    } catch(e) {}
+    const saved = getFromStorage(LS_QUOTES);
+    if (saved?.length > 0) {
+      const cats = getFromStorage(LS_CATS, []);
+      setSavedSession({ quotes: saved, customCats: cats });
+    }
   }, []);
+
+  // ── Cleanup abort controller ──
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, [phase]);
 
   // ── Responsive ──
   useEffect(() => {
@@ -290,7 +303,7 @@ export default function Commonplace() {
   };
 
   // ── API: batch identification ──
-  const identifyBatch = useCallback(async (items, withFormatting = false) => {
+  const identifyBatch = useCallback(async (items, withFormatting = false, signal) => {
     if (items.length === 0) return [];
     const sourceCats = ["Film","TV","Book","Music","Speech","Person","Phrase"];
     const allCatStr = [...sourceCats, ...VIBE_TAGS, ...customCats.filter(c => !sourceCats.includes(c) && !VIBE_TAGS.includes(c)), "Unknown"].join("|");
@@ -303,6 +316,7 @@ export default function Commonplace() {
     const r = await fetch("/api/identify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal,
       body: JSON.stringify({
         model: "claude-3-5-haiku-20241022",
         max_tokens: 4000,
@@ -382,6 +396,9 @@ Return exactly one JSON object per input item.`,
 
   // ── Processing pipeline ──
   const runProcessing = async (unique, appendMode, useFormatting = false) => {
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     const localMatches = []; const needsApi = [];
     unique.forEach((p, i) => {
       const match = localLookup(p.text, p.hint);
@@ -400,21 +417,32 @@ Return exactly one JSON object per input item.`,
 
     const apiResults = new Map(); let apiFailed = false; const failed = []; const BATCH_SIZE = 20;
     if (needsApi.length > 0) {
-      for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
-        const chunk = needsApi.slice(i, i + BATCH_SIZE);
-        setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
-        try {
-          const results = await identifyBatch(chunk, useFormatting);
+      try {
+        for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
+          if (signal.aborted) {
+            throw new Error('Processing cancelled');
+          }
+          
+          const chunk = needsApi.slice(i, i + BATCH_SIZE);
+          setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
+          
+          const results = await identifyBatch(chunk, useFormatting, signal);
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
           setIdentifiedFeed(prev => [...prev, ...results.map(r => {
             const item = chunk[r.i];
             return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
           })]);
-        } catch {
-          apiFailed = true; chunk.forEach(c => failed.push(c));
-          setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
-          break;
         }
+      } catch (err) {
+        if (err.name === 'AbortError' || signal.aborted || err.message === 'Processing cancelled') {
+          setProgress(null);
+          setIsProcessing(false);
+          showToast("Processing cancelled");
+          return;
+        }
+        apiFailed = true;
+        needsApi.slice(apiResults.size * BATCH_SIZE).forEach(c => failed.push(c));
+        setApiError(`AI identification failed for ${needsApi.length - apiResults.size} entries. You can edit them manually or retry.`);
       }
     }
     if (failed.length > 0) setFailedEntries(failed);
@@ -438,6 +466,7 @@ Return exactly one JSON object per input item.`,
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
     setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
     setProgress(null); setIsProcessing(false); goPhase("results");
+    abortControllerRef.current = null;
   };
 
   const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
@@ -545,8 +574,14 @@ const handleDupesContinue = async () => {
   };
 
   const handleClear = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
     window.history.replaceState(null, "", window.location.pathname); setIsSharedView(false);
-    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
+    removeFromStorage(LS_QUOTES);
+    removeFromStorage(LS_CATS);
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
@@ -919,6 +954,16 @@ const handleDupesContinue = async () => {
                 })}
               </div>
             )}
+            <button 
+              style={{ marginTop: 20, padding: "8px 20px", borderRadius: 8, border: "1px solid #E3E2DE", background: "#fff", color: "#DC2626", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+              onClick={() => {
+                if (abortControllerRef.current) {
+                  abortControllerRef.current.abort();
+                }
+              }}
+            >
+              Cancel processing
+            </button>
           </div>
         </div>
       )}

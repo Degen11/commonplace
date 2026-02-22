@@ -1,6 +1,45 @@
 import { QUOTED_CATS } from "../data/constants";
 import LOCAL_DB from "../data/localQuotes";
 
+// ===================== STORAGE HELPERS =====================
+export function saveToStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return { success: true };
+  } catch (error) {
+    console.warn(`Failed to save ${key}:`, error);
+    return { success: false, error: error.message || "Storage quota exceeded" };
+  }
+}
+
+export function getFromStorage(key, defaultValue = null) {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.warn(`Failed to read ${key}:`, error);
+    return defaultValue;
+  }
+}
+
+export function removeFromStorage(key) {
+  try {
+    localStorage.removeItem(key);
+    return { success: true };
+  } catch (error) {
+    console.warn(`Failed to remove ${key}:`, error);
+    return { success: false, error: error.message };
+  }
+}
+
+// ===================== DATA GROUPING =====================
+export function groupByCategory(quotes) {
+  return quotes.reduce((acc, q) => {
+    (acc[q.category] = acc[q.category] || []).push(q);
+    return acc;
+  }, {});
+}
+
 // ── Extract known proper nouns from local DB source strings ──
 // Fix 6: only include a word if it appears in 2+ DIFFERENT source strings.
 // Single-occurrence words are likely song/movie title words ("Dreams",
@@ -216,8 +255,7 @@ export function exportCSV(quotes) {
 }
 
 export function exportMD(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let md = "# Commonplace Export\n\n";
   Object.entries(grouped).forEach(([cat, qs]) => {
     md += `## ${cat}\n\n`;
@@ -238,8 +276,7 @@ export function exportJSON(quotes) {
 }
 
 export function exportTXT(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let text = "";
   Object.entries(grouped).forEach(([cat, qs]) => {
     text += `${cat.toUpperCase()}\n${"─".repeat(cat.length)}\n\n`;
@@ -255,8 +292,7 @@ export function exportTXT(quotes) {
 }
 
 export function richCopyToClipboard(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let text = "";
   Object.entries(grouped).forEach(([cat, qs]) => {
     text += `✦ ${cat.toUpperCase()}\n\n`;
@@ -274,8 +310,7 @@ export function richCopyToClipboard(quotes) {
 }
 
 export function copyToClipboard(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let text = "";
   Object.entries(grouped).forEach(([cat, qs]) => {
     text += `${cat}\n${"─".repeat(cat.length)}\n`;

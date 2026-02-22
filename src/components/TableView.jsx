@@ -5,6 +5,9 @@ import { displayText } from "../utils/helpers";
 import { getCatColor, CONF_LABELS, REORDERABLE_COLS } from "../data/constants";
 import { Z } from "./styles";
 
+// Column spacing (header + rows use same gap to keep alignment perfect)
+const COL_GAP = 16; // tweak 12–18
+
 // ── Inline source text input ──
 function InlineSourceInput({ initial, onSave, onCancel }) {
   const [val, setVal] = useState(initial);
@@ -46,11 +49,11 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
   );
 }
 
-// Column configuration
+// Column configuration (no inter-column padding; spacing comes from COL_GAP)
 const COL_CONFIG = {
-  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
-  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
-  category: { label: "Category", style: { width: 80, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
+  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
+  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
+  category: { label: "Category", style: { width: 80,  paddingLeft: 0, paddingRight: 0, textAlign: "left" } },
 };
 
 export default function TableView({
@@ -122,8 +125,11 @@ export default function TableView({
     switch(colKey) {
       case "content":
         return (
-          <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12 }}
-            onClick={() => { if (!isEd) setEditingId(q.id); }}>
+          <div
+            key="content"
+            style={COL_CONFIG.content.style}
+            onClick={() => { if (!isEd) setEditingId(q.id); }}
+          >
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
               : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
@@ -149,7 +155,7 @@ export default function TableView({
         );
       case "category":
         return (
-          <div key="category" style={{ width: 80 }}>
+          <div key="category" style={COL_CONFIG.category.style}>
             {inlineEdit?.id === q.id && inlineEdit?.field === "category"
               ? <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
               : <span
@@ -165,20 +171,23 @@ export default function TableView({
     }
   };
 
+  const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
+
   return (
     <div style={{ overflowX: "auto" }}>
       {filtered.length > 0 && (
-        <div style={Z.tHead}>
-          <div style={{ width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ ...Z.tHead, gap: COL_GAP }}>
+          <div style={{ width: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div
-              style={{ ...Z.check, ...(filtered.length > 0 && filtered.every(q => selected.has(q.id)) ? Z.checkOn : {}) }}
+              style={{ ...Z.check, ...(allSelected ? Z.checkOn : {}) }}
               onClick={selAll}
               onMouseDown={e => e.preventDefault()}
               title="Select all"
             >
-              {filtered.length > 0 && filtered.every(q => selected.has(q.id)) && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+              {allSelected && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
             </div>
           </div>
+
           {columnOrder.map(colKey => (
             <div
               key={colKey}
@@ -199,6 +208,7 @@ export default function TableView({
               {COL_CONFIG[colKey].label}
             </div>
           ))}
+
           <div style={{ width: 110 }} />
         </div>
       )}
@@ -208,13 +218,16 @@ export default function TableView({
         const isEd = editingId === q.id;
         const needsAtt = q.confidence === "low" || q.category === "Unknown";
         return (
-          <div key={q.id} className="qrow"
+          <div
+            key={q.id}
+            className="qrow"
             draggable={!isEd && inlineEdit?.id !== q.id}
             onDragStart={() => handleDragStart(q.id)}
             onDragOver={e => handleDragOver(e, q.id)}
             onDragEnd={handleDragEnd}
             style={{
               ...(compact ? Z.rowCompact : Z.row),
+              gap: COL_GAP,
               ...(isSel ? { background: "#F0F7FF" } : {}),
               ...(q.favorite ? Z.favRow : {}),
               ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),

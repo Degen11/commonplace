@@ -333,7 +333,7 @@ export const Z = {
   entryText:{fontSize:14,lineHeight:1.55,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   // FIX: Source column now wraps text naturally, stable row height
-  srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8,flexWrap:"wrap"},
+  ssrcCol:{width:200,display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"},
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},

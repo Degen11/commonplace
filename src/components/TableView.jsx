@@ -179,30 +179,26 @@ export default function TableView({
               {filtered.length > 0 && filtered.every(q => selected.has(q.id)) && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
             </div>
           </div>
-{columnOrder.map(colKey => (
-  <div
-    key={colKey}
-    className="col-drag-header"
-    style={{
-      ...COL_CONFIG[colKey].style,
-      marginRight: colKey !== columnOrder[columnOrder.length-1] ? 4 : 0,
-      width: colKey === "source" 
-        ? `calc(${COL_CONFIG.source.style.width} - 4px)` 
-        : COL_CONFIG[colKey].style.width,
-      opacity: dragColId === colKey ? 0.4 : 1,
-      outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
-      outlineOffset: 2,
-      borderRadius: 4,
-    }}
-    draggable
-    onDragStart={e => handleColDragStart(e, colKey)}
-    onDragOver={e => handleColDragOver(e, colKey)}
-    onDrop={e => handleColDrop(e, colKey)}
-    onDragEnd={handleColDragEnd}
-  >
-    {COL_CONFIG[colKey].label}
-  </div>
-))}
+          {columnOrder.map(colKey => (
+            <div
+              key={colKey}
+              className="col-drag-header"
+              style={{
+                ...COL_CONFIG[colKey].style,
+                opacity: dragColId === colKey ? 0.4 : 1,
+                outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
+                outlineOffset: 2,
+                borderRadius: 4,
+              }}
+              draggable
+              onDragStart={e => handleColDragStart(e, colKey)}
+              onDragOver={e => handleColDragOver(e, colKey)}
+              onDrop={e => handleColDrop(e, colKey)}
+              onDragEnd={handleColDragEnd}
+            >
+              {COL_CONFIG[colKey].label}
+            </div>
+          ))}
           <div style={{ width: 110 }} />
         </div>
       )}

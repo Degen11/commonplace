@@ -185,7 +185,10 @@ export default function TableView({
     className="col-drag-header"
     style={{
       ...COL_CONFIG[colKey].style,
-      marginRight: colKey !== columnOrder[columnOrder.length-1] ? 4 : 0, // Add gap except last column
+      marginRight: colKey !== columnOrder[columnOrder.length-1] ? 4 : 0,
+      width: colKey === "source" 
+        ? `calc(${COL_CONFIG.source.style.width} - 4px)` 
+        : COL_CONFIG[colKey].style.width,
       opacity: dragColId === colKey ? 0.4 : 1,
       outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
       outlineOffset: 2,

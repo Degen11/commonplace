@@ -984,7 +984,7 @@ const handleDupesContinue = async () => {
                   </button>
                 </div>
               )}
-              <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
+              <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)} title="View statistics about your collection">
                 {showStats ? "Hide stats" : "Stats"}
               </button>
               <div ref={exportRef} style={{ position: "relative" }}>
@@ -1075,7 +1075,7 @@ const handleDupesContinue = async () => {
             </div>
             <div ref={sortRef} style={{ position: "relative" }}>
               <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
-                Sort{sortBy !== "default" ? " ✓" : ""}<span style={{ fontSize: 10, marginLeft: 4, opacity: .4 }}>▾</span>
+                Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<span style={{ fontSize: 10, marginLeft: 4, opacity: .4 }}>▾</span>
               </button>
               {showSort && (
                 <div style={Z.sortDrop}>
@@ -1216,7 +1216,7 @@ const handleDupesContinue = async () => {
             <div style={Z.empty}>
               <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>
               <button style={{ background: "none", border: "none", color: "#2383E2", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
-                onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Clear all filters</button>
+                onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Reset all filters</button>
             </div>
           )}
 

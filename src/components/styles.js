@@ -44,20 +44,20 @@ export const baseCSS = `
   .col-drag-header:active{cursor:grabbing}
 
   /* Row interactions (optimized) */
-  .qrow{cursor:grab;transition:background 0.18s ease, box-shadow 0.18s ease}
+  .qrow{cursor:grab;transition:background 0.18s ease}
   .qrow:active{cursor:grabbing}
-  .qrow:hover{background:rgba(55,53,47,0.035) !important;box-shadow:0 1px 0 rgba(55,53,47,0.06)}
+  .qrow:hover{background:rgba(55,53,47,0.05) !important}
   .qrow:hover .row-actions{opacity:1 !important}
   .qrow:hover .checkbox{opacity:1 !important}
 
   /* Inline edit affordances */
   .inline-src{cursor:text !important;transition:color .12s}
   .inline-src:hover{color:#37352F !important;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:rgba(55,53,47,0.35)}
-  .inline-cat{cursor:pointer !important;transition:opacity .12s}
-  .inline-cat:hover{opacity:0.75 !important}
+  .inline-cat{cursor:pointer !important;transition:opacity .12s,background .12s}
+  .inline-cat:hover{opacity:0.75 !important;background:rgba(60,87,117,0.08) !important}
 
   /* Checkbox hover affordance */
-  .checkbox:hover .check{border-color:#3C5775 !important;background:rgba(60,87,117,0.08)}
+  .checkbox:hover .check{border-color:#3C5775 !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
 
   .dd-opt:hover{background:#F1F1EF !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
@@ -240,7 +240,7 @@ export const Z = {
   shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#EFF6FF",border:"1px solid #DBEAFE",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
   shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"#fff",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 
-  // Stats panel - UPDATED title size
+  // Stats panel
   statsPanel:{background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12,padding:20,margin:"12px 0",animation:"slideD .2s ease"},
   statsPanelTitle:{fontSize:15,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
   statsPanelClose:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:16,padding:"0 4px"},
@@ -256,7 +256,7 @@ export const Z = {
   statNumber:{fontSize:28,fontWeight:700,color:"#37352F",letterSpacing:-1},
   statNumberSub:{fontSize:12,color:"#9B9A97",marginTop:2},
 
-  // Dupe modal - UPDATED with proper fonts and blue accent
+  // Dupe modal
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
   dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.15)",overflow:"hidden",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid #F1F1EF"},
@@ -308,7 +308,7 @@ export const Z = {
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
-   // Table - FIX: Source wraps naturally, no truncation
+  // Table
   tHead:{
     display:"flex",
     alignItems:"center",
@@ -316,7 +316,7 @@ export const Z = {
     borderBottom:"1px solid rgba(55,53,47,0.08)",
     fontSize:11,
     color:"#3C5775",
-    fontWeight:600,
+    fontWeight:700,
     textTransform:"uppercase",
     letterSpacing:0.6,
     background:"rgba(60,87,117,0.03)",
@@ -327,18 +327,15 @@ export const Z = {
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .15s"},
-  // UPDATED: Match checkboxes to use same blue as accent
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
-  entryText:{fontSize:14,lineHeight:1.55,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
-  entryTextCompact:{fontSize:13,lineHeight:1.4,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
-  // FIX: Source column now wraps text naturally, stable row height
+  entryText:{fontSize:14,lineHeight:1.65,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
+  entryTextCompact:{fontSize:13,lineHeight:1.35,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8,flexWrap:"wrap"},
-  srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1},
+  srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{width:110,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
-  // UPDATED: Icon-friendly button styles
+  rowAct:{width:110,display:"flex",gap:4,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#6B6764",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
 
   // Edit form

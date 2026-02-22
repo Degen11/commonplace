@@ -37,8 +37,6 @@ const SORT_OPTIONS = [
   { key: "category",   label: "By category" },
 ];
 
-// Column config for persistence - now imported from constants
-
 // ── Footer ──
 function Footer({ styles }) {
   return (

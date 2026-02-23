@@ -655,7 +655,13 @@ const LOCAL_MAP = new Map();
 LOCAL_DB.forEach(q => LOCAL_MAP.set(q.norm, q));
 
 function normalizeForLookup(s) {
-  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
+  return (s || "")
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/\p{M}/gu, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function localLookup(text, hint, options = {}) {

@@ -141,7 +141,9 @@ export default function Commonplace() {
   const [confirmClear, setConfirmClear]       = useState(false);
   const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing]       = useState(false);
-  const [toast, setToast]                     = useState(null);
+  const [toasts, setToasts]                   = useState([]);
+  const [confirmBulkDel, setConfirmBulkDel]   = useState(false);
+  const [reviewQueue, setReviewQueue]         = useState([]);
   const [dragId, setDragId]                   = useState(null);
   const [failedEntries, setFailedEntries]     = useState([]);
   const [isSharedView, setIsSharedView]       = useState(false);
@@ -174,6 +176,7 @@ export default function Commonplace() {
   const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
   const lastSelectedIndex      = useRef(null);
+  const toastIdRef             = useRef(0);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -289,6 +292,7 @@ export default function Commonplace() {
         // Priority 2: Close edit form if open and no field is focused (change #2)
         if (editingId) {
           setEditingId(null);
+          if (reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
           return;
         }
         // Priority 3: Clear search
@@ -334,7 +338,11 @@ export default function Commonplace() {
     }
   }, [quotes, phase, progress]);
 
-  const showToast = (message, action, onAction) => setToast({ message, action, onAction });
+  const showToast = (message, action, onAction) => {
+    toastIdRef.current += 1;
+    setToasts(prev => [...prev, { id: toastIdRef.current, message, action, onAction }]);
+  };
+  const dismissToast = () => setToasts(prev => prev.slice(1));
   
   // ── File import ──
   const handleFileImport = (file) => {
@@ -727,6 +735,20 @@ const handleDupesContinue = async () => {
   const saveEdit   = (id, text, source, category) => {
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
     setEditingId(null);
+    // Advance review queue if active
+    if (reviewQueue.length > 0) {
+      const remaining = reviewQueue.filter(rid => rid !== id);
+      setReviewQueue(remaining);
+      if (remaining.length > 0) {
+        setTimeout(() => {
+          setEditingId(remaining[0]);
+          const el = document.querySelector(`[data-id="${remaining[0]}"]`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 150);
+      } else {
+        showToast("Review complete — all entries updated!");
+      }
+    }
   };
   const saveInlineField = (id, field, value) => {
     setQuotes(p => p.map(q => {
@@ -761,6 +783,7 @@ const handleDupesContinue = async () => {
     });
   };
   const bulkDel = () => {
+    setConfirmBulkDel(false);
     const deletedQuotes = quotes.filter(q => selected.has(q.id));
     const deletedIds = new Set(selected);
     setQuotes(p => p.filter(q => !deletedIds.has(q.id)));
@@ -776,6 +799,25 @@ const handleDupesContinue = async () => {
       });
     });
   };
+  const startReviewFlow = () => {
+    setSortBy("confidence");
+    setCatFilter("All");
+    setFavFilter(false);
+    setSearch("");
+    const attentionIds = quotes
+      .filter(q => q.confidence === "low" || q.category === "Unknown")
+      .sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0))
+      .map(q => q.id);
+    setReviewQueue(attentionIds);
+    if (attentionIds.length > 0) {
+      setTimeout(() => {
+        setEditingId(attentionIds[0]);
+        const el = document.querySelector(`[data-id="${attentionIds[0]}"]`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+    }
+  };
+
   const addCat  = () => { 
     const sanitized = sanitizeCategoryName(newCatName);
     if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
@@ -1055,7 +1097,7 @@ const handleDupesContinue = async () => {
       {phase === "results" && (
         <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
 
-          {toast && <Toast message={toast.message} action={toast.action} onAction={() => { if (toast.onAction) toast.onAction(); setToast(null); }} onDismiss={() => setToast(null)} />}
+          {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
 
           {confirmClear && (
             <div style={Z.modalOverlay} onClick={() => setConfirmClear(false)}>
@@ -1065,6 +1107,19 @@ const handleDupesContinue = async () => {
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                   <button style={Z.confirmCancel} onClick={() => setConfirmClear(false)}>Cancel</button>
                   <button style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {confirmBulkDel && (
+            <div style={Z.modalOverlay} onClick={() => setConfirmBulkDel(false)}>
+              <div style={Z.confirmBox} onClick={e => e.stopPropagation()}>
+                <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Delete {selected.size} entries?</p>
+                <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>This will remove {selected.size} selected entries. You'll be able to undo immediately after.</p>
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button style={Z.confirmCancel} onClick={() => setConfirmBulkDel(false)}>Cancel</button>
+                  <button style={Z.confirmYes} onClick={bulkDel}>Delete {selected.size} entries</button>
                 </div>
               </div>
             </div>
@@ -1195,7 +1250,7 @@ const handleDupesContinue = async () => {
                 <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
                 <button style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
-                <button style={Z.bulkDelBtn} onClick={bulkDel}>Delete</button>
+                <button style={Z.bulkDelBtn} onClick={() => selected.size > 10 ? setConfirmBulkDel(true) : bulkDel()}>Delete</button>
                 <button style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
               </div>
             </div>
@@ -1242,15 +1297,23 @@ const handleDupesContinue = async () => {
             ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
           </div>
 
-          {unknownCount > 0 && sortBy !== "confidence" && (
+          {unknownCount > 0 && (reviewQueue.length > 0 ? (
+            <div style={Z.attentionBar}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={Z.attentionCount}>{reviewQueue.length}</span>
+                <span>{reviewQueue.length === 1 ? "entry" : "entries"} remaining in review</span>
+              </div>
+              <button style={{ ...Z.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
+            </div>
+          ) : sortBy !== "confidence" && (
             <div style={Z.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={Z.attentionCount}>{unknownCount}</span>
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
-              <button style={Z.attentionBtn} onClick={() => setSortBy("confidence")}>Review now ↑</button>
+              <button style={Z.attentionBtn} onClick={startReviewFlow}>Review now →</button>
             </div>
-          )}
+          ))}
 
           {/* TABLE VIEW */}
           {view === "table" && (
@@ -1318,24 +1381,25 @@ const handleDupesContinue = async () => {
             </div>
           )}
 {hasMore && (
-            <button
-              onClick={loadMore}
-              style={{
-                display: "block",
-                margin: "20px auto",
-                padding: "10px 24px",
-                fontSize: 13,
-                color: "#2383E2",
-                background: "none",
-                border: "1px solid #E3E2DE",
-                borderRadius: 8,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              Load more ({remaining} remaining)
-            </button>
-          )}
+  <button
+    onClick={loadMore}
+    style={{
+      display: "block",
+      margin: "20px auto",
+      padding: "10px 24px",
+      fontSize: 13,
+      color: "#2383E2",
+      background: "none",
+      border: "1px solid #E3E2DE",
+      borderRadius: 8,
+      cursor: "pointer",
+      fontFamily: "inherit",
+      animation: "fadeUp .3s ease",
+    }}
+  >
+    Load more ({remaining} remaining)
+  </button>
+)}
           {filtered.length === 0 && (
             <div style={Z.empty}>
               <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>

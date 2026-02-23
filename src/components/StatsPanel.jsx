@@ -4,6 +4,23 @@ import { getCatColor, CONF_LABELS } from "../data/constants";
 export default function StatsPanel({ quotes, computedStats, cc, customCats, onClose }) {
   if (!computedStats) return null;
 
+  if (quotes.length < 10) {
+    return (
+      <div style={Z.statsPanel}>
+        <div style={Z.statsPanelTitle}>
+          <span>Collection breakdown</span>
+          <button style={Z.statsPanelClose} onClick={onClose}>✕</button>
+        </div>
+        <div style={{ textAlign: "center", padding: "24px 16px", color: "#9B9A97", fontSize: 13 }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
+          Add at least 10 entries to unlock collection insights.
+          <br />
+          <span style={{ fontSize: 12 }}>You have {quotes.length} so far.</span>
+        </div>
+      </div>
+    );
+  }
+
   const uniqueSources = new Set(quotes.map(q => q.source).filter(s => s !== "Unknown")).size;
   const favCount = quotes.filter(q => q.favorite).length;
   const confCounts = { high: 0, medium: 0, low: 0 };

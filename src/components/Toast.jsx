@@ -10,7 +10,13 @@ export default function Toast({ message, action, onAction, onDismiss }) {
   return (
     <div style={Z.toast}>
       <div style={Z.toastContent}>
-        <span>{message}</span>
+        <span style={{
+          maxWidth: 280,
+          overflow: "hidden",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+        }}>{message}</span>
         {action && <button style={Z.toastAction} onClick={onAction}>{action}</button>}
       </div>
     </div>

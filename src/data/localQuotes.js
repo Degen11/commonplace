@@ -752,8 +752,8 @@ function normalizeForLookup(s) {
     .trim();
 }
 
-export function localLookup(text, options = {}) {
-  const { hint, exactOnly = false } = options;
+export function localLookup(text, hint, options = {}) {
+  const { exactOnly = false } = options;
   const norm = normalizeForLookup(text);
   const exact = LOCAL_MAP.get(norm);
   if (exact) return { source: exact.s, category: exact.c, confidence: "high", local: true };

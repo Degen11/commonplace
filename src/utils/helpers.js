@@ -91,7 +91,10 @@ export function basicFormat(text) {
   if (!t) return t;
 
   // 1. Strip leading copy-paste junk (bullets, numbers, dashes)
-  t = t.replace(/^[\s\u2022\u00b7\u2013\u2014\-*>#]+/, "").trim();
+  t = t.replace(/^[\s\u2022\u00b7\u2013\u2014\-*>#]+/, "")
+       .replace(/^\d{1,4}\s*\.\s*/, "")
+       .replace(/^\d{1,4}\s+(?=[A-Z])/, "")
+       .trim();
 
   // 2. Collapse multiple spaces
   t = t.replace(/  +/g, " ");

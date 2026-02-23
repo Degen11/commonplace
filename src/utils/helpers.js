@@ -157,19 +157,33 @@ export function smartSplit(text) {
 
 // ===================== TEXT PROCESSING =====================
 export function normalize(s) {
-  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
+  return (s || "")
+    .normalize("NFKD")                 // splits accents
+    .toLowerCase()
+    .replace(/\p{M}/gu, "")            // removes accent marks only
+    .replace(/[^\p{L}\p{N}\s]/gu, "")  // keeps letters/numbers from ALL scripts
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function wordSet(s) {
-  return new Set(normalize(s).split(" ").filter(w => w.length > 2));
+  return new Set(
+    normalize(s)
+      .split(" ")
+      .filter(Boolean)
+      .filter(w => (w.match(/[\p{L}\p{N}]/gu) || []).length >= 2)
+  );
 }
 
 export function similarity(a, b) {
   const na = normalize(a), nb = normalize(b);
+  if (!na || !nb) return 0;
   if (na === nb) return 1;
   if (na.includes(nb) || nb.includes(na)) return 0.9;
+
   const wa = wordSet(a), wb = wordSet(b);
   if (!wa.size || !wb.size) return 0;
+
   let overlap = 0;
   wa.forEach(w => { if (wb.has(w)) overlap++; });
   return (overlap * 2) / (wa.size + wb.size);

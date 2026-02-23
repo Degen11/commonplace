@@ -800,7 +800,7 @@ const handleDupesContinue = async () => {
   if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
   else if (sortBy === "alpha")    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
   else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
-  const { visible, hasMore, remaining, sentinelRef } = useInfiniteScroll(filtered);
+  const { visible, hasMore, remaining } = useInfiniteScroll(filtered);
 
   const cc           = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
   const favCount     = quotes.filter(q => q.favorite).length;
@@ -1292,7 +1292,6 @@ const handleDupesContinue = async () => {
           )}
 {hasMore && (
             <div
-              ref={sentinelRef}
               style={{
                 display: "flex",
                 justifyContent: "center",

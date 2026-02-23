@@ -1,57 +1,60 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const PAGE_SIZE = 100;
-const SCROLL_THRESHOLD = 600;
+const SCROLL_THRESHOLD = 800;
 
 export default function useInfiniteScroll(filtered) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const loadingRef = useRef(false);
-  const rafRef = useRef(null);
 
-  // Reset to first page when the list identity changes
+  // Refs so the scroll handler always sees current values
+  // without needing to re-register the listener
+  const visibleCountRef = useRef(visibleCount);
+  const filteredLenRef = useRef(filtered.length);
+  visibleCountRef.current = visibleCount;
+  filteredLenRef.current = filtered.length;
+
+  // Reset when the filtered list changes (new quotes, filter, sort)
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-    loadingRef.current = false;
   }, [filtered]);
 
+  // Single scroll listener — registered once, never re-registers
   useEffect(() => {
-    if (visibleCount >= filtered.length) return;
-
     const handleScroll = () => {
-      if (loadingRef.current) return;
-      if (rafRef.current) return;
+      if (visibleCountRef.current >= filteredLenRef.current) return;
 
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        const scrollBottom =
-          document.documentElement.scrollHeight -
-          window.scrollY -
-          window.innerHeight;
+      const scrollBottom =
+        document.documentElement.scrollHeight -
+        window.scrollY -
+        window.innerHeight;
 
-        if (scrollBottom < SCROLL_THRESHOLD) {
-          loadingRef.current = true;
-          setVisibleCount((prev) => {
-            const next = prev + PAGE_SIZE;
-            return next >= filtered.length ? filtered.length : next;
-          });
-          // Release the guard after a frame so the DOM can settle
-          requestAnimationFrame(() => {
-            loadingRef.current = false;
-          });
-        }
-      });
+      if (scrollBottom < SCROLL_THRESHOLD) {
+        setVisibleCount((prev) => {
+          const next = prev + PAGE_SIZE;
+          return next >= filteredLenRef.current
+            ? filteredLenRef.current
+            : next;
+        });
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [filtered.length, visibleCount]);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Manual fallback in case scroll doesn't trigger
+  const loadMore = useCallback(() => {
+    setVisibleCount((prev) => {
+      const next = prev + PAGE_SIZE;
+      return next >= filteredLenRef.current
+        ? filteredLenRef.current
+        : next;
+    });
+  }, []);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
   const remaining = filtered.length - visibleCount;
 
-  return { visible, hasMore, remaining };
+  return { visible, hasMore, remaining, loadMore };
 }

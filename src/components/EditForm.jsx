@@ -12,9 +12,9 @@ function findSuggestion(text) {
   // Score every entry by word overlap
   let best = null; let bestScore = 0;
   for (const entry of LOCAL_DB) {
-    if (entry.norm === norm) return null; // exact match — no suggestion needed
+    if (entry.t === norm) return null; // exact match — no suggestion needed
     const wa = new Set(norm.split(" ").filter(w => w.length > 2));
-    const wb = new Set(entry.norm.split(" ").filter(w => w.length > 2));
+    const wb = new Set(entry.t.split(" ").filter(w => w.length > 2));
     if (!wa.size || !wb.size) continue;
     let overlap = 0;
     wa.forEach(w => { if (wb.has(w)) overlap++; });

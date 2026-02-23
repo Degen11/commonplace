@@ -174,14 +174,12 @@ const LOCAL_DB_RAW = [
   {t:"excellent",s:"The Simpsons - Mr. Burns",c:"TV"},
   {t:"eat my shorts",s:"The Simpsons - Bart Simpson",c:"TV"},
   {t:"yadda yadda yadda",s:"Seinfeld",c:"TV"},
-  {t:"no soup for you",s:"Seinfeld",c:"TV"},
   {t:"serenity now",s:"Seinfeld",c:"TV"},
   {t:"pivot",s:"Friends - Ross Geller",c:"TV"},
   {t:"how rude",s:"Full House - Stephanie Tanner",c:"TV"},
   {t:"did i do that",s:"Family Matters - Steve Urkel",c:"TV"},
   {t:"whatchu talkin bout willis",s:"Diff’rent Strokes",c:"TV"},
   {t:"norm",s:"Cheers",c:"TV"},
-  {t:"everybody lies",s:"House M.D. - Gregory House",c:"TV"},
   {t:"im batman",s:"Various Batman Series",c:"TV"},
   {t:"previously on",s:"Television Trope",c:"TV"},
   {t:"we have to go back",s:"Lost - Jack Shephard",c:"TV"},
@@ -625,7 +623,6 @@ const LOCAL_DB_RAW = [
   // Note: t is normalized lowercase (Cyrillic), punctuation removed
   {t:"без труда не выловишь и рыбку из пруда",s:"Russian proverb",c:"Phrase"},
   {t:"семь раз отмерь один раз отрежь",s:"Russian proverb",c:"Phrase"},
-  {t:"не имей сто рублей а имей сто друзей",s:"Russian proverb",c:"Phrase"},
   {t:"на бога надейся а сам не плошай",s:"Russian proverb",c:"Phrase"},
   {t:"доверяй но проверяй",s:"Russian proverb",c:"Phrase"},
   {t:"тише едешь дальше будешь",s:"Russian proverb",c:"Phrase"},
@@ -741,9 +738,9 @@ const LOCAL_DB_RAW = [
 ];
 
 // Build lookup structures
-const LOCAL_DB = LOCAL_DB_RAW.map(q => ({ ...q, norm: q.t }));
+const LOCAL_DB = LOCAL_DB_RAW;
 const LOCAL_MAP = new Map();
-LOCAL_DB.forEach(q => LOCAL_MAP.set(q.norm, q));
+LOCAL_DB.forEach(q => LOCAL_MAP.set(q.t, q));
 
 function normalizeForLookup(s) {
   return (s || "")
@@ -755,25 +752,33 @@ function normalizeForLookup(s) {
     .trim();
 }
 
-export function localLookup(text, hint, options = {}) {
-  const { exactOnly = false } = options;
+export function localLookup(text, options = {}) {
+  const { hint, exactOnly = false } = options;
   const norm = normalizeForLookup(text);
   const exact = LOCAL_MAP.get(norm);
   if (exact) return { source: exact.s, category: exact.c, confidence: "high", local: true };
 
-  if (!exactOnly) {
+if (!exactOnly) {
+    let bestHigh = null;
+    let bestMed = null;
+
     for (const entry of LOCAL_DB) {
-      if (norm.includes(entry.norm) && entry.norm.length > 15)
-        return { source: entry.s, category: entry.c, confidence: "high", local: true };
-      if (entry.norm.includes(norm) && norm.length > 15)
-        return { source: entry.s, category: entry.c, confidence: "medium", local: true };
+      if (norm.includes(entry.t) && entry.t.length > 15) {
+        if (!bestHigh || entry.t.length > bestHigh.t.length) bestHigh = entry;
+      }
+      if (entry.t.includes(norm) && norm.length > 15) {
+        if (!bestMed || entry.t.length < bestMed.t.length) bestMed = entry;
+      }
     }
 
+    if (bestHigh) return { source: bestHigh.s, category: bestHigh.c, confidence: "high", local: true };
+    if (bestMed) return { source: bestMed.s, category: bestMed.c, confidence: "medium", local: true };
+
     if (hint) {
-      const h = hint.trim();
-      const knownAuthors = LOCAL_DB.filter(e => e.s.toLowerCase().includes(h.toLowerCase()));
+      const h = hint.trim().toLowerCase();
+      const knownAuthors = LOCAL_DB.filter(e => e.s.toLowerCase().includes(h));
       if (knownAuthors.length > 0)
-        return { source: h, category: knownAuthors[0].c, confidence: "medium", local: true };
+        return { source: knownAuthors[0].s, category: knownAuthors[0].c, confidence: "medium", local: true };
       return null;
     }
   }

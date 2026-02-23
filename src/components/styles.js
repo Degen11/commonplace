@@ -304,7 +304,7 @@ export const Z = {
   sortOptOn:{background:"#F1F1EF",fontWeight:600},
 
   // Category pills — #5 added sticky shadow
-  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"},
+  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50},
   catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"},

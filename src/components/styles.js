@@ -104,14 +104,14 @@ export const Z = {
   dropZone:{border:"2px dashed #E3E2DE",borderRadius:10,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"#fff"},
   dropZoneActive:{borderColor:"#2383E2",background:"#EFF6FF"},
   dropIcon:{fontSize:32,marginBottom:12},
-  dropTitle:{fontSize:15,fontWeight:600,color:"#37352F",marginBottom:6},
+  dropTitle:{fontSize:14,fontWeight:600,color:"#37352F",marginBottom:6},
   dropSub:{fontSize:13,color:"#9B9A97"},
   dropFileName:{display:"inline-flex",alignItems:"center",gap:6,marginTop:12,padding:"6px 12px",background:"#F0FDF4",border:"1px solid #DCFCE7",borderRadius:6,fontSize:12,color:"#16A34A",fontWeight:500},
 
-  bigTextarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:8,padding:16,fontSize:15,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:240,lineHeight:1.7,background:"#fff"},
+  bigTextarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:8,padding:16,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:240,lineHeight:1.7,background:"#fff"},
   inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,flexWrap:"wrap",gap:10},
   inputCount:{fontSize:13,color:"#9B9A97"},
-  processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:CP_ACCENT,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:CP_ACCENT,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   tryBtn:{padding:"8px 16px",border:"1px solid #E3E2DE",borderRadius:8,background:"#fff",color:"#9B9A97",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
 
   // Restore session banner
@@ -144,7 +144,7 @@ export const Z = {
 
   featureCard: {
     background: "#FFFFFF",
-    border: "1px solid #F1F1EF",
+    border: "1px solid #E3E2DE",
     borderRadius: 12,
     padding: "16px 12px",
     display: "flex",
@@ -195,7 +195,7 @@ export const Z = {
   procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
   procTitle:{fontSize:24,fontWeight:700,letterSpacing:-.5,marginBottom:8},
   procSub:{fontSize:14,color:"#9B9A97",marginBottom:32},
-  procCard:{width:"100%",maxWidth:480,padding:20,background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12},
+  procCard:{width:"100%",maxWidth:480,padding:20,background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12},
   procTop:{display:"flex",justifyContent:"space-between",fontSize:14,marginBottom:10},
   track:{height:4,borderRadius:2,background:"#EBEBEA",overflow:"hidden"},
   fill:{height:"100%",borderRadius:2,background:"#37352F",transition:"width .3s"},
@@ -203,13 +203,13 @@ export const Z = {
 
   // Live feed
   feedWrap:{marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
-  feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#fff",border:"1px solid #F1F1EF",borderRadius:7,fontSize:12,animation:"fadeUp .2s ease"},
+  feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#fff",border:"1px solid #E3E2DE",borderRadius:7,fontSize:12,animation:"fadeUp .2s ease"},
   feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:10,flexShrink:0},
   feedItemText:{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#37352F"},
   feedItemSrc:{color:"#9B9A97",flexShrink:0,maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},
 
-  // Results header
-  header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"40px 0 16px",borderBottom:"1px solid #F1F1EF",flexWrap:"wrap",gap:12},
+  // Results header — #4 tightened padding rhythm
+  header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"32px 0 16px",borderBottom:"1px solid #E3E2DE",flexWrap:"wrap",gap:12},
   title:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:32,fontWeight:700,letterSpacing:-1,color:"#37352F",lineHeight:1},
   sub:{fontSize:13,color:"#9B9A97",marginTop:6},
   hdrBtn:{padding:"6px 12px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
@@ -226,7 +226,7 @@ export const Z = {
 
   // Export dropdown
   expDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.1)",border:"1px solid #E3E2DE",minWidth:200,zIndex:100,padding:4,animation:"slideD .15s ease"},
-  expOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:13,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
+  expOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   expOptNote:{display:"block",width:"100%",padding:"4px 12px 8px",fontSize:11,color:"#9B9A97",fontFamily:"inherit"},
 
   // Bars
@@ -235,17 +235,17 @@ export const Z = {
   statsBar:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#F0FDF4",border:"1px solid #DCFCE7",borderRadius:8,margin:"12px 0",fontSize:13,color:"#37352F",flexWrap:"wrap",animation:"slideD .2s ease"},
   statDot:{width:3,height:3,borderRadius:"50%",background:"#D3D3D0"},
   statsDismiss:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:14,marginLeft:"auto"},
-  addMorePanel:{background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:8,padding:14,margin:"12px 0",animation:"slideD .2s ease"},
+  addMorePanel:{background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:8,padding:14,margin:"12px 0",animation:"slideD .2s ease"},
   attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FFF7ED",border:"1px solid #FED7AA",borderRadius:8,margin:"10px 0",fontSize:13,color:"#92400E",animation:"slideD .2s ease",gap:8},
-  attentionCount:{fontWeight:700,fontSize:15,color:"#EA580C"},
+  attentionCount:{fontWeight:700,fontSize:14,color:"#EA580C"},
   attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#EA580C",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
   shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#EFF6FF",border:"1px solid #DBEAFE",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
   shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"#fff",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 
   // Stats panel
-  statsPanel:{background:"#FAFAFA",border:"1px solid #F1F1EF",borderRadius:12,padding:20,margin:"12px 0",animation:"slideD .2s ease"},
-  statsPanelTitle:{fontSize:15,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
+  statsPanel:{background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12,padding:20,margin:"12px 0",animation:"slideD .2s ease"},
+  statsPanelTitle:{fontSize:14,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
   statsPanelClose:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:16,padding:"0 4px"},
   statsGrid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20},
   statsSection:{display:"flex",flexDirection:"column",gap:10},
@@ -254,35 +254,36 @@ export const Z = {
   statsBarLabel:{display:"flex",justifyContent:"space-between",fontSize:12,color:"#37352F"},
   statsBarTrack:{height:6,borderRadius:3,background:"#EBEBEA",overflow:"hidden"},
   statsBarFill:{height:"100%",borderRadius:3,transition:"width .4s ease"},
-  statsHighlight:{fontSize:13,color:"#37352F",lineHeight:1.6,padding:"8px 10px",background:"#fff",border:"1px solid #F1F1EF",borderRadius:6},
+  statsHighlight:{fontSize:13,color:"#37352F",lineHeight:1.6,padding:"8px 10px",background:"#fff",border:"1px solid #E3E2DE",borderRadius:6},
   statsHighlightLabel:{fontSize:11,color:"#9B9A97",marginBottom:2},
   statNumber:{fontSize:28,fontWeight:700,color:"#37352F",letterSpacing:-1},
   statNumberSub:{fontSize:12,color:"#9B9A97",marginTop:2},
 
-  // Dupe modal
+  // Dupe modal — #9 removed shadow (overlay provides depth)
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
-  dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.15)",overflow:"clip",fontFamily:"'DM Sans',-apple-system,sans-serif",maxHeight:"85vh",display:"flex",flexDirection:"column"},  dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid #F1F1EF"},
+  dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",overflow:"clip",fontFamily:"'DM Sans',-apple-system,sans-serif",maxHeight:"85vh",display:"flex",flexDirection:"column"},
+  dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid #E3E2DE"},
   dupeModalTitle:{fontSize:16,fontWeight:700,color:"#37352F",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeModalSub:{fontSize:13,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
-  dupeCard:{border:"1px solid #F1F1EF",borderRadius:8,overflow:"hidden"},
+  dupeCard:{border:"1px solid #E3E2DE",borderRadius:8,overflow:"hidden"},
   dupePair:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0},
   dupeSide:{padding:"10px 12px",fontSize:12},
   dupeExisting:{background:"#FAFAFA"},
-  dupeIncoming:{background:"#fff",borderLeft:"1px solid #F1F1EF"},
+  dupeIncoming:{background:"#fff",borderLeft:"1px solid #E3E2DE"},
   dupeSideLabel:{fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeSideText:{fontSize:13,color:"#37352F",lineHeight:1.5,fontWeight:500,fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeSideSource:{fontSize:11,color:"#9B9A97",marginTop:2,fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeActions:{display:"flex",gap:6,padding:"8px 12px",borderTop:"1px solid #F1F1EF",background:"#FAFAFA",justifyContent:"flex-end"},
+  dupeActions:{display:"flex",gap:6,padding:"8px 12px",borderTop:"1px solid #E3E2DE",background:"#FAFAFA",justifyContent:"flex-end"},
   dupeKeepBtn:{padding:"4px 12px",borderRadius:6,border:"none",background:"#37352F",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeMergeBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2383E2",background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeSkipBtn:{padding:"4px 10px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeModalFooter:{padding:"12px 20px",borderTop:"1px solid #F1F1EF",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8},
+  dupeModalFooter:{padding:"12px 20px",borderTop:"1px solid #E3E2DE",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8},
   dupeContinueBtn:{padding:"8px 20px",borderRadius:8,border:"none",background:"#2383E2",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeKeptCount:{fontSize:12,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
 
-  // Bulk edit
-  bulkBar:{position:"fixed",bottom:0,left:0,right:0,display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:"rgba(255,255,255,0.97)",borderTop:"1px solid #E3E2DE",boxShadow:"0 -4px 20px rgba(0,0,0,0.08)",flexWrap:"wrap",zIndex:500,animation:"bulkSlideUp .2s ease",backdropFilter:"blur(8px)"},
+  // Bulk edit — #10 removed backdropFilter
+  bulkBar:{position:"fixed",bottom:0,left:0,right:0,display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:"rgba(255,255,255,0.97)",borderTop:"1px solid #E3E2DE",boxShadow:"0 -4px 20px rgba(0,0,0,0.08)",flexWrap:"wrap",zIndex:500,animation:"bulkSlideUp .2s ease"},
   bulkN:{fontSize:13,fontWeight:600,color:CP_ACCENT,whiteSpace:"nowrap"},
   bulkF:{display:"flex",gap:6,alignItems:"center",flex:1,flexWrap:"wrap"},
   bulkSel:{border:"1px solid #D3D3D0",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"#fff"},
@@ -291,49 +292,50 @@ export const Z = {
   bulkDelBtn:{padding:"5px 12px",borderRadius:6,border:"1px solid #EB5757",background:"#fff",color:"#EB5757",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   bulkX:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:14},
 
-  // Toolbar
-  toolbar:{display:"flex",gap:8,alignItems:"center",padding:"12px 0",borderBottom:"1px solid #F1F1EF"},
+  // Toolbar — #4 matched padding to pills rhythm
+  toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE"},
   srchW:{position:"relative",flex:1},
   srchI:{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,opacity:.5},
-  srchIn:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:13,fontFamily:"inherit",color:"#37352F",background:"#fff"},
+  srchIn:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"#37352F",background:"#fff"},
   clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:12},
   sortBtn:{padding:"7px 12px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"},
   sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.1)",border:"1px solid #E3E2DE",minWidth:220,zIndex:100,padding:4,animation:"slideD .15s ease"},
-  sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:13,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
+  sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   sortOptOn:{background:"#F1F1EF",fontWeight:600},
 
-  // Category pills
-  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #F1F1EF",position:"sticky",top:0,background:"#FAF8F4",zIndex:50},
+  // Category pills — #5 added sticky shadow
+  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"},
   catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"},
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
-  // Table
+  // Table — #2 unified borders, #3 removed tHead tint, #6 row bg to white
   tHead:{
     display:"flex",
     alignItems:"center",
     padding:"12px 0 8px 0",
-    borderBottom:"1px solid rgba(55,53,47,0.08)",
+    borderBottom:"1px solid #E3E2DE",
     fontSize:11,
     color:"#3C5775",
     fontWeight:700,
     textTransform:"uppercase",
     letterSpacing:0.6,
-    background:"rgba(60,87,117,0.03)",
+    background:"transparent",
     marginBottom:0,
     textAlign:"left",
   },
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#FAF8F4"},
-  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(55,53,47,0.08)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#FAF8F4"},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#fff"},
+  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #E3E2DE",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#fff"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",borderColor:"#D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
   entryText:{fontSize:14,lineHeight:1.65,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.35,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
-  srcCol:{width:200,display:"flex",alignItems:"center",gap:4,paddingRight:8,flexWrap:"wrap"},
+  // #8 srcCol flex instead of fixed width
+  srcCol:{minWidth:120,maxWidth:200,flex:"0 1 200px",display:"flex",alignItems:"center",gap:4,paddingRight:8,flexWrap:"wrap"},
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
@@ -351,9 +353,9 @@ export const Z = {
   inlineSrcInput:{border:`1px solid ${CP_ACCENT}`,borderRadius:4,padding:"2px 6px",fontSize:12,fontFamily:"inherit",color:"#37352F",width:"100%",background:"#fff"},
   inlineCatSel:{border:`1px solid ${CP_ACCENT}`,borderRadius:4,padding:"2px 2px",fontSize:11,fontFamily:"inherit",background:"#fff",cursor:"pointer",width:78},
 
-  // Modal
+  // Modal — #9 removed shadow (overlay provides depth)
   modalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
-  confirmBox:{background:"#fff",borderRadius:12,padding:24,maxWidth:400,width:"100%",boxShadow:"0 8px 32px rgba(0,0,0,.12)"},
+  confirmBox:{background:"#fff",borderRadius:12,padding:24,maxWidth:400,width:"100%"},
   confirmCancel:{padding:"8px 16px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#37352F",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   confirmYes:{padding:"8px 16px",borderRadius:6,border:"none",background:"#EB5757",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
 
@@ -375,11 +377,11 @@ export const Z = {
 
 // ===================== CARD STYLES =====================
 export const CZ = {
-  card:{background:"#fff",border:"1px solid #F1F1EF",borderRadius:8,padding:16,transition:"all .15s",cursor:"grab"},
+  card:{background:"#fff",border:"1px solid #E3E2DE",borderRadius:8,padding:16,transition:"all .15s",cursor:"grab"},
   favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0.3,transition:"opacity .15s"},
-  txt:{fontSize:15,lineHeight:1.6,color:"#37352F",marginBottom:10,whiteSpace:"pre-wrap"},
+  txt:{fontSize:14,lineHeight:1.6,color:"#37352F",marginBottom:10,whiteSpace:"pre-wrap"},
   srcRow:{display:"flex",alignItems:"center",gap:6},
   src:{fontSize:12,color:"#9B9A97"},
 };

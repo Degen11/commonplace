@@ -325,12 +325,14 @@ export default function Commonplace() {
   // ── Update document title with quote count ──
   useEffect(() => {
     const baseTitle = "Commonplace";
-    if (quotes.length > 0) {
+    if (phase === "processing" && progress) {
+      document.title = `(${progress.done}/${progress.total}) Organizing... — ${baseTitle}`;
+    } else if (quotes.length > 0) {
       document.title = `(${quotes.length}) ${baseTitle}`;
     } else {
       document.title = baseTitle;
     }
-  }, [quotes]);
+  }, [quotes, phase, progress]);
 
   const showToast = (message, action, onAction) => setToast({ message, action, onAction });
   
@@ -430,13 +432,24 @@ Return exactly one JSON object per input item.`,
   }, [customCats]);
 
   // ── Re-identify a single entry ──
+  const describeChanges = (oldQ, newSource, newCategory) => {
+    const parts = [];
+    if (newSource !== oldQ.source) parts.push(`source → ${newSource}`);
+    if (newCategory !== oldQ.category) parts.push(`${oldQ.category} → ${newCategory}`);
+    if (parts.length === 0) return "Re-identified — no changes";
+    return `Re-identified: ${parts.join(", ")}`;
+  };
+
   const reIdentify = async (q) => {
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
+      const snapshot = { ...q };
       setQuotes(prev => prev.map(x => x.id === q.id ? {
         ...x, source: local.source, category: local.category, confidence: local.confidence,
       } : x));
-      showToast("Re-identified!");
+      showToast(describeChanges(q, local.source, local.category), "Undo", () => {
+        setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
+      });
       return;
     }
     const item = { text: q.text, hint: null };
@@ -445,13 +458,18 @@ Return exactly one JSON object per input item.`,
       if (results.length > 0) {
         const r = results[0];
         const validCats = new Set([...allCats, ...VIBE_TAGS]);
+        const newSource = r.source || "Unknown";
+        const newCategory = validCats.has(r.category) ? r.category : "Unknown";
+        const snapshot = { ...q };
         setQuotes(prev => prev.map(x => x.id === q.id ? {
           ...x,
-          source: r.source || "Unknown",
-          category: validCats.has(r.category) ? r.category : "Unknown",
+          source: newSource,
+          category: newCategory,
           confidence: r.confidence || "low",
         } : x));
-        showToast("Re-identified!");
+        showToast(describeChanges(q, newSource, newCategory), "Undo", () => {
+          setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
+        });
       }
     } catch {
       showToast("Couldn't reach AI. Try again.");
@@ -1092,21 +1110,29 @@ const handleDupesContinue = async () => {
                 <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
                 {showExport && (
                   <div style={Z.expDrop}>
-                    {/* Change #7: Entry count note in export dropdown */}
-                    <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
                       Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
-                      {hasActiveFilters && ` (${filtered.length} currently filtered)`}
                     </div>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
                     {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
                     <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                    {/* Change #4: Toast confirmation for file exports */}
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}>📄 Plain text</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}>📊 CSV</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}>📝 Markdown</button>
                     <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
+                    {hasActiveFilters && (<>
+                      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+                        Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
+                      </div>
+                      <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}>📋 Copy filtered</button>
+                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}>📄 Filtered TXT</button>
+                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}>📊 Filtered CSV</button>
+                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}>📝 Filtered MD</button>
+                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
+                    </>)}
                   </div>
                 )}
               </div>

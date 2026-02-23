@@ -7,7 +7,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
 
   return (
     <div style={Z.dupeModalOverlay} onClick={onContinue}>
-      <div style={Z.dupeModalBox} onClick={e => e.stopPropagation()}>
+      <div style={{ ...Z.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={Z.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <span style={{ fontSize: 24 }}>🔍</span>
@@ -18,7 +18,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
           </div>
         </div>
 
-        <div style={{ ...Z.dupeList, padding: "16px 24px" }}>
+        <div style={{ ...Z.dupeList, padding: "16px 24px", overflowY: "auto", flex: 1, minHeight: 0 }}>
           {pendingDupes.map((dupe, i) => {
             const decision = dupeDecisions[i];
             const isKeep = decision === "keep";
@@ -171,6 +171,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
           padding: "16px 24px",
           borderTop: "1px solid #F1F1EF",
           background: "white",
+          flexShrink: 0,
         }}>
           <span style={{
             fontSize: 13,

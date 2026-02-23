@@ -1291,19 +1291,23 @@ const handleDupesContinue = async () => {
             </div>
           )}
 {hasMore && (
-            <div
+            <button
               onClick={loadMore}
               style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "20px 0",
+                display: "block",
+                margin: "20px auto",
+                padding: "10px 24px",
                 fontSize: 13,
-                color: "#9B9A97",
+                color: "#2383E2",
+                background: "none",
+                border: "1px solid #E3E2DE",
+                borderRadius: 8,
                 cursor: "pointer",
+                fontFamily: "inherit",
               }}
             >
-              {remaining} more {remaining === 1 ? "entry" : "entries"} — click or scroll to load
-            </div>
+              Load more ({remaining} remaining)
+            </button>
           )}
           {filtered.length === 0 && (
             <div style={Z.empty}>

@@ -63,7 +63,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                 </div>
                 
                 {/* Content */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxHeight: 200, overflowY: "auto" }}>
                   <div style={{
                     padding: 16,
                     background: "#FAFAFA",

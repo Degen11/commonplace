@@ -261,11 +261,10 @@ export const Z = {
 
   // Dupe modal
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
-  dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.15)",overflow:"hidden",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid #F1F1EF"},
+  dupeModalBox:{background:"#fff",borderRadius:14,padding:0,maxWidth:560,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.15)",overflow:"hidden",fontFamily:"'DM Sans',-apple-system,sans-serif",maxHeight:"85vh",display:"flex",flexDirection:"column"},  dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid #F1F1EF"},
   dupeModalTitle:{fontSize:16,fontWeight:700,color:"#37352F",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeModalSub:{fontSize:13,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeList:{maxHeight:340,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
+  dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
   dupeCard:{border:"1px solid #F1F1EF",borderRadius:8,overflow:"hidden"},
   dupePair:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0},
   dupeSide:{padding:"10px 12px",fontSize:12},

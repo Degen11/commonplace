@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import useInfiniteScroll from "../hooks/useInfiniteScroll";
 
 // Data
 import { localLookup } from "../data/localQuotes";
@@ -799,6 +800,7 @@ const handleDupesContinue = async () => {
   if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
   else if (sortBy === "alpha")    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
   else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
+  const { visible, hasMore, remaining, sentinelRef } = useInfiniteScroll(filtered);
 
   const cc           = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
   const favCount     = quotes.filter(q => q.favorite).length;
@@ -1226,7 +1228,7 @@ const handleDupesContinue = async () => {
           {/* TABLE VIEW */}
           {view === "table" && (
             <TableView
-              filtered={filtered}
+              filtered={visible}
               selected={selected}
               toggleSel={toggleSel}
               selAll={selAll}
@@ -1254,7 +1256,7 @@ const handleDupesContinue = async () => {
           {/* CARD VIEW — with long-press to select (change #8) */}
           {view === "cards" && (
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-              {filtered.map(q => {
+              {visible.map(q => {
                 const col = getCatColor(q.category, customCats);
                 const isSel = selected.has(q.id);
                 const isEd  = editingId === q.id;
@@ -1288,7 +1290,20 @@ const handleDupesContinue = async () => {
               })}
             </div>
           )}
-
+{hasMore && (
+            <div
+              ref={sentinelRef}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "20px 0",
+                fontSize: 13,
+                color: "#9B9A97",
+              }}
+            >
+              {remaining} more {remaining === 1 ? "entry" : "entries"}...
+            </div>
+          )}
           {filtered.length === 0 && (
             <div style={Z.empty}>
               <p style={{ fontSize: 14, color: "#9B9A97", marginBottom: 8 }}>No entries match your current filters.</p>

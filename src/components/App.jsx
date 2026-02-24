@@ -24,6 +24,7 @@ import StatsPanel from "./StatsPanel";
 import TransformPreview from "./TransformPreview";
 import TableView from "./TableView";
 import CardItem from "./CardItem";
+import Footer from "./Footer";
 import { baseCSS, Z } from "./styles";
 
 const LS_QUOTES     = "commonplace_quotes";
@@ -37,15 +38,6 @@ const SORT_OPTIONS = [
   { key: "alpha",      label: "Alphabetical" },
   { key: "category",   label: "By category" },
 ];
-
-// ── Footer ──
-function Footer({ styles }) {
-  return (
-    <footer style={styles.footer}>
-      <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={styles.footerLink}>Degen Hill</a></span>
-    </footer>
-  );
-}
 
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {

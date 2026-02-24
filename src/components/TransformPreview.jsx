@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // ─── Commonplace accent ───────────────────────────────────────────────────────
 // Desaturated slate-blue. Cool enough to cut through the warm sand palette,
@@ -26,176 +26,106 @@ const RESULT_CARDS = [
 function AnimInner({ onComplete = () => {} }) {
   const [visibleLines, setVisibleLines] = useState([]);
   const [visibleCards, setVisibleCards] = useState([]);
-  const [phase, setPhase] = useState("before");  // before | processing | after
-  const [lightness, setLightness] = useState(0);   // 0 = dark, 1 = light
+  const [phase, setPhase]   = useState("before");  // before | processing | after
+  const [lightness, setLightness] = useState(0);   // 0 = dark, 1 = light (drives interpolation)
 
-  // Cleaner timeout management
   useEffect(() => {
-    const timeouts = [];
-    const setDelay = (ms, fn) => {
-      const id = setTimeout(fn, ms);
-      timeouts.push(id);
-      return id;
-    };
+    const ts = [];
+    const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); return id; };
 
     setVisibleLines([]);
     setVisibleCards([]);
     setPhase("before");
     setLightness(0);
 
-    // Stagger raw lines in with spring-like easing
-    RAW_LINES.forEach((_, i) => {
-      setDelay(300 + i * 500, () => {
-        setVisibleLines(p => [...p, i]);
-      });
-    });
+    // Stagger raw lines in
+    RAW_LINES.forEach((_, i) => t(300 + i * 500, () => {
+      setVisibleLines(p => [...p, i]);
+    }));
 
     const doneTyping = 300 + RAW_LINES.length * 500 + 900;
 
-    setDelay(doneTyping, () => setPhase("processing"));
+    t(doneTyping, () => setPhase("processing"));
 
     const showAt = doneTyping + 1200;
 
-    // Smoother lightness transitions
-    setDelay(showAt - 600, () => setLightness(0.3));
-    setDelay(showAt - 300, () => setLightness(0.6));
-    setDelay(showAt, () => {
+    // Ease the surface toward light *before* the cards arrive so the flip
+    // is smooth and not competing with card animations
+    t(showAt - 500, () => setLightness(0.45));  // midpoint
+    t(showAt,       () => {
       setPhase("after");
-      setLightness(1);
-      
-      // Stagger cards with subtle delay
-      RESULT_CARDS.forEach((_, i) => {
-        setDelay(i * 180, () => {
-          setVisibleCards(p => [...p, i]);
-        });
-      });
+      t(60,  () => setLightness(1));            // finish the fade once cards start
+
+      RESULT_CARDS.forEach((_, i) => t(i * 230, () => {
+        setVisibleCards(p => [...p, i]);
+      }));
     });
 
-    setDelay(showAt + RESULT_CARDS.length * 180 + 2600, () => onComplete?.());
+    t(showAt + RESULT_CARDS.length * 230 + 2600, () => onComplete?.());
 
-    return () => timeouts.forEach(clearTimeout);
+    return () => ts.forEach(clearTimeout);
   }, [onComplete]);
 
-  // ── Dot animation with smoother keyframes ──
+  // ── Dot animation ──
   const dotStyle = (delay, color) => ({
-    width: 6,
-    height: 6,
-    borderRadius: "50%",
-    background: color,
-    display: "inline-block",
-    animation: "pulseDot 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+    width: 6, height: 6, borderRadius: "50%",
+    background: color, display: "inline-block",
+    animation: "tpDot 1.2s ease-in-out infinite",
     animationDelay: delay,
   });
 
-  // ── Interpolate between dark and light with more nuance ───────────────────
+  // ── Interpolate between dark (0) and light (1) ────────────────────────────
+  // Using a hand-rolled lerp so we control exactly which values cross-fade,
+  // avoiding the jarring instant snap that happened before.
   const ui = useMemo(() => {
-    const l = lightness;
-    
-    // Smoother transitions with mid-values
-    const surfaceBg = l === 0 
-      ? "#1A1918"
-      : l < 0.3
-        ? "#252220"
-        : l < 0.6
-          ? "#F8F6F2"
-          : "#FFFFFF";
+    const l = lightness; // 0–1
 
-    const chromeBg = l < 0.3 
-      ? "#141312" 
-      : l < 0.6
-        ? "#E8E4DE"
-        : "#F5F1EB";
+    const lerp = (a, b) => {
+      // Accepts hex strings and rgba — for simplicity we just return one or the other
+      // and let the CSS transition handle the actual visual smoothing.
+      return l < 0.5 ? a : b;
+    };
+
+    // Outer surface: dark warm → page background
+    const surfaceBg = l === 0
+      ? "#1A1918"
+      : l < 0.5
+        ? "#252220"
+        : "#FFFFFF";  // Pure white — distinct from the #FAF8F4 page, gives real lift
+
+    // Chrome bar
+    const chromeBg = l < 0.5 ? "#141312" : "#F5F1EB";
 
     return {
       surfaceBg,
-      surfaceShadow: l < 0.3
-        ? "0 20px 60px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2)"
-        : "0 2px 0 rgba(60,87,117,0.06), 0 20px 60px rgba(60,87,117,0.12), 0 8px 24px rgba(26,24,20,0.08)",
+      surfaceShadow: l < 0.5
+        ? "0 8px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.14)"
+        : "0 2px 0 rgba(60,87,117,0.06), 0 8px 40px rgba(60,87,117,0.10), 0 2px 12px rgba(26,24,20,0.06)",
 
       chromeBg,
-      chromeBorder: l < 0.3 ? "#2A2826" : `rgba(60,87,117,${0.06 + l * 0.1})`,
-      chromeText: l < 0.3 ? "#6B6764" : CP_ACCENT,
+      chromeBorder: l < 0.5 ? "#2A2826" : "rgba(60,87,117,0.10)",
+      chromeText:   l < 0.5 ? "#6B6764" : CP_ACCENT,
 
-      dots: l < 0.3 ? "#9A9591" : CP_ACCENT,
+      dots: l < 0.5 ? "#9A9591" : CP_ACCENT,
 
-      caret: l < 0.3 ? "#3D3B38" : "rgba(55,53,47,0.35)",
-      rawText: l < 0.3 ? "#8A8581" : "#4A4640",
+      caret:   l < 0.5 ? "#3D3B38" : "rgba(55,53,47,0.25)",
+      rawText: l < 0.5 ? "#8A8581" : "#6A6660",
 
-      // Card styles with micro-interactions
-      cardBg: "#FFFFFF",
+      // ── After cards: white with accent-tinted border + soft shadow ──
+      // This is the key fix — white bg floats off the page, accent border
+      // provides identity, shadow gives depth without being heavy.
+      cardBg:     "#FFFFFF",
       cardBorder: `rgba(60,87,117,0.14)`,
-      cardShadow: "0 4px 12px rgba(60,87,117,0.08), 0 0 0 1px rgba(60,87,117,0.06)",
-      cardHoverShadow: "0 8px 24px rgba(60,87,117,0.12), 0 0 0 1px rgba(60,87,117,0.1)",
-      cardText: l < 0.3 ? "#C8C3BC" : "#2A2825",
-      cardSrc: l < 0.3 ? "#5A5855" : "#8A8885",
+      cardShadow: "0 1px 4px rgba(60,87,117,0.07), 0 0 0 1px rgba(60,87,117,0.08)",
+      cardText:   l < 0.5 ? "#C8C3BC" : "#37352F",
+      cardSrc:    l < 0.5 ? "#5A5855" : "#9B9A97",
     };
   }, [lightness]);
 
   return (
     <>
       <style>{`
-        @keyframes pulseDot {
-          0%, 100% { 
-            opacity: 0.25; 
-            transform: scale(0.8);
-            filter: blur(0px);
-          }
-          50% { 
-            opacity: 1; 
-            transform: scale(1.2);
-            filter: blur(0.5px);
-          }
-        }
-        
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-            filter: blur(4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-            filter: blur(0);
-          }
-        }
-        
-        @keyframes glowPulse {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 rgba(60,87,117,0);
-          }
-          50% { 
-            box-shadow: 0 0 20px 4px rgba(60,87,117,0.1);
-          }
-        }
-        
-        .chrome-bar {
-          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .result-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        
-        .result-card:hover {
-          transform: translateY(-2px) scale(1.01);
-          box-shadow: ${ui.cardHoverShadow};
-          cursor: default;
-        }
-        
-        .result-card:hover .card-source {
-          color: ${CP_ACCENT};
-          transition: color 0.2s ease;
-        }
-        
-        .raw-line {
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .processing-glow {
-          animation: glowPulse 2s ease-in-out infinite;
-        }
+        @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
       `}</style>
 
       <div
@@ -203,180 +133,142 @@ function AnimInner({ onComplete = () => {} }) {
           width: "100%",
           maxWidth: 800,
           margin: "52px auto 0",
-          borderRadius: 16,
+          borderRadius: 14,
           overflow: "hidden",
           background: ui.surfaceBg,
           boxShadow: ui.surfaceShadow,
-          transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+          // Longer transition so the surface eases in over 600ms instead of snapping
+          transition: "background 600ms ease, box-shadow 600ms ease",
         }}
       >
-        {/* Chrome bar with improved design */}
+        {/* Chrome bar */}
         <div
-          className="chrome-bar"
           style={{
-            padding: "14px 20px",
+            padding: "11px 18px",
             background: ui.chromeBg,
             borderBottom: `1px solid ${ui.chromeBorder}`,
             display: "flex",
             alignItems: "center",
-            gap: 12,
+            gap: 10,
+            transition: "background 600ms ease, border-color 600ms ease",
           }}
         >
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 6 }}>
             {["#FF5F57", "#FFBD2E", "#28C840"].map((c, i) => (
-              <div 
-                key={i} 
-                style={{ 
-                  width: 12, 
-                  height: 12, 
-                  borderRadius: "50%", 
-                  background: c, 
-                  opacity: 0.8,
-                  transition: "transform 0.2s ease",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.2)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-              />
+              <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c, opacity: 0.9 }} />
             ))}
           </div>
 
           <span
             style={{
-              fontFamily: "'SF Mono', 'DM Mono', Menlo, monospace",
-              fontSize: 13,
+              fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+              fontSize: 14,
               fontWeight: 500,
               color: ui.chromeText,
-              marginLeft: 8,
-              letterSpacing: -0.2,
-              transition: "color 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+              marginLeft: 6,
+              transition: "color 600ms ease",
             }}
           >
             {phase === "before"
               ? "quotes.txt"
               : phase === "processing"
-                ? "identifying sources..."
-                : "collection — 5 quotes organized"}
+                ? "identifying…"
+                : "collection — organized ✓"}
           </span>
 
           {phase === "processing" && (
-            <div 
-              className="processing-glow"
-              style={{ 
-                marginLeft: "auto", 
-                display: "flex", 
-                gap: 6, 
-                alignItems: "center",
-                padding: "4px 8px",
-                borderRadius: 20,
-                background: "rgba(60,87,117,0.04)",
-              }}
-            >
-              <span style={dotStyle("0s", ui.dots)} />
+            <div style={{ marginLeft: "auto", display: "flex", gap: 5, alignItems: "center" }}>
+              <span style={dotStyle("0s",   ui.dots)} />
               <span style={dotStyle("0.2s", ui.dots)} />
               <span style={dotStyle("0.4s", ui.dots)} />
             </div>
           )}
         </div>
 
-        {/* Content with improved spacing */}
-        <div style={{ padding: "28px 30px", minHeight: 260 }}>
+        {/* Content */}
+        <div style={{ padding: "22px 26px", minHeight: 228 }}>
 
           {/* BEFORE / PROCESSING */}
           {phase !== "after" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
               {RAW_LINES.map((line, i) => (
                 <div
                   key={i}
-                  className="raw-line"
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
+                    gap: 10,
                     opacity: visibleLines.includes(i)
-                      ? (phase === "processing" ? 0.25 : 1)
+                      ? (phase === "processing" ? 0.3 : 1)
                       : 0,
-                    transform: visibleLines.includes(i) 
-                      ? "translateY(0)" 
-                      : "translateY(12px)",
+                    transform: visibleLines.includes(i) ? "translateY(0)" : "translateY(8px)",
+                    transition: "opacity 0.4s ease, transform 0.4s ease",
                   }}
                 >
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                       color: ui.caret,
-                      fontSize: 14,
+                      fontSize: 12,
                       flexShrink: 0,
-                      fontWeight: 300,
-                      transition: "color 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                      transition: "color 600ms ease",
                     }}
                   >
-                    {phase === "processing" ? "⋯" : "›"}
+                    ›
                   </span>
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', monospace",
-                      fontSize: 13,
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+                      fontSize: 12.5,
                       color: ui.rawText,
-                      lineHeight: 1.5,
+                      lineHeight: 1.4,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
-                      transition: "color 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                      fontStyle: phase === "processing" ? "italic" : "normal",
+                      transition: "color 600ms ease",
                     }}
                   >
                     {line}
-                    {phase === "processing" && i === visibleLines.length - 1 && (
-                      <span style={{ 
-                        marginLeft: 4, 
-                        opacity: 0.5,
-                        animation: "pulseDot 1s infinite",
-                      }}>_</span>
-                    )}
                   </span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* AFTER — result cards with hover effects */}
+          {/* AFTER — result cards */}
           {phase === "after" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {RESULT_CARDS.map((card, i) => (
                 <div
                   key={i}
-                  className="result-card"
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    padding: "12px 16px",
+                    gap: 10,
+                    padding: "9px 13px",
                     background: ui.cardBg,
-                    borderRadius: 10,
+                    borderRadius: 8,
                     border: `1px solid ${ui.cardBorder}`,
                     boxShadow: ui.cardShadow,
                     opacity: visibleCards.includes(i) ? 1 : 0,
-                    transform: visibleCards.includes(i) 
-                      ? "translateY(0)" 
-                      : "translateY(20px)",
-                    animationDelay: `${i * 80}ms`,
+                    transform: visibleCards.includes(i) ? "translateY(0)" : "translateY(10px)",
+                    transition: "opacity 0.38s ease, transform 0.38s ease",
                   }}
                 >
-                  {/* Category tag with improved styling */}
+                  {/* Category tag — now uses accent for "Person" */}
                   <span
                     style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      padding: "4px 10px",
-                      borderRadius: 20,
+                      fontSize: 9,
+                      fontWeight: 800,
+                      padding: "2px 7px",
+                      borderRadius: 4,
                       background: card.tagBg,
                       color: card.tagColor,
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.6,
                       whiteSpace: "nowrap",
                       flexShrink: 0,
                       textTransform: "uppercase",
-                      fontFamily: "'SF Mono', 'DM Mono', monospace",
-                      boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                     }}
                   >
                     {card.tag}
@@ -384,34 +276,31 @@ function AnimInner({ onComplete = () => {} }) {
 
                   <span
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', monospace",
-                      fontSize: 13,
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+                      fontSize: 12,
                       color: ui.cardText,
                       flex: 1,
                       minWidth: 0,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
-                      fontWeight: 450,
-                      transition: "color 0.3s ease",
+                      transition: "color 600ms ease",
                     }}
                   >
-                    “{card.text}”
+                    "{card.text}"
                   </span>
 
                   <span
-                    className="card-source"
                     style={{
-                      fontFamily: "'SF Mono', 'DM Mono', monospace",
+                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                       fontSize: 11,
                       color: ui.cardSrc,
                       whiteSpace: "nowrap",
                       flexShrink: 0,
-                      transition: "color 0.3s ease",
-                      opacity: 0.8,
+                      transition: "color 600ms ease",
                     }}
                   >
-                    — {card.source}
+                    {card.source}
                   </span>
                 </div>
               ))}
@@ -425,18 +314,5 @@ function AnimInner({ onComplete = () => {} }) {
 
 export default function TransformPreview() {
   const [key, setKey] = useState(0);
-  
-  const handleComplete = useCallback(() => {
-    setKey(k => k + 1);
-  }, []);
-  
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(145deg, #F5F2ED 0%, #EAE7E2 100%)",
-      padding: "20px",
-    }}>
-      <AnimInner key={key} onComplete={handleComplete} />
-    </div>
-  );
+  return <AnimInner key={key} onComplete={() => setKey(k => k + 1)} />;
 }

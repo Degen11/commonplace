@@ -186,14 +186,6 @@ export const Z = {
     lineHeight: 1.3,
   },
 
-  // Old preview keys kept as no-ops
-  howWrap:{display:"none"},
-  howStep:{},howIcon:{},howLabel:{},howDesc:{},howArrow:{},
-  previewWrap:{display:"none"},
-  previewBoxBefore:{},previewBoxAfter:{},previewLabel:{},previewLabelBefore:{},previewLabelAfter:{},
-  previewContent:{},previewLine:{},previewLineDot:{},previewArrow:{},
-  previewResult:{},previewResultLast:{},previewTag:{},previewText:{},previewSrc:{},
-
   // Processing
   procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
   procTitle:{fontSize:24,fontWeight:700,letterSpacing:-.5,marginBottom:8},

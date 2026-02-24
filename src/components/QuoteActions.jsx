@@ -7,6 +7,16 @@ export function FavBtn({ q, onFav }) {
       style={Z.actBtn}
       onClick={e => { e.stopPropagation(); onFav(q.id); }}
       title={q.favorite ? "Unfavorite" : "Favorite"}
+      onMouseEnter={e => {
+        if (!q.favorite) {
+          e.currentTarget.style.color = "#F59E0B";
+        }
+      }}
+      onMouseLeave={e => {
+        if (!q.favorite) {
+          e.currentTarget.style.color = "#6B6764";
+        }
+      }}
     >
       {q.favorite ? (
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

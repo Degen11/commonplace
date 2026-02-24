@@ -1,140 +1,439 @@
 import { Z } from "./styles";
 import { getCatColor, CONF_LABELS } from "../data/constants";
+import { useMemo } from "react";
+
+// Lucide React icons - you'll need to install lucide-react
+import { 
+  FileText, 
+  BookOpen, 
+  Hash, 
+  Star, 
+  Tag, 
+  BarChart3, 
+  AlertCircle,
+  X 
+} from "lucide-react";
 
 export default function StatsPanel({ quotes, computedStats, cc, customCats, onClose }) {
-  if (!computedStats) return null;
+  // Memoize expensive computations
+  const stats = useMemo(() => {
+    if (!quotes.length) return null;
+    
+    const uniqueSources = new Set(quotes.map(q => q.source).filter(Boolean)).size;
+    const favCount = quotes.filter(q => q.favorite).length;
+    const confCounts = { high: 0, medium: 0, low: 0 };
+    const unknownCount = quotes.filter(q => q.category === "Unknown").length;
+    
+    quotes.forEach(q => {
+      if (confCounts[q.confidence] !== undefined) confCounts[q.confidence]++;
+    });
+    
+    const needsAttention = confCounts.low + unknownCount;
+    
+    return { uniqueSources, favCount, confCounts, needsAttention, unknownCount };
+  }, [quotes]);
 
-  if (quotes.length < 10) {
-    return (
-      <div style={Z.statsPanel}>
-        <div style={Z.statsPanelTitle}>
-          <span>Collection breakdown</span>
-          <button style={Z.statsPanelClose} onClick={onClose}>✕</button>
-        </div>
-        <div style={{ textAlign: "center", padding: "24px 16px", color: "#9B9A97", fontSize: 13 }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
-          Add at least 10 entries to unlock collection insights.
-          <br />
-          <span style={{ fontSize: 12 }}>You have {quotes.length} so far.</span>
-        </div>
-      </div>
-    );
+  if (!computedStats || !stats || quotes.length < 10) {
+    return <EmptyState count={quotes.length} onClose={onClose} />;
   }
 
-  const uniqueSources = new Set(quotes.map(q => q.source).filter(s => s !== "Unknown")).size;
-  const favCount = quotes.filter(q => q.favorite).length;
-  const confCounts = { high: 0, medium: 0, low: 0 };
-  quotes.forEach(q => { if (confCounts[q.confidence] !== undefined) confCounts[q.confidence]++; });
-  const needsAttention = confCounts.low + quotes.filter(q => q.category === "Unknown").length;
+  const confColors = { 
+    high: "#16A34A", 
+    medium: "#D97706", 
+    low: "#DC2626" 
+  };
+
+  const confLabels = {
+    high: "High",
+    medium: "Medium",
+    low: "Low"
+  };
 
   const kpis = [
-    { value: quotes.length, label: "entries", color: "#37352F" },
-    { value: uniqueSources, label: "sources", color: "#3C5775" },
-    { value: computedStats.avgWords, label: "avg words", color: "#6A6660" },
-    { value: favCount, label: "favorites", color: "#D97706" },
+    { 
+      value: quotes.length, 
+      label: "entries", 
+      color: "#37352F", 
+      icon: FileText,
+      iconColor: "#9B9A97"
+    },
+    { 
+      value: stats.uniqueSources, 
+      label: "sources", 
+      color: "#3C5775", 
+      icon: BookOpen,
+      iconColor: "#6A6660"
+    },
+    { 
+      value: computedStats.avgWords, 
+      label: "avg words", 
+      color: "#6A6660", 
+      icon: Hash,
+      iconColor: "#9B9A97"
+    },
+    { 
+      value: stats.favCount, 
+      label: "favorites", 
+      color: "#D97706", 
+      icon: Star,
+      iconColor: "#B45309"
+    },
   ];
-
-  const confColors = { high: "#16A34A", medium: "#D97706", low: "#DC2626" };
 
   return (
     <div style={Z.statsPanel}>
-      <div style={Z.statsPanelTitle}>
-        <span>Collection breakdown</span>
-        <button style={Z.statsPanelClose} onClick={onClose}>✕</button>
-      </div>
+      <PanelHeader onClose={onClose} />
 
       {/* KPI row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 20 }}>
-        {kpis.map(k => (
-          <div key={k.label} style={{
-            background: "#fff",
-            border: "1px solid #E3E2DE",
-            borderRadius: 8,
-            padding: "14px 16px",
-            textAlign: "center",
-          }}>
-            <div style={{ fontSize: 26, fontWeight: 700, color: k.color, letterSpacing: -1, lineHeight: 1 }}>{k.value}</div>
-            <div style={{ fontSize: 11, color: "#9B9A97", marginTop: 6, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 500 }}>{k.label}</div>
-          </div>
-        ))}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: 12,
+        marginBottom: 24,
+      }}>
+        {kpis.map(k => {
+          const Icon = k.icon;
+          return (
+            <div
+              key={k.label}
+              style={{
+                background: "#fff",
+                border: "1px solid #E3E2DE",
+                borderRadius: 10,
+                padding: "16px 12px",
+                transition: "all 0.2s ease",
+                cursor: "default",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
+                e.currentTarget.style.borderColor = "#D4D4D0";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.borderColor = "#E3E2DE";
+              }}
+            >
+              <Icon 
+                size={20} 
+                color={k.iconColor}
+                style={{ 
+                  marginBottom: 10,
+                  opacity: 0.8,
+                }}
+              />
+              <div style={{
+                fontSize: 28,
+                fontWeight: 700,
+                color: k.color,
+                letterSpacing: -1,
+                lineHeight: 1,
+              }}>{k.value}</div>
+              <div style={{
+                fontSize: 11,
+                color: "#9B9A97",
+                marginTop: 6,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                fontWeight: 500,
+              }}>{k.label}</div>
+            </div>
+          );
+        })}
       </div>
 
-      <div style={Z.statsGrid}>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 24,
+      }}>
         {/* Category distribution */}
         <div style={Z.statsSection}>
-          <div style={Z.statsSectionTitle}>By category</div>
-          {Object.entries(cc).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
-            const pct = (count / quotes.length) * 100;
-            const col = getCatColor(cat, customCats);
-            return (
-              <div key={cat} style={Z.statsBarRow}>
-                <div style={Z.statsBarLabel}>
-                  <span>{cat}</span>
-                  <span style={{ color: "#9B9A97" }}>{count} <span style={{ fontSize: 10 }}>({Math.round(pct)}%)</span></span>
-                </div>
-                <div style={Z.statsBarTrack}>
-                  <div style={{ ...Z.statsBarFill, width: `${pct}%`, background: col.text }} />
-                </div>
-              </div>
-            );
-          })}
+          <SectionTitle icon={Tag} title="By category" />
+          {Object.entries(cc)
+            .sort((a, b) => b[1] - a[1])
+            .map(([cat, count]) => {
+              const pct = (count / quotes.length) * 100;
+              const col = getCatColor(cat, customCats);
+              return (
+                <StatBar
+                  key={cat}
+                  label={cat}
+                  count={count}
+                  percentage={pct}
+                  color={col.text}
+                />
+              );
+            })}
         </div>
 
-        {/* Top sources */}
+        {/* Top sources and confidence */}
         <div style={Z.statsSection}>
-          <div style={Z.statsSectionTitle}>Top sources</div>
+          <SectionTitle icon={BookOpen} title="Top sources" />
           {computedStats.topSrcs.map(([src, count]) => (
-            <div key={src} style={Z.statsBarRow}>
-              <div style={Z.statsBarLabel}>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{src}</span>
-                <span style={{ color: "#9B9A97", flexShrink: 0 }}>{count}</span>
-              </div>
-              <div style={Z.statsBarTrack}>
-                <div style={{ ...Z.statsBarFill, width: `${(count / quotes.length) * 100}%`, background: "#37352F" }} />
-              </div>
-            </div>
+            <StatBar
+              key={src}
+              label={src}
+              count={count}
+              percentage={(count / quotes.length) * 100}
+              color="#37352F"
+              maxWidth={180}
+            />
           ))}
 
-          {/* Confidence breakdown replaces shortest/longest */}
-          <div style={{ marginTop: 16 }}>
-            <div style={Z.statsSectionTitle}>Confidence</div>
-            <div style={{ display: "flex", gap: 0, borderRadius: 6, overflow: "hidden", height: 8, background: "#EBEBEA", marginTop: 6, marginBottom: 8 }}>
+          <div style={{ marginTop: 24 }}>
+            <SectionTitle icon={BarChart3} title="Confidence breakdown" />
+            
+            {/* Confidence meter */}
+            <div style={{
+              display: "flex",
+              gap: 0,
+              borderRadius: 8,
+              overflow: "hidden",
+              height: 10,
+              background: "#EBEBEA",
+              marginTop: 8,
+              marginBottom: 12,
+            }}>
               {["high", "medium", "low"].map(level => {
-                const pct = (confCounts[level] / quotes.length) * 100;
+                const pct = (stats.confCounts[level] / quotes.length) * 100;
                 return pct > 0 ? (
-                  <div key={level} style={{ width: `${pct}%`, background: confColors[level], transition: "width .4s ease" }} />
+                  <div
+                    key={level}
+                    style={{
+                      width: `${pct}%`,
+                      background: confColors[level],
+                      transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}
+                  />
                 ) : null;
               })}
             </div>
-            <div style={{ display: "flex", gap: 14, fontSize: 11, color: "#6A6660" }}>
+
+            {/* Confidence legend */}
+            <div style={{
+              display: "flex",
+              gap: 20,
+              fontSize: 12,
+              color: "#6A6660",
+              flexWrap: "wrap",
+            }}>
               {["high", "medium", "low"].map(level => (
-                <span key={level} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: confColors[level], flexShrink: 0 }} />
-                  {CONF_LABELS[level]} {confCounts[level]}
+                <span
+                  key={level}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: confColors[level],
+                    flexShrink: 0,
+                  }} />
+                  {confLabels[level]} {stats.confCounts[level]}
                 </span>
               ))}
             </div>
           </div>
 
-          {needsAttention > 0 && (
-            <div style={{
-              marginTop: 12,
-              padding: "8px 12px",
-              background: "#FFF7ED",
-              border: "1px solid #FED7AA",
-              borderRadius: 6,
-              fontSize: 12,
-              color: "#92400E",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}>
-              <span style={{ fontWeight: 700 }}>{needsAttention}</span>
-              {needsAttention === 1 ? "entry needs" : "entries need"} review
-            </div>
+          {stats.needsAttention > 0 && (
+            <AttentionBanner count={stats.needsAttention} />
           )}
         </div>
       </div>
     </div>
   );
 }
+
+// Extracted components for better organization
+const EmptyState = ({ count, onClose }) => (
+  <div style={Z.statsPanel}>
+    <PanelHeader onClose={onClose} />
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "48px 24px",
+      color: "#9B9A97",
+    }}>
+      <BarChart3 
+        size={48} 
+        color="#D4D4D0"
+        style={{ 
+          marginBottom: 16,
+          strokeWidth: 1.5,
+        }}
+      />
+      <div style={{
+        fontWeight: 500,
+        fontSize: 14,
+        color: "#6A6660",
+        marginBottom: 12,
+        textAlign: "center",
+      }}>
+        Add at least 10 entries to unlock insights
+      </div>
+      <div style={{
+        background: "#F0F0EE",
+        padding: "6px 16px",
+        borderRadius: 100,
+        fontSize: 13,
+        color: "#6A6660",
+        display: "inline-flex",
+        alignItems: "center",
+      }}>
+        <FileText size={14} style={{ marginRight: 6, opacity: 0.6 }} />
+        {count} {count === 1 ? 'entry' : 'entries'} so far
+      </div>
+    </div>
+  </div>
+);
+
+const PanelHeader = ({ onClose }) => (
+  <div style={{
+    ...Z.statsPanelTitle,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottom: "1px solid #E3E2DE",
+    paddingBottom: 16,
+    marginBottom: 20,
+  }}>
+    <span style={{ 
+      fontSize: 16, 
+      fontWeight: 600,
+      color: "#37352F",
+    }}>
+      Collection breakdown
+    </span>
+    <button 
+      style={{
+        ...Z.statsPanelClose,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 32,
+        height: 32,
+        borderRadius: 6,
+        border: "none",
+        background: "transparent",
+        color: "#9B9A97",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+      }}
+      onClick={onClose}
+      aria-label="Close panel"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "#F0F0EE";
+        e.currentTarget.style.color = "#37352F";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.color = "#9B9A97";
+      }}
+    >
+      <X size={18} />
+    </button>
+  </div>
+);
+
+const SectionTitle = ({ icon: Icon, title }) => (
+  <div style={{
+    ...Z.statsSectionTitle,
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 16,
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#37352F",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  }}>
+    {Icon && (
+      <Icon 
+        size={16} 
+        color="#9B9A97"
+        style={{ strokeWidth: 2 }}
+      />
+    )}
+    <span>{title}</span>
+  </div>
+);
+
+const StatBar = ({ label, count, percentage, color, maxWidth }) => (
+  <div style={{
+    marginBottom: 16,
+    animation: "slideIn 0.3s ease",
+  }}>
+    <div style={{
+      display: "flex",
+      justifyContent: "space-between",
+      fontSize: 13,
+      marginBottom: 6,
+    }}>
+      <span style={{
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        maxWidth: maxWidth || "auto",
+        color: "#37352F",
+      }}>{label}</span>
+      <span style={{ 
+        color: "#9B9A97",
+        flexShrink: 0,
+        marginLeft: 8,
+      }}>
+        {count} <span style={{ fontSize: 11 }}>({Math.round(percentage)}%)</span>
+      </span>
+    </div>
+    <div style={{
+      height: 6,
+      background: "#EBEBEA",
+      borderRadius: 4,
+      overflow: "hidden",
+    }}>
+      <div 
+        style={{
+          height: "100%",
+          width: `${percentage}%`,
+          background: color,
+          borderRadius: 4,
+          transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }} 
+      />
+    </div>
+  </div>
+);
+
+const AttentionBanner = ({ count }) => (
+  <div style={{
+    marginTop: 20,
+    padding: "12px 16px",
+    background: "#FFF7ED",
+    border: "1px solid #FED7AA",
+    borderRadius: 10,
+    fontSize: 13,
+    color: "#92400E",
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    animation: "slideIn 0.3s ease",
+  }}>
+    <AlertCircle 
+      size={18} 
+      color="#D97706"
+      style={{ flexShrink: 0 }}
+    />
+    <span>
+      <strong style={{ fontWeight: 600 }}>{count}</strong>{" "}
+      {count === 1 ? "entry needs" : "entries need"} review
+    </span>
+  </div>
+);

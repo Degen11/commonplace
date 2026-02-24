@@ -1,49 +1,10 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import EditForm from "./EditForm";
+import useLongPress from "../hooks/useLongPress";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { getCatColor, CONF_LABELS, REORDERABLE_COLS } from "../data/constants";
 import { Z } from "./styles";
-
-// ── Long-press hook for mobile selection (change #8) ──
-function useLongPress(onLongPress, ms = 400) {
-  const timerRef = useRef(null);
-  const movedRef = useRef(false);
-  const startPos = useRef({ x: 0, y: 0 });
-
-  const onTouchStart = useCallback((e) => {
-    movedRef.current = false;
-    const touch = e.touches[0];
-    startPos.current = { x: touch.clientX, y: touch.clientY };
-    timerRef.current = setTimeout(() => {
-      if (!movedRef.current) {
-        onLongPress();
-      }
-    }, ms);
-  }, [onLongPress, ms]);
-
-  const onTouchMove = useCallback((e) => {
-    if (timerRef.current) {
-      const touch = e.touches[0];
-      const dx = Math.abs(touch.clientX - startPos.current.x);
-      const dy = Math.abs(touch.clientY - startPos.current.y);
-      if (dx > 10 || dy > 10) {
-        movedRef.current = true;
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-  }, []);
-
-  const onTouchEnd = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  return { onTouchStart, onTouchMove, onTouchEnd };
-}
 
 // ── Inline source text input ──
 function InlineSourceInput({ initial, onSave, onCancel }) {

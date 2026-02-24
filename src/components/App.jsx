@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
+import useLongPress from "../hooks/useLongPress";
 
 // Data
 import { localLookup } from "../data/localQuotes";
@@ -46,46 +47,6 @@ function Footer({ styles }) {
       <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={styles.footerLink}>Degen Hill</a></span>
     </footer>
   );
-}
-
-// ── Long-press hook for mobile selection ──
-function useLongPress(onLongPress, ms = 400) {
-  const timerRef = useRef(null);
-  const movedRef = useRef(false);
-  const startPos = useRef({ x: 0, y: 0 });
-
-  const onTouchStart = useCallback((e) => {
-    movedRef.current = false;
-    const touch = e.touches[0];
-    startPos.current = { x: touch.clientX, y: touch.clientY };
-    timerRef.current = setTimeout(() => {
-      if (!movedRef.current) {
-        onLongPress();
-      }
-    }, ms);
-  }, [onLongPress, ms]);
-
-  const onTouchMove = useCallback((e) => {
-    if (timerRef.current) {
-      const touch = e.touches[0];
-      const dx = Math.abs(touch.clientX - startPos.current.x);
-      const dy = Math.abs(touch.clientY - startPos.current.y);
-      if (dx > 10 || dy > 10) {
-        movedRef.current = true;
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-  }, []);
-
-  const onTouchEnd = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  return { onTouchStart, onTouchMove, onTouchEnd };
 }
 
 // ===================== MAIN COMPONENT =====================

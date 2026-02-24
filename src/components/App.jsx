@@ -7,25 +7,25 @@ import useInfiniteScroll from "../hooks/useInfiniteScroll";
 import { localLookup } from "../data/localQuotes";
 import {
   DEFAULT_CATEGORIES, SOURCE_CATEGORIES, VIBE_TAGS, QUOTED_CATS,
-  CONF_ORDER, CONF_LABELS, EXAMPLE_QUOTES, getCatColor, REORDERABLE_COLS
+  CONF_ORDER, EXAMPLE_QUOTES, getCatColor, REORDERABLE_COLS
 } from "../data/constants";
 
 // Utils
 import {
-  normalize, similarity, smartParse, smartSplit, basicFormat, displayText,
+  normalize, similarity, smartParse, smartSplit, basicFormat,
   exportCSV, exportMD, exportJSON, exportTXT,
   copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData
 } from "../utils/helpers";
 
 // Components
 import Toast from "./Toast";
-import EditForm from "./EditForm";
 import DupeModal from "./DupeModal";
 import StatsPanel from "./StatsPanel";
 import TransformPreview from "./TransformPreview";
 import TableView from "./TableView";
-import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
-import { baseCSS, Z, CZ } from "./styles";
+import CardItem from "./CardItem";
+import Footer from "./Footer";
+import { baseCSS, Z } from "./styles";
 
 const LS_QUOTES     = "commonplace_quotes";
 const LS_CATS       = "commonplace_cats";
@@ -38,55 +38,6 @@ const SORT_OPTIONS = [
   { key: "alpha",      label: "Alphabetical" },
   { key: "category",   label: "By category" },
 ];
-
-// ── Footer ──
-function Footer({ styles }) {
-  return (
-    <footer style={styles.footer}>
-      <span>Built by <a href="https://github.com/Degen11" target="_blank" rel="noopener noreferrer" style={styles.footerLink}>Degen Hill</a></span>
-    </footer>
-  );
-}
-
-// ── Long-press hook for mobile selection ──
-function useLongPress(onLongPress, ms = 400) {
-  const timerRef = useRef(null);
-  const movedRef = useRef(false);
-  const startPos = useRef({ x: 0, y: 0 });
-
-  const onTouchStart = useCallback((e) => {
-    movedRef.current = false;
-    const touch = e.touches[0];
-    startPos.current = { x: touch.clientX, y: touch.clientY };
-    timerRef.current = setTimeout(() => {
-      if (!movedRef.current) {
-        onLongPress();
-      }
-    }, ms);
-  }, [onLongPress, ms]);
-
-  const onTouchMove = useCallback((e) => {
-    if (timerRef.current) {
-      const touch = e.touches[0];
-      const dx = Math.abs(touch.clientX - startPos.current.x);
-      const dy = Math.abs(touch.clientY - startPos.current.y);
-      if (dx > 10 || dy > 10) {
-        movedRef.current = true;
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-  }, []);
-
-  const onTouchEnd = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  return { onTouchStart, onTouchMove, onTouchEnd };
-}
 
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
@@ -1417,73 +1368,3 @@ const handleDupesContinue = async () => {
   );
 }
 
-// ── Card item component with long-press support (change #8) ──
-function CardItem({
-  q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
-  inlineEdit, allCats, actionProps,
-  toggleSel, startEditing, startInlineEdit,
-  saveEdit, saveInlineField, setInlineEdit, setEditingId,
-  handleDragStart, handleDragOver, handleDragEnd,
-}) {
-  const longPress = useLongPress(
-    useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
-    400
-  );
-
-  return (
-    <div
-      className="qcard"
-      draggable={!isEd && inlineEdit?.id !== q.id}
-      onDragStart={() => handleDragStart(q.id)}
-      onDragOver={e => handleDragOver(e, q.id)}
-      onDragEnd={handleDragEnd}
-      {...(isMobile ? longPress : {})}
-      style={{
-        ...CZ.card,
-        ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
-        ...(q.favorite ? CZ.favCard : {}),
-        ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
-        ...(dragId === q.id ? { opacity: .4 } : {}),
-        animation: "fadeUp .3s ease",
-      }}
-      onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
-      onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
-    >
-      <div style={CZ.top}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div className="check-div" style={{ ...Z.check, ...(isSel ? Z.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id); }}>
-            {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
-          </div>
-          {inlineEdit?.id === q.id && inlineEdit?.field === "category"
-            ? <select style={Z.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
-                {allCats.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
-          }
-        </div>
-        <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
-          <FavBtn q={q} onFav={actionProps.onFav} />
-          <CopyBtn q={q} onCopy={actionProps.onCopy} />
-          <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
-          <DelBtn q={q} onDelete={actionProps.onDelete} />
-        </div>
-      </div>
-      {isEd
-        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
-        : (
-          <>
-            <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
-            <div style={CZ.srcRow}>
-              <span style={{ color: "#D3D3D0" }}>—</span>
-              {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-                ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
-                : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
-              }
-              <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-            </div>
-          </>
-        )
-      }
-    </div>
-  );
-}

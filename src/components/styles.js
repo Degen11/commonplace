@@ -17,6 +17,8 @@ export const baseCSS = `
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{animation:spin 1s linear infinite}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   html{scroll-behavior:smooth}
   div[style]:focus{outline:none;border-color:transparent}
@@ -183,14 +185,6 @@ export const Z = {
     color: "#1A1814",
     lineHeight: 1.3,
   },
-
-  // Old preview keys kept as no-ops
-  howWrap:{display:"none"},
-  howStep:{},howIcon:{},howLabel:{},howDesc:{},howArrow:{},
-  previewWrap:{display:"none"},
-  previewBoxBefore:{},previewBoxAfter:{},previewLabel:{},previewLabelBefore:{},previewLabelAfter:{},
-  previewContent:{},previewLine:{},previewLineDot:{},previewArrow:{},
-  previewResult:{},previewResultLast:{},previewTag:{},previewText:{},previewSrc:{},
 
   // Processing
   procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},

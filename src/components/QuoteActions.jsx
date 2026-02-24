@@ -58,19 +58,11 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
       onMouseEnter={e => !loading && (e.currentTarget.style.color = "#059669")}
       onMouseLeave={e => !loading && (e.currentTarget.style.color = "#6B6764")}
     >
-      <RefreshCw 
-        size={16} 
+      <RefreshCw
+        size={16}
         strokeWidth={1.5}
         className={loading ? "spin" : ""}
       />
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
     </button>
   );
 }

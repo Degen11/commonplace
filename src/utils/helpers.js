@@ -213,6 +213,12 @@ export function smartParse(line) {
 export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text}\u201D` : q.text;
 
 // ===================== EXPORT =====================
+function groupByCategory(quotes) {
+  const grouped = {};
+  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  return grouped;
+}
+
 function download(content, name, type) {
   const b = new Blob([content], { type });
   const u = URL.createObjectURL(b);
@@ -233,8 +239,7 @@ export function exportCSV(quotes) {
 }
 
 export function exportMD(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let md = "# Commonplace Export\n\n";
   Object.entries(grouped).forEach(([cat, qs]) => {
     md += `## ${cat}\n\n`;
@@ -255,8 +260,7 @@ export function exportJSON(quotes) {
 }
 
 export function exportTXT(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let text = "";
   Object.entries(grouped).forEach(([cat, qs]) => {
     text += `${cat.toUpperCase()}\n${"─".repeat(cat.length)}\n\n`;
@@ -272,8 +276,7 @@ export function exportTXT(quotes) {
 }
 
 export function richCopyToClipboard(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let text = "";
   Object.entries(grouped).forEach(([cat, qs]) => {
     text += `✦ ${cat.toUpperCase()}\n\n`;
@@ -291,8 +294,7 @@ export function richCopyToClipboard(quotes) {
 }
 
 export function copyToClipboard(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
+  const grouped = groupByCategory(quotes);
   let text = "";
   Object.entries(grouped).forEach(([cat, qs]) => {
     text += `${cat}\n${"─".repeat(cat.length)}\n`;

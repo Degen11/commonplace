@@ -96,6 +96,7 @@ export default function Commonplace() {
   const [confirmClear, setConfirmClear]       = useState(false);
   const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing]       = useState(false);
+  const [processingError, setProcessingError] = useState(null);
   const [confirmBulkDel, setConfirmBulkDel]   = useState(false);
   const [reviewQueue, setReviewQueue]         = useState([]);
   const [reviewTotal, setReviewTotal]         = useState(0);
@@ -132,6 +133,7 @@ export default function Commonplace() {
   const exportRef              = useRef(null);
   const sortRef                = useRef(null);
   const pendingContinuationRef = useRef(null);
+  const pendingPartialRef      = useRef(null);
   const fileInputRef           = useRef(null);
   const lastSelectedIndex      = useRef(null);
 
@@ -466,12 +468,20 @@ export default function Commonplace() {
         } catch {
           apiFailed = true; chunk.forEach(c => failed.push(c));
           setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
-          break;
+          setProcessingError(`AI identification failed for batch ${Math.floor(i / BATCH_SIZE) + 1}. ${apiResults.size + localMatches.length} of ${unique.length} entries processed so far.`);
+          // Store partial state for continue-with-partial
+          pendingPartialRef.current = { unique, localMatches, apiResults, appendMode, useFormatting, apiFailed, failed, needsApi };
+          if (failed.length > 0) setFailedEntries(failed);
+          return; // Pause — don't transition to results yet
         }
       }
     }
     if (failed.length > 0) setFailedEntries(failed);
 
+    finishProcessing(unique, localMatches, apiResults, appendMode, useFormatting, apiFailed, failed, needsApi);
+  };
+
+  const finishProcessing = (unique, localMatches, apiResults, appendMode, useFormatting, apiFailed, failed, needsApi) => {
     const newQuotes = unique.map((p, i) => {
       const local = localMatches.find(m => m.idx === i);
       if (local) {
@@ -490,7 +500,7 @@ export default function Commonplace() {
 
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
     setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
-    setProgress(null); setIsProcessing(false); goPhase("results");
+    setProgress(null); setIsProcessing(false); setProcessingError(null); goPhase("results");
   };
 
   const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
@@ -871,7 +881,15 @@ const handleDupesContinue = async () => {
           progress={progress}
           identifiedFeed={identifiedFeed}
           customCats={customCats}
-          onCancel={() => { setIsProcessing(false); setProgress(null); goPhase("input"); }}
+          processingError={processingError}
+          onCancel={() => { setIsProcessing(false); setProgress(null); setProcessingError(null); goPhase("input"); }}
+          onContinuePartial={() => {
+            if (pendingPartialRef.current) {
+              const { unique, localMatches, apiResults, appendMode, useFormatting, apiFailed, failed, needsApi } = pendingPartialRef.current;
+              pendingPartialRef.current = null;
+              finishProcessing(unique, localMatches, apiResults, appendMode, useFormatting, apiFailed, failed, needsApi);
+            }
+          }}
         />
       )}
 

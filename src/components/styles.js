@@ -103,6 +103,18 @@ export const baseCSS = `
 
   .ca{transition:opacity .15s}
   .qcard:hover .ca{opacity:1 !important}
+
+  /* Fix 10 — shift-click tooltip on checkboxes */
+  .checkbox[data-tip]{position:relative}
+  .checkbox[data-tip]::after{
+    content:attr(data-tip);
+    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:#37352F;color:#fff;padding:4px 10px;border-radius:5px;
+    font-size:11px;font-weight:400;white-space:nowrap;
+    opacity:0;pointer-events:none;z-index:200;
+    transition:opacity .08s ease;
+  }
+  .checkbox[data-tip]:hover::after{opacity:1}
 `;
 
 // ===================== MAIN STYLES =====================

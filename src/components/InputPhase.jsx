@@ -98,6 +98,7 @@ export default function InputPhase({
                       <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
                     </div>
                     Clean up formatting
+                    <span className="conf-tooltip" data-tip="Fixes capitalization, converts straight quotes to curly quotes, normalizes dashes and spacing" onClick={e => e.stopPropagation()} style={{ display: "inline-flex", cursor: "help" }}><Info size={12} color="#9B9A97" /></span>
                   </label>
                 </div>
               );

@@ -88,7 +88,7 @@ function TableRow({
         animation: "fadeUp .25s ease",
       }}
     >
-      <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
+      <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }} data-tip="Shift+click to select range">
         <div
           style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
           onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}

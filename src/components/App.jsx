@@ -850,10 +850,7 @@ const handleDupesContinue = async () => {
             setSavedSession(null);
             goPhase("results");
           }}
-          onDismissSession={() => {
-            try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
-            setSavedSession(null);
-          }}
+          onDismissSession={() => setSavedSession(null)}
           fileInputRef={fileInputRef}
         />
       )}
@@ -1006,6 +1003,7 @@ const handleDupesContinue = async () => {
                       <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
                     </div>
                     Clean up formatting
+                    <span className="conf-tooltip" data-tip="Fixes capitalization, converts straight quotes to curly quotes, normalizes dashes and spacing" onClick={e => e.stopPropagation()} style={{ display: "inline-flex", cursor: "help" }}><Info size={12} color="#9B9A97" /></span>
                   </label>
                   <span style={{ fontSize: 12, color: "#9B9A97" }}>
                     {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
@@ -1021,7 +1019,11 @@ const handleDupesContinue = async () => {
 
           {showBulkBar && (
             <div style={Z.bulkBar}>
-              <span style={Z.bulkN}>{selected.size} selected</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, color: "#9B9A97" }}><Pencil size={14} /> Bulk edit</span>
+                <span style={{ width: 1, height: 16, background: "#E3E2DE" }} />
+                <span style={Z.bulkN}>{selected.size} selected</span>
+              </span>
               <div style={Z.bulkF}>
                 <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />

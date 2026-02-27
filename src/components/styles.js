@@ -19,7 +19,8 @@ export const baseCSS = `
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spin{animation:spin 1s linear infinite}
-  .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
+  @keyframes fadeUpEntry{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .phase-in{animation:fadeUpEntry .35s ease}.phase-out{opacity:0;transform:scale(0.98);transition:all .25s ease}
   html{scroll-behavior:smooth}
   div[style]:focus{outline:none;border-color:transparent}
 

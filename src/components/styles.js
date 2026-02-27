@@ -19,8 +19,7 @@ export const baseCSS = `
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spin{animation:spin 1s linear infinite}
-  @keyframes fadeUpEntry{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-  .phase-in{animation:fadeUpEntry .35s ease}.phase-out{opacity:0;transform:scale(0.98);transition:all .25s ease}
+  .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   html{scroll-behavior:smooth}
   div[style]:focus{outline:none;border-color:transparent}
 
@@ -80,49 +79,6 @@ export const baseCSS = `
   .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
   .nav-link{transition:color .15s ease}
   .nav-link:hover{color:#1A1814 !important}
-
-  /* Fix 16 — hover state migrations */
-  .dupe-keep-btn{transition:all 0.15s ease}
-  .dupe-keep-btn:not(.active):hover{background:rgba(60,87,117,0.1) !important}
-  .dupe-merge-btn{transition:all 0.15s ease}
-  .dupe-merge-btn:not(.active):hover{background:rgba(5,150,105,0.1) !important}
-  .dupe-skip-btn{transition:all 0.15s ease}
-  .dupe-skip-btn:not(.active):hover{background:rgba(155,154,151,0.1) !important}
-  .dupe-continue-btn{transition:background 0.15s ease}
-  .dupe-continue-btn:hover{background:#2D4259 !important}
-
-  .act-btn.fav-btn:hover{color:#F59E0B !important}
-  .act-btn.copy-btn:hover{color:#2383E2 !important}
-  .act-btn.reid-btn:not(:disabled):hover{color:#059669 !important}
-  .act-btn.del-btn:hover{color:#EF4444 !important}
-
-  .stat-card{transition:all 0.2s ease}
-  .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.05);border-color:#D4D4D0 !important}
-
-  .stats-close-btn{transition:all 0.2s ease}
-  .stats-close-btn:hover{background:#F0F0EE !important;color:#37352F !important}
-
-  .ca{transition:opacity .15s}
-  .qcard:hover .ca{opacity:1 !important}
-
-  /* Fix 10 — shift-click tooltip on checkboxes */
-  .checkbox[data-tip]{position:relative}
-  .checkbox[data-tip]::after{
-    content:attr(data-tip);
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:#37352F;color:#fff;padding:4px 10px;border-radius:5px;
-    font-size:11px;font-weight:400;white-space:nowrap;
-    opacity:0;pointer-events:none;z-index:200;
-    transition:opacity .08s ease;
-  }
-  .checkbox[data-tip]:hover::after{opacity:1}
-
-  /* Fix 2 — hide scrollbar on category pills */
-  .cat-scroll::-webkit-scrollbar{display:none}
-
-  /* Fix 3 — cancel button hover */
-  .cancel-proc{transition:all .15s ease}
-  .cancel-proc:hover{border-color:#DC2626 !important;color:#DC2626 !important}
 `;
 
 // ===================== MAIN STYLES =====================
@@ -231,17 +187,17 @@ export const Z = {
   },
 
   // Processing
-  procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:80},
+  procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
   procTitle:{fontSize:24,fontWeight:700,letterSpacing:-.5,marginBottom:8},
   procSub:{fontSize:14,color:"#9B9A97",marginBottom:32},
-  procCard:{width:"100%",maxWidth:560,padding:24,background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12},
+  procCard:{width:"100%",maxWidth:480,padding:20,background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12},
   procTop:{display:"flex",justifyContent:"space-between",fontSize:14,marginBottom:10},
   track:{height:4,borderRadius:2,background:"#EBEBEA",overflow:"hidden"},
   fill:{height:"100%",borderRadius:2,background:"#37352F",transition:"width .3s"},
   procCurrent:{fontSize:13,color:"#9B9A97",marginTop:8,fontStyle:"italic",animation:"pulse 1.5s infinite"},
 
   // Live feed
-  feedWrap:{marginTop:20,width:"100%",maxWidth:560,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
+  feedWrap:{marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
   feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#fff",border:"1px solid #E3E2DE",borderRadius:7,fontSize:12,animation:"fadeUp .2s ease"},
   feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:10,flexShrink:0},
   feedItemText:{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#37352F"},
@@ -343,8 +299,8 @@ export const Z = {
   sortOptOn:{background:"#F1F1EF",fontWeight:600},
 
   // Category pills — #5 added sticky shadow
-  cats:{display:"flex",gap:6,padding:"10px 0",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50,overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",msOverflowStyle:"none",scrollbarWidth:"none"},
-  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500,flexShrink:0},
+  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50},
+  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"},
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},

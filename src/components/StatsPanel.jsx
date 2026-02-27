@@ -96,13 +96,23 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
           return (
             <div
               key={k.label}
-              className="stat-card"
               style={{
                 background: "#fff",
                 border: "1px solid #E3E2DE",
                 borderRadius: 10,
                 padding: "16px 12px",
+                transition: "all 0.2s ease",
                 cursor: "default",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
+                e.currentTarget.style.borderColor = "#D4D4D0";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.borderColor = "#E3E2DE";
               }}
             >
               <Icon 
@@ -302,8 +312,7 @@ const PanelHeader = ({ onClose }) => (
     }}>
       Collection breakdown
     </span>
-    <button
-      className="stats-close-btn"
+    <button 
       style={{
         ...Z.statsPanelClose,
         display: "flex",
@@ -316,9 +325,18 @@ const PanelHeader = ({ onClose }) => (
         background: "transparent",
         color: "#9B9A97",
         cursor: "pointer",
+        transition: "all 0.2s ease",
       }}
       onClick={onClose}
       aria-label="Close panel"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "#F0F0EE";
+        e.currentTarget.style.color = "#37352F";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.color = "#9B9A97";
+      }}
     >
       <X size={18} />
     </button>

@@ -174,16 +174,21 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
           background: "white",
           flexShrink: 0,
         }}>
-          <span style={{
-            fontSize: 13,
-            color: "#3C5775",
-            fontWeight: 600,
-            background: "rgba(60,87,117,0.1)",
-            padding: "4px 14px",
-            borderRadius: 30,
-          }}>
-            {keptCount > 0 ? `${keptCount} will be added` : "All will be skipped"}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => setDupeDecisions(Object.fromEntries(pendingDupes.map((_, i) => [i, "keep"])))} style={{ background: "none", border: "none", color: "#3C5775", fontSize: 12, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }}>Keep all</button>
+            <button onClick={() => setDupeDecisions(Object.fromEntries(pendingDupes.map((_, i) => [i, "skip"])))} style={{ background: "none", border: "none", color: "#9B9A97", fontSize: 12, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }}>Skip all</button>
+            <span style={{ width: 1, height: 16, background: "#E3E2DE" }} />
+            <span style={{
+              fontSize: 13,
+              color: "#3C5775",
+              fontWeight: 600,
+              background: "rgba(60,87,117,0.1)",
+              padding: "4px 14px",
+              borderRadius: 30,
+            }}>
+              {keptCount > 0 ? `${keptCount} will be added` : "All will be skipped"}
+            </span>
+          </div>
           <button
             className="dupe-continue-btn"
             onClick={onContinue}

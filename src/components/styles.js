@@ -115,6 +115,10 @@ export const baseCSS = `
     transition:opacity .08s ease;
   }
   .checkbox[data-tip]:hover::after{opacity:1}
+
+  /* Fix 3 — cancel button hover */
+  .cancel-proc{transition:all .15s ease}
+  .cancel-proc:hover{border-color:#DC2626 !important;color:#DC2626 !important}
 `;
 
 // ===================== MAIN STYLES =====================
@@ -223,17 +227,17 @@ export const Z = {
   },
 
   // Processing
-  procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
+  procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:80},
   procTitle:{fontSize:24,fontWeight:700,letterSpacing:-.5,marginBottom:8},
   procSub:{fontSize:14,color:"#9B9A97",marginBottom:32},
-  procCard:{width:"100%",maxWidth:480,padding:20,background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12},
+  procCard:{width:"100%",maxWidth:560,padding:24,background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12},
   procTop:{display:"flex",justifyContent:"space-between",fontSize:14,marginBottom:10},
   track:{height:4,borderRadius:2,background:"#EBEBEA",overflow:"hidden"},
   fill:{height:"100%",borderRadius:2,background:"#37352F",transition:"width .3s"},
   procCurrent:{fontSize:13,color:"#9B9A97",marginTop:8,fontStyle:"italic",animation:"pulse 1.5s infinite"},
 
   // Live feed
-  feedWrap:{marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
+  feedWrap:{marginTop:20,width:"100%",maxWidth:560,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
   feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#fff",border:"1px solid #E3E2DE",borderRadius:7,fontSize:12,animation:"fadeUp .2s ease"},
   feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:10,flexShrink:0},
   feedItemText:{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#37352F"},

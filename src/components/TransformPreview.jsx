@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ─── Commonplace accent ───────────────────────────────────────────────────────
 // Desaturated slate-blue. Cool enough to cut through the warm sand palette,
@@ -22,25 +22,28 @@ const RESULT_CARDS = [
   { tag: "Music",  tagBg: "#FFE4E6", tagColor: "#E11D48",    text: "Is this the real life, is this just fantasy", source: "Queen" },
 ];
 
+const DOT_STYLE_BASE = {
+  width: 6, height: 6, borderRadius: "50%",
+  display: "inline-block",
+  animation: "tpDot 1.2s ease-in-out infinite",
+};
+
 // ─── Inner animation — remounts each loop via key prop ────────────────────────
-function AnimInner({ onComplete = () => {} }) {
-  const [visibleLines, setVisibleLines] = useState([]);
-  const [visibleCards, setVisibleCards] = useState([]);
+function AnimInner({ onComplete }) {
+  const [lineCount, setLineCount] = useState(0);
+  const [cardCount, setCardCount] = useState(0);
   const [phase, setPhase]   = useState("before");  // before | processing | after
   const [lightness, setLightness] = useState(0);   // 0 = dark, 1 = light (drives interpolation)
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     const ts = [];
     const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); return id; };
 
-    setVisibleLines([]);
-    setVisibleCards([]);
-    setPhase("before");
-    setLightness(0);
-
     // Stagger raw lines in
     RAW_LINES.forEach((_, i) => t(300 + i * 500, () => {
-      setVisibleLines(p => [...p, i]);
+      setLineCount(i + 1);
     }));
 
     const doneTyping = 300 + RAW_LINES.length * 500 + 900;
@@ -57,34 +60,18 @@ function AnimInner({ onComplete = () => {} }) {
       t(60,  () => setLightness(1));            // finish the fade once cards start
 
       RESULT_CARDS.forEach((_, i) => t(i * 230, () => {
-        setVisibleCards(p => [...p, i]);
+        setCardCount(i + 1);
       }));
     });
 
-    t(showAt + RESULT_CARDS.length * 230 + 2600, () => onComplete?.());
+    t(showAt + RESULT_CARDS.length * 230 + 2600, () => onCompleteRef.current?.());
 
     return () => ts.forEach(clearTimeout);
-  }, [onComplete]);
-
-  // ── Dot animation ──
-  const dotStyle = (delay, color) => ({
-    width: 6, height: 6, borderRadius: "50%",
-    background: color, display: "inline-block",
-    animation: "tpDot 1.2s ease-in-out infinite",
-    animationDelay: delay,
-  });
+  }, []);
 
   // ── Interpolate between dark (0) and light (1) ────────────────────────────
-  // Using a hand-rolled lerp so we control exactly which values cross-fade,
-  // avoiding the jarring instant snap that happened before.
   const ui = useMemo(() => {
     const l = lightness; // 0–1
-
-    const lerp = (a, b) => {
-      // Accepts hex strings and rgba — for simplicity we just return one or the other
-      // and let the CSS transition handle the actual visual smoothing.
-      return l < 0.5 ? a : b;
-    };
 
     // Outer surface: dark warm → page background
     const surfaceBg = l === 0
@@ -111,9 +98,6 @@ function AnimInner({ onComplete = () => {} }) {
       caret:   l < 0.5 ? "#3D3B38" : "rgba(55,53,47,0.25)",
       rawText: l < 0.5 ? "#8A8581" : "#6A6660",
 
-      // ── After cards: white with accent-tinted border + soft shadow ──
-      // This is the key fix — white bg floats off the page, accent border
-      // provides identity, shadow gives depth without being heavy.
       cardBg:     "#FFFFFF",
       cardBorder: `rgba(60,87,117,0.14)`,
       cardShadow: "0 1px 4px rgba(60,87,117,0.07), 0 0 0 1px rgba(60,87,117,0.08)",
@@ -122,197 +106,213 @@ function AnimInner({ onComplete = () => {} }) {
     };
   }, [lightness]);
 
-  return (
-    <>
-      <style>{`
-        @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-      `}</style>
+  const isAfter = phase === "after";
 
+  return (
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 800,
+        margin: "52px auto 0",
+        borderRadius: 14,
+        overflow: "hidden",
+        background: ui.surfaceBg,
+        boxShadow: ui.surfaceShadow,
+        transition: "background 600ms ease, box-shadow 600ms ease",
+      }}
+    >
+      {/* Chrome bar */}
       <div
         style={{
-          width: "100%",
-          maxWidth: 800,
-          margin: "52px auto 0",
-          borderRadius: 14,
-          overflow: "hidden",
-          background: ui.surfaceBg,
-          boxShadow: ui.surfaceShadow,
-          // Longer transition so the surface eases in over 600ms instead of snapping
-          transition: "background 600ms ease, box-shadow 600ms ease",
+          padding: "11px 18px",
+          background: ui.chromeBg,
+          borderBottom: `1px solid ${ui.chromeBorder}`,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          transition: "background 600ms ease, border-color 600ms ease",
         }}
       >
-        {/* Chrome bar */}
-        <div
+        <div style={{ display: "flex", gap: 6 }}>
+          {["#FF5F57", "#FFBD2E", "#28C840"].map((c, i) => (
+            <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c, opacity: 0.9 }} />
+          ))}
+        </div>
+
+        <span
           style={{
-            padding: "11px 18px",
-            background: ui.chromeBg,
-            borderBottom: `1px solid ${ui.chromeBorder}`,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            transition: "background 600ms ease, border-color 600ms ease",
+            fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+            fontSize: 14,
+            fontWeight: 500,
+            color: ui.chromeText,
+            marginLeft: 6,
+            transition: "color 600ms ease",
           }}
         >
-          <div style={{ display: "flex", gap: 6 }}>
-            {["#FF5F57", "#FFBD2E", "#28C840"].map((c, i) => (
-              <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c, opacity: 0.9 }} />
-            ))}
+          {phase === "before"
+            ? "quotes.txt"
+            : phase === "processing"
+              ? "identifying…"
+              : "collection — organized ✓"}
+        </span>
+
+        {phase === "processing" && (
+          <div style={{ marginLeft: "auto", display: "flex", gap: 5, alignItems: "center" }}>
+            <span style={{ ...DOT_STYLE_BASE, background: ui.dots, animationDelay: "0s" }} />
+            <span style={{ ...DOT_STYLE_BASE, background: ui.dots, animationDelay: "0.2s" }} />
+            <span style={{ ...DOT_STYLE_BASE, background: ui.dots, animationDelay: "0.4s" }} />
           </div>
+        )}
+      </div>
 
-          <span
-            style={{
-              fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-              fontSize: 14,
-              fontWeight: 500,
-              color: ui.chromeText,
-              marginLeft: 6,
-              transition: "color 600ms ease",
-            }}
-          >
-            {phase === "before"
-              ? "quotes.txt"
-              : phase === "processing"
-                ? "identifying…"
-                : "collection — organized ✓"}
-          </span>
+      {/* Content — both phases always mounted, crossfade via opacity */}
+      <div style={{ padding: "22px 26px", minHeight: 228, position: "relative" }}>
 
-          {phase === "processing" && (
-            <div style={{ marginLeft: "auto", display: "flex", gap: 5, alignItems: "center" }}>
-              <span style={dotStyle("0s",   ui.dots)} />
-              <span style={dotStyle("0.2s", ui.dots)} />
-              <span style={dotStyle("0.4s", ui.dots)} />
-            </div>
-          )}
+        {/* BEFORE / PROCESSING — fades out when "after" */}
+        <div
+          style={{
+            display: "flex", flexDirection: "column", gap: 11,
+            opacity: isAfter ? 0 : 1,
+            position: isAfter ? "absolute" : "relative",
+            inset: isAfter ? "22px 26px" : undefined,
+            transition: "opacity 0.4s ease",
+            pointerEvents: isAfter ? "none" : undefined,
+          }}
+        >
+          {RAW_LINES.map((line, i) => {
+            const visible = i < lineCount;
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  opacity: visible
+                    ? (phase === "processing" ? 0.3 : 1)
+                    : 0,
+                  transform: visible ? "translateY(0)" : "translateY(8px)",
+                  transition: "opacity 0.4s ease, transform 0.4s ease",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+                    color: ui.caret,
+                    fontSize: 12,
+                    flexShrink: 0,
+                    transition: "color 600ms ease",
+                  }}
+                >
+                  ›
+                </span>
+                <span
+                  style={{
+                    fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+                    fontSize: 12.5,
+                    color: ui.rawText,
+                    lineHeight: 1.4,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    transition: "color 600ms ease",
+                  }}
+                >
+                  {line}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Content */}
-        <div style={{ padding: "22px 26px", minHeight: 228 }}>
-
-          {/* BEFORE / PROCESSING */}
-          {phase !== "after" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-              {RAW_LINES.map((line, i) => (
-                <div
-                  key={i}
+        {/* AFTER — result cards, always mounted but invisible until phase flips */}
+        <div
+          style={{
+            display: "flex", flexDirection: "column", gap: 7,
+            opacity: isAfter ? 1 : 0,
+            position: isAfter ? "relative" : "absolute",
+            inset: isAfter ? undefined : "22px 26px",
+            transition: "opacity 0.4s ease",
+            pointerEvents: isAfter ? undefined : "none",
+          }}
+        >
+          {RESULT_CARDS.map((card, i) => {
+            const visible = i < cardCount;
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "9px 13px",
+                  background: ui.cardBg,
+                  borderRadius: 8,
+                  border: `1px solid ${ui.cardBorder}`,
+                  boxShadow: ui.cardShadow,
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateY(0)" : "translateY(10px)",
+                  transition: "opacity 0.38s ease, transform 0.38s ease",
+                }}
+              >
+                {/* Category tag */}
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    opacity: visibleLines.includes(i)
-                      ? (phase === "processing" ? 0.3 : 1)
-                      : 0,
-                    transform: visibleLines.includes(i) ? "translateY(0)" : "translateY(8px)",
-                    transition: "opacity 0.4s ease, transform 0.4s ease",
+                    fontSize: 9,
+                    fontWeight: 800,
+                    padding: "2px 7px",
+                    borderRadius: 4,
+                    background: card.tagBg,
+                    color: card.tagColor,
+                    letterSpacing: 0.6,
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                    textTransform: "uppercase",
+                    fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
                   }}
                 >
-                  <span
-                    style={{
-                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-                      color: ui.caret,
-                      fontSize: 12,
-                      flexShrink: 0,
-                      transition: "color 600ms ease",
-                    }}
-                  >
-                    ›
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-                      fontSize: 12.5,
-                      color: ui.rawText,
-                      lineHeight: 1.4,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      transition: "color 600ms ease",
-                    }}
-                  >
-                    {line}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                  {card.tag}
+                </span>
 
-          {/* AFTER — result cards */}
-          {phase === "after" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {RESULT_CARDS.map((card, i) => (
-                <div
-                  key={i}
+                <span
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "9px 13px",
-                    background: ui.cardBg,
-                    borderRadius: 8,
-                    border: `1px solid ${ui.cardBorder}`,
-                    boxShadow: ui.cardShadow,
-                    opacity: visibleCards.includes(i) ? 1 : 0,
-                    transform: visibleCards.includes(i) ? "translateY(0)" : "translateY(10px)",
-                    transition: "opacity 0.38s ease, transform 0.38s ease",
+                    fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+                    fontSize: 12,
+                    color: ui.cardText,
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    transition: "color 600ms ease",
                   }}
                 >
-                  {/* Category tag — now uses accent for "Person" */}
-                  <span
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 800,
-                      padding: "2px 7px",
-                      borderRadius: 4,
-                      background: card.tagBg,
-                      color: card.tagColor,
-                      letterSpacing: 0.6,
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      textTransform: "uppercase",
-                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-                    }}
-                  >
-                    {card.tag}
-                  </span>
+                  "{card.text}"
+                </span>
 
-                  <span
-                    style={{
-                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-                      fontSize: 12,
-                      color: ui.cardText,
-                      flex: 1,
-                      minWidth: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      transition: "color 600ms ease",
-                    }}
-                  >
-                    "{card.text}"
-                  </span>
-
-                  <span
-                    style={{
-                      fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-                      fontSize: 11,
-                      color: ui.cardSrc,
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      transition: "color 600ms ease",
-                    }}
-                  >
-                    {card.source}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                <span
+                  style={{
+                    fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+                    fontSize: 11,
+                    color: ui.cardSrc,
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                    transition: "color 600ms ease",
+                  }}
+                >
+                  {card.source}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
 export default function TransformPreview() {
   const [key, setKey] = useState(0);
-  return <AnimInner key={key} onComplete={() => setKey(k => k + 1)} />;
+  const handleComplete = useCallback(() => setKey(k => k + 1), []);
+  return <AnimInner key={key} onComplete={handleComplete} />;
 }

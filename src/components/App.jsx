@@ -341,44 +341,18 @@ export default function Commonplace() {
   // ── API: batch identification ──
   const identifyBatch = useCallback(async (items, withFormatting = false) => {
     if (items.length === 0) return [];
-    const sourceCats = ["Film","TV","Book","Music","Speech","Person","Phrase"];
-    const allCatStr = [...sourceCats, ...VIBE_TAGS, ...customCats.filter(c => !sourceCats.includes(c) && !VIBE_TAGS.includes(c)), "Unknown"].join("|");
     const quotesBlock = items.map((it, i) => {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
       return `[${i}] ${it.text}${hintStr}`;
     }).join("\n");
-    const extraField = withFormatting ? `,"cleanText":"the text with typos fixed and proper capitalization"` : "";
-    const extraInstr = withFormatting ? " For cleanText: fix typos, fix 'i' → 'I', capitalize the first word, preserve original meaning." : "";
     const r = await fetch("/api/identify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "CommonplaceApp",
+      },
       body: JSON.stringify({
-        model: "claude-3-5-haiku-20241022",
-        max_tokens: 4000,
-        system: `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
-Each element: {"i":index,"source":"Source - Speaker/Author","category":"${allCatStr}","confidence":"high|medium|low"${extraField}}
-
-CATEGORY DEFINITIONS:
-- Film: movies and screenplays
-- TV: television shows and series
-- Book: novels, non-fiction, poetry, plays
-- Music: song lyrics
-- Speech: famous speeches, interviews, public statements
-- Person: attributed to a real person (not from a specific work)
-- Phrase: common idiom or expression with no single clear origin
-
-VIBE TAGS (use when source is not identifiable — always pick the best fit, never skip):
-Aphorism=short punchy universal truth | Philosophical=abstract ideas about existence/reality | Observation=comment on human behavior or the world | Comedic=humorous or witty | Poetic=lyrical or emotionally vivid | Existential=questions of purpose/being/mortality | Motivational=inspires action or perseverance | Cynical=skeptical or darkly realistic | Identity=relates to self-concept | Reflection=introspective or personal insight
-
-IDENTIFICATION RULES — follow strictly:
-1. Commit to your best guess. If you are 40% or more confident of an origin, provide it with confidence "low" or "medium" rather than defaulting to Unknown source.
-2. Consider paraphrases. If a quote is a loose version of a famous line, attribute it to that origin with confidence "medium" or "low".
-3. Check all domains. Before giving up, mentally check: is this from a film? TV show? Novel? Song? A philosopher, politician, or historical figure? A common saying?
-4. Partial attribution is better than none. "Attributed to Mark Twain (origin disputed)" is more useful than Unknown.
-5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
-6. Always assign a vibe tag as the category whenever source is Unknown. category="Unknown" with no vibe tag is never acceptable.
-7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".${extraInstr}
-Return exactly one JSON object per input item.`,
+        formatting: withFormatting,
         messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
       }),
     });
@@ -388,7 +362,7 @@ Return exactly one JSON object per input item.`,
     const t = d.content.map(x => x.text || "").join("");
     const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
     return Array.isArray(parsed) ? parsed : [];
-  }, [customCats]);
+  }, []);
 
   // ── Re-identify a single entry ──
   const describeChanges = (oldQ, newSource, newCategory) => {

@@ -311,13 +311,12 @@ function download(content, name, type) {
 }
 
 export function exportCSV(quotes) {
-  const rows = [["Text", "Source", "Category", "Favorite", "Tags"]];
+  const rows = [["Text", "Source", "Category", "Favorite"]];
   quotes.forEach(q => rows.push([
     `"${q.text.replace(/"/g, '""')}"`,
     `"${q.source.replace(/"/g, '""')}"`,
     q.category,
     q.favorite ? "yes" : "no",
-    `"${(q.tags || []).join("; ")}"`,
   ]));
   download(rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv");
 }
@@ -329,10 +328,9 @@ export function exportMD(quotes) {
     md += `## ${cat}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " ⭐" : "";
-      const t = (q.tags || []).length > 0 ? ` \`${q.tags.join("` `")}\`` : "";
       QUOTED_CATS.has(q.category)
-        ? md += `> \u201C${q.text}\u201D\n> \u2014 *${q.source}*${f}${t}\n\n`
-        : md += `- **${q.text}** \u2014 ${q.source}${f}${t}\n`;
+        ? md += `> \u201C${q.text}\u201D\n> \u2014 *${q.source}*${f}\n\n`
+        : md += `- **${q.text}** \u2014 ${q.source}${f}\n`;
     });
     md += "\n";
   });
@@ -340,7 +338,7 @@ export function exportMD(quotes) {
 }
 
 export function exportJSON(quotes) {
-  const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite, tags: q.tags || [] }));
+  const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
   download(JSON.stringify(data, null, 2), "commonplace-export.json", "application/json");
 }
 
@@ -351,10 +349,9 @@ export function exportTXT(quotes) {
     text += `${cat.toUpperCase()}\n${"─".repeat(cat.length)}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " ★" : "";
-      const t = (q.tags || []).length > 0 ? ` [${q.tags.join(", ")}]` : "";
       QUOTED_CATS.has(q.category)
-        ? text += `"${q.text}" — ${q.source}${f}${t}\n`
-        : text += `${q.text} — ${q.source}${f}${t}\n`;
+        ? text += `"${q.text}" — ${q.source}${f}\n`
+        : text += `${q.text} — ${q.source}${f}\n`;
     });
     text += "\n";
   });
@@ -395,11 +392,7 @@ export function copyToClipboard(quotes) {
 
 // ===================== SHAREABLE LINKS =====================
 export function encodeShareData(quotes) {
-  const minimal = quotes.map(q => {
-    const m = [q.text, q.source, q.category, q.favorite ? 1 : 0];
-    if (q.tags?.length) m.push(q.tags);
-    return m;
-  });
+  const minimal = quotes.map(q => [q.text, q.source, q.category, q.favorite ? 1 : 0]);
   return btoa(unescape(encodeURIComponent(JSON.stringify(minimal))));
 }
 
@@ -411,7 +404,6 @@ export function decodeShareData(hash) {
       id: crypto.randomUUID(),
       text: q[0], source: q[1], category: q[2],
       confidence: "high", favorite: !!q[3],
-      tags: Array.isArray(q[4]) ? q[4] : [],
     }));
   } catch { return null; }
 }

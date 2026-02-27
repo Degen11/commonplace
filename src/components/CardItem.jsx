@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import useLongPress from "../hooks/useLongPress";
 import EditForm from "./EditForm";
-import TagInput from "./TagInput";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { CONF_LABELS } from "../data/constants";
@@ -10,7 +9,7 @@ import { Z, CZ } from "./styles";
 // ── Card item component with long-press support (change #8) ──
 export default function CardItem({
   q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
-  inlineEdit, allCats, allTags, actionProps,
+  inlineEdit, allCats, actionProps,
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   handleDragStart, handleDragOver, handleDragEnd,
@@ -59,7 +58,7 @@ export default function CardItem({
         </div>
       </div>
       {isEd
-        ? <EditForm q={q} allCats={allCats} allTags={allTags} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
+        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
         : (
           <>
             <p style={{ ...CZ.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
@@ -70,13 +69,6 @@ export default function CardItem({
                 : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
               }
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-            </div>
-            <div style={{ marginTop: 6 }}>
-              <TagInput
-                tags={q.tags || []}
-                onChange={(newTags) => actionProps.onTagChange(q.id, newTags)}
-                allTags={allTags}
-              />
             </div>
           </>
         )

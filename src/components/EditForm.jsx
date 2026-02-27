@@ -26,25 +26,11 @@ function findSuggestion(text) {
   return null;
 }
 
-const TAG_PILL = {
-  display: "inline-flex", alignItems: "center", gap: 3,
-  padding: "1px 7px", borderRadius: 3, fontSize: 11, fontWeight: 500,
-  background: "#F0EDE6", color: "#6A6660", whiteSpace: "nowrap", lineHeight: "18px",
-};
-
-const TAG_INPUT = {
-  border: "1px solid #D3D3D0", borderRadius: 4, padding: "2px 6px",
-  fontSize: 11, fontFamily: "inherit", color: "#37352F", width: 90,
-  background: "#fff", outline: "none",
-};
-
-export default function EditForm({ q, allCats, onSave, onCancel, inCard, allTags = [] }) {
+export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
   const [text, setText] = useState(q.text);
   const [source, setSource] = useState(q.source);
   const [category, setCategory] = useState(q.category);
-  const [tags, setTags] = useState(q.tags || []);
   const [dismissed, setDismissed] = useState(false);
-  const [tagInput, setTagInput] = useState("");
 
   const suggestion = useMemo(() => {
     if (dismissed) return null;
@@ -69,7 +55,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, allTags
         onChange={e => { setText(e.target.value); setDismissed(false); }}
         onKeyDown={e => {
           if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSave(q.id, text, source, category, tags); }
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSave(q.id, text, source, category); }
         }}
         autoFocus
       />
@@ -131,7 +117,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, allTags
           placeholder="Source..."
           onKeyDown={e => {
             if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-            if (e.key === "Enter") { e.preventDefault(); onSave(q.id, text, source, category, tags); }
+            if (e.key === "Enter") { e.preventDefault(); onSave(q.id, text, source, category); }
           }}
         />
         <select
@@ -141,47 +127,10 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, allTags
         >
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button style={Z.editSave} onClick={() => onSave(q.id, text, source, category, tags)}>Save</button>
+        <button style={Z.editSave} onClick={() => onSave(q.id, text, source, category)}>Save</button>
         <button style={Z.editCancel} onClick={onCancel}>Cancel</button>
       </div>
 
-      {/* Tags */}
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: "#9B9A97", marginRight: 2 }}>Tags:</span>
-        {tags.map(tag => (
-          <span key={tag} style={TAG_PILL}>
-            {tag}
-            <button
-              onClick={() => setTags(prev => prev.filter(t => t !== tag))}
-              style={{ background: "none", border: "none", color: "#9B9A97", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1, fontFamily: "inherit" }}
-            >&times;</button>
-          </span>
-        ))}
-        <input
-          style={TAG_INPUT}
-          value={tagInput}
-          onChange={e => setTagInput(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === "Enter" || e.key === ",") {
-              e.preventDefault();
-              e.stopPropagation();
-              if (tagInput.trim()) { const tag = tagInput.trim().toLowerCase().replace(/[,;]/g, ""); if (tag && !tags.includes(tag)) setTags(prev => [...prev, tag]); setTagInput(""); }
-            }
-            if (e.key === "Backspace" && !tagInput && tags.length > 0) {
-              setTags(prev => prev.slice(0, -1));
-            }
-            if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-          }}
-          onBlur={() => { if (tagInput.trim()) { const tag = tagInput.trim().toLowerCase().replace(/[,;]/g, ""); if (tag && !tags.includes(tag)) setTags(prev => [...prev, tag]); setTagInput(""); } }}
-          placeholder="add tag..."
-          list="edit-tag-sugg"
-        />
-        {allTags.length > 0 && (
-          <datalist id="edit-tag-sugg">
-            {allTags.filter(t => !tags.includes(t)).slice(0, 8).map(s => <option key={s} value={s} />)}
-          </datalist>
-        )}
-      </div>
     </div>
   );
 }

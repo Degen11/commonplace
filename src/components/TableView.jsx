@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import EditForm from "./EditForm";
-import { TagPills } from "./TagInput";
 import useLongPress from "../hooks/useLongPress";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
@@ -122,7 +121,6 @@ export default function TableView({
   saveEdit,
   saveInlineField,
   allCats,
-  allTags,
   customCats,
   actionProps,
   compact,
@@ -184,7 +182,7 @@ export default function TableView({
         <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 18 }}
           onClick={() => { if (!isEd) setEditingId(q.id); }}>
           {isEd
-            ? <EditForm q={q} allCats={allCats} allTags={allTags} onSave={saveEdit} onCancel={() => setEditingId(null)} />
+            ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
             : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
           }
         </div>
@@ -202,7 +200,6 @@ export default function TableView({
                   onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
                 >{q.source}</span>
             }
-            <TagPills tags={q.tags || []} />
           </div>
         </div>
       );

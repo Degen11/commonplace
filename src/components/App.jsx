@@ -96,7 +96,6 @@ export default function Commonplace() {
   const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
   const [isProcessing, setIsProcessing]       = useState(false);
   const [confirmBulkDel, setConfirmBulkDel]   = useState(false);
-  const [tagFilter, setTagFilter]             = useState(null);
   const [reviewQueue, setReviewQueue]         = useState([]);
   const [dragId, setDragId]                   = useState(null);
   const [failedEntries, setFailedEntries]     = useState([]);
@@ -134,7 +133,6 @@ export default function Commonplace() {
   const lastSelectedIndex      = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
-  const allTags = [...new Set(quotes.flatMap(q => q.tags || []))].sort();
 
   // Helper functions
   const sanitizeCategoryName = (name) => {
@@ -265,7 +263,6 @@ export default function Commonplace() {
         const visibleQuotes = quotes.filter(q => {
           if (catFilter !== "All" && q.category !== catFilter) return false;
           if (favFilter && !q.favorite) return false;
-          if (tagFilter && !(q.tags || []).includes(tagFilter)) return false;
           if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
           return true;
         });
@@ -276,12 +273,12 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter, selected, tagFilter]);
+  }, [search, editingId, quotes, catFilter, favFilter, selected]);
 
   // Reset shift-click index when filters change
   useEffect(() => {
     lastSelectedIndex.current = null;
-  }, [catFilter, favFilter, search, sortBy, tagFilter]);
+  }, [catFilter, favFilter, search, sortBy]);
 
   // ── Update document title with quote count ──
   useEffect(() => {
@@ -472,16 +469,16 @@ export default function Commonplace() {
       const local = localMatches.find(m => m.idx === i);
       if (local) {
         const text = useFormatting ? basicFormat(p.text) : p.text;
-        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, tags: [] };
+        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
       }
       const api = apiResults.get(i);
       if (api) {
         const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
         const validCats = new Set([...allCats, ...VIBE_TAGS]);
-        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false, tags: [] };
+        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
       }
       const text = useFormatting ? basicFormat(p.text) : p.text;
-      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false, tags: [] };
+      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
     });
 
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
@@ -601,7 +598,6 @@ const handleDupesContinue = async () => {
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
     setShowStats(false); setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
     setPendingDupes([]); setDupeDecisions({}); pendingContinuationRef.current = null;
-    setTagFilter(null);
   };
 
   const handleDelete = (id) => {
@@ -668,8 +664,8 @@ const handleDupesContinue = async () => {
       lastSelectedIndex.current = null;
     }
   };
-  const saveEdit   = (id, text, source, category, tags) => {
-    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high", ...(tags !== undefined ? { tags } : {}) } : q));
+  const saveEdit   = (id, text, source, category) => {
+    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
     setEditingId(null);
     // Advance review queue if active
     if (reviewQueue.length > 0) {
@@ -790,14 +786,13 @@ const handleDupesContinue = async () => {
   let filtered = quotes.filter(q => {
     if (catFilter !== "All" && q.category !== catFilter) return false;
     if (favFilter && !q.favorite) return false;
-    if (tagFilter && !(q.tags || []).includes(tagFilter)) return false;
     if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
   if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
   else if (sortBy === "alpha")    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
   else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
-  const paginationKey = `${catFilter}-${favFilter}-${search}-${sortBy}-${tagFilter}-${quotes.length}`;
+  const paginationKey = `${catFilter}-${favFilter}-${search}-${sortBy}-${quotes.length}`;
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
 
   const cc           = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
@@ -805,7 +800,7 @@ const handleDupesContinue = async () => {
   const showBulkBar  = selected.size > 0;
   const unknownCount = quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length;
   const topCats      = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
-  const hasActiveFilters = catFilter !== "All" || favFilter || search || tagFilter;
+  const hasActiveFilters = catFilter !== "All" || favFilter || search;
 
   const computedStats = quotes.length > 0 ? (() => {
     const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
@@ -820,7 +815,6 @@ const handleDupesContinue = async () => {
     onDelete:     handleDelete,
     onCopy:       copyQuote,
     onReidentify: reIdentify,
-    onTagChange:  (id, tags) => setQuotes(p => p.map(x => x.id === id ? { ...x, tags } : x)),
   };
 
   // ========================== RENDER ==========================
@@ -850,7 +844,7 @@ const handleDupesContinue = async () => {
           onProcess={handleProcess}
           onFileImport={handleFileImport}
           onRestoreSession={() => {
-            setQuotes((savedSession.quotes || []).map(q => ({ ...q, tags: q.tags || [] })));
+            setQuotes(savedSession.quotes || []);
             setCustomCats(savedSession.customCats || []);
             setSavedSession(null);
             goPhase("results");
@@ -1078,32 +1072,6 @@ const handleDupesContinue = async () => {
             ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
           </div>
 
-          {allTags.length > 0 && (
-            <div style={{ display: "flex", gap: 5, padding: "6px 0", flexWrap: "wrap", alignItems: "center", borderBottom: "1px solid #E3E2DE" }}>
-              <span style={{ fontSize: 11, color: "#9B9A97", fontWeight: 500, marginRight: 2 }}>Tags</span>
-              {allTags.map(tag => {
-                const count = quotes.filter(q => (q.tags || []).includes(tag)).length;
-                const isActive = tagFilter === tag;
-                return (
-                  <button key={tag} onClick={() => setTagFilter(isActive ? null : tag)} style={{
-                    ...Z.catPill,
-                    fontSize: 11,
-                    padding: "2px 8px",
-                    background: isActive ? "#E0DCD4" : "#fff",
-                    color: isActive ? "#37352F" : "#6A6660",
-                    borderColor: isActive ? "#C8C4BC" : "#E3E2DE",
-                  }}>
-                    {tag}
-                    <span style={{ opacity: .5, fontSize: 10 }}>{count}</span>
-                  </button>
-                );
-              })}
-              {tagFilter && (
-                <button onClick={() => setTagFilter(null)} style={{ background: "none", border: "none", color: "#9B9A97", cursor: "pointer", fontSize: 11, fontFamily: "inherit" }}>clear</button>
-              )}
-            </div>
-          )}
-
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
             <div style={Z.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1136,7 +1104,6 @@ const handleDupesContinue = async () => {
               saveEdit={saveEdit}
               saveInlineField={saveInlineField}
               allCats={allCats}
-              allTags={allTags}
               customCats={customCats}
               actionProps={actionProps}
               compact={compact}
@@ -1172,7 +1139,6 @@ const handleDupesContinue = async () => {
                     isMobile={isMobile}
                     inlineEdit={inlineEdit}
                     allCats={allCats}
-                    allTags={allTags}
                     actionProps={actionProps}
                     toggleSel={toggleSel}
                     startEditing={startEditing}

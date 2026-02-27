@@ -88,7 +88,7 @@ function TableRow({
         animation: "fadeUp .25s ease",
       }}
     >
-      <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
+      <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }} data-tip="Shift+click to select range">
         <div
           style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
           onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
@@ -99,7 +99,7 @@ function TableRow({
 
       {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
 
-      <div className="row-actions" style={Z.rowAct}>
+      <div className="row-actions" style={{ ...Z.rowAct, ...(actionProps.reidentifying === q.id ? { opacity: 0.6, pointerEvents: "none" } : {}) }}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <CopyBtn q={q} onCopy={actionProps.onCopy} />
         <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />

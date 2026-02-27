@@ -130,6 +130,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         <button style={Z.editSave} onClick={() => onSave(q.id, text, source, category)}>Save</button>
         <button style={Z.editCancel} onClick={onCancel}>Cancel</button>
       </div>
+
     </div>
   );
 }

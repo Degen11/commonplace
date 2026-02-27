@@ -190,15 +190,17 @@ export default function TableView({
     case "source":
       return (
         <div key="source" className="src-col" style={Z.srcCol}>
-          {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-            ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
-            : <span
-                className="inline-src"
-                style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
-                title={q.source}
-                onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-              >{q.source}</span>
-          }
+          <div style={{ display: "flex", flexDirection: "column", gap: 0, flex: 1, minWidth: 0 }}>
+            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+              ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
+              : <span
+                  className="inline-src"
+                  style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                  title={q.source}
+                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+                >{q.source}</span>
+            }
+          </div>
         </div>
       );
     case "category":

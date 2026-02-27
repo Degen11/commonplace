@@ -48,7 +48,7 @@ export default function CardItem({
             : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
           }
         </div>
-        <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
+        <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}), ...(actionProps.reidentifying === q.id ? { opacity: 0.6, pointerEvents: "none" } : {}) }}>
           <FavBtn q={q} onFav={actionProps.onFav} />
           <CopyBtn q={q} onCopy={actionProps.onCopy} />
           <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />

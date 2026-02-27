@@ -98,8 +98,10 @@ export default function Commonplace() {
   const [isProcessing, setIsProcessing]       = useState(false);
   const [confirmBulkDel, setConfirmBulkDel]   = useState(false);
   const [reviewQueue, setReviewQueue]         = useState([]);
+  const [reviewTotal, setReviewTotal]         = useState(0);
   const [dragId, setDragId]                   = useState(null);
   const [failedEntries, setFailedEntries]     = useState([]);
+  const [reidentifyingId, setReidentifyingId] = useState(null);
   const [isSharedView, setIsSharedView]       = useState(false);
   const [formattingEnabled, setFormattingEnabled] = useState(false);
   const [identifiedFeed, setIdentifiedFeed]   = useState([]);
@@ -382,6 +384,7 @@ export default function Commonplace() {
   };
 
   const reIdentify = async (q) => {
+    setReidentifyingId(q.id);
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       const snapshot = { ...q };
@@ -391,6 +394,7 @@ export default function Commonplace() {
       showToast(describeChanges(q, local.source, local.category), "Undo", () => {
         setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
       });
+      setReidentifyingId(null);
       return;
     }
     const item = { text: q.text, hint: null };
@@ -414,6 +418,8 @@ export default function Commonplace() {
       }
     } catch {
       showToast("Couldn't reach AI. Try again.");
+    } finally {
+      setReidentifyingId(null);
     }
   };
 
@@ -680,6 +686,7 @@ const handleDupesContinue = async () => {
         }, 150);
       } else {
         showToast("Review complete — all entries updated!");
+        setReviewTotal(0);
       }
     }
   };
@@ -742,6 +749,7 @@ const handleDupesContinue = async () => {
       .sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0))
       .map(q => q.id);
     setReviewQueue(attentionIds);
+    setReviewTotal(attentionIds.length);
     if (attentionIds.length > 0) {
       setTimeout(() => {
         setEditingId(attentionIds[0]);
@@ -816,6 +824,7 @@ const handleDupesContinue = async () => {
     onDelete:     handleDelete,
     onCopy:       copyQuote,
     onReidentify: reIdentify,
+    reidentifying: reidentifyingId,
   };
 
   // ========================== RENDER ==========================
@@ -1091,12 +1100,17 @@ const handleDupesContinue = async () => {
           </div>
 
           {unknownCount > 0 && reviewQueue.length > 0 && (
-            <div style={Z.attentionBar}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={Z.attentionCount}>{reviewQueue.length}</span>
-                <span>{reviewQueue.length === 1 ? "entry" : "entries"} remaining in review</span>
+            <div style={{ ...Z.attentionBar, flexDirection: "column", gap: 6, position: "relative", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={Z.attentionCount}>{reviewTotal - reviewQueue.length} of {reviewTotal}</span>
+                  <span>reviewed</span>
+                </div>
+                <button style={{ ...Z.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setReviewTotal(0); setEditingId(null); }}>Exit review</button>
               </div>
-              <button style={{ ...Z.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
+              <div style={{ width: "100%", height: 3, background: "rgba(234,88,12,0.15)", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ height: "100%", background: "#EA580C", borderRadius: 2, transition: "width .3s ease", width: `${reviewTotal > 0 ? ((reviewTotal - reviewQueue.length) / reviewTotal) * 100 : 0}%` }} />
+              </div>
             </div>
           )}
           {unknownCount > 0 && reviewQueue.length === 0 && !stats && sortBy !== "confidence" && (

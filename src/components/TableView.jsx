@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import EditForm from "./EditForm";
+import { TagPills } from "./TagInput";
 import useLongPress from "../hooks/useLongPress";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
@@ -121,6 +122,7 @@ export default function TableView({
   saveEdit,
   saveInlineField,
   allCats,
+  allTags,
   customCats,
   actionProps,
   compact,
@@ -182,7 +184,7 @@ export default function TableView({
         <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 18 }}
           onClick={() => { if (!isEd) setEditingId(q.id); }}>
           {isEd
-            ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
+            ? <EditForm q={q} allCats={allCats} allTags={allTags} onSave={saveEdit} onCancel={() => setEditingId(null)} />
             : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
           }
         </div>
@@ -190,15 +192,18 @@ export default function TableView({
     case "source":
       return (
         <div key="source" className="src-col" style={Z.srcCol}>
-          {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-            ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
-            : <span
-                className="inline-src"
-                style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
-                title={q.source}
-                onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-              >{q.source}</span>
-          }
+          <div style={{ display: "flex", flexDirection: "column", gap: 0, flex: 1, minWidth: 0 }}>
+            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+              ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
+              : <span
+                  className="inline-src"
+                  style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                  title={q.source}
+                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+                >{q.source}</span>
+            }
+            <TagPills tags={q.tags || []} />
+          </div>
         </div>
       );
     case "category":

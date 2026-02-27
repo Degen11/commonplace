@@ -209,6 +209,89 @@ export function smartParse(line) {
   return { text: t.replace(/^["'\u201C]+|["'\u201D]+$/g, "").trim(), hint: null };
 }
 
+// ===================== CSV PARSING =====================
+export function parseCSVLine(line) {
+  const fields = [];
+  let cur = "", inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') { inQuote = !inQuote; }
+    else if (line[i] === "," && !inQuote) { fields.push(cur.trim()); cur = ""; }
+    else { cur += line[i]; }
+  }
+  fields.push(cur.trim());
+  return fields;
+}
+
+// ===================== IMPORT PARSERS =====================
+export function parseKindleClippings(content) {
+  const clips = content.split("==========").filter(c => c.trim());
+  const results = [];
+
+  for (const clip of clips) {
+    const lines = clip.trim().split("\n").map(l => l.trim());
+    if (lines.length < 3) continue;
+
+    const titleLine = lines[0];
+    const metaLine = lines[1] || "";
+    // Skip notes — only keep highlights
+    if (metaLine.toLowerCase().includes("your note")) continue;
+
+    const textLines = lines.slice(2).filter(Boolean);
+    const text = textLines.join(" ").trim();
+    if (!text || text.length < 3) continue;
+
+    const match = titleLine.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    let hint;
+    if (match) {
+      const title = match[1].trim();
+      const rawAuthor = match[2].trim();
+      // Kindle stores author as "Last, First" — flip it
+      const parts = rawAuthor.split(",").map(p => p.trim());
+      const author = parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawAuthor;
+      hint = `${title} - ${author}`;
+    } else {
+      hint = titleLine.trim();
+    }
+
+    results.push({ text, hint });
+  }
+
+  return results;
+}
+
+export function parseReadwiseCSV(content) {
+  const lines = content.split("\n");
+  if (lines.length < 2) return [];
+
+  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+
+  const highlightIdx = headers.indexOf("highlight");
+  const titleIdx = Math.max(headers.indexOf("book title"), headers.indexOf("title"));
+  const authorIdx = Math.max(headers.indexOf("book author"), headers.indexOf("author"));
+
+  if (highlightIdx < 0) return [];
+
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const fields = parseCSVLine(lines[i]);
+    const text = fields[highlightIdx]?.trim();
+    if (!text) continue;
+
+    const title = titleIdx >= 0 ? fields[titleIdx]?.trim() : null;
+    const author = authorIdx >= 0 ? fields[authorIdx]?.trim() : null;
+
+    let hint = null;
+    if (title && author) hint = `${title} - ${author}`;
+    else if (title) hint = title;
+    else if (author) hint = author;
+
+    results.push({ text, hint });
+  }
+
+  return results;
+}
+
 // ===================== DISPLAY =====================
 export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text}\u201D` : q.text;
 
@@ -228,12 +311,13 @@ function download(content, name, type) {
 }
 
 export function exportCSV(quotes) {
-  const rows = [["Text", "Source", "Category", "Favorite"]];
+  const rows = [["Text", "Source", "Category", "Favorite", "Tags"]];
   quotes.forEach(q => rows.push([
     `"${q.text.replace(/"/g, '""')}"`,
     `"${q.source.replace(/"/g, '""')}"`,
     q.category,
     q.favorite ? "yes" : "no",
+    `"${(q.tags || []).join("; ")}"`,
   ]));
   download(rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv");
 }
@@ -245,9 +329,10 @@ export function exportMD(quotes) {
     md += `## ${cat}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " ⭐" : "";
+      const t = (q.tags || []).length > 0 ? ` \`${q.tags.join("` `")}\`` : "";
       QUOTED_CATS.has(q.category)
-        ? md += `> \u201C${q.text}\u201D\n> \u2014 *${q.source}*${f}\n\n`
-        : md += `- **${q.text}** \u2014 ${q.source}${f}\n`;
+        ? md += `> \u201C${q.text}\u201D\n> \u2014 *${q.source}*${f}${t}\n\n`
+        : md += `- **${q.text}** \u2014 ${q.source}${f}${t}\n`;
     });
     md += "\n";
   });
@@ -255,7 +340,7 @@ export function exportMD(quotes) {
 }
 
 export function exportJSON(quotes) {
-  const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
+  const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite, tags: q.tags || [] }));
   download(JSON.stringify(data, null, 2), "commonplace-export.json", "application/json");
 }
 
@@ -266,9 +351,10 @@ export function exportTXT(quotes) {
     text += `${cat.toUpperCase()}\n${"─".repeat(cat.length)}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " ★" : "";
+      const t = (q.tags || []).length > 0 ? ` [${q.tags.join(", ")}]` : "";
       QUOTED_CATS.has(q.category)
-        ? text += `"${q.text}" — ${q.source}${f}\n`
-        : text += `${q.text} — ${q.source}${f}\n`;
+        ? text += `"${q.text}" — ${q.source}${f}${t}\n`
+        : text += `${q.text} — ${q.source}${f}${t}\n`;
     });
     text += "\n";
   });
@@ -309,7 +395,11 @@ export function copyToClipboard(quotes) {
 
 // ===================== SHAREABLE LINKS =====================
 export function encodeShareData(quotes) {
-  const minimal = quotes.map(q => [q.text, q.source, q.category, q.favorite ? 1 : 0]);
+  const minimal = quotes.map(q => {
+    const m = [q.text, q.source, q.category, q.favorite ? 1 : 0];
+    if (q.tags?.length) m.push(q.tags);
+    return m;
+  });
   return btoa(unescape(encodeURIComponent(JSON.stringify(minimal))));
 }
 
@@ -321,6 +411,7 @@ export function decodeShareData(hash) {
       id: crypto.randomUUID(),
       text: q[0], source: q[1], category: q[2],
       confidence: "high", favorite: !!q[3],
+      tags: Array.isArray(q[4]) ? q[4] : [],
     }));
   } catch { return null; }
 }

@@ -1,3 +1,4 @@
+import { Search, Check, X, RefreshCw } from "lucide-react";
 import { Z } from "./styles";
 
 export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecisions, onContinue }) {
@@ -10,7 +11,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
       <div style={{ ...Z.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={Z.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 24 }}>🔍</span>
+            <Search size={22} color="#3C5775" />
             <div style={Z.dupeModalTitle}>Possible Duplicates Detected</div>
           </div>
           <div style={Z.dupeModalSub}>
@@ -116,7 +117,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                     onMouseEnter={e => !isKeep && (e.currentTarget.style.background = "rgba(60,87,117,0.1)")}
                     onMouseLeave={e => !isKeep && (e.currentTarget.style.background = "white")}
                   >
-                    ✓ Keep
+                    <Check size={13} style={{ marginRight: 3 }} /> Keep
                   </button>
                   {dupe.matchedSource && dupe.incoming.hint && dupe.matchedSource !== dupe.incoming.hint && (
                     <button
@@ -137,7 +138,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                       onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.1)")}
                       onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "white")}
                     >
-                      ↻ Merge
+                      <RefreshCw size={12} style={{ marginRight: 3 }} /> Merge
                     </button>
                   )}
                   <button
@@ -156,7 +157,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                     onMouseEnter={e => !isSkip && (e.currentTarget.style.background = "rgba(155,154,151,0.1)")}
                     onMouseLeave={e => !isSkip && (e.currentTarget.style.background = "white")}
                   >
-                    ✕ Skip
+                    <X size={13} style={{ marginRight: 3 }} /> Skip
                   </button>
                 </div>
               </div>

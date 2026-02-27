@@ -29,6 +29,7 @@ import TableView from "./TableView";
 import CardItem from "./CardItem";
 import Footer from "./Footer";
 import { baseCSS, Z } from "./styles";
+import { Zap, Bot, XCircle, RefreshCw, AlertTriangle, X, Eye, Search, ClipboardList, Sparkles, Link, FileText, BarChart3, FileEdit, Pencil, Info } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
 const LS_CATS       = "commonplace_cats";
@@ -902,7 +903,7 @@ const handleDupesContinue = async () => {
 
           {isSharedView && (
             <div style={Z.shareBanner}>
-              <span>👀 You're viewing a shared collection ({quotes.length} entries)</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} /> You're viewing a shared collection ({quotes.length} entries)</span>
               <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); window.history.replaceState(null, "", window.location.pathname); }}>Make it yours</button>
             </div>
           )}
@@ -943,25 +944,25 @@ const handleDupesContinue = async () => {
                       <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
                       Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
                     </div>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}>📋 Copy to clipboard</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}>✨ Rich copy</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { handleShare(); setShowExport(false); }}>🔗 Shareable link</button>
-                    {quotes.length > 80 && <span style={Z.expOptNote}>⚠ Links may break above ~80 entries — export a file instead</span>}
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardList size={13} /> Copy to clipboard</button>
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={13} /> Rich copy</button>
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { handleShare(); setShowExport(false); }}><Link size={13} /> Shareable link</button>
+                    {quotes.length > 80 && <span style={Z.expOptNote}><AlertTriangle size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />Links may break above ~80 entries — export a file instead</span>}
                     <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}>📄 Plain text</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}>📊 CSV</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}>📝 Markdown</button>
-                    <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={13} /> Plain text</button>
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><BarChart3 size={13} /> CSV</button>
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileEdit size={13} /> Markdown</button>
+                    <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
                     {hasActiveFilters && (<>
                       <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
                       <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
                         Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
                       </div>
-                      <button className="dd-opt" style={Z.expOpt} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}>📋 Copy filtered</button>
-                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}>📄 Filtered TXT</button>
-                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}>📊 Filtered CSV</button>
-                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}>📝 Filtered MD</button>
-                      <button className="dd-opt" style={Z.expOpt} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
+                      <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardList size={13} /> Copy filtered</button>
+                      <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={13} /> Filtered TXT</button>
+                      <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><BarChart3 size={13} /> Filtered CSV</button>
+                      <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileEdit size={13} /> Filtered MD</button>
+                      <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
                     </>)}
                   </div>
                 )}
@@ -975,7 +976,7 @@ const handleDupesContinue = async () => {
 
           {apiError && (
             <div style={Z.errorBar}>
-              <span>⚠️ {apiError}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {apiError}</span>
               <div style={{ display: "flex", gap: 8 }}>
                 {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
                 <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
@@ -985,11 +986,11 @@ const handleDupesContinue = async () => {
 
           {stats && (
             <div style={Z.statsBar}>
-              <span>⚡ <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
-              <span>🤖 <strong>{stats.api}</strong> identified by AI</span>
-              {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626" }}>❌ <strong>{stats.failed}</strong> failed</span></>}
-              {stats.dupes > 0 && <><span style={Z.statDot} /><span>🔁 <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-              <button style={Z.statsDismiss} onClick={() => setStats(null)}>✕</button>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} color="#D97706" /> <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} color="#059669" /> <strong>{stats.api}</strong> identified by AI</span>
+              {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} /> <strong>{stats.failed}</strong> failed</span></>}
+              {stats.dupes > 0 && <><span style={Z.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
+              <button style={Z.statsDismiss} onClick={() => setStats(null)}><X size={14} /></button>
             </div>
           )}
 
@@ -1026,15 +1027,15 @@ const handleDupesContinue = async () => {
                 <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
                 <button style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
                 <button style={Z.bulkDelBtn} onClick={() => selected.size > 10 ? setConfirmBulkDel(true) : bulkDel()}>Delete</button>
-                <button style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
+                <button style={Z.bulkX} onClick={() => setSelected(new Set())}><X size={14} /></button>
               </div>
             </div>
           )}
 
           <div style={Z.toolbar}>
-            <div style={Z.srchW}><span style={Z.srchI}>🔍</span>
+            <div style={Z.srchW}><span style={Z.srchI}><Search size={13} /></span>
               <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
-              {search && <button style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
+              {search && <button style={Z.clrBtn} onClick={() => setSearch("")}><X size={12} /></button>}
             </div>
             <div ref={sortRef} style={{ position: "relative" }}>
               <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>

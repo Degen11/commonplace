@@ -35,8 +35,6 @@ export default function CardItem({
         ...(dragId === q.id ? { opacity: .4 } : {}),
         animation: "fadeUp .3s ease",
       }}
-      onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
-      onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
     >
       <div style={CZ.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

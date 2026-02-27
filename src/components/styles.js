@@ -79,6 +79,30 @@ export const baseCSS = `
   .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
   .nav-link{transition:color .15s ease}
   .nav-link:hover{color:#1A1814 !important}
+
+  /* Fix 16 — hover state migrations */
+  .dupe-keep-btn{transition:all 0.15s ease}
+  .dupe-keep-btn:not(.active):hover{background:rgba(60,87,117,0.1) !important}
+  .dupe-merge-btn{transition:all 0.15s ease}
+  .dupe-merge-btn:not(.active):hover{background:rgba(5,150,105,0.1) !important}
+  .dupe-skip-btn{transition:all 0.15s ease}
+  .dupe-skip-btn:not(.active):hover{background:rgba(155,154,151,0.1) !important}
+  .dupe-continue-btn{transition:background 0.15s ease}
+  .dupe-continue-btn:hover{background:#2D4259 !important}
+
+  .act-btn.fav-btn:hover{color:#F59E0B !important}
+  .act-btn.copy-btn:hover{color:#2383E2 !important}
+  .act-btn.reid-btn:not(:disabled):hover{color:#059669 !important}
+  .act-btn.del-btn:hover{color:#EF4444 !important}
+
+  .stat-card{transition:all 0.2s ease}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.05);border-color:#D4D4D0 !important}
+
+  .stats-close-btn{transition:all 0.2s ease}
+  .stats-close-btn:hover{background:#F0F0EE !important;color:#37352F !important}
+
+  .ca{transition:opacity .15s}
+  .qcard:hover .ca{opacity:1 !important}
 `;
 
 // ===================== MAIN STYLES =====================

@@ -25,7 +25,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
             const isKeep = decision === "keep";
             const isMerge = decision === "merge";
             const isSkip = decision === "skip";
-            
+
             return (
               <div key={i} style={{
                 border: "1px solid #F1F1EF",
@@ -62,7 +62,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                     NEW
                   </div>
                 </div>
-                
+
                 {/* Content */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxHeight: 200, overflowY: "auto" }}>
                   <div style={{
@@ -101,6 +101,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                   justifyContent: "flex-end",
                 }}>
                   <button
+                    className={`dupe-keep-btn${isKeep ? " active" : ""}`}
                     onClick={() => setDupeDecisions(p => ({ ...p, [i]: "keep" }))}
                     style={{
                       padding: "6px 16px",
@@ -112,15 +113,15 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                       fontWeight: 500,
                       cursor: "pointer",
                       borderRight: "1px solid #F1F1EF",
-                      transition: "all 0.15s ease",
+                      display: "inline-flex",
+                      alignItems: "center",
                     }}
-                    onMouseEnter={e => !isKeep && (e.currentTarget.style.background = "rgba(60,87,117,0.1)")}
-                    onMouseLeave={e => !isKeep && (e.currentTarget.style.background = "white")}
                   >
                     <Check size={13} style={{ marginRight: 3 }} /> Keep
                   </button>
                   {dupe.matchedSource && dupe.incoming.hint && dupe.matchedSource !== dupe.incoming.hint && (
                     <button
+                      className={`dupe-merge-btn${isMerge ? " active" : ""}`}
                       onClick={() => setDupeDecisions(p => ({ ...p, [i]: "merge" }))}
                       style={{
                         padding: "6px 16px",
@@ -132,16 +133,16 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                         fontWeight: 500,
                         cursor: "pointer",
                         borderRight: "1px solid #F1F1EF",
-                        transition: "all 0.15s ease",
+                        display: "inline-flex",
+                        alignItems: "center",
                       }}
                       title="Keep the new entry but combine both sources"
-                      onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.1)")}
-                      onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "white")}
                     >
                       <RefreshCw size={12} style={{ marginRight: 3 }} /> Merge
                     </button>
                   )}
                   <button
+                    className={`dupe-skip-btn${isSkip ? " active" : ""}`}
                     onClick={() => setDupeDecisions(p => ({ ...p, [i]: "skip" }))}
                     style={{
                       padding: "6px 16px",
@@ -152,10 +153,9 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                       fontSize: 13,
                       fontWeight: 500,
                       cursor: "pointer",
-                      transition: "all 0.15s ease",
+                      display: "inline-flex",
+                      alignItems: "center",
                     }}
-                    onMouseEnter={e => !isSkip && (e.currentTarget.style.background = "rgba(155,154,151,0.1)")}
-                    onMouseLeave={e => !isSkip && (e.currentTarget.style.background = "white")}
                   >
                     <X size={13} style={{ marginRight: 3 }} /> Skip
                   </button>
@@ -185,6 +185,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
             {keptCount > 0 ? `${keptCount} will be added` : "All will be skipped"}
           </span>
           <button
+            className="dupe-continue-btn"
             onClick={onContinue}
             style={{
               padding: "8px 28px",
@@ -196,8 +197,6 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
               fontWeight: 600,
               cursor: "pointer",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "#2D4259"}
-            onMouseLeave={e => e.currentTarget.style.background = "#3C5775"}
           >
             Continue
           </button>

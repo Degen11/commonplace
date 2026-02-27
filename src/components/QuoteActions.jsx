@@ -4,22 +4,12 @@ import { Z } from "./styles";
 export function FavBtn({ q, onFav }) {
   return (
     <button
-      className="act-btn"
-      style={Z.actBtn}
+      className="act-btn fav-btn"
+      style={{ ...Z.actBtn, ...(q.favorite ? { color: "#F59E0B" } : {}) }}
       onClick={e => { e.stopPropagation(); onFav(q.id); }}
       title={q.favorite ? "Unfavorite" : "Favorite"}
-      onMouseEnter={e => {
-        if (!q.favorite) {
-          e.currentTarget.style.color = "#F59E0B";
-        }
-      }}
-      onMouseLeave={e => {
-        if (!q.favorite) {
-          e.currentTarget.style.color = "#6B6764";
-        }
-      }}
     >
-      <Star 
+      <Star
         size={16}
         fill={q.favorite ? "#F59E0B" : "none"}
         color={q.favorite ? "#F59E0B" : "currentColor"}
@@ -32,12 +22,10 @@ export function FavBtn({ q, onFav }) {
 export function CopyBtn({ q, onCopy }) {
   return (
     <button
-      className="act-btn"
+      className="act-btn copy-btn"
       style={Z.actBtn}
       onClick={e => { e.stopPropagation(); onCopy(q); }}
       title="Copy to clipboard"
-      onMouseEnter={e => e.currentTarget.style.color = "#2383E2"}
-      onMouseLeave={e => e.currentTarget.style.color = "#6B6764"}
     >
       <Copy size={16} strokeWidth={1.5} />
     </button>
@@ -47,7 +35,7 @@ export function CopyBtn({ q, onCopy }) {
 export function ReidentifyBtn({ q, onReidentify, loading }) {
   return (
     <button
-      className="act-btn"
+      className="act-btn reid-btn"
       style={{
         ...Z.actBtn,
         ...(loading ? { opacity: 0.5, cursor: "wait" } : {}),
@@ -55,8 +43,6 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
       onClick={e => { e.stopPropagation(); if (!loading) onReidentify(q); }}
       title={loading ? "Re-identifying..." : "Re-identify source"}
       disabled={loading}
-      onMouseEnter={e => !loading && (e.currentTarget.style.color = "#059669")}
-      onMouseLeave={e => !loading && (e.currentTarget.style.color = "#6B6764")}
     >
       <RefreshCw
         size={16}
@@ -70,12 +56,10 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
 export function DelBtn({ q, onDelete }) {
   return (
     <button
-      className="act-btn"
+      className="act-btn del-btn"
       style={Z.actBtn}
       onClick={e => { e.stopPropagation(); onDelete(q.id); }}
       title="Delete"
-      onMouseEnter={e => e.currentTarget.style.color = "#EF4444"}
-      onMouseLeave={e => e.currentTarget.style.color = "#6B6764"}
     >
       <Trash2 size={16} strokeWidth={1.5} />
     </button>

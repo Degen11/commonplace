@@ -117,6 +117,9 @@ export const baseCSS = `
   }
   .checkbox[data-tip]:hover::after{opacity:1}
 
+  /* Fix 2 — hide scrollbar on category pills */
+  .cat-scroll::-webkit-scrollbar{display:none}
+
   /* Fix 3 — cancel button hover */
   .cancel-proc{transition:all .15s ease}
   .cancel-proc:hover{border-color:#DC2626 !important;color:#DC2626 !important}
@@ -340,8 +343,8 @@ export const Z = {
   sortOptOn:{background:"#F1F1EF",fontWeight:600},
 
   // Category pills — #5 added sticky shadow
-  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50},
-  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
+  cats:{display:"flex",gap:6,padding:"10px 0",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50,overflowX:"auto",overflowY:"hidden",whiteSpace:"nowrap",msOverflowStyle:"none",scrollbarWidth:"none"},
+  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500,flexShrink:0},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"},
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},

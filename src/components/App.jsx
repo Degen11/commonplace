@@ -938,23 +938,20 @@ const handleDupesContinue = async () => {
                 <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
                 {showExport && (
                   <div style={Z.expDrop}>
-                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-                      Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
-                    </div>
+                    <div style={{ padding: "6px 12px 4px", fontSize: 10, fontWeight: 600, color: "#9B9A97", textTransform: "uppercase", letterSpacing: 0.5 }}>Quick share</div>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardList size={13} /> Copy to clipboard</button>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={13} /> Rich copy</button>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { handleShare(); setShowExport(false); }}><Link size={13} /> Shareable link</button>
-                    {quotes.length > 80 && <span style={Z.expOptNote}><AlertTriangle size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />Links may break above ~80 entries — export a file instead</span>}
-                    <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+                    {quotes.length > 80 && <span style={Z.expOptNote}><AlertTriangle size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />Links may break above ~80 entries</span>}
+                    <div style={{ height: 1, background: "#F1F1EF", margin: "4px 0" }} />
+                    <div style={{ padding: "6px 12px 4px", fontSize: 10, fontWeight: 600, color: "#9B9A97", textTransform: "uppercase", letterSpacing: 0.5 }}>Download ({quotes.length})</div>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={13} /> Plain text</button>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><BarChart3 size={13} /> CSV</button>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileEdit size={13} /> Markdown</button>
                     <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
                     {hasActiveFilters && (<>
-                      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-                        Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
-                      </div>
+                      <div style={{ height: 1, background: "#F1F1EF", margin: "4px 0" }} />
+                      <div style={{ padding: "6px 12px 4px", fontSize: 10, fontWeight: 600, color: "#2383E2", textTransform: "uppercase", letterSpacing: 0.5 }}>Filtered ({filtered.length})</div>
                       <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardList size={13} /> Copy filtered</button>
                       <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={13} /> Filtered TXT</button>
                       <button className="dd-opt" style={{ ...Z.expOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><BarChart3 size={13} /> Filtered CSV</button>
@@ -981,14 +978,32 @@ const handleDupesContinue = async () => {
             </div>
           )}
 
-          {stats && (
-            <div style={Z.statsBar}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} color="#D97706" /> <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} color="#059669" /> <strong>{stats.api}</strong> identified by AI</span>
-              {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} /> <strong>{stats.failed}</strong> failed</span></>}
-              {stats.dupes > 0 && <><span style={Z.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-              <button style={Z.statsDismiss} onClick={() => setStats(null)}><X size={14} /></button>
+          {stats && unknownCount > 0 && reviewQueue.length === 0 && sortBy !== "confidence" ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#fff", border: "1px solid #E3E2DE", borderRadius: 8, margin: "12px 0", fontSize: 13, color: "#37352F", flexWrap: "wrap", animation: "slideD .2s ease", gap: 8, borderLeft: "3px solid #EA580C" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} color="#D97706" /> <strong>{stats.local}</strong> local</span><span style={Z.statDot} />
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} color="#059669" /> <strong>{stats.api}</strong> AI</span>
+                {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} /> <strong>{stats.failed}</strong> failed</span></>}
+                {stats.dupes > 0 && <><span style={Z.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} /> <strong>{stats.dupes}</strong> skipped</span></>}
+                <button style={Z.statsDismiss} onClick={() => setStats(null)}><X size={14} /></button>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ ...Z.attentionCount, fontSize: 13 }}>{unknownCount} need attention</span>
+                <button style={Z.attentionBtn} onClick={startReviewFlow}>Review now</button>
+              </div>
             </div>
+          ) : (
+            <>
+              {stats && (
+                <div style={Z.statsBar}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} color="#D97706" /> <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} color="#059669" /> <strong>{stats.api}</strong> identified by AI</span>
+                  {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} /> <strong>{stats.failed}</strong> failed</span></>}
+                  {stats.dupes > 0 && <><span style={Z.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
+                  <button style={Z.statsDismiss} onClick={() => setStats(null)}><X size={14} /></button>
+                </div>
+              )}
+            </>
           )}
 
           {/* UPDATED: Add More panel with formatting toggle */}
@@ -1051,7 +1066,7 @@ const handleDupesContinue = async () => {
             </div>
           </div>
 
-          <div style={Z.cats}>
+          <div className="cat-scroll" style={Z.cats}>
             <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
             {favCount > 0 && (
               <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
@@ -1075,7 +1090,7 @@ const handleDupesContinue = async () => {
             ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
           </div>
 
-          {unknownCount > 0 && (reviewQueue.length > 0 ? (
+          {unknownCount > 0 && reviewQueue.length > 0 && (
             <div style={Z.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={Z.attentionCount}>{reviewQueue.length}</span>
@@ -1083,7 +1098,8 @@ const handleDupesContinue = async () => {
               </div>
               <button style={{ ...Z.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
             </div>
-          ) : sortBy !== "confidence" && (
+          )}
+          {unknownCount > 0 && reviewQueue.length === 0 && !stats && sortBy !== "confidence" && (
             <div style={Z.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={Z.attentionCount}>{unknownCount}</span>
@@ -1091,7 +1107,7 @@ const handleDupesContinue = async () => {
               </div>
               <button style={Z.attentionBtn} onClick={startReviewFlow}>Review now →</button>
             </div>
-          ))}
+          )}
 
           {/* TABLE VIEW */}
           {view === "table" && (

@@ -52,9 +52,9 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 
 // Column configuration
 const COL_CONFIG = {
-  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 18, textAlign: "left" } },
-  source:   { label: "Source",   style: { width: 200, paddingLeft: 0, paddingRight: 18, textAlign: "left" } },
-  category: { label: "Category", style: { minWidth: 100, paddingLeft: 0, paddingRight: 16, textAlign: "left" } },
+  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  source:   { label: "Source",   style: { width: 180, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
+  category: { label: "Category", style: { minWidth: 90, paddingLeft: 0, paddingRight: 8, textAlign: "left" } },
 };
 
 // Performance: Extract inline style object
@@ -184,7 +184,7 @@ export default function TableView({
   switch(colKey) {
     case "content":
       return (
-        <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 18 }}
+        <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12 }}
           onClick={() => { if (!isEd) setEditingId(q.id); }}>
           {isEd
             ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
@@ -234,7 +234,7 @@ export default function TableView({
   }
 };
   return (
-    <div style={{ overflowX: "auto" }}>
+    <div style={{ overflowX: "visible" }}>
       {filtered.length > 0 && (
         <div style={Z.tHead}>
           <div className="ui-tip ui-tip-below" data-tip="Select all" style={Z.chkW}>
@@ -265,7 +265,7 @@ export default function TableView({
               {COL_CONFIG[colKey].label}
             </div>
           ))}
-          <div style={{ width: 110 }} />
+          <div style={{ width: 96 }} />
         </div>
       )}
 

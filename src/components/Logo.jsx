@@ -7,7 +7,7 @@ export default function Logo({ size = 28, color = "#3C5775" }) {
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ display: "block", flexShrink: 0 }}
+      style={{ display: "block", flexShrink: 0, position: "relative", top: 1 }}
     >
       {/* Left page */}
       <path

@@ -62,7 +62,7 @@ export default function InputPhase({
             </div>
 
             {/* Animated "How It Works" — replaces static cards + TransformPreview */}
-            <div id="how">
+            <div id="how" style={{ width: "100%" }}>
               <HowItWorksAnimation />
             </div>
           </div>

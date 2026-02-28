@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClipboardList, Zap, CheckCircle } from "lucide-react";
 import { CP_ACCENT } from "./styles";
 
@@ -24,15 +24,20 @@ const STEPS = [
 ];
 
 // ── Styles ──────────────────────────────────────────────────────────────────
+const DARK_BG = "#1E1E1E";
+const DARK_BORDER = "#333";
+
 const S = {
   root: {
     display: "flex",
     flexDirection: "column",
     gap: 16,
+    width: "100%",
   },
   stepRow: {
     display: "flex",
     gap: 0,
+    justifyContent: "center",
   },
   stepItem: (active, done) => ({
     display: "flex",
@@ -44,7 +49,7 @@ const S = {
     fontWeight: active || done ? 600 : 400,
     color: active ? CP_ACCENT : done ? "#1A1814" : "#C8C4BC",
     background: active ? "rgba(60,87,117,0.08)" : "transparent",
-    transition: "all 0.35s ease",
+    transition: "all 0.4s ease",
     whiteSpace: "nowrap",
   }),
   stepDivider: {
@@ -55,65 +60,67 @@ const S = {
     color: "#D3D3D0",
     fontSize: 10,
   },
-  stage: {
+  stage: (dark) => ({
     borderRadius: 10,
     overflow: "hidden",
-    border: "1px solid #E8E3DA",
-    background: "#fff",
-    minHeight: 160,
+    border: `1px solid ${dark ? DARK_BORDER : "#E8E3DA"}`,
+    background: dark ? DARK_BG : "#fff",
+    minHeight: 180,
     position: "relative",
-  },
+    transition: "background 0.8s ease, border-color 0.8s ease",
+  }),
   linesWrap: {
-    padding: "14px 16px",
+    padding: "16px 18px",
     display: "flex",
     flexDirection: "column",
-    gap: 8,
+    gap: 10,
   },
-  line: (visible, processing) => ({
+  line: (visible, scanning, scanned) => ({
     fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
     fontSize: 11.5,
-    color: processing ? CP_ACCENT : "#6A6660",
-    lineHeight: 1.4,
+    color: scanning ? "#7EB8FF" : scanned ? "#7EB8FF" : "rgba(255,255,255,0.55)",
+    lineHeight: 1.5,
     opacity: visible ? 1 : 0,
     transform: visible ? "translateY(0)" : "translateY(6px)",
-    transition: "opacity 0.35s ease, transform 0.35s ease, color 0.4s ease",
+    transition: "opacity 0.45s ease, transform 0.45s ease, color 0.5s ease",
     display: "flex",
     alignItems: "center",
     gap: 8,
   }),
-  lineCaret: (processing) => ({
+  lineCaret: (scanning, scanned) => ({
     fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
     fontSize: 11,
-    color: processing ? CP_ACCENT : "#C8C4BC",
+    color: scanning ? "#7EB8FF" : scanned ? "#5A9BDB" : "rgba(255,255,255,0.25)",
     flexShrink: 0,
-    transition: "color 0.4s ease",
+    transition: "color 0.5s ease",
   }),
-  processingOverlay: (show) => ({
+  progressBar: {
     position: "absolute",
-    inset: 0,
-    background: "rgba(60,87,117,0.03)",
-    opacity: show ? 1 : 0,
-    transition: "opacity 0.4s ease",
-    pointerEvents: "none",
-  }),
+    bottom: 0,
+    left: 0,
+    height: 2,
+    background: "rgba(126,184,255,0.5)",
+    borderRadius: 1,
+    transition: "width 0.6s ease",
+  },
   cardsWrap: {
-    padding: "14px 16px",
+    padding: "16px 18px",
     display: "flex",
     flexDirection: "column",
-    gap: 6,
+    gap: 8,
   },
   card: (visible) => ({
     display: "flex",
     alignItems: "center",
     gap: 8,
-    padding: "7px 10px",
+    padding: "8px 12px",
     background: "#fff",
     borderRadius: 7,
     border: "1px solid rgba(60,87,117,0.12)",
     boxShadow: "0 1px 3px rgba(60,87,117,0.06)",
     opacity: visible ? 1 : 0,
     transform: visible ? "translateY(0)" : "translateY(8px)",
-    transition: "opacity 0.3s ease, transform 0.3s ease",
+    transition: "opacity 0.4s ease, transform 0.4s ease",
   }),
   cardTag: (bg, color) => ({
     fontSize: 8,
@@ -152,46 +159,64 @@ export default function HowItWorksAnimation() {
   // 0 = idle, 1 = paste, 2 = identify, 3 = organize, 4 = done
   const [step, setStep] = useState(0);
   const [lineCount, setLineCount] = useState(0);
+  const [scanIndex, setScanIndex] = useState(-1); // which line is currently being scanned
+  const [scannedLines, setScannedLines] = useState(new Set());
   const [cardCount, setCardCount] = useState(0);
-  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const ts = [];
     const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
 
-    // Step 1 — Paste: lines appear one by one
-    t(400, () => setStep(1));
+    // Step 1 — Paste: lines appear one by one (slower)
+    t(600, () => setStep(1));
     RAW_LINES.forEach((_, i) => {
-      t(600 + i * 400, () => setLineCount(i + 1));
+      t(900 + i * 650, () => setLineCount(i + 1));
     });
 
-    const pasteDone = 600 + RAW_LINES.length * 400 + 300;
+    const pasteDone = 900 + RAW_LINES.length * 650 + 500;
 
-    // Step 2 — Identify: lines shimmer
+    // Step 2 — Identify: scan each line one at a time with a progress bar
     t(pasteDone, () => {
       setStep(2);
-      setProcessing(true);
+      setProgress(5);
     });
 
-    const identifyDone = pasteDone + 1200;
+    RAW_LINES.forEach((_, i) => {
+      const scanStart = pasteDone + 300 + i * 800;
+      // Highlight this line
+      t(scanStart, () => {
+        setScanIndex(i);
+        setProgress(Math.round(((i + 0.5) / RAW_LINES.length) * 100));
+      });
+      // Mark it as scanned
+      t(scanStart + 550, () => {
+        setScannedLines(prev => new Set([...prev, i]));
+        setScanIndex(-1);
+        setProgress(Math.round(((i + 1) / RAW_LINES.length) * 100));
+      });
+    });
 
-    // Step 3 — Organize: cards appear
+    const identifyDone = pasteDone + 300 + RAW_LINES.length * 800 + 600;
+
+    // Step 3 — Organize: transition to light, cards appear
     t(identifyDone, () => {
       setStep(3);
-      setProcessing(false);
+      setProgress(100);
     });
 
     RESULT_CARDS.forEach((_, i) => {
-      t(identifyDone + 200 + i * 200, () => setCardCount(i + 1));
+      t(identifyDone + 400 + i * 350, () => setCardCount(i + 1));
     });
 
-    const organizeDone = identifyDone + 200 + RESULT_CARDS.length * 200 + 400;
+    const organizeDone = identifyDone + 400 + RESULT_CARDS.length * 350 + 500;
     t(organizeDone, () => setStep(4));
 
     return () => ts.forEach(clearTimeout);
   }, []);
 
   const activeStep = step >= 4 ? 3 : step;
+  const isDark = step >= 1 && step < 3;
 
   return (
     <div style={S.root}>
@@ -213,22 +238,21 @@ export default function HowItWorksAnimation() {
         })}
       </div>
 
-      {/* Animation stage */}
-      <div style={S.stage}>
-        <div style={S.processingOverlay(processing)} />
+      {/* Animation stage — dark bg for paste/identify, transitions to white for organize */}
+      <div style={S.stage(isDark)}>
 
         {step < 3 ? (
-          /* Paste / Identify phase — raw lines */
+          /* Paste / Identify phase — raw lines on dark bg */
           <div style={S.linesWrap}>
             {RAW_LINES.map((line, i) => (
-              <div key={i} style={S.line(i < lineCount, processing)}>
-                <span style={S.lineCaret(processing)}>›</span>
+              <div key={i} style={S.line(i < lineCount, scanIndex === i, scannedLines.has(i))}>
+                <span style={S.lineCaret(scanIndex === i, scannedLines.has(i))}>›</span>
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{line}</span>
               </div>
             ))}
           </div>
         ) : (
-          /* Organize phase — result cards */
+          /* Organize phase — result cards on white bg */
           <div style={S.cardsWrap}>
             {RESULT_CARDS.map((card, i) => (
               <div key={i} style={S.card(i < cardCount)}>
@@ -238,6 +262,11 @@ export default function HowItWorksAnimation() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Progress bar during identify */}
+        {step === 2 && (
+          <div style={{ ...S.progressBar, width: `${progress}%` }} />
         )}
       </div>
     </div>

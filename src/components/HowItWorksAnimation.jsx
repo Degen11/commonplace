@@ -70,12 +70,14 @@ const S = {
     transition: "background 0.8s ease, border-color 0.8s ease",
     textAlign: "left",
   }),
-  linesWrap: {
+  linesWrap: (fading) => ({
     padding: "16px 18px",
     display: "flex",
     flexDirection: "column",
     gap: 10,
-  },
+    opacity: fading ? 0 : 1,
+    transition: "opacity 0.6s ease",
+  }),
   line: (visible, scanning, scanned) => ({
     fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
     fontSize: 11.5,
@@ -104,12 +106,14 @@ const S = {
     borderRadius: 1,
     transition: "width 0.6s ease",
   },
-  cardsWrap: {
+  cardsWrap: (visible) => ({
     padding: "16px 18px",
     display: "flex",
     flexDirection: "column",
     gap: 8,
-  },
+    opacity: visible ? 1 : 0,
+    transition: "opacity 0.5s ease 0.3s",
+  }),
   card: (visible) => ({
     display: "flex",
     alignItems: "center",
@@ -162,6 +166,8 @@ export default function HowItWorksAnimation() {
   const [lineCount, setLineCount] = useState(0);
   const [scanIndex, setScanIndex] = useState(-1); // which line is currently being scanned
   const [scannedLines, setScannedLines] = useState(new Set());
+  const [linesFading, setLinesFading] = useState(false); // lines fading out
+  const [showCards, setShowCards] = useState(false);      // cards layer mounted
   const [cardCount, setCardCount] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -200,17 +206,23 @@ export default function HowItWorksAnimation() {
 
     const identifyDone = pasteDone + 300 + RAW_LINES.length * 800 + 600;
 
-    // Step 3 — Organize: transition to light, cards appear
+    // Transition: fade out lines, start bg transition, then fade in cards
     t(identifyDone, () => {
       setStep(3);
+      setLinesFading(true);  // lines fade out (0.6s)
       setProgress(100);
     });
 
-    RESULT_CARDS.forEach((_, i) => {
-      t(identifyDone + 400 + i * 350, () => setCardCount(i + 1));
+    // Mount cards layer after lines have faded (0.6s), then reveal one by one
+    t(identifyDone + 700, () => {
+      setShowCards(true);
     });
 
-    const organizeDone = identifyDone + 400 + RESULT_CARDS.length * 350 + 500;
+    RESULT_CARDS.forEach((_, i) => {
+      t(identifyDone + 1000 + i * 350, () => setCardCount(i + 1));
+    });
+
+    const organizeDone = identifyDone + 1000 + RESULT_CARDS.length * 350 + 500;
     t(organizeDone, () => setStep(4));
 
     return () => ts.forEach(clearTimeout);
@@ -242,9 +254,9 @@ export default function HowItWorksAnimation() {
       {/* Animation stage — dark bg for paste/identify, transitions to white for organize */}
       <div style={S.stage(isDark)}>
 
-        {step < 3 ? (
-          /* Paste / Identify phase — raw lines on dark bg */
-          <div style={S.linesWrap}>
+        {/* Lines layer — always mounted, fades out during transition */}
+        {!showCards && (
+          <div style={S.linesWrap(linesFading)}>
             {RAW_LINES.map((line, i) => (
               <div key={i} style={S.line(i < lineCount, scanIndex === i, scannedLines.has(i))}>
                 <span style={S.lineCaret(scanIndex === i, scannedLines.has(i))}>›</span>
@@ -252,9 +264,11 @@ export default function HowItWorksAnimation() {
               </div>
             ))}
           </div>
-        ) : (
-          /* Organize phase — result cards on white bg */
-          <div style={S.cardsWrap}>
+        )}
+
+        {/* Cards layer — mounted after lines fade, fades in */}
+        {showCards && (
+          <div style={S.cardsWrap(showCards)}>
             {RESULT_CARDS.map((card, i) => (
               <div key={i} style={S.card(i < cardCount)}>
                 <span style={S.cardTag(card.tagBg, card.tagColor)}>{card.tag}</span>

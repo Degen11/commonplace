@@ -28,6 +28,7 @@ import ProcessingPhase from "./ProcessingPhase";
 import TableView from "./TableView";
 import CardItem from "./CardItem";
 import Footer from "./Footer";
+import Logo from "./Logo";
 import { baseCSS, Z } from "./styles";
 
 // Icons
@@ -1099,7 +1100,7 @@ const handleDupesContinue = async () => {
               backdropFilter: "blur(8px)", animation: "slideD .15s ease",
             }}>
               <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Logo size={16} /><span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span></span>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <div style={Z.viewTog}>
                     <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>

@@ -14,7 +14,7 @@ const RESULT_CARDS = [
   { tag: "Person", tagBg: "#EEF2F7", tagColor: CP_ACCENT,  text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
   { tag: "Film",   tagBg: "#F3E8FF", tagColor: "#7C3AED",  text: "All those moments will be lost in time",    source: "Blade Runner" },
   { tag: "Person", tagBg: "#EEF2F7", tagColor: CP_ACCENT,  text: "The unexamined life is not worth living",   source: "Socrates" },
-  { tag: "Person", tagBg: "#EEF2F7", tagColor: CP_ACCENT,  text: "Be the change",                            source: "Mahatma Gandhi" },
+  { tag: "Speech", tagBg: "#FEF3C7", tagColor: "#B45309",  text: "Be the change",                            source: "Mahatma Gandhi" },
 ];
 
 const STEPS = [
@@ -68,6 +68,7 @@ const S = {
     minHeight: 180,
     position: "relative",
     transition: "background 0.8s ease, border-color 0.8s ease",
+    textAlign: "left",
   }),
   linesWrap: {
     padding: "16px 18px",

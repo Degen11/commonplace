@@ -129,19 +129,25 @@ export const Z = {
   // Landing
   landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:44},
 
+  // Nav logo with icon
+  navLogoWrap:{display:"flex",alignItems:"center",gap:8,textDecoration:"none"},
+
   // Split layout (replaces old hero)
   splitLayout:{display:"grid",gridTemplateColumns:"5fr 6fr",gap:40,alignItems:"start",width:"100%",animation:"fadeUp .5s ease"},
-  splitLeft:{display:"flex",flexDirection:"column",gap:28,paddingTop:8},
+  splitLeft:{display:"flex",flexDirection:"column",gap:24,paddingTop:8},
   splitRight:{display:"flex",flexDirection:"column",gap:16},
-  splitHeadline:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:32,fontWeight:700,letterSpacing:-1,color:"#1A1814",lineHeight:1.15},
-  splitDesc:{fontSize:15,color:"#6A6660",marginTop:14,lineHeight:1.75,fontWeight:300},
-  splitHow:{display:"flex",flexDirection:"column",gap:0},
-  splitHowLabel:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,color:CP_ACCENT,marginBottom:12},
-  splitHowGrid:{display:"flex",flexDirection:"column",gap:0},
-  splitHowCard:{display:"flex",alignItems:"flex-start",gap:12,padding:"14px 0",borderTop:"1px solid #E8E3DA"},
-  splitHowCardIcon:{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:10,background:"rgba(60,87,117,0.08)",flexShrink:0},
-  splitHowCardTitle:{fontSize:14,fontWeight:600,color:"#1A1814",marginBottom:2},
-  splitHowCardDesc:{fontSize:13,color:"#6A6660",lineHeight:1.5,fontWeight:300},
+
+  // Hero brand mark — dominant visual anchor
+  heroBrandWrap:{display:"flex",alignItems:"center",gap:10,marginBottom:4},
+  heroBrandName:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:42,fontWeight:700,letterSpacing:-1.5,color:"#1A1814",lineHeight:1.1},
+
+  // Tagline — clearly secondary
+  heroTagline:{fontFamily:"'DM Sans',-apple-system,sans-serif",fontSize:18,fontWeight:300,color:"#9A9590",lineHeight:1.5,marginTop:2},
+
+  splitDesc:{fontSize:15,color:"#6A6660",marginTop:8,lineHeight:1.75,fontWeight:300},
+
+  // Section divider before centered content
+  sectionDivider:{width:"100%",maxWidth:800,height:1,background:"#E8E3DA",marginTop:56},
 
   // Legacy hero (kept for reference)
   hero:{textAlign:"center",marginBottom:44,animation:"fadeUp .5s ease"},
@@ -188,10 +194,10 @@ export const Z = {
   featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
   featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
 
-  // UPDATED FEATURE GRID STYLES - 4 columns, icon-centered, no descriptions
+  // Features grid — 3-column, 2 rows
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+    gridTemplateColumns: "repeat(3, 1fr)",
     gap: 12,
     marginTop: 16,
   },
@@ -200,7 +206,7 @@ export const Z = {
     background: "#FFFFFF",
     border: "1px solid #E3E2DE",
     borderRadius: 12,
-    padding: "16px 12px",
+    padding: "20px 16px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",

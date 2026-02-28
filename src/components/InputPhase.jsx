@@ -1,10 +1,11 @@
-import TransformPreview from "./TransformPreview";
+import Logo from "./Logo";
+import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
 import { baseCSS, Z } from "./styles";
 import { smartSplit } from "../utils/helpers";
 import { EXAMPLE_QUOTES } from "../data/constants";
 import {
-  Pencil, Upload, FolderOpen, FileText, ClipboardList, Zap, Bot,
+  Pencil, Upload, FolderOpen, FileText,
   AlertTriangle, CheckCircle,
 } from "lucide-react";
 
@@ -33,8 +34,13 @@ export default function InputPhase({
   return (
     <div style={Z.wrap} className={fadeClass}>
       <style>{baseCSS}</style>
+
+      {/* ── Nav ── */}
       <nav style={Z.nav}>
-        <span style={Z.navLogo}>Commonplace</span>
+        <div style={Z.navLogoWrap}>
+          <Logo size={22} />
+          <span style={Z.navLogo}>Commonplace</span>
+        </div>
         <div style={Z.navRight}>
           <a className="nav-link" href="#how" style={{ color: "#9A9590", textDecoration: "none" }}>How it works</a>
         </div>
@@ -43,42 +49,25 @@ export default function InputPhase({
       <div style={Z.landing}>
         {/* ── Two-column split layout ── */}
         <div className="split-layout" style={Z.splitLayout}>
-          {/* Left column — value prop + how it works */}
+
+          {/* Left column — brand mark + tagline + animated demo */}
           <div style={Z.splitLeft}>
             <div>
-              <h1 style={Z.splitHeadline}>Organize your quote collection</h1>
+              <div style={Z.heroBrandWrap}>
+                <Logo size={36} />
+                <h1 style={Z.heroBrandName}>Commonplace</h1>
+              </div>
+              <p style={Z.heroTagline}>Organize your quote collection</p>
               <p style={Z.splitDesc}>Paste your messy quotes, phrases, and fragments. We'll organize everything and identify the sources.</p>
             </div>
 
-            <div id="how" style={Z.splitHow}>
-              <div style={Z.splitHowLabel}>How it works</div>
-              <div style={Z.splitHowGrid}>
-                <div style={Z.splitHowCard}>
-                  <div style={Z.splitHowCardIcon}><ClipboardList size={20} color="#3C5775" strokeWidth={1.5} /></div>
-                  <div>
-                    <div style={Z.splitHowCardTitle}>Paste anything</div>
-                    <div style={Z.splitHowCardDesc}>One entry per line. Attribution hints via dashes or parentheses — or nothing at all.</div>
-                  </div>
-                </div>
-                <div style={Z.splitHowCard}>
-                  <div style={Z.splitHowCardIcon}><Zap size={20} color="#3C5775" strokeWidth={1.5} /></div>
-                  <div>
-                    <div style={Z.splitHowCardTitle}>Local first</div>
-                    <div style={Z.splitHowCardDesc}>600+ common quotes matched instantly. Zero API calls, millisecond results.</div>
-                  </div>
-                </div>
-                <div style={Z.splitHowCard}>
-                  <div style={Z.splitHowCardIcon}><Bot size={20} color="#3C5775" strokeWidth={1.5} /></div>
-                  <div>
-                    <div style={Z.splitHowCardTitle}>AI for the rest</div>
-                    <div style={Z.splitHowCardDesc}>Unrecognized quotes go to Claude Haiku — source, category, and confidence returned.</div>
-                  </div>
-                </div>
-              </div>
+            {/* Animated "How It Works" — replaces static cards + TransformPreview */}
+            <div id="how">
+              <HowItWorksAnimation />
             </div>
           </div>
 
-          {/* Right column — input area */}
+          {/* Right column — input area (untouched) */}
           <div style={Z.splitRight}>
             {savedSession && (
               <div style={{ ...Z.restoreBanner, maxWidth: "none" }}>
@@ -157,9 +146,10 @@ export default function InputPhase({
           </div>
         </div>
 
-        {/* ── Full-width sections below the split ── */}
-        <TransformPreview />
+        {/* ── Section divider ── */}
+        <div style={Z.sectionDivider} />
 
+        {/* ── Features — 6 key features in 3×2 grid ── */}
         <div style={{ width: "100%", maxWidth: 800, marginTop: 56, animation: "fadeUp .6s .1s ease both" }}>
           <div style={{ ...Z.howSectionTitle, marginTop: 0, marginBottom: 20 }}>
             <span style={Z.howSectionTitleLine} />
@@ -173,14 +163,8 @@ export default function InputPhase({
               { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="7" height="6" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="11" y="5" width="7" height="6" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="2" y="13" width="7" height="4" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="11" y="13" width="7" height="4" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/></svg>, title: "Bulk operations", color: "#7C3AED" },
               { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 3v14M14 3v14" stroke="#EA580C" strokeWidth="1.5" strokeLinecap="round"/><path d="M3 7l3-3 3 3M17 13l-3 3-3-3" stroke="#EA580C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Drag to reorder", color: "#EA580C" },
               { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v3m0 5v6m-4-4h8" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/><circle cx="10" cy="10" r="7" stroke="#059669" strokeWidth="1.5" fill="none"/></svg>, title: "Multiple exports", color: "#059669" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 9l3-3 3 3M10 6v8m-7 1h14" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Shareable links", color: "#DC2626" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#0891B2" strokeWidth="1.5" fill="none"/><path d="M10 6v4l3 2" stroke="#0891B2" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Session restore", color: "#0891B2" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2.5" rx="1" stroke="#9333EA" strokeWidth="1.5" fill="none"/><rect x="3" y="9" width="9" height="2.5" rx="1" stroke="#9333EA" strokeWidth="1.5" fill="none"/><rect x="3" y="13" width="6" height="2.5" rx="1" stroke="#9333EA" strokeWidth="1.5" fill="none"/></svg>, title: "Custom categories", color: "#9333EA" },
               { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="4" stroke="#0D9488" strokeWidth="1.5" fill="none"/><circle cx="13" cy="13" r="4" stroke="#0D9488" strokeWidth="1.5" fill="none"/></svg>, title: "Duplicate detection", color: "#0D9488" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5l4 4 4-4M15 11l-4 4-4-4" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Smart formatting", color: "#D97706" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2" fill="#E11D48"/><circle cx="10" cy="10" r="6" stroke="#E11D48" strokeWidth="1.5" fill="none"/></svg>, title: "Confidence indicators", color: "#E11D48" },
               { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#4338CA" strokeWidth="1.5" fill="none"/><path d="M14 14l3 3" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Search & filter", color: "#4338CA" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="8" width="4" height="8" rx="1" stroke="#0369A1" strokeWidth="1.5" fill="none"/><rect x="8" y="4" width="4" height="12" rx="1" stroke="#0369A1" strokeWidth="1.5" fill="none"/><rect x="13" y="10" width="4" height="6" rx="1" stroke="#0369A1" strokeWidth="1.5" fill="none"/></svg>, title: "Keyboard shortcuts", color: "#0369A1" },
             ].map(f => (
               <div key={f.title} className="feature-card" style={Z.featureCard}>
                 <div style={{ ...Z.featureIcon, background: `${f.color}15` }}>

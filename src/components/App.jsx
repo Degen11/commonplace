@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
@@ -148,6 +148,8 @@ export default function Commonplace() {
   const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
   const lastSelectedIndex      = useRef(null);
+  const toolbarRef             = useRef(null);
+  const pendingScrollAdjust    = useRef(null);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -243,6 +245,28 @@ export default function Commonplace() {
     obs.observe(headerRef.current);
     return () => obs.disconnect();
   }, [phase]);
+
+  // ── Scroll position preservation for mini-header actions ──
+  // When panels (Stats, Add More) are toggled from the sticky mini-header,
+  // they insert/remove content above the viewport, shifting visible content.
+  // This records the toolbar position before the change so we can compensate.
+  const preserveScroll = useCallback(() => {
+    if (toolbarRef.current && !headerVisible) {
+      pendingScrollAdjust.current = toolbarRef.current.getBoundingClientRect().top;
+    }
+  }, [headerVisible]);
+
+  useLayoutEffect(() => {
+    if (pendingScrollAdjust.current != null && toolbarRef.current) {
+      const prevTop = pendingScrollAdjust.current;
+      const newTop = toolbarRef.current.getBoundingClientRect().top;
+      const diff = newTop - prevTop;
+      if (diff !== 0) {
+        window.scrollBy({ top: diff, behavior: "instant" });
+      }
+    }
+    pendingScrollAdjust.current = null;
+  }, [showStats, showAddMore, view, compact]);
 
   // ── Click-outside for dropdowns and edit form ──
   useEffect(() => {
@@ -1049,25 +1073,25 @@ const handleDupesContinue = async () => {
                 <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <div style={Z.viewTog}>
-                    <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
+                    <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
                     </button>
-                    <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
+                    <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
                     </button>
-                    <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")}>
+                    <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
                     </button>
                   </div>
-                  <button style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>Stats</button>
+                  <button style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
                   <button style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-                  <button style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add</button>
+                  <button style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add</button>
                 </div>
               </div>
             </div>
           )}
 
-          {showStats && <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => setShowStats(false)} />}
+          {showStats && <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { preserveScroll(); setShowStats(false); }} />}
 
           {apiError && (
             <div style={Z.errorBar}>
@@ -1127,7 +1151,7 @@ const handleDupesContinue = async () => {
             </div>
           )}
 
-          <div style={Z.toolbar}>
+          <div ref={toolbarRef} style={Z.toolbar}>
             <div style={Z.srchW}><span style={Z.srchI}><Search size={13} strokeWidth={2} /></span>
               <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
               {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}

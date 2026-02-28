@@ -36,6 +36,16 @@ export default function InputPhase({
       <style>{baseCSS}</style>
 
       <div style={Z.landing}>
+        {savedSession && (
+          <div style={{ ...Z.restoreBanner, maxWidth: "none", width: "100%" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FolderOpen size={15} strokeWidth={1.5} /> You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button style={Z.restoreBtn} onClick={onRestoreSession}>Restore session</button>
+              <button style={Z.restoreDismiss} onClick={onDismissSession}>Dismiss</button>
+            </div>
+          </div>
+        )}
+
         {/* ── Two-column split layout ── */}
         <div className="split-layout" style={Z.splitLayout}>
 
@@ -57,18 +67,8 @@ export default function InputPhase({
             </div>
           </div>
 
-          {/* Right column — input area (untouched) */}
+          {/* Right column — input area */}
           <div style={Z.splitRight}>
-            {savedSession && (
-              <div style={{ ...Z.restoreBanner, maxWidth: "none" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FolderOpen size={15} strokeWidth={1.5} /> You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button style={Z.restoreBtn} onClick={onRestoreSession}>Restore session</button>
-                  <button style={Z.restoreDismiss} onClick={onDismissSession}>Dismiss</button>
-                </div>
-              </div>
-            )}
-
             <div style={{ ...Z.inputCard, maxWidth: "none" }}>
               <div style={Z.tabRow}>
                 <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("paste")}><Pencil size={14} strokeWidth={1.5} /> Type / Paste</button>

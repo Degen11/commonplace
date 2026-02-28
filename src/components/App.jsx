@@ -1055,7 +1055,7 @@ const handleDupesContinue = async () => {
 
           <div ref={headerRef} style={Z.header}>
             <div>
-              <h1 style={Z.title}>Commonplace</h1>
+              <h1 style={{ ...Z.title, display: "flex", alignItems: "center", gap: 10 }}><Logo size={28} /> Commonplace</h1>
               <p style={Z.sub}>
                 {filtered.length < quotes.length
                   ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>

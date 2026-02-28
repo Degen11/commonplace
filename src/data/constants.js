@@ -61,6 +61,7 @@ export const getCatColor = (c, customCats) =>
     : CAT_COLORS.Unknown);
 
 export const CONF_ORDER  = { low: 0, medium: 1, high: 2 };
+export const CONF_COLORS = { high: "#16A34A", medium: "#D97706", low: "#DC2626" };
 export const CONF_LABELS = {
   low:    "Low confidence — likely needs manual correction",
   medium: "Medium confidence — might be inaccurate",

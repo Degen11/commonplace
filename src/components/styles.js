@@ -3,6 +3,16 @@ export const CP_ACCENT       = "#3C5775";
 export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";
 export const CP_ACCENT_TEXT  = "#2D4259";
 
+// ===================== Z-INDEX SCALE =====================
+// 50   — sticky category pills
+// 59   — stats / add-more overlays (below mini-header)
+// 60   — sticky mini-header
+// 100  — dropdowns (export, sort)
+// 200  — tooltips
+// 500  — bulk-action bar
+// 1000 — modal overlays (confirm, dupe)
+// 2000 — toast notifications
+
 // ===================== BASE CSS =====================
 export const baseCSS = `
   *{box-sizing:border-box;margin:0;padding:0}
@@ -73,12 +83,6 @@ export const baseCSS = `
   .how-card{transition:background .2s ease,transform .2s ease}
   .how-card:hover{background:#fff !important;transform:translateY(-2px)}
   .feature-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,87,117,0.08);border-color:rgba(60,87,117,0.15) !important}
-  .nav-link{transition:color .15s ease}
-  .feat-pill{transition:all .18s ease}
-  .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
-  .nav-link{transition:color .15s ease}
-  .nav-link:hover{color:#1A1814 !important}
-
   /* General-purpose UI tooltip (extends conf-tooltip pattern) */
   .ui-tip{position:relative}
   .ui-tip::after{
@@ -129,9 +133,6 @@ export const Z = {
   // Landing
   landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:44},
 
-  // Nav logo with icon
-  navLogoWrap:{display:"flex",alignItems:"center",gap:8,textDecoration:"none"},
-
   // Split layout (replaces old hero)
   splitLayout:{display:"grid",gridTemplateColumns:"5fr 6fr",gap:40,alignItems:"start",width:"100%",animation:"fadeUp .5s ease"},
   splitLeft:{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:24,paddingTop:8},
@@ -146,13 +147,6 @@ export const Z = {
 
   splitDesc:{fontSize:15,color:"#6A6660",marginTop:8,lineHeight:1.75,fontWeight:300},
 
-  // Section divider before centered content
-  sectionDivider:{width:"100%",maxWidth:800,height:1,background:"#E8E3DA",marginTop:56},
-
-  // Legacy hero (kept for reference)
-  hero:{textAlign:"center",marginBottom:44,animation:"fadeUp .5s ease"},
-  heroTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:52,fontWeight:700,letterSpacing:-2,color:"#1A1814",lineHeight:1.05},
-  heroSub:{fontSize:16,color:"#6A6660",marginTop:14,lineHeight:1.75,fontWeight:300},
   inputCard:{width:"100%",maxWidth:800,background:"#fff",border:"1px solid #E8E3DA",borderRadius:14,padding:20,animation:"fadeUp .45s ease",boxShadow:"0 2px 16px rgba(26,24,20,0.06)"},
 
   // Input tabs
@@ -170,7 +164,6 @@ export const Z = {
 
   bigTextarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:8,padding:16,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:240,lineHeight:1.7,background:"#fff"},
   inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,flexWrap:"wrap",gap:10},
-  inputCount:{fontSize:13,color:"#9B9A97"},
   processBtn:{padding:"10px 24px",border:"none",borderRadius:8,background:CP_ACCENT,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   tryBtn:{padding:"8px 16px",border:"1px solid #E3E2DE",borderRadius:8,background:"#fff",color:"#9B9A97",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
 
@@ -183,17 +176,6 @@ export const Z = {
   howSection:{width:"100%",maxWidth:800,marginTop:56,animation:"fadeUp .6s .1s ease both"},
   howSectionTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:26,color:CP_ACCENT,marginBottom:20,display:"flex",alignItems:"center",gap:12},
   howSectionTitleLine:{flex:1,height:1,background:"#E8E3DA"},
-  howGrid:{display:"grid",gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",gap:2,background:"#E8E3DA",borderRadius:12,overflow:"hidden"},
-  howCard:{background:"#F5F1EB",padding:"28px 24px",display:"flex",flexDirection:"column",gap:10},
-  howCardIcon:{fontSize:24},
-  howCardTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,fontWeight:700,letterSpacing:"-0.2px",color:"#1A1814"},
-  howCardDesc:{fontSize:13,lineHeight:1.65,color:"#6A6660",fontWeight:300},
-
-  // Feature pills (keeping for reference, but will be replaced)
-  featPills:{display:"flex",flexWrap:"wrap",gap:7,marginTop:16,justifyContent:"center"},
-  featPill:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 13px",border:"1px solid #E0DCD4",borderRadius:50,fontSize:12,color:"#6A6660",background:"#FAF8F4",fontWeight:400,cursor:"default"},
-  featPillDot:{width:4,height:4,borderRadius:"50%",background:"#C4501A",flexShrink:0},
-
   // Features grid — 3-column, 2 rows
   featuresGrid: {
     display: "grid",
@@ -214,12 +196,6 @@ export const Z = {
     transition: "all 0.2s ease",
     boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
     cursor: "default",
-  },
-
-  featureCardHover: {
-    transform: "translateY(-2px)",
-    boxShadow: "0 8px 24px rgba(60,87,117,0.08)",
-    borderColor: "rgba(60,87,117,0.15)",
   },
 
   featureIcon: {
@@ -299,17 +275,8 @@ export const Z = {
   statsPanel:{background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12,padding:20,margin:"12px 0",animation:"slideD .2s ease"},
   statsPanelTitle:{fontSize:14,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
   statsPanelClose:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:16,padding:"0 4px"},
-  statsGrid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20},
   statsSection:{display:"flex",flexDirection:"column",gap:10},
   statsSectionTitle:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#3C5775",marginBottom:4},
-  statsBarRow:{display:"flex",flexDirection:"column",gap:4,marginBottom:6},
-  statsBarLabel:{display:"flex",justifyContent:"space-between",fontSize:12,color:"#37352F"},
-  statsBarTrack:{height:6,borderRadius:3,background:"#EBEBEA",overflow:"hidden"},
-  statsBarFill:{height:"100%",borderRadius:3,transition:"width .4s ease"},
-  statsHighlight:{fontSize:13,color:"#37352F",lineHeight:1.6,padding:"8px 10px",background:"#fff",border:"1px solid #E3E2DE",borderRadius:6},
-  statsHighlightLabel:{fontSize:11,color:"#9B9A97",marginBottom:2},
-  statNumber:{fontSize:28,fontWeight:700,color:"#37352F",letterSpacing:-1},
-  statNumberSub:{fontSize:12,color:"#9B9A97",marginTop:2},
 
   // Dupe modal — #9 removed shadow (overlay provides depth)
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
@@ -318,22 +285,6 @@ export const Z = {
   dupeModalTitle:{fontSize:16,fontWeight:700,color:"#37352F",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeModalSub:{fontSize:13,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
-  dupeCard:{border:"1px solid #E3E2DE",borderRadius:8,overflow:"hidden"},
-  dupePair:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0},
-  dupeSide:{padding:"10px 12px",fontSize:12},
-  dupeExisting:{background:"#FAFAFA"},
-  dupeIncoming:{background:"#fff",borderLeft:"1px solid #E3E2DE"},
-  dupeSideLabel:{fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:.5,color:"#9B9A97",marginBottom:4,fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeSideText:{fontSize:13,color:"#37352F",lineHeight:1.5,fontWeight:500,fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeSideSource:{fontSize:11,color:"#9B9A97",marginTop:2,fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeActions:{display:"flex",gap:6,padding:"8px 12px",borderTop:"1px solid #E3E2DE",background:"#FAFAFA",justifyContent:"flex-end"},
-  dupeKeepBtn:{padding:"4px 12px",borderRadius:6,border:"none",background:"#37352F",color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeMergeBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2383E2",background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeSkipBtn:{padding:"4px 10px",borderRadius:6,border:"1px solid #E3E2DE",background:"#fff",color:"#9B9A97",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeModalFooter:{padding:"12px 20px",borderTop:"1px solid #E3E2DE",display:"flex",justifyContent:"space-between",alignItems:"center",gap:8},
-  dupeContinueBtn:{padding:"8px 20px",borderRadius:8,border:"none",background:"#2383E2",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-  dupeKeptCount:{fontSize:12,color:"#9B9A97",fontFamily:"'DM Sans',-apple-system,sans-serif"},
-
   // Bulk edit — #10 removed backdropFilter
   bulkBar:{position:"fixed",bottom:0,left:0,right:0,display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:"rgba(255,255,255,0.97)",borderTop:"1px solid #E3E2DE",boxShadow:"0 -4px 20px rgba(0,0,0,0.08)",flexWrap:"wrap",zIndex:500,animation:"bulkSlideUp .2s ease"},
   bulkN:{fontSize:13,fontWeight:600,color:CP_ACCENT,whiteSpace:"nowrap"},

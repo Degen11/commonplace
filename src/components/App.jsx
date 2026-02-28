@@ -35,6 +35,7 @@ import { baseCSS, Z } from "./styles";
 import {
   Search, ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
   AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2,
+  List, AlignJustify, LayoutGrid,
 } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
@@ -294,21 +295,27 @@ export default function Commonplace() {
       // Don't trigger if user is typing in an input/textarea
       if (e.target.matches('input, textarea, select')) return;
       
-      // Escape: prioritized dismissal chain (change #3, #2)
+      // Escape: prioritized dismissal chain
       if (e.key === 'Escape') {
-        // Priority 1: Clear selection if any entries are selected
+        // Priority 0: Close any open modal
+        if (confirmClear) { setConfirmClear(false); return; }
+        if (confirmBulkDel) { setConfirmBulkDel(false); return; }
+        // Priority 1: Close dropdowns
+        if (showExport) { setShowExport(false); return; }
+        if (showSort) { setShowSort(false); return; }
+        // Priority 2: Clear selection if any entries are selected
         if (selected.size > 0) {
           setSelected(new Set());
           lastSelectedIndex.current = null;
           return;
         }
-        // Priority 2: Close edit form if open and no field is focused (change #2)
+        // Priority 3: Close edit form if open and no field is focused
         if (editingId) {
           setEditingId(null);
           if (reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
           return;
         }
-        // Priority 3: Clear search
+        // Priority 4: Clear search
         if (search) {
           setSearch('');
           return;
@@ -332,7 +339,7 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter, selected]);
+  }, [search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort]);
 
   // Reset shift-click index when filters change
   useEffect(() => {
@@ -1011,7 +1018,7 @@ const handleDupesContinue = async () => {
           {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
 
           {confirmClear && (
-            <div style={Z.modalOverlay} onClick={() => setConfirmClear(false)}>
+            <div style={Z.modalOverlay} role="dialog" aria-modal="true" aria-label="Confirm clear" onClick={() => setConfirmClear(false)}>
               <div style={{ ...Z.confirmBox, borderTop: "3px solid #EA580C" }} onClick={e => e.stopPropagation()}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1029,7 +1036,7 @@ const handleDupesContinue = async () => {
           )}
 
           {confirmBulkDel && (
-            <div style={Z.modalOverlay} onClick={() => setConfirmBulkDel(false)}>
+            <div style={Z.modalOverlay} role="dialog" aria-modal="true" aria-label="Confirm delete" onClick={() => setConfirmBulkDel(false)}>
               <div style={{ ...Z.confirmBox, borderTop: "3px solid #EB5757" }} onClick={e => e.stopPropagation()}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1069,13 +1076,13 @@ const handleDupesContinue = async () => {
               {!isMobile && (
                 <div style={Z.viewTog}>
                   <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                    <List size={16} strokeWidth={1.5} />
                   </button>
                   <button className="ui-tip ui-tip-below" data-tip="Compact view" style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                    <AlignJustify size={16} strokeWidth={1.5} />
                   </button>
                   <button className="ui-tip ui-tip-below" data-tip="Card view" style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
+                    <LayoutGrid size={16} strokeWidth={1.5} />
                   </button>
                 </div>
               )}
@@ -1104,13 +1111,13 @@ const handleDupesContinue = async () => {
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <div style={Z.viewTog}>
                     <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                      <List size={14} strokeWidth={1.5} />
                     </button>
                     <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                      <AlignJustify size={14} strokeWidth={1.5} />
                     </button>
                     <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
+                      <LayoutGrid size={14} strokeWidth={1.5} />
                     </button>
                   </div>
                   <button style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>

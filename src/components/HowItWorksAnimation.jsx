@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ClipboardList, Zap, CheckCircle } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { ClipboardList, Zap, CheckCircle, RefreshCw } from "lucide-react";
 import { CP_ACCENT } from "./styles";
 
 // ── Data ────────────────────────────────────────────────────────────────────
@@ -162,6 +162,7 @@ const S = {
 // ── Component ───────────────────────────────────────────────────────────────
 export default function HowItWorksAnimation() {
   // 0 = idle, 1 = paste, 2 = identify, 3 = organize, 4 = done
+  const [runKey, setRunKey] = useState(0);
   const [step, setStep] = useState(0);
   const [lineCount, setLineCount] = useState(0);
   const [scanIndex, setScanIndex] = useState(-1); // which line is currently being scanned
@@ -170,6 +171,18 @@ export default function HowItWorksAnimation() {
   const [showCards, setShowCards] = useState(false);      // cards layer mounted
   const [cardCount, setCardCount] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  const replay = useCallback(() => {
+    setStep(0);
+    setLineCount(0);
+    setScanIndex(-1);
+    setScannedLines(new Set());
+    setLinesFading(false);
+    setShowCards(false);
+    setCardCount(0);
+    setProgress(0);
+    setRunKey(k => k + 1);
+  }, []);
 
   useEffect(() => {
     const ts = [];
@@ -226,7 +239,7 @@ export default function HowItWorksAnimation() {
     t(organizeDone, () => setStep(4));
 
     return () => ts.forEach(clearTimeout);
-  }, []);
+  }, [runKey]);
 
   const activeStep = step >= 4 ? 3 : step;
   const isDark = step >= 1 && step < 3;
@@ -282,6 +295,21 @@ export default function HowItWorksAnimation() {
         {/* Progress bar during identify */}
         {step === 2 && (
           <div style={{ ...S.progressBar, width: `${progress}%` }} />
+        )}
+
+        {/* Replay button */}
+        {step === 4 && (
+          <button onClick={replay} style={{
+            position: "absolute", bottom: 8, right: 8,
+            background: "none", border: "1px solid #E8E3DA", borderRadius: 6,
+            padding: 5, cursor: "pointer", display: "flex", alignItems: "center",
+            justifyContent: "center", color: "#C8C4BC", transition: "all 0.2s ease",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#6A6660"; e.currentTarget.style.borderColor = "#C8C4BC"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; e.currentTarget.style.borderColor = "#E8E3DA"; }}
+          >
+            <RefreshCw size={12} strokeWidth={1.5} />
+          </button>
         )}
       </div>
     </div>

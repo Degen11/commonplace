@@ -62,7 +62,7 @@ const CATEGORY_CELL_STYLE = { minWidth: 100, display: 'flex', alignItems: 'cente
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({
-  q, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
+  q, isSel, isEd, needsAtt, sortBy, dragId, dragInsert, isMobile,
   inlineEdit, columnOrder, compact, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
   handleDragStart, handleDragOver, handleDragEnd, renderColCell,
@@ -72,8 +72,12 @@ function TableRow({
     400
   );
 
+  const insertClass = dragInsert?.id === q.id
+    ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
+    : "";
+
   return (
-    <div className="qrow"
+    <div className={`qrow ${insertClass}`}
       draggable={!isEd && inlineEdit?.id !== q.id}
       onDragStart={() => handleDragStart(q.id)}
       onDragOver={e => handleDragOver(e, q.id)}
@@ -101,7 +105,7 @@ function TableRow({
 
       <div className="row-actions" style={Z.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
-        <CopyBtn q={q} onCopy={actionProps.onCopy} />
+        <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
         <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
         <DelBtn q={q} onDelete={actionProps.onDelete} />
       </div>
@@ -125,6 +129,7 @@ export default function TableView({
   actionProps,
   compact,
   dragId,
+  dragInsert,
   handleDragStart,
   handleDragOver,
   handleDragEnd,
@@ -224,7 +229,7 @@ export default function TableView({
           )}
         </div>
       );
-    default: 
+    default:
       return null;
   }
 };
@@ -232,11 +237,10 @@ export default function TableView({
     <div style={{ overflowX: "auto" }}>
       {filtered.length > 0 && (
         <div style={Z.tHead}>
-          <div style={Z.chkW}>
+          <div className="ui-tip ui-tip-below" data-tip="Select all" style={Z.chkW}>
             <div
               style={{ ...Z.check, ...(filtered.length > 0 && filtered.every(q => selected.has(q.id)) ? Z.checkOn : {}) }}
               onClick={(e) => { e.currentTarget.blur(); selAll(); }}
-              title="Select all"
             >
               {filtered.length > 0 && filtered.every(q => selected.has(q.id)) && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
             </div>
@@ -278,6 +282,7 @@ export default function TableView({
             needsAtt={needsAtt}
             sortBy={sortBy}
             dragId={dragId}
+            dragInsert={dragInsert}
             isMobile={isMobile}
             inlineEdit={inlineEdit}
             columnOrder={columnOrder}

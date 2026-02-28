@@ -52,7 +52,7 @@ export default function CardItem({
         </div>
         <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
           <FavBtn q={q} onFav={actionProps.onFav} />
-          <CopyBtn q={q} onCopy={actionProps.onCopy} />
+          <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
           <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
           <DelBtn q={q} onDelete={actionProps.onDelete} />
         </div>

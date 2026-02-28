@@ -1,14 +1,27 @@
+import { useEffect, useRef } from "react";
 import { Z } from "./styles";
 import { Search } from "lucide-react";
 
 export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecisions, onContinue }) {
+  const boxRef = useRef(null);
+
+  // ESC to close + trap focus
+  useEffect(() => {
+    if (pendingDupes.length === 0) return;
+    const h = (e) => { if (e.key === "Escape") onContinue(); };
+    document.addEventListener("keydown", h);
+    // Focus the modal box so screen readers announce it
+    boxRef.current?.focus();
+    return () => document.removeEventListener("keydown", h);
+  }, [pendingDupes.length, onContinue]);
+
   if (pendingDupes.length === 0) return null;
 
   const keptCount = Object.values(dupeDecisions).filter(d => d === "keep" || d === "merge").length;
 
   return (
-    <div style={Z.dupeModalOverlay} onClick={onContinue}>
-      <div style={{ ...Z.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+    <div style={Z.dupeModalOverlay} role="dialog" aria-modal="true" aria-label="Duplicate detection" onClick={onContinue}>
+      <div ref={boxRef} tabIndex={-1} style={{ ...Z.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={Z.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Search size={22} color="#3C5775" strokeWidth={1.5} />

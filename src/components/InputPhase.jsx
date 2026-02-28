@@ -6,7 +6,8 @@ import { smartSplit } from "../utils/helpers";
 import { EXAMPLE_QUOTES } from "../data/constants";
 import {
   Pencil, Upload, FolderOpen, FileText,
-  AlertTriangle, CheckCircle,
+  AlertTriangle, CheckCircle, PenLine, LayoutGrid,
+  GripVertical, Download, Copy, Search,
 } from "lucide-react";
 
 export default function InputPhase({
@@ -61,7 +62,7 @@ export default function InputPhase({
               <p style={{ fontSize: 13, color: "#B0ACA6", marginTop: 12, letterSpacing: "0.01em" }}>No signup · Private processing · Instant results · Zero cost</p>
             </div>
 
-            {/* Animated "How It Works" — replaces static cards + TransformPreview */}
+            {/* Animated "How It Works" demo */}
             <div id="how" style={{ width: "100%" }}>
               <HowItWorksAnimation />
             </div>
@@ -146,22 +147,25 @@ export default function InputPhase({
 
           <div style={Z.featuresGrid}>
             {[
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 3v14" stroke="#2383E2" strokeWidth="2" strokeLinecap="round"/></svg>, title: "Inline editing", color: "#2383E2" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="7" height="6" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="11" y="5" width="7" height="6" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="2" y="13" width="7" height="4" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/><rect x="11" y="13" width="7" height="4" rx="1" stroke="#7C3AED" strokeWidth="1.5" fill="none"/></svg>, title: "Bulk operations", color: "#7C3AED" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 3v14M14 3v14" stroke="#EA580C" strokeWidth="1.5" strokeLinecap="round"/><path d="M3 7l3-3 3 3M17 13l-3 3-3-3" stroke="#EA580C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Drag to reorder", color: "#EA580C" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v3m0 5v6m-4-4h8" stroke="#059669" strokeWidth="1.5" strokeLinecap="round"/><circle cx="10" cy="10" r="7" stroke="#059669" strokeWidth="1.5" fill="none"/></svg>, title: "Multiple exports", color: "#059669" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="4" stroke="#0D9488" strokeWidth="1.5" fill="none"/><circle cx="13" cy="13" r="4" stroke="#0D9488" strokeWidth="1.5" fill="none"/></svg>, title: "Duplicate detection", color: "#0D9488" },
-              { icon: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#4338CA" strokeWidth="1.5" fill="none"/><path d="M14 14l3 3" stroke="#4338CA" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Search & filter", color: "#4338CA" },
-            ].map(f => (
+              { icon: PenLine, title: "Inline editing", color: "#2383E2" },
+              { icon: LayoutGrid, title: "Bulk operations", color: "#7C3AED" },
+              { icon: GripVertical, title: "Drag to reorder", color: "#EA580C" },
+              { icon: Download, title: "Multiple exports", color: "#059669" },
+              { icon: Copy, title: "Duplicate detection", color: "#0D9488" },
+              { icon: Search, title: "Search & filter", color: "#4338CA" },
+            ].map(f => {
+              const Icon = f.icon;
+              return (
               <div key={f.title} className="feature-card" style={Z.featureCard}>
                 <div style={{ ...Z.featureIcon, background: `${f.color}15` }}>
-                  {f.icon}
+                  <Icon size={20} color={f.color} strokeWidth={1.5} />
                 </div>
                 <div style={Z.featureContent}>
                   <div style={Z.featureTitle}>{f.title}</div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

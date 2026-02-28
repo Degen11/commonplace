@@ -1,9 +1,8 @@
 import { Z } from "./styles";
-import { getCatColor, CONF_LABELS } from "../data/constants";
+import { getCatColor, CONF_LABELS, CONF_COLORS } from "../data/constants";
 import { useMemo } from "react";
 
-// Lucide React icons - you'll need to install lucide-react
-import { 
+import {
   FileText, 
   BookOpen, 
   Hash, 
@@ -36,12 +35,6 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
   if (!computedStats || !stats || quotes.length < 10) {
     return <EmptyState count={quotes.length} onClose={onClose} />;
   }
-
-  const confColors = { 
-    high: "#16A34A", 
-    medium: "#D97706", 
-    low: "#DC2626" 
-  };
 
   const confLabels = {
     high: "High",
@@ -203,7 +196,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
                     key={level}
                     style={{
                       width: `${pct}%`,
-                      background: confColors[level],
+                      background: CONF_COLORS[level],
                       transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                     }}
                   />
@@ -232,7 +225,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
                     width: 8,
                     height: 8,
                     borderRadius: "50%",
-                    background: confColors[level],
+                    background: CONF_COLORS[level],
                     flexShrink: 0,
                   }} />
                   {confLabels[level]} {stats.confCounts[level]}

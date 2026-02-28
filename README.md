@@ -1,71 +1,116 @@
 # Commonplace
 
-**Paste your messy quotes. Get back a clean, attributed collection.**
+Organize your quote collection. Paste messy quotes, phrases, and fragments — Commonplace identifies sources, categorizes everything, and gives you a clean, browsable collection.
 
-Commonplace takes a raw pile of quotes, phrases, and fragments — one per line — and figures out where each one came from. Movie quotes get tagged as Film. Song lyrics as Music. Famous sayings get attributed to the right person, with confidence ratings on everything.
+## Features
 
----
+- **AI-powered identification** — Claude Haiku identifies sources and categories for film, TV, book, music, speech, and person quotes
+- **Local quote database** — 600+ curated quotes matched instantly without an API call
+- **Duplicate detection** — flags near-duplicates before adding, with keep/merge/skip options
+- **Multiple views** — table, compact table, and card layouts with drag-to-reorder
+- **Inline editing** — click any field to edit; "Did you mean?" suggestions from the local database
+- **Bulk operations** — multi-select with Shift+click, bulk category/source reassignment, bulk delete
+- **Search & filter** — full-text search across quotes and sources, category pill filters, favorites
+- **Import** — paste text, drag-and-drop `.txt`/`.csv` files, Kindle highlights, Readwise exports
+- **Export** — plain text, CSV, Markdown, JSON, clipboard (plain + rich text), shareable URL links
+- **Persistence** — auto-saves to localStorage; restore previous sessions on return
+- **Review flow** — step through low-confidence entries one by one for quick correction
+- **Custom categories** — add your own beyond the built-in source categories and vibe tags
+- **Formatting cleanup** — optional smart quote normalization, dash cleanup, capitalization fixes
+- **Statistics panel** — collection insights with category distribution and confidence breakdown
+- **Responsive** — card view on mobile, table view on desktop, sticky mini-header on scroll
 
-## How it works
+## Tech Stack
 
-### 1. Paste anything
+- **Frontend:** React 18, Vite 5, JavaScript (no TypeScript)
+- **Styling:** CSS-in-JS (inline style objects), no CSS framework
+- **Icons:** lucide-react
+- **Backend:** Vercel Serverless Function (`/api/identify`) proxying to Anthropic API
+- **Deployment:** Vercel
+- **Analytics:** @vercel/analytics, @vercel/speed-insights
 
-No formatting required. Throw in whatever you have:
+## Setup
+
+```bash
+git clone <repo-url>
+cd commonplace
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
 
 ```
-You can't handle the truth
-The world breaks everyone — Hemingway
-"Be the change" (Gandhi)
-To infinity and beyond
-Not all those who wander are lost
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Commonplace handles attribution hints via em dashes, hyphens, tildes, and parentheses. If you already know the source, include it and it'll be preserved.
+The API key is used server-side only (in `api/identify.js`) and is never exposed to the client.
 
-### 2. Instant local matching
+## Development
 
-A curated database of 600+ well-known quotes runs first — no API call, no cost, instant results. The most common film lines, song lyrics, speeches, literary quotes, and philosophical phrases are all covered. If your quote is in there, it comes back in milliseconds with high confidence.
+```bash
+npm run dev        # Start dev server (localhost:5173)
+npm run build      # Production build to dist/
+npm run preview    # Preview production build locally
+```
 
-### 3. AI identification for everything else
+Use `vercel dev` to test the `/api/identify` serverless function locally.
 
-Anything the local database doesn't recognize gets batched and sent to Claude Haiku. Haiku identifies the source, assigns a category, and rates its confidence. Batches of 20 go out in a single API call to keep costs minimal.
+## Project Structure
 
-### 4. Review and clean up
+```
+api/
+  identify.js              Vercel serverless function — AI identification proxy
+public/
+  favicon.svg              App icon
+  og-image.svg             Social sharing preview
+src/
+  main.jsx                 React entry point
+  components/
+    App.jsx                Main state management and orchestration
+    InputPhase.jsx         Landing page, text input, file import
+    ProcessingPhase.jsx    Progress display during identification
+    TableView.jsx          Table/compact results view with column reorder
+    CardItem.jsx           Card-based results view
+    EditForm.jsx           Inline editor with suggestion engine
+    DupeModal.jsx          Duplicate detection resolution modal
+    QuoteActions.jsx       Reusable action buttons (fav, copy, delete, re-identify)
+    StatsPanel.jsx         Collection statistics dashboard
+    Toast.jsx              Toast notifications
+    Footer.jsx             Footer attribution
+    Logo.jsx               Custom SVG logo
+    HowItWorksAnimation.jsx  Animated landing page demo
+    styles.js              Centralized style objects and CSS
+  hooks/
+    useInfiniteScroll.js   Paginated rendering (100 items/page)
+    useLongPress.js        Mobile long-press gesture for selection
+    useToasts.js           Toast notification queue
+  data/
+    constants.js           Categories, colors, confidence levels, config
+    localQuotes.js         600+ curated quote database for instant matching
+  utils/
+    helpers.js             Text processing, parsing, export, sharing utilities
+```
 
-Everything comes back in a table or card view. Low-confidence entries are flagged so you know what to double-check. You can:
+## Deployment
 
-- Edit any text, source, or category inline
-- Use the **Did you mean?** hint when your text is close to a known quote
-- Hit **Re-identify** on any entry to get a fresh AI pass
-- Bulk-edit categories or sources across multiple entries at once
-- Add custom categories beyond the built-in ones
+Deployed to Vercel. Push to `main` triggers automatic deployment.
 
-### 5. Export
+Required Vercel environment variable:
+- `ANTHROPIC_API_KEY` — Anthropic API key for Claude Haiku
 
-When you're done, export as **CSV**, **Markdown** (grouped by category), **JSON**, or plain text. Copy everything to clipboard in one shot, or generate a shareable link to send your collection to someone else.
+## Keyboard Shortcuts
 
----
+| Shortcut | Action |
+|----------|--------|
+| `Esc` | Close modal > close dropdown > clear selection > close edit > clear search |
+| `Ctrl/Cmd + A` | Select all visible quotes |
 
-## Categories
+## Troubleshooting
 
-**Source categories** — used when the origin is known:
-`Film` · `TV` · `Book` · `Music` · `Speech` · `Person` · `Phrase`
-
-**Vibe tags** — used when the source is unknown, to describe the nature of the entry:
-`Aphorism` · `Philosophical` · `Observation` · `Comedic` · `Poetic` · `Existential` · `Motivational` · `Cynical` · `Identity` · `Reflection`
-
----
-
-## Cost
-
-The local database covers the most common quotes for free. For everything else, Haiku is extremely cheap — roughly $0.014 per batch of 20 quotes. Processing 1,000 quotes costs under $1.
-
----
-
-## Tech
-
-React 18, Vite, Vercel serverless functions, Claude Haiku. No CSS framework — zero external style dependencies.
-
----
-
-*© Degen Hill. All rights reserved.*
+- **"Service not configured"** — `ANTHROPIC_API_KEY` is missing from environment variables
+- **API fails / 502** — check Anthropic API status; the app falls back to local matching and marks failures for retry
+- **Quotes not persisting** — localStorage may be full or disabled (private browsing); export as a file instead
+- **Table view missing on mobile** — table view auto-switches to cards below 640px viewport width
+- **Import not working** — only `.txt` and `.csv` files are supported; Kindle and Readwise formats are auto-detected

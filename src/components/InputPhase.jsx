@@ -35,17 +35,6 @@ export default function InputPhase({
     <div style={Z.wrap} className={fadeClass}>
       <style>{baseCSS}</style>
 
-      {/* ── Nav ── */}
-      <nav style={Z.nav}>
-        <div style={Z.navLogoWrap}>
-          <Logo size={22} />
-          <span style={Z.navLogo}>Commonplace</span>
-        </div>
-        <div style={Z.navRight}>
-          <a className="nav-link" href="#how" style={{ color: "#9A9590", textDecoration: "none" }}>How it works</a>
-        </div>
-      </nav>
-
       <div style={Z.landing}>
         {/* ── Two-column split layout ── */}
         <div className="split-layout" style={Z.splitLayout}>
@@ -59,6 +48,7 @@ export default function InputPhase({
               </div>
               <p style={Z.heroTagline}>Organize your quote collection</p>
               <p style={Z.splitDesc}>Paste your messy quotes, phrases, and fragments. We'll organize everything and identify the sources.</p>
+              <p style={{ fontSize: 13, color: "#B0ACA6", marginTop: 12, letterSpacing: "0.01em" }}>No signup · Private processing · Instant results · Zero cost</p>
             </div>
 
             {/* Animated "How It Works" — replaces static cards + TransformPreview */}

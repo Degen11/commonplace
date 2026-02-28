@@ -41,113 +41,127 @@ export default function InputPhase({
       </nav>
 
       <div style={Z.landing}>
-        <div style={Z.hero}>
-          <h1 style={Z.heroTitle}>Commonplace</h1>
-          <p style={Z.heroSub}>Paste your messy quotes, phrases, and fragments.<br />We'll organize everything and identify the sources.</p>
-        </div>
-
-        {savedSession && (
-          <div style={Z.restoreBanner}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FolderOpen size={15} strokeWidth={1.5} /> You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button style={Z.restoreBtn} onClick={onRestoreSession}>Restore session</button>
-              <button style={Z.restoreDismiss} onClick={onDismissSession}>Dismiss</button>
+        {/* ── Two-column split layout ── */}
+        <div className="split-layout" style={Z.splitLayout}>
+          {/* Left column — value prop + how it works */}
+          <div style={Z.splitLeft}>
+            <div>
+              <h1 style={Z.splitHeadline}>Organize your quote collection</h1>
+              <p style={Z.splitDesc}>Paste your messy quotes, phrases, and fragments. We'll organize everything and identify the sources.</p>
             </div>
-          </div>
-        )}
 
-        <div style={Z.inputCard}>
-          <div style={Z.tabRow}>
-            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("paste")}><Pencil size={14} strokeWidth={1.5} /> Type / Paste</button>
-            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("import")}><Upload size={14} strokeWidth={1.5} /> Import File</button>
-          </div>
-
-          {inputTab === "paste" && (
-            <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
-              placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
-          )}
-
-          {inputTab === "import" && (
-            <div className="drop-zone" style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
-              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={handleDropZone}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
-                onChange={e => { onFileImport(e.target.files[0]); e.target.value = ""; }} />
-              <div style={{ ...Z.dropIcon, display: "flex", justifyContent: "center" }}>{isDragOver ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} /> : <FileText size={32} color="#9B9A97" strokeWidth={1.5} />}</div>
-              <div style={Z.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
-              <div style={Z.dropSub}>or click to browse — supports Kindle highlights and Readwise exports</div>
-              {importedFileName && (
-                <div style={Z.dropFileName}><CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
-              )}
-            </div>
-          )}
-
-          <div style={Z.inputFooter}>
-            {(() => {
-              const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
-              const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
-              return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <span style={Z.entryMeta}>
-                    {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"} detected` : "Quotes, phrases, expressions — all welcome"}
-                  </span>
-                  {count > 50 && (
-                    <span style={Z.warnBadge}><AlertTriangle size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
-                  )}
-                  {hasFancyChars && !formattingEnabled && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#0369A1", background: "#EFF6FF", padding: "3px 8px", borderRadius: 50, fontWeight: 500, cursor: "pointer", border: "1px solid #DBEAFE" }}
-                      onClick={() => setFormattingEnabled(true)}>
-                      Smart quotes detected — enable formatting cleanup?
-                    </span>
-                  )}
-                  <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
-                    <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#1A1814" : "#E0DCD4" }}>
-                      <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
-                    </div>
-                    Clean up formatting
-                  </label>
+            <div id="how" style={Z.splitHow}>
+              <div style={Z.splitHowLabel}>How it works</div>
+              <div style={Z.splitHowGrid}>
+                <div style={Z.splitHowCard}>
+                  <div style={Z.splitHowCardIcon}><ClipboardList size={20} color="#3C5775" strokeWidth={1.5} /></div>
+                  <div>
+                    <div style={Z.splitHowCardTitle}>Paste anything</div>
+                    <div style={Z.splitHowCardDesc}>One entry per line. Attribution hints via dashes or parentheses — or nothing at all.</div>
+                  </div>
                 </div>
-              );
-            })()}
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {!rawInput.trim() && inputTab === "paste" && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
-              <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }} onClick={onProcess} disabled={!rawInput.trim() || isProcessing}>
-                {isProcessing ? "Processing..." : "Organize my collection →"}
-              </button>
+                <div style={Z.splitHowCard}>
+                  <div style={Z.splitHowCardIcon}><Zap size={20} color="#3C5775" strokeWidth={1.5} /></div>
+                  <div>
+                    <div style={Z.splitHowCardTitle}>Local first</div>
+                    <div style={Z.splitHowCardDesc}>600+ common quotes matched instantly. Zero API calls, millisecond results.</div>
+                  </div>
+                </div>
+                <div style={Z.splitHowCard}>
+                  <div style={Z.splitHowCardIcon}><Bot size={20} color="#3C5775" strokeWidth={1.5} /></div>
+                  <div>
+                    <div style={Z.splitHowCardTitle}>AI for the rest</div>
+                    <div style={Z.splitHowCardDesc}>Unrecognized quotes go to Claude Haiku — source, category, and confidence returned.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column — input area */}
+          <div style={Z.splitRight}>
+            {savedSession && (
+              <div style={{ ...Z.restoreBanner, maxWidth: "none" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FolderOpen size={15} strokeWidth={1.5} /> You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button style={Z.restoreBtn} onClick={onRestoreSession}>Restore session</button>
+                  <button style={Z.restoreDismiss} onClick={onDismissSession}>Dismiss</button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ ...Z.inputCard, maxWidth: "none" }}>
+              <div style={Z.tabRow}>
+                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("paste")}><Pencil size={14} strokeWidth={1.5} /> Type / Paste</button>
+                <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("import")}><Upload size={14} strokeWidth={1.5} /> Import File</button>
+              </div>
+
+              {inputTab === "paste" && (
+                <textarea style={Z.bigTextarea} value={rawInput} onChange={e => setRawInput(e.target.value)}
+                  placeholder={"Paste everything here — one per line, messy is fine:\n\nYou can't handle the truth\nThe world breaks everyone — Hemingway\n\"Be the change\" (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost — Tolkien"} rows={12} />
+              )}
+
+              {inputTab === "import" && (
+                <div className="drop-zone" style={{ ...Z.dropZone, ...(isDragOver ? Z.dropZoneActive : {}) }}
+                  onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={handleDropZone}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
+                    onChange={e => { onFileImport(e.target.files[0]); e.target.value = ""; }} />
+                  <div style={{ ...Z.dropIcon, display: "flex", justifyContent: "center" }}>{isDragOver ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} /> : <FileText size={32} color="#9B9A97" strokeWidth={1.5} />}</div>
+                  <div style={Z.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
+                  <div style={Z.dropSub}>or click to browse — supports Kindle highlights and Readwise exports</div>
+                  {importedFileName && (
+                    <div style={Z.dropFileName}><CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
+                  )}
+                </div>
+              )}
+
+              <div style={Z.inputFooter}>
+                {(() => {
+                  const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
+                  const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <span style={Z.entryMeta}>
+                        {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"} detected` : "Quotes, phrases, expressions — all welcome"}
+                      </span>
+                      {count > 50 && (
+                        <span style={Z.warnBadge}><AlertTriangle size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
+                      )}
+                      {hasFancyChars && !formattingEnabled && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#0369A1", background: "#EFF6FF", padding: "3px 8px", borderRadius: 50, fontWeight: 500, cursor: "pointer", border: "1px solid #DBEAFE" }}
+                          onClick={() => setFormattingEnabled(true)}>
+                          Smart quotes detected — enable formatting cleanup?
+                        </span>
+                      )}
+                      <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
+                        <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#1A1814" : "#E0DCD4" }}>
+                          <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
+                        </div>
+                        Clean up formatting
+                      </label>
+                    </div>
+                  );
+                })()}
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {!rawInput.trim() && inputTab === "paste" && <button className="try-btn" style={Z.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>Try it with examples</button>}
+                  <button className="proc-btn" style={{ ...Z.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }} onClick={onProcess} disabled={!rawInput.trim() || isProcessing}>
+                    {isProcessing ? "Processing..." : "Organize my collection →"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* ── Full-width sections below the split ── */}
         <TransformPreview />
 
-        <div id="how" style={Z.howSection}>
-          <div style={Z.howSectionTitle}>
-            <span style={Z.howSectionTitleLine} />
-            How it works
-            <span style={Z.howSectionTitleLine} />
-          </div>
-          <div style={Z.howGrid}>
-            <div className="how-card" style={Z.howCard}>
-              <div style={Z.howCardIcon}><ClipboardList size={24} color="#3C5775" strokeWidth={1.5} /></div>
-              <div style={Z.howCardTitle}>Paste anything</div>
-              <div style={Z.howCardDesc}>One entry per line. Attribution hints via dashes, parentheses, or tildes — or nothing at all. Messy is fine.</div>
-            </div>
-            <div className="how-card" style={Z.howCard}>
-              <div style={Z.howCardIcon}><Zap size={24} color="#3C5775" strokeWidth={1.5} /></div>
-              <div style={Z.howCardTitle}>Local first</div>
-              <div style={Z.howCardDesc}>600+ common quotes matched instantly from a built-in database. Zero API calls, zero cost, millisecond results.</div>
-            </div>
-            <div className="how-card" style={Z.howCard}>
-              <div style={Z.howCardIcon}><Bot size={24} color="#3C5775" strokeWidth={1.5} /></div>
-              <div style={Z.howCardTitle}>AI for the rest</div>
-              <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
-            </div>
-          </div>
-
-          <div style={{...Z.howSectionTitle, marginTop: 48, marginBottom: 20}}>
+        <div style={{ width: "100%", maxWidth: 800, marginTop: 56, animation: "fadeUp .6s .1s ease both" }}>
+          <div style={{ ...Z.howSectionTitle, marginTop: 0, marginBottom: 20 }}>
             <span style={Z.howSectionTitleLine} />
             Powerful features
             <span style={Z.howSectionTitleLine} />

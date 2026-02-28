@@ -109,6 +109,11 @@ export const baseCSS = `
   /* Category pills horizontal scroll */
   .cat-scroll::-webkit-scrollbar{display:none}
   .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
+
+  /* Responsive: stack split layout on small screens */
+  @media (max-width: 768px) {
+    .split-layout { grid-template-columns: 1fr !important; }
+  }
 `;
 
 // ===================== MAIN STYLES =====================
@@ -122,7 +127,23 @@ export const Z = {
   navRight:{display:"flex",alignItems:"center",gap:28,fontSize:13,color:"#9A9590"},
 
   // Landing
-  landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:64},
+  landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:44},
+
+  // Split layout (replaces old hero)
+  splitLayout:{display:"grid",gridTemplateColumns:"5fr 6fr",gap:40,alignItems:"start",width:"100%",animation:"fadeUp .5s ease"},
+  splitLeft:{display:"flex",flexDirection:"column",gap:28,paddingTop:8},
+  splitRight:{display:"flex",flexDirection:"column",gap:16},
+  splitHeadline:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:32,fontWeight:700,letterSpacing:-1,color:"#1A1814",lineHeight:1.15},
+  splitDesc:{fontSize:15,color:"#6A6660",marginTop:14,lineHeight:1.75,fontWeight:300},
+  splitHow:{display:"flex",flexDirection:"column",gap:0},
+  splitHowLabel:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:0.8,color:CP_ACCENT,marginBottom:12},
+  splitHowGrid:{display:"flex",flexDirection:"column",gap:0},
+  splitHowCard:{display:"flex",alignItems:"flex-start",gap:12,padding:"14px 0",borderTop:"1px solid #E8E3DA"},
+  splitHowCardIcon:{width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:10,background:"rgba(60,87,117,0.08)",flexShrink:0},
+  splitHowCardTitle:{fontSize:14,fontWeight:600,color:"#1A1814",marginBottom:2},
+  splitHowCardDesc:{fontSize:13,color:"#6A6660",lineHeight:1.5,fontWeight:300},
+
+  // Legacy hero (kept for reference)
   hero:{textAlign:"center",marginBottom:44,animation:"fadeUp .5s ease"},
   heroTitle:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:52,fontWeight:700,letterSpacing:-2,color:"#1A1814",lineHeight:1.05},
   heroSub:{fontSize:16,color:"#6A6660",marginTop:14,lineHeight:1.75,fontWeight:300},

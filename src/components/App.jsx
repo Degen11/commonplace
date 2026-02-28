@@ -40,6 +40,7 @@ const LS_QUOTES     = "commonplace_quotes";
 const LS_CATS       = "commonplace_cats";
 const LS_COL_ORDER  = "commonplace_col_order";
 const LS_VIEW       = "commonplace_view";
+const LS_SORT       = "commonplace_sort";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
@@ -82,7 +83,13 @@ export default function Commonplace() {
   const [catFilter, setCatFilter]             = useState("All");
   const [favFilter, setFavFilter]             = useState(false);
   const [search, setSearch]                   = useState("");
-  const [sortBy, setSortBy]                   = useState("default");
+  const [sortBy, setSortBy]                   = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_SORT);
+      if (saved && SORT_OPTIONS.some(o => o.key === saved)) return saved;
+    } catch(e) {}
+    return "default";
+  });
   const [editingId, setEditingId]             = useState(null);
   const [inlineEdit, setInlineEdit]           = useState(null);
   const [selected, setSelected]               = useState(new Set());
@@ -114,6 +121,10 @@ export default function Commonplace() {
   const [importedFileName, setImportedFileName] = useState(null);
   const [pendingDupes, setPendingDupes]       = useState([]);
   const [dupeDecisions, setDupeDecisions]     = useState({});
+  const [copiedId, setCopiedId]               = useState(null);
+  const [reidentifyingId, setReidentifyingId] = useState(null);
+  const [dragInsert, setDragInsert]           = useState(null);
+  const [headerVisible, setHeaderVisible]     = useState(true);
 
   // Column order state — persisted to localStorage
   const [columnOrder, setColumnOrder] = useState(() => {
@@ -184,6 +195,11 @@ export default function Commonplace() {
     try { localStorage.setItem(LS_VIEW, JSON.stringify({ view, compact })); } catch(e) {}
   }, [view, compact]);
 
+  // Persist sort preference
+  useEffect(() => {
+    try { localStorage.setItem(LS_SORT, sortBy); } catch(e) {}
+  }, [sortBy]);
+
   // ── Mount: shared link OR restore session ──
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -216,6 +232,17 @@ export default function Commonplace() {
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, [view]);
+
+  // ── Sticky header observer ──
+  const headerRef = useRef(null);
+  useEffect(() => {
+    if (phase !== "results" || !headerRef.current) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      setHeaderVisible(entry.isIntersecting);
+    }, { threshold: 0 });
+    obs.observe(headerRef.current);
+    return () => obs.disconnect();
+  }, [phase]);
 
   // ── Click-outside for dropdowns and edit form ──
   useEffect(() => {
@@ -387,12 +414,14 @@ export default function Commonplace() {
   };
 
   const reIdentify = async (q) => {
+    setReidentifyingId(q.id);
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       const snapshot = { ...q };
       setQuotes(prev => prev.map(x => x.id === q.id ? {
         ...x, source: local.source, category: local.category, confidence: local.confidence,
       } : x));
+      setReidentifyingId(null);
       showToast(describeChanges(q, local.source, local.category), "Undo", () => {
         setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
       });
@@ -420,6 +449,7 @@ export default function Commonplace() {
     } catch {
       showToast("Couldn't reach AI. Try again.");
     }
+    setReidentifyingId(null);
   };
 
   // ── Copy single quote to clipboard ──
@@ -428,7 +458,11 @@ export default function Commonplace() {
       ? `"${q.text}" — ${q.source}`
       : `${q.text} — ${q.source}`;
     navigator.clipboard.writeText(text)
-      .then(() => showToast("Copied!"))
+      .then(() => {
+        setCopiedId(q.id);
+        setTimeout(() => setCopiedId(prev => prev === q.id ? null : prev), 1200);
+        showToast("Copied!");
+      })
       .catch(() => showToast("Couldn't copy — try manually selecting the text."));
   };
 
@@ -773,7 +807,11 @@ const handleDupesContinue = async () => {
   const handleDragStart = (id) => { setDragId(id); lastDragTarget.current = null; };
   const handleDragOver  = (e, targetId) => {
     e.preventDefault();
-    if (!dragId || dragId === targetId) return;
+    if (!dragId || dragId === targetId) { setDragInsert(null); return; }
+    // Determine whether cursor is in top or bottom half of the target element
+    const rect = e.currentTarget.getBoundingClientRect();
+    const half = (e.clientY - rect.top) < rect.height / 2 ? "above" : "below";
+    setDragInsert({ id: targetId, pos: half });
     if (lastDragTarget.current === targetId) return;
     lastDragTarget.current = targetId;
     setQuotes(prev => {
@@ -786,7 +824,7 @@ const handleDupesContinue = async () => {
       return arr;
     });
   };
-  const handleDragEnd = () => { setDragId(null); lastDragTarget.current = null; };
+  const handleDragEnd = () => { setDragId(null); setDragInsert(null); lastDragTarget.current = null; };
 
   // ── Filtering & sorting ──
   let filtered = quotes.filter(q => {
@@ -821,6 +859,8 @@ const handleDupesContinue = async () => {
     onDelete:     handleDelete,
     onCopy:       copyQuote,
     onReidentify: reIdentify,
+    copiedId,
+    reidentifying: reidentifyingId,
   };
 
   // ========================== RENDER ==========================
@@ -923,7 +963,7 @@ const handleDupesContinue = async () => {
             </div>
           )}
 
-          <div style={Z.header}>
+          <div ref={headerRef} style={Z.header}>
             <div>
               <h1 style={Z.title}>Commonplace</h1>
               <p style={Z.sub}>
@@ -938,22 +978,22 @@ const handleDupesContinue = async () => {
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               {!isMobile && (
                 <div style={Z.viewTog}>
-                  <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }} title="Table">
+                  <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
                   </button>
-                  <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }} title="Compact">
+                  <button className="ui-tip ui-tip-below" data-tip="Compact view" style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
                   </button>
-                  <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")} title="Cards">
+                  <button className="ui-tip ui-tip-below" data-tip="Card view" style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
                   </button>
                 </div>
               )}
-              <button style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)} title="View statistics about your collection">
+              <button className="ui-tip ui-tip-below" data-tip="Collection insights" style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
                 {showStats ? "Hide stats" : "Stats"}
               </button>
               <div ref={exportRef} style={{ position: "relative" }}>
-                <button style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                <button className="ui-tip ui-tip-below" data-tip="Export or share your collection" style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
                 {showExport && (
                   <div style={Z.expDrop}>
                       <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
@@ -979,13 +1019,53 @@ const handleDupesContinue = async () => {
                       <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Filtered MD</button>
                       <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
                     </>)}
+                    {selected.size > 0 && (<>
+                      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#059669", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+                        Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
+                      </div>
+                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel).then(() => showToast(`Copied ${sel.length} selected entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected</button>
+                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel); showToast(`Exported ${sel.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Selected CSV</button>
+                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel); showToast(`Exported ${sel.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Selected MD</button>
+                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel); showToast(`Exported ${sel.length} as JSON`); setShowExport(false); }}>{"{ }"} Selected JSON</button>
+                    </>)}
                   </div>
                 )}
               </div>
-              <button style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }} title="Add more quotes to your existing collection">＋ Add more</button>
-              <button style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
+              <button className="ui-tip ui-tip-below" data-tip="Add more quotes" style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
+              <button className="ui-tip ui-tip-below" data-tip="Clear all and start over" style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
             </div>
           </div>
+
+          {/* Sticky mini-header when main header scrolls out */}
+          {!headerVisible && !isMobile && (
+            <div style={{
+              position: "fixed", top: 0, left: 0, right: 0, zIndex: 60,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(250,248,244,0.95)", borderBottom: "1px solid #E3E2DE",
+              backdropFilter: "blur(8px)", animation: "slideD .15s ease",
+            }}>
+              <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <div style={Z.viewTog}>
+                    <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="6.5" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".5"/><rect x="1" y="11" width="14" height="2.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                    </button>
+                    <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".8"/><rect x="1" y="5.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".6"/><rect x="1" y="9" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".4"/><rect x="1" y="12.5" width="14" height="1.5" rx=".5" fill="currentColor" opacity=".3"/></svg>
+                    </button>
+                    <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".7"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".3"/></svg>
+                    </button>
+                  </div>
+                  <button style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>Stats</button>
+                  <button style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                  <button style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showStats && <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => setShowStats(false)} />}
 
@@ -1016,7 +1096,7 @@ const handleDupesContinue = async () => {
                 placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-                  <label style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
+                  <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
                     <div style={{ ...Z.fmtToggleTrack, background: addMoreFormatting ? "#1A1814" : "#E0DCD4" }}>
                       <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
                     </div>
@@ -1040,9 +1120,9 @@ const handleDupesContinue = async () => {
               <div style={Z.bulkF}>
                 <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
-                <button style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
-                <button style={Z.bulkDelBtn} onClick={() => selected.size > 10 ? setConfirmBulkDel(true) : bulkDel()}>Delete</button>
-                <button style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
+                <button className="ui-tip" data-tip="Apply to selected" style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
+                <button className="ui-tip" data-tip="Delete selected entries" style={Z.bulkDelBtn} onClick={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}>Delete</button>
+                <button className="ui-tip" data-tip="Clear selection" style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
               </div>
             </div>
           )}
@@ -1050,7 +1130,7 @@ const handleDupesContinue = async () => {
           <div style={Z.toolbar}>
             <div style={Z.srchW}><span style={Z.srchI}><Search size={13} strokeWidth={2} /></span>
               <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
-              {search && <button style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
+              {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
             </div>
             <div ref={sortRef} style={{ position: "relative" }}>
               <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
@@ -1074,10 +1154,12 @@ const handleDupesContinue = async () => {
             {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
               const col = getCatColor(c, customCats); const on = catFilter === c;
               const count = cc[c];
-              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}) }}>
+              const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
+              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                 {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
-                {customCats.includes(c) && <span style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
+                {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
+                {customCats.includes(c) && <span className="ui-tip" data-tip="Remove category" style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
               </button>;
             })}
             {showNewCat ? (
@@ -1085,7 +1167,7 @@ const handleDupesContinue = async () => {
                 <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
                 <button style={Z.newCatSv} onClick={addCat}>Add</button>
               </div>
-            ) : <button style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+            ) : <button className="ui-tip ui-tip-below" data-tip="Add custom category" style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
           </div>
 
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
@@ -1102,7 +1184,7 @@ const handleDupesContinue = async () => {
                 <span style={Z.attentionCount}>{unknownCount}</span>
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
-              <button style={Z.attentionBtn} onClick={startReviewFlow}>Review now →</button>
+              <button className="ui-tip" data-tip="Step through entries that need attention" style={Z.attentionBtn} onClick={startReviewFlow}>Review now →</button>
             </div>
           ))}
 
@@ -1124,6 +1206,7 @@ const handleDupesContinue = async () => {
               actionProps={actionProps}
               compact={compact}
               dragId={dragId}
+              dragInsert={dragInsert}
               handleDragStart={handleDragStart}
               handleDragOver={handleDragOver}
               handleDragEnd={handleDragEnd}
@@ -1195,14 +1278,26 @@ const handleDupesContinue = async () => {
             <div style={{ ...Z.empty, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
               <Search size={48} color="#D4D4D0" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <p style={{ fontSize: 14, fontWeight: 500, color: "#6A6660", marginBottom: 8 }}>
-                No results
-                {catFilter !== "All" && <> for <strong style={{ color: getCatColor(catFilter, customCats).text }}>{catFilter}</strong></>}
-                {search && <> matching "<strong>{search}</strong>"</>}
-                {favFilter && <> in favorites</>}
+                No results found
               </p>
               <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>
-                {search ? "Try a different search term or broaden your filters" : "Try selecting a different category or removing a filter"}
+                Try removing a filter to see more entries
               </p>
+              {/* Removable filter chips */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 12 }}>
+                {catFilter !== "All" && (
+                  <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: getCatColor(catFilter, customCats).text, cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
+                    onClick={() => setCatFilter("All")}>{catFilter} ✕</button>
+                )}
+                {search && (
+                  <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: "#37352F", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
+                    onClick={() => setSearch("")}>"{search}" ✕</button>
+                )}
+                {favFilter && (
+                  <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #FDE68A", background: "#FEF3C7", fontSize: 12, color: "#D97706", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
+                    onClick={() => setFavFilter(false)}>★ Favorites ✕</button>
+                )}
+              </div>
               <button style={{
                 background: "#F0F0EE", border: "none", color: "#6A6660", cursor: "pointer",
                 fontSize: 13, fontFamily: "inherit", fontWeight: 500, padding: "8px 20px",

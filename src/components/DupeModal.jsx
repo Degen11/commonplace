@@ -134,7 +134,8 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                         borderRight: "1px solid #F1F1EF",
                         transition: "all 0.15s ease",
                       }}
-                      title="Keep the new entry but combine both sources"
+                      className="ui-tip"
+                      data-tip="Keep new entry, combine sources"
                       onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.1)")}
                       onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "white")}
                     >

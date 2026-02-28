@@ -88,6 +88,7 @@ export default function InputPhase({
           <div style={Z.inputFooter}>
             {(() => {
               const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
+              const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <span style={Z.entryMeta}>
@@ -96,7 +97,13 @@ export default function InputPhase({
                   {count > 50 && (
                     <span style={Z.warnBadge}><AlertTriangle size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
                   )}
-                  <label style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
+                  {hasFancyChars && !formattingEnabled && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#0369A1", background: "#EFF6FF", padding: "3px 8px", borderRadius: 50, fontWeight: 500, cursor: "pointer", border: "1px solid #DBEAFE" }}
+                      onClick={() => setFormattingEnabled(true)}>
+                      Smart quotes detected — enable formatting cleanup?
+                    </span>
+                  )}
+                  <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
                     <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#1A1814" : "#E0DCD4" }}>
                       <div style={{ ...Z.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
                     </div>

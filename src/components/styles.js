@@ -79,6 +79,33 @@ export const baseCSS = `
   .nav-link{transition:color .15s ease}
   .nav-link:hover{color:#1A1814 !important}
 
+  /* General-purpose UI tooltip (extends conf-tooltip pattern) */
+  .ui-tip{position:relative}
+  .ui-tip::after{
+    content:attr(data-tip);
+    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:#37352F;color:#fff;padding:4px 10px;border-radius:5px;
+    font-size:11px;font-weight:400;white-space:nowrap;
+    opacity:0;pointer-events:none;z-index:200;
+    transition:opacity .12s ease .35s;
+  }
+  .ui-tip:hover::after{opacity:1}
+  .ui-tip:active::after{opacity:0;transition:none}
+  .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
+  .ui-tip-left::after{left:auto;right:0;transform:none}
+
+  /* Undo toast countdown bar */
+  @keyframes toastCountdown{from{width:100%}to{width:0%}}
+  .toast-bar{
+    position:absolute;bottom:0;left:0;height:2px;
+    background:rgba(255,255,255,.35);border-radius:0 0 8px 8px;
+    animation:toastCountdown var(--toast-duration,2.5s) linear forwards;
+  }
+
+  /* Drag insertion indicator */
+  .drag-insert-above{box-shadow:inset 0 2px 0 #3C5775 !important}
+  .drag-insert-below{box-shadow:inset 0 -2px 0 #3C5775 !important}
+
   /* Category pills horizontal scroll */
   .cat-scroll::-webkit-scrollbar{display:none}
   .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
@@ -369,7 +396,7 @@ export const Z = {
   footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#C8C4BC",borderTop:"1px solid #EAE6DE",marginTop:40},
   footerLink:{color:"#9A9590",textDecoration:"none"},
   toast:{position:"fixed",bottom:24,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:2000,animation:"toastIn .2s ease",fontFamily:"'Inter',-apple-system,sans-serif"},
-  toastContent:{background:"#37352F",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,fontWeight:500,display:"flex",alignItems:"center",gap:12,boxShadow:"0 4px 16px rgba(0,0,0,.2)",pointerEvents:"auto"},
+  toastContent:{position:"relative",overflow:"hidden",background:"#37352F",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,fontWeight:500,display:"flex",alignItems:"center",gap:12,boxShadow:"0 4px 16px rgba(0,0,0,.2)",pointerEvents:"auto"},
   toastAction:{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,color:"#fff",padding:"3px 10px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 };
 

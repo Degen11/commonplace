@@ -327,6 +327,8 @@ const PanelHeader = ({ onClose }) => (
         cursor: "pointer",
         transition: "all 0.2s ease",
       }}
+      className="ui-tip"
+      data-tip="Close"
       onClick={onClose}
       aria-label="Close panel"
       onMouseEnter={(e) => {

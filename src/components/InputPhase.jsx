@@ -3,6 +3,10 @@ import Footer from "./Footer";
 import { baseCSS, Z } from "./styles";
 import { smartSplit } from "../utils/helpers";
 import { EXAMPLE_QUOTES } from "../data/constants";
+import {
+  Pencil, Upload, FolderOpen, FileText, ClipboardList, Zap, Bot,
+  AlertTriangle, CheckCircle,
+} from "lucide-react";
 
 export default function InputPhase({
   fadeClass,
@@ -44,7 +48,7 @@ export default function InputPhase({
 
         {savedSession && (
           <div style={Z.restoreBanner}>
-            <span>📂 You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FolderOpen size={15} strokeWidth={1.5} /> You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
             <div style={{ display: "flex", gap: 6 }}>
               <button style={Z.restoreBtn} onClick={onRestoreSession}>Restore session</button>
               <button style={Z.restoreDismiss} onClick={onDismissSession}>Dismiss</button>
@@ -54,8 +58,8 @@ export default function InputPhase({
 
         <div style={Z.inputCard}>
           <div style={Z.tabRow}>
-            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("paste")}>✏️ Type / Paste</button>
-            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}) }} onClick={() => setInputTab("import")}>📁 Import File</button>
+            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "paste" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("paste")}><Pencil size={14} strokeWidth={1.5} /> Type / Paste</button>
+            <button className="tab-btn" style={{ ...Z.tabBtn, ...(inputTab === "import" ? Z.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }} onClick={() => setInputTab("import")}><Upload size={14} strokeWidth={1.5} /> Import File</button>
           </div>
 
           {inputTab === "paste" && (
@@ -72,11 +76,11 @@ export default function InputPhase({
             >
               <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
                 onChange={e => { onFileImport(e.target.files[0]); e.target.value = ""; }} />
-              <div style={Z.dropIcon}>{isDragOver ? "📂" : "📄"}</div>
+              <div style={{ ...Z.dropIcon, display: "flex", justifyContent: "center" }}>{isDragOver ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} /> : <FileText size={32} color="#9B9A97" strokeWidth={1.5} />}</div>
               <div style={Z.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
               <div style={Z.dropSub}>or click to browse — supports Kindle highlights and Readwise exports</div>
               {importedFileName && (
-                <div style={Z.dropFileName}>✓ {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
+                <div style={Z.dropFileName}><CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
               )}
             </div>
           )}
@@ -90,7 +94,7 @@ export default function InputPhase({
                     {count > 0 ? `${count} ${count === 1 ? "entry" : "entries"} detected` : "Quotes, phrases, expressions — all welcome"}
                   </span>
                   {count > 50 && (
-                    <span style={Z.warnBadge}>⚠ {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
+                    <span style={Z.warnBadge}><AlertTriangle size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment</span>
                   )}
                   <label style={Z.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
                     <div style={{ ...Z.fmtToggleTrack, background: formattingEnabled ? "#1A1814" : "#E0DCD4" }}>
@@ -120,17 +124,17 @@ export default function InputPhase({
           </div>
           <div style={Z.howGrid}>
             <div className="how-card" style={Z.howCard}>
-              <div style={Z.howCardIcon}>📋</div>
+              <div style={Z.howCardIcon}><ClipboardList size={24} color="#3C5775" strokeWidth={1.5} /></div>
               <div style={Z.howCardTitle}>Paste anything</div>
               <div style={Z.howCardDesc}>One entry per line. Attribution hints via dashes, parentheses, or tildes — or nothing at all. Messy is fine.</div>
             </div>
             <div className="how-card" style={Z.howCard}>
-              <div style={Z.howCardIcon}>⚡</div>
+              <div style={Z.howCardIcon}><Zap size={24} color="#3C5775" strokeWidth={1.5} /></div>
               <div style={Z.howCardTitle}>Local first</div>
               <div style={Z.howCardDesc}>600+ common quotes matched instantly from a built-in database. Zero API calls, zero cost, millisecond results.</div>
             </div>
             <div className="how-card" style={Z.howCard}>
-              <div style={Z.howCardIcon}>🤖</div>
+              <div style={Z.howCardIcon}><Bot size={24} color="#3C5775" strokeWidth={1.5} /></div>
               <div style={Z.howCardTitle}>AI for the rest</div>
               <div style={Z.howCardDesc}>Unrecognized quotes go to Claude Haiku in batches of 20. Source, category, and confidence — all returned.</div>
             </div>

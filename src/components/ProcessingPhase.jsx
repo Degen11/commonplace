@@ -8,9 +8,17 @@ export default function ProcessingPhase({
   customCats,
   onCancel,
 }) {
+  const doneCount = progress?.done || 0;
+
   return (
     <div style={Z.wrap} className={fadeClass}>
       <style>{baseCSS}</style>
+      <nav style={Z.nav}>
+        <span style={Z.navLogo}>Commonplace</span>
+        <div style={Z.navRight}>
+          <span style={{ color: "#9A9590", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
+        </div>
+      </nav>
       <div style={Z.procWrap}>
         <h2 style={Z.procTitle}>Organizing your collection...</h2>
         <p style={Z.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
@@ -24,12 +32,16 @@ export default function ProcessingPhase({
             <p style={Z.procCurrent}>{progress.current}</p>
           </div>
         )}
-        <button
-          style={{ marginTop: 16, background: "none", border: "1px solid #E3E2DE", borderRadius: 8, padding: "8px 20px", fontSize: 13, color: "#9B9A97", cursor: "pointer", fontFamily: "inherit" }}
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
+        <div style={{ marginTop: 20, borderTop: "1px solid #E3E2DE", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
+          <button
+            style={{ ...Z.hdrBtn, padding: "8px 20px", fontSize: 13 }}
+            onClick={onCancel}
+          >
+            {doneCount > 0
+              ? `Cancel (keep ${doneCount} identified)`
+              : "Cancel"}
+          </button>
+        </div>
         {identifiedFeed.length > 0 && (
           <div style={Z.feedWrap}>
             {[...identifiedFeed].reverse().map((item, i) => {

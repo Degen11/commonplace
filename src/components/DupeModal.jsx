@@ -1,4 +1,5 @@
 import { Z } from "./styles";
+import { Search } from "lucide-react";
 
 export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecisions, onContinue }) {
   if (pendingDupes.length === 0) return null;
@@ -10,7 +11,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
       <div style={{ ...Z.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={Z.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 24 }}>🔍</span>
+            <Search size={22} color="#3C5775" strokeWidth={1.5} />
             <div style={Z.dupeModalTitle}>Possible Duplicates Detected</div>
           </div>
           <div style={Z.dupeModalSub}>

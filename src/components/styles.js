@@ -5,7 +5,6 @@ export const CP_ACCENT_TEXT  = "#2D4259";
 
 // ===================== BASE CSS =====================
 export const baseCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#FAF8F4;color:#1A1814}
   ::selection{background:rgba(60,87,117,0.18)}
@@ -79,6 +78,10 @@ export const baseCSS = `
   .feat-pill:hover{background:#F0EDE6 !important;border-color:#C8C4BC !important;color:#1A1814 !important}
   .nav-link{transition:color .15s ease}
   .nav-link:hover{color:#1A1814 !important}
+
+  /* Category pills horizontal scroll */
+  .cat-scroll::-webkit-scrollbar{display:none}
+  .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
 `;
 
 // ===================== MAIN STYLES =====================
@@ -187,7 +190,7 @@ export const Z = {
   },
 
   // Processing
-  procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:120},
+  procWrap:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:64},
   procTitle:{fontSize:24,fontWeight:700,letterSpacing:-.5,marginBottom:8},
   procSub:{fontSize:14,color:"#9B9A97",marginBottom:32},
   procCard:{width:"100%",maxWidth:480,padding:20,background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12},
@@ -290,7 +293,7 @@ export const Z = {
   // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE"},
   srchW:{position:"relative",flex:1},
-  srchI:{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,opacity:.5},
+  srchI:{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,opacity:.5,display:"flex",alignItems:"center"},
   srchIn:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"#37352F",background:"#fff"},
   clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:12},
   sortBtn:{padding:"7px 12px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"},
@@ -298,11 +301,11 @@ export const Z = {
   sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   sortOptOn:{background:"#F1F1EF",fontWeight:600},
 
-  // Category pills — #5 added sticky shadow
-  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"wrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50},
-  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
+  // Category pills — horizontal scroll with fade
+  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
+  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500,whiteSpace:"nowrap",flexShrink:0},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
-  addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"},
+  addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 

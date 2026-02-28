@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Z } from "./styles";
 import LOCAL_DB from "../data/localQuotes";
 import { normalize } from "../utils/helpers";
+import { Lightbulb } from "lucide-react";
 
 // Finds the closest local DB match to the current text.
 // Returns null if nothing is close enough to be worth suggesting.
@@ -69,7 +70,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
     border:"1px solid #A7F3D0",    // subtle green border
     fontSize:12,
   }}>
-    <span style={{ color:"#065F46", flexShrink:0 }}>💡 Did you mean:</span>
+    <span style={{ color:"#065F46", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
     <span style={{ color:"#064E3B", fontStyle:"italic", flex:1 }}>
       "{suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1)}" — {suggestion.s}
     </span>

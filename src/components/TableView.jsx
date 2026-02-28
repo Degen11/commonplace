@@ -54,11 +54,11 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
 const COL_CONFIG = {
   content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
   source:   { label: "Source",   style: { flex: "0 1 180px", minWidth: 100, maxWidth: 180, paddingLeft: 0, paddingRight: 6, textAlign: "left" } },
-  category: { label: "Category", style: { minWidth: 100, paddingLeft: 0, paddingRight: 8, textAlign: "left" } },
+  category: { label: "Category", style: { flex: "0 1 120px", minWidth: 0, paddingLeft: 0, paddingRight: 8, textAlign: "left" } },
 };
 
 // Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { minWidth: 100, display: 'flex', alignItems: 'center', gap: 6 };
+const CATEGORY_CELL_STYLE = { flex: "0 1 120px", minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' };
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({

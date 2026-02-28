@@ -146,9 +146,6 @@ export default function InputPhase({
           </div>
         </div>
 
-        {/* ── Section divider ── */}
-        <div style={Z.sectionDivider} />
-
         {/* ── Features — 6 key features in 3×2 grid ── */}
         <div style={{ width: "100%", maxWidth: 800, marginTop: 56, animation: "fadeUp .6s .1s ease both" }}>
           <div style={{ ...Z.howSectionTitle, marginTop: 0, marginBottom: 20 }}>

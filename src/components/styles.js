@@ -134,11 +134,11 @@ export const Z = {
 
   // Split layout (replaces old hero)
   splitLayout:{display:"grid",gridTemplateColumns:"5fr 6fr",gap:40,alignItems:"start",width:"100%",animation:"fadeUp .5s ease"},
-  splitLeft:{display:"flex",flexDirection:"column",gap:24,paddingTop:8},
+  splitLeft:{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:24,paddingTop:8},
   splitRight:{display:"flex",flexDirection:"column",gap:16},
 
   // Hero brand mark — dominant visual anchor
-  heroBrandWrap:{display:"flex",alignItems:"center",gap:10,marginBottom:4},
+  heroBrandWrap:{display:"flex",alignItems:"center",gap:10,marginBottom:4,justifyContent:"center"},
   heroBrandName:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:42,fontWeight:700,letterSpacing:-1.5,color:"#1A1814",lineHeight:1.1},
 
   // Tagline — clearly secondary

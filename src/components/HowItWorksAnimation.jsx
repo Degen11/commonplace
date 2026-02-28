@@ -297,21 +297,23 @@ export default function HowItWorksAnimation() {
           <div style={{ ...S.progressBar, width: `${progress}%` }} />
         )}
 
-        {/* Replay button */}
-        {step === 4 && (
-          <button onClick={replay} style={{
-            position: "absolute", bottom: 8, right: 8,
-            background: "none", border: "1px solid #E8E3DA", borderRadius: 6,
-            padding: 5, cursor: "pointer", display: "flex", alignItems: "center",
-            justifyContent: "center", color: "#C8C4BC", transition: "all 0.2s ease",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.color = "#6A6660"; e.currentTarget.style.borderColor = "#C8C4BC"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; e.currentTarget.style.borderColor = "#E8E3DA"; }}
-          >
-            <RefreshCw size={12} strokeWidth={1.5} />
-          </button>
-        )}
       </div>
+
+      {/* Replay button — below the stage */}
+      {step === 4 && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={replay} style={{
+            background: "none", border: "none", padding: 2,
+            cursor: "pointer", display: "flex", alignItems: "center",
+            justifyContent: "center", color: "#C8C4BC", transition: "color 0.2s ease",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#6A6660"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; }}
+          >
+            <RefreshCw size={10} strokeWidth={1.5} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -144,6 +144,7 @@ export default function Commonplace() {
   const undoRef                = useRef(null);
   const addMoreRef             = useRef(null);
   const exportRef              = useRef(null);
+  const miniExportRef          = useRef(null);
   const sortRef                = useRef(null);
   const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
@@ -271,7 +272,7 @@ export default function Commonplace() {
   // ── Click-outside for dropdowns and edit form ──
   useEffect(() => {
     const h = e => {
-      if (exportRef.current && !exportRef.current.contains(e.target)) setShowExport(false);
+      if (exportRef.current && !exportRef.current.contains(e.target) && (!miniExportRef.current || !miniExportRef.current.contains(e.target))) setShowExport(false);
       if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
       
       // Close edit form if clicking outside the table/cards area
@@ -887,6 +888,70 @@ const handleDupesContinue = async () => {
     reidentifying: reidentifyingId,
   };
 
+  // ── Export dropdown content (shared between main header and mini-header) ──
+  const exportDropdownContent = (
+    <div style={Z.expDrop}>
+      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+        Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
+      </div>
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard</button>
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={14} strokeWidth={1.5} /> Rich copy</button>
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { handleShare(); setShowExport(false); }}><Link size={14} strokeWidth={1.5} /> Shareable link</button>
+      {quotes.length > 80 && <span style={Z.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — export a file instead</span>}
+      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Markdown</button>
+      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
+      {hasActiveFilters && (<>
+        <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+        <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+          Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
+        </div>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Filtered TXT</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Filtered CSV</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Filtered MD</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
+      </>)}
+      {selected.size > 0 && (<>
+        <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
+        <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#059669", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
+          Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
+        </div>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel).then(() => showToast(`Copied ${sel.length} selected entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel); showToast(`Exported ${sel.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Selected CSV</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel); showToast(`Exported ${sel.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Selected MD</button>
+        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel); showToast(`Exported ${sel.length} as JSON`); setShowExport(false); }}>{"{ }"} Selected JSON</button>
+      </>)}
+    </div>
+  );
+
+  // ── Add More panel content (shared between in-flow and fixed overlay) ──
+  const addMorePanelContent = (
+    <>
+      <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
+        placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+          <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
+            <div style={{ ...Z.fmtToggleTrack, background: addMoreFormatting ? "#1A1814" : "#E0DCD4" }}>
+              <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
+            </div>
+            Clean up formatting
+          </label>
+          <span style={{ fontSize: 12, color: "#9B9A97" }}>
+            {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
+          <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
+        </div>
+      </div>
+    </>
+  );
+
   // ========================== RENDER ==========================
   return (
     <>
@@ -1018,43 +1083,7 @@ const handleDupesContinue = async () => {
               </button>
               <div ref={exportRef} style={{ position: "relative" }}>
                 <button className="ui-tip ui-tip-below" data-tip="Export or share your collection" style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-                {showExport && (
-                  <div style={Z.expDrop}>
-                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-                      Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
-                    </div>
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard</button>
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={14} strokeWidth={1.5} /> Rich copy</button>
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { handleShare(); setShowExport(false); }}><Link size={14} strokeWidth={1.5} /> Shareable link</button>
-                    {quotes.length > 80 && <span style={Z.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — export a file instead</span>}
-                    <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Markdown</button>
-                    <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
-                    {hasActiveFilters && (<>
-                      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-                        Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
-                      </div>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Filtered TXT</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Filtered CSV</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Filtered MD</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
-                    </>)}
-                    {selected.size > 0 && (<>
-                      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-                      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#059669", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-                        Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
-                      </div>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel).then(() => showToast(`Copied ${sel.length} selected entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel); showToast(`Exported ${sel.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Selected CSV</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel); showToast(`Exported ${sel.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Selected MD</button>
-                      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel); showToast(`Exported ${sel.length} as JSON`); setShowExport(false); }}>{"{ }"} Selected JSON</button>
-                    </>)}
-                  </div>
-                )}
+                {showExport && headerVisible && exportDropdownContent}
               </div>
               <button className="ui-tip ui-tip-below" data-tip="Add more quotes" style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
               <button className="ui-tip ui-tip-below" data-tip="Clear all and start over" style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
@@ -1084,14 +1113,32 @@ const handleDupesContinue = async () => {
                     </button>
                   </div>
                   <button style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
-                  <button style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                  <div ref={miniExportRef} style={{ position: "relative" }}>
+                    <button style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                    {showExport && exportDropdownContent}
+                  </div>
                   <button style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add</button>
                 </div>
               </div>
             </div>
           )}
 
-          {showStats && <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { preserveScroll(); setShowStats(false); }} />}
+          {showStats && (
+            headerVisible ? (
+              <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { preserveScroll(); setShowStats(false); }} />
+            ) : (
+              <div style={{
+                position: "fixed", top: 49, left: 0, right: 0, bottom: 0,
+                zIndex: 59, background: "rgba(250,248,244,0.98)",
+                overflowY: "auto", padding: "0 32px",
+                animation: "slideD .2s ease",
+              }}>
+                <div style={{ maxWidth: 1120, margin: "0 auto", paddingTop: 12, paddingBottom: 24 }}>
+                  <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => setShowStats(false)} />
+                </div>
+              </div>
+            )
+          )}
 
           {apiError && (
             <div style={Z.errorBar}>
@@ -1115,27 +1162,23 @@ const handleDupesContinue = async () => {
 
           {/* UPDATED: Add More panel with formatting toggle */}
           {showAddMore && (
-            <div style={Z.addMorePanel}>
-              <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
-                placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-                  <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
-                    <div style={{ ...Z.fmtToggleTrack, background: addMoreFormatting ? "#1A1814" : "#E0DCD4" }}>
-                      <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
-                    </div>
-                    Clean up formatting
-                  </label>
-                  <span style={{ fontSize: 12, color: "#9B9A97" }}>
-                    {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
-                  </span>
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
-                  <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
+            headerVisible ? (
+              <div style={Z.addMorePanel}>
+                {addMorePanelContent}
+              </div>
+            ) : (
+              <div style={{
+                position: "fixed", top: 49, left: 0, right: 0,
+                zIndex: 59, background: "rgba(250,248,244,0.98)",
+                padding: "12px 32px", borderBottom: "1px solid #E3E2DE",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+                animation: "slideD .2s ease",
+              }}>
+                <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+                  {addMorePanelContent}
                 </div>
               </div>
-            </div>
+            )
           )}
 
           {showBulkBar && (

@@ -1,18 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Z } from "./styles";
-import LOCAL_DB from "../data/localQuotes";
 import { normalize } from "../utils/helpers";
 import { Lightbulb } from "lucide-react";
 
 // Finds the closest local DB match to the current text.
-// Returns null if nothing is close enough to be worth suggesting.
-function findSuggestion(text) {
-  if (!text || text.length < 8) return null;
+// db is null until the dynamic import resolves (gracefully returns null then).
+function findSuggestion(text, db) {
+  if (!db || !text || text.length < 8) return null;
   const norm = normalize(text);
 
   // Score every entry by word overlap
   let best = null; let bestScore = 0;
-  for (const entry of LOCAL_DB) {
+  for (const entry of db) {
     if (entry.t === norm) return null; // exact match — no suggestion needed
     const wa = new Set(norm.split(" ").filter(w => w.length > 2));
     const wb = new Set(entry.t.split(" ").filter(w => w.length > 2));
@@ -32,11 +31,18 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
   const [source, setSource] = useState(q.source);
   const [category, setCategory] = useState(q.category);
   const [dismissed, setDismissed] = useState(false);
+  const [localDb, setLocalDb] = useState(null);
+
+  // Lazy-load the local DB — already cached in the module registry after
+  // the first processing run, so this resolves instantly in practice.
+  useEffect(() => {
+    import("../data/localQuotes").then(m => setLocalDb(m.default));
+  }, []);
 
   const suggestion = useMemo(() => {
     if (dismissed) return null;
-    return findSuggestion(text);
-  }, [text, dismissed]);
+    return findSuggestion(text, localDb);
+  }, [text, dismissed, localDb]);
 
   const applySuggestion = () => {
     setText(suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1));

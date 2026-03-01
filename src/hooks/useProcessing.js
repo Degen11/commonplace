@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from "react";
-import { localLookup } from "../data/localQuotes";
 import { VIBE_TAGS } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
+  initProperNouns,
 } from "../utils/helpers";
 
 const LS_DRAFT = "commonplace_draft";
@@ -56,6 +56,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   // ── Processing pipeline ──
   const runProcessing = async (unique, appendMode, useFormatting = false) => {
+    // Lazy-load the local DB only when processing actually starts
+    const { default: localDb, localLookup } = await import("../data/localQuotes");
+    initProperNouns(localDb);
+
     const localMatches = []; const needsApi = [];
     unique.forEach((p, i) => {
       const match = localLookup(p.text, p.hint);

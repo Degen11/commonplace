@@ -1,62 +1,61 @@
 import { QUOTED_CATS } from "../data/constants";
-import LOCAL_DB from "../data/localQuotes";
 
-// ── Extract known proper nouns from local DB source strings ──
-// Fix 6: only include a word if it appears in 2+ DIFFERENT source strings.
-// Single-occurrence words are likely song/movie title words ("Dreams",
-// "Heroes", "Perfect", "Changes") that shouldn't be capitalized in general text.
-const KNOWN_PROPER_NOUNS = (() => {
-  // Words that are common English words or title-case noise — never treat as proper nouns
-  const skipWords = new Set([
-    // Articles / prepositions / conjunctions
-    "the","a","an","of","in","on","at","to","for","and","or","but","with",
-    "from","by","via","as","is","was","are","be","been","has","have","had",
-    // Pronouns / determiners
-    "it","its","this","that","these","those","my","his","her","our","your",
-    // Common verbs
-    "get","got","go","goes","make","take","want","know","say","think","see",
-    "come","give","find","tell","ask","seem","feel","look","leave","call",
-    // Category / meta words
-    "film","tv","book","music","speech","person","phrase","various",
-    "attributed","often","unknown","parts","series","season","episode",
-    "act","scene","chapter","vol","pt","ep","version",
-    // Words that appear capitalized in titles but aren't proper nouns
-    "man","men","women","woman","boy","girl","one","two","three","four","five",
-    "six","seven","eight","nine","ten","new","old","big","little","great",
-    "long","good","bad","best","last","first","next","right","left","high",
-    "low","real","true","false","black","white","red","blue","green","dark",
-    "light","hard","soft","hot","cold","fast","slow","free","full","back",
-    "front","night","day","life","time","world","home","house","road","way",
-    "end","start","stop","run","walk","stand","fall","rise","love","hate",
-    "fear","hope","pain","joy","heart","mind","soul","fire","water","air",
-    "earth","sky","sun","moon","star","wild","sweet","beautiful","perfect",
-    "simple","broken","lost","found","gone","dead","alive","young","old",
-    // Common song/movie title words that get extracted but aren't proper nouns
-    "dreams","dream","heroes","hero","changes","change","perfect","thunder",
-    "animal","animals","africa","imagine","creep","humble","gods","plan","plans",
-    "normal","rolling","deep","rolling","somebody","nobody","everybody","anybody",
-    "always","never","forever","sometimes","just","only","every","another",
-    "nothing","something","everything","anything","somewhere","nowhere","here",
-    "where","there","when","while","after","before","until","since","still",
-    "already","again","even","also","too","very","well","down","up","out",
-    "over","under","through","between","against","without","within","about",
-    "their","them","they","him","her","its","who","what","why","how",
-    "all","both","each","few","many","much","more","most","other","some",
-    "such","no","nor","not","same","so","than","then","there","though",
-    "into","during","across","along","off","away",
-  ]);
+// ── Proper noun set — lazy-initialized when localQuotes DB is first loaded ──
+// Populated by initProperNouns() called from useProcessing on first run.
+// basicFormat gracefully skips step 6 if not yet initialized.
+let _properNouns = null;
 
-  // Count how many distinct source strings each capitalized word appears in
-  const wordSources = new Map(); // word → Set of source strings it appears in
+const _SKIP_WORDS = new Set([
+  // Articles / prepositions / conjunctions
+  "the","a","an","of","in","on","at","to","for","and","or","but","with",
+  "from","by","via","as","is","was","are","be","been","has","have","had",
+  // Pronouns / determiners
+  "it","its","this","that","these","those","my","his","her","our","your",
+  // Common verbs
+  "get","got","go","goes","make","take","want","know","say","think","see",
+  "come","give","find","tell","ask","seem","feel","look","leave","call",
+  // Category / meta words
+  "film","tv","book","music","speech","person","phrase","various",
+  "attributed","often","unknown","parts","series","season","episode",
+  "act","scene","chapter","vol","pt","ep","version",
+  // Words that appear capitalized in titles but aren't proper nouns
+  "man","men","women","woman","boy","girl","one","two","three","four","five",
+  "six","seven","eight","nine","ten","new","old","big","little","great",
+  "long","good","bad","best","last","first","next","right","left","high",
+  "low","real","true","false","black","white","red","blue","green","dark",
+  "light","hard","soft","hot","cold","fast","slow","free","full","back",
+  "front","night","day","life","time","world","home","house","road","way",
+  "end","start","stop","run","walk","stand","fall","rise","love","hate",
+  "fear","hope","pain","joy","heart","mind","soul","fire","water","air",
+  "earth","sky","sun","moon","star","wild","sweet","beautiful","perfect",
+  "simple","broken","lost","found","gone","dead","alive","young","old",
+  // Common song/movie title words that get extracted but aren't proper nouns
+  "dreams","dream","heroes","hero","changes","change","perfect","thunder",
+  "animal","animals","africa","imagine","creep","humble","gods","plan","plans",
+  "normal","rolling","deep","rolling","somebody","nobody","everybody","anybody",
+  "always","never","forever","sometimes","just","only","every","another",
+  "nothing","something","everything","anything","somewhere","nowhere","here",
+  "where","there","when","while","after","before","until","since","still",
+  "already","again","even","also","too","very","well","down","up","out",
+  "over","under","through","between","against","without","within","about",
+  "their","them","they","him","her","its","who","what","why","how",
+  "all","both","each","few","many","much","more","most","other","some",
+  "such","no","nor","not","same","so","than","then","there","though",
+  "into","during","across","along","off","away",
+]);
 
-  LOCAL_DB.forEach(entry => {
+// Called once from useProcessing after dynamic-importing localQuotes.
+export function initProperNouns(db) {
+  if (_properNouns) return; // already initialized
+  const wordSources = new Map();
+  db.forEach(entry => {
     const words = entry.s.split(/[\s\-\u2013\u2014,()[\]/&]+/);
     words.forEach(w => {
       const clean = w.replace(/[^a-zA-Z']/g, "");
       if (
         clean.length > 2 &&
         /^[A-Z]/.test(clean) &&
-        !skipWords.has(clean.toLowerCase()) &&
+        !_SKIP_WORDS.has(clean.toLowerCase()) &&
         !/^\d/.test(clean)
       ) {
         if (!wordSources.has(clean)) wordSources.set(clean, new Set());
@@ -64,17 +63,12 @@ const KNOWN_PROPER_NOUNS = (() => {
       }
     });
   });
-
-  // Only trust words that appear in at least 2 different source strings —
-  // this weeds out single-occurrence title words like "Dreams" or "Heroes"
-  // while keeping reliable proper nouns like "Hemingway" or "Shakespeare"
   const nouns = new Set();
   wordSources.forEach((sources, word) => {
     if (sources.size >= 2) nouns.add(word);
   });
-
-  return nouns;
-})();
+  _properNouns = nouns;
+}
 
 // Common misspellings — conservative, only clear-cut cases
 const MISSPELLINGS = {
@@ -135,11 +129,13 @@ export function basicFormat(text) {
     );
   });
 
-  // 6. Capitalize known proper nouns (only high-confidence ones from 2+ sources)
-  KNOWN_PROPER_NOUNS.forEach(noun => {
-    const lower = noun.toLowerCase();
-    t = t.replace(new RegExp("\\b" + lower + "\\b", "g"), noun);
-  });
+  // 6. Capitalize known proper nouns (only if DB has been loaded via initProperNouns)
+  if (_properNouns) {
+    _properNouns.forEach(noun => {
+      const lower = noun.toLowerCase();
+      t = t.replace(new RegExp("\\b" + lower + "\\b", "g"), noun);
+    });
+  }
 
   // 7. Capitalize first letter
   t = t.charAt(0).toUpperCase() + t.slice(1);
@@ -406,4 +402,120 @@ export function decodeShareData(hash) {
       confidence: "high", favorite: !!q[3],
     }));
   } catch { return null; }
+}
+
+// ===================== SHARE AS IMAGE =====================
+// Draws a 1080×1080 PNG card for a single quote and returns a Blob.
+// catColor: { bg: string, text: string } from getCatColor().
+export async function generateShareImage(q, catColor) {
+  const W = 1080, H = 1080, PAD = 72;
+
+  await document.fonts.ready;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, W, H);
+
+  // Thin border inset
+  ctx.strokeStyle = "#E8E3DA";
+  ctx.lineWidth = 1.5;
+  const bi = 32;
+  ctx.strokeRect(bi, bi, W - bi * 2, H - bi * 2);
+
+  // Decorative open-quote watermark
+  ctx.fillStyle = "rgba(60,87,117,0.06)";
+  ctx.font = `bold 280px 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = "left";
+  ctx.fillText("\u201C", PAD - 10, PAD + 220);
+
+  // ── Measure and wrap quote text ──
+  const textX = PAD + 8;
+  const textMaxW = W - PAD * 2 - 16;
+  ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
+  const words = q.text.split(" ");
+  const lines = [];
+  let cur = "";
+  for (const word of words) {
+    const test = cur ? `${cur} ${word}` : word;
+    if (ctx.measureText(test).width > textMaxW && cur) {
+      lines.push(cur);
+      cur = word;
+    } else {
+      cur = test;
+    }
+  }
+  if (cur) lines.push(cur);
+
+  // Cap at 8 lines with ellipsis
+  if (lines.length > 8) {
+    lines.splice(8);
+    let last = lines[7];
+    while (ctx.measureText(last + "\u2026").width > textMaxW && last.length > 1)
+      last = last.slice(0, -1).trimEnd();
+    lines[7] = last + "\u2026";
+  }
+
+  // ── Vertical centering ──
+  const lineH = 62;
+  const blockH = lines.length * lineH;
+  const attrH = 28; // attribution font size
+  const pillH = 36;
+  const totalH = blockH + 36 + attrH + 48 + pillH;
+  const textStartY = Math.round(Math.max(PAD + 180, (H - totalH) * 0.44 + lineH));
+
+  // Draw quote lines
+  ctx.fillStyle = "#1A1814";
+  ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = "left";
+  lines.forEach((line, i) => {
+    ctx.fillText(line, textX, textStartY + i * lineH);
+  });
+
+  // Attribution
+  const attrY = textStartY + blockH + 36;
+  ctx.fillStyle = "#9A9590";
+  ctx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
+  ctx.fillText(`\u2014 ${q.source}`, textX, attrY);
+
+  // Category pill
+  const pillY = attrY + 48;
+  ctx.font = `600 18px 'DM Sans', -apple-system, sans-serif`;
+  const pillTxt = q.category;
+  const pillTxtW = ctx.measureText(pillTxt).width;
+  const px = 18, py = 8;
+  const pillW = pillTxtW + px * 2;
+  ctx.fillStyle = catColor.bg;
+  _roundRect(ctx, textX, pillY - pillH + py, pillW, pillH, 6);
+  ctx.fill();
+  ctx.fillStyle = catColor.text;
+  ctx.fillText(pillTxt, textX + px, pillY + py - 2);
+
+  // Branding
+  ctx.fillStyle = "#C8C4BC";
+  ctx.font = `500 20px 'DM Sans', -apple-system, sans-serif`;
+  ctx.textAlign = "right";
+  ctx.fillText("\u2756 Commonplace", W - PAD - 8, H - PAD - 12);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(b => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/png");
+  });
+}
+
+function _roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }

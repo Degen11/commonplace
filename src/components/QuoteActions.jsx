@@ -1,4 +1,4 @@
-import { Star, Copy, Check, RefreshCw, Trash2 } from "lucide-react";
+import { Star, Copy, Check, RefreshCw, Trash2, Share2 } from "lucide-react";
 import { Z } from "./styles";
 import { CONF_COLORS } from "../data/constants";
 
@@ -80,6 +80,21 @@ export function DelBtn({ q, onDelete }) {
       onMouseLeave={e => e.currentTarget.style.color = "#6B6764"}
     >
       <Trash2 size={16} strokeWidth={1.5} />
+    </button>
+  );
+}
+
+export function ShareImageBtn({ q, onShareImage }) {
+  return (
+    <button
+      className="act-btn ui-tip"
+      data-tip="Save as image"
+      style={Z.actBtn}
+      onClick={e => { e.stopPropagation(); onShareImage(q); }}
+      onMouseEnter={e => { e.currentTarget.style.color = "#7C3AED"; }}
+      onMouseLeave={e => { e.currentTarget.style.color = "#6B6764"; }}
+    >
+      <Share2 size={16} strokeWidth={1.5} />
     </button>
   );
 }

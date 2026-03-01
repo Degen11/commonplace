@@ -1,5 +1,6 @@
 import { baseCSS, Z } from "./styles";
 import { getCatColor } from "../data/constants";
+import { CheckCircle } from "lucide-react";
 
 export default function ProcessingPhase({
   fadeClass,
@@ -7,8 +8,10 @@ export default function ProcessingPhase({
   identifiedFeed,
   customCats,
   onCancel,
+  processingDone,
 }) {
   const doneCount = progress?.done || 0;
+  const isComplete = processingDone || progress?.phase === "complete";
 
   return (
     <div style={Z.wrap} className={fadeClass}>
@@ -20,29 +23,43 @@ export default function ProcessingPhase({
         </div>
       </nav>
       <div style={Z.procWrap}>
-        <h2 style={Z.procTitle}>Organizing your collection...</h2>
-        <p style={Z.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
+        {isComplete ? (
+          <>
+            <div style={{ animation: "fadeUp .3s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16 }} />
+              <h2 style={{ ...Z.procTitle, color: "#059669" }}>All done!</h2>
+              <p style={Z.procSub}>{progress?.total || 0} entries organized and ready to explore</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 style={Z.procTitle}>Organizing your collection...</h2>
+            <p style={Z.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
+          </>
+        )}
         {progress && (
           <div style={Z.procCard}>
             <div style={Z.procTop}>
               <span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span>
-              <span style={{ color: "#9B9A97" }}>{Math.round((progress.done / progress.total) * 100)}%</span>
+              <span style={{ color: isComplete ? "#059669" : "#9B9A97" }}>{Math.round((progress.done / progress.total) * 100)}%</span>
             </div>
-            <div style={Z.track}><div style={{ ...Z.fill, width: `${(progress.done / progress.total) * 100}%` }} /></div>
-            <p style={Z.procCurrent}>{progress.current}</p>
+            <div style={Z.track}><div style={{ ...Z.fill, width: `${(progress.done / progress.total) * 100}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
+            {!isComplete && <p style={Z.procCurrent}>{progress.current}</p>}
           </div>
         )}
-        <div style={{ marginTop: 20, borderTop: "1px solid #E3E2DE", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
-          <button
-            style={{ ...Z.hdrBtn, padding: "8px 20px", fontSize: 13 }}
-            onClick={onCancel}
-          >
-            {doneCount > 0
-              ? `Cancel (keep ${doneCount} identified)`
-              : "Cancel"}
-          </button>
-        </div>
-        {identifiedFeed.length > 0 && (
+        {!isComplete && (
+          <div style={{ marginTop: 20, borderTop: "1px solid #E3E2DE", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
+            <button
+              style={{ ...Z.hdrBtn, padding: "8px 20px", fontSize: 13 }}
+              onClick={onCancel}
+            >
+              {doneCount > 0
+                ? `Cancel (keep ${doneCount} identified)`
+                : "Cancel"}
+            </button>
+          </div>
+        )}
+        {identifiedFeed.length > 0 && !isComplete && (
           <div style={Z.feedWrap}>
             {[...identifiedFeed].reverse().map((item, i) => {
               const col = getCatColor(item.category, customCats);

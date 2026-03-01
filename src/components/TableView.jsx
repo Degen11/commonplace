@@ -83,6 +83,7 @@ function TableRow({
   inlineEdit, columnOrder, compact, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
   handleDragStart, handleDragOver, handleDragEnd, renderColCell,
+  deletingId,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
@@ -106,7 +107,7 @@ function TableRow({
         ...(q.favorite ? Z.favRow : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
         ...(dragId === q.id ? { opacity: .4 } : {}),
-        animation: "fadeUp .25s ease",
+        animation: deletingId === q.id ? "exitShrink .2s ease forwards" : "fadeUp .25s ease",
       }}
     >
       <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
@@ -155,6 +156,7 @@ export default function TableView({
   sortBy,
   isMobile,
   savedPulse,
+  deletingId,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -311,6 +313,7 @@ export default function TableView({
             handleDragOver={handleDragOver}
             handleDragEnd={handleDragEnd}
             renderColCell={renderColCell}
+            deletingId={deletingId}
           />
         );
       })}

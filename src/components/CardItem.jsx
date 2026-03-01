@@ -13,12 +13,14 @@ export default function CardItem({
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   handleDragStart, handleDragOver, handleDragEnd,
-  savedPulse,
+  savedPulse, index = 0, deletingId,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
   );
+
+  const isDeleting = deletingId === q.id;
 
   return (
     <div
@@ -34,7 +36,8 @@ export default function CardItem({
         ...(q.favorite ? CZ.favCard : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
         ...(dragId === q.id ? { opacity: .4 } : {}),
-        animation: "fadeUp .3s ease",
+        animation: isDeleting ? "exitShrink .2s ease forwards" : "fadeUp .3s ease both",
+        animationDelay: isDeleting ? "0s" : `${Math.min(index, 10) * 30}ms`,
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
       onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}

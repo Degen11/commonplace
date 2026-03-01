@@ -145,7 +145,7 @@ export default function InputPhase({
             <span style={Z.howSectionTitleLine} />
           </div>
 
-          <div style={Z.featuresGrid}>
+          <div className="features-grid" style={Z.featuresGrid}>
             {[
               { icon: PenLine, title: "Inline editing", color: "#2383E2" },
               { icon: LayoutGrid, title: "Bulk operations", color: "#7C3AED" },

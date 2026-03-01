@@ -84,7 +84,7 @@ export const baseCSS = `
   .drop-zone{transition:all .2s ease}
   .how-card{transition:background .2s ease,transform .2s ease}
   .how-card:hover{background:#fff !important;transform:translateY(-2px)}
-  .feature-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,87,117,0.08);border-color:rgba(60,87,117,0.15) !important}
+  .feature-card:hover{border-color:rgba(60,87,117,0.15) !important}
   /* General-purpose UI tooltip (extends conf-tooltip pattern) */
   .ui-tip{position:relative}
   .ui-tip::after{
@@ -124,9 +124,24 @@ export const baseCSS = `
   /* Save pulse for inline edits */
   .save-pulse{animation:savePulse .5s ease}
 
+  /* Header button hover states */
+  .hdr-btn{transition:all .15s ease}
+  .hdr-btn:hover{background:rgba(55,53,47,0.06)}
+  .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
+  .load-more-btn{transition:all .15s ease}
+  .load-more-btn:hover{background:#EFF6FF !important;border-color:#93C5FD !important}
+
+  /* Disabled cursor */
+  button:disabled{cursor:not-allowed !important}
+
   /* Responsive: stack split layout on small screens */
   @media (max-width: 768px) {
     .split-layout { grid-template-columns: 1fr !important; }
+  }
+  @media (max-width: 640px) {
+    .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .dupe-compare { grid-template-columns: 1fr !important; }
   }
 `;
 
@@ -271,7 +286,7 @@ export const Z = {
   errorBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,margin:"12px 0",fontSize:13,color:"#991B1B",animation:"slideD .2s ease",gap:12,flexWrap:"wrap"},
   retryBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #DC2626",background:"#fff",color:"#DC2626",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBar:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#F0FDF4",border:"1px solid #DCFCE7",borderRadius:8,margin:"12px 0",fontSize:13,color:"#37352F",flexWrap:"wrap",animation:"slideD .2s ease"},
-  statDot:{width:3,height:3,borderRadius:"50%",background:"#D3D3D0"},
+  statDot:{width:4,height:4,borderRadius:"50%",background:"#D3D3D0"},
   statsDismiss:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:14,marginLeft:"auto"},
   addMorePanel:{background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:8,padding:14,margin:"12px 0",animation:"slideD .2s ease"},
   attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FFF7ED",border:"1px solid #FED7AA",borderRadius:8,margin:"10px 0",fontSize:13,color:"#92400E",animation:"slideD .2s ease",gap:8},
@@ -312,13 +327,13 @@ export const Z = {
   srchIn:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"#37352F",background:"#fff"},
   clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:12},
   sortBtn:{padding:"7px 12px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"},
-  sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.1)",border:"1px solid #E3E2DE",minWidth:220,zIndex:100,padding:4,animation:"slideD .15s ease"},
+  sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.1)",border:"1px solid #E3E2DE",minWidth:220,zIndex:100,padding:4,transition:"opacity .15s ease, transform .15s ease"},
   sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"#37352F",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   sortOptOn:{background:"#F1F1EF",fontWeight:600},
 
   // Category pills — horizontal scroll with fade
   cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid #E3E2DE",position:"sticky",top:0,background:"#FAF8F4",zIndex:50,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
-  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500,whiteSpace:"nowrap",flexShrink:0},
+  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid #E3E2DE",background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500,whiteSpace:"nowrap",flexShrink:0,transition:"all .15s ease"},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed #D3D3D0",background:"transparent",color:"#9B9A97",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
@@ -339,7 +354,7 @@ export const Z = {
     marginBottom:0,
     textAlign:"left",
   },
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE",transition:"background .12s ease, opacity .15s",minHeight:48,background:"#fff"},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE",transition:"background .18s ease, opacity .15s",minHeight:48,background:"#fff"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #E3E2DE",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#fff"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
@@ -383,7 +398,7 @@ export const Z = {
   empty:{textAlign:"center",padding:"60px 24px"},
   footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"#C8C4BC",borderTop:"1px solid #EAE6DE",marginTop:40},
   footerLink:{color:"#9A9590",textDecoration:"none"},
-  toast:{position:"fixed",bottom:24,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:2000,animation:"toastIn .2s ease",fontFamily:"'Inter',-apple-system,sans-serif"},
+  toast:{position:"fixed",bottom:24,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:2000,animation:"toastIn .2s ease",fontFamily:"'DM Sans',-apple-system,sans-serif"},
   toastContent:{position:"relative",overflow:"hidden",background:"#37352F",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,fontWeight:500,display:"flex",alignItems:"center",gap:12,boxShadow:"0 4px 16px rgba(0,0,0,.2)",pointerEvents:"auto"},
   toastAction:{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,color:"#fff",padding:"3px 10px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 };

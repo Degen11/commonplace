@@ -284,6 +284,16 @@ export default function Commonplace() {
     setShowSort(false);
   }, [headerVisible]);
 
+  // Lock body scroll when stats overlay is open
+  useEffect(() => {
+    if (showStats) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showStats]);
+
   // ── Scroll position preservation for mini-header actions ──
   // When panels (Stats, Add More) are toggled from the sticky mini-header,
   // they insert/remove content above the viewport, shifting visible content.
@@ -1201,20 +1211,17 @@ const handleDupesContinue = async () => {
           )}
 
           {showStats && (
-            headerVisible ? (
-              <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { preserveScroll(); setShowStats(false); }} />
-            ) : (
-              <div style={{
-                position: "fixed", top: 49, left: 0, right: 0, bottom: 0,
-                zIndex: 59, background: "rgba(250,248,244,0.98)",
-                overflowY: "auto", padding: "0 32px",
-                animation: "slideD .2s ease",
-              }}>
-                <div style={{ maxWidth: 1120, margin: "0 auto", paddingTop: 12, paddingBottom: 24 }}>
-                  <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => setShowStats(false)} />
-                </div>
+            <div style={{
+              position: "fixed", top: headerVisible ? 0 : 49, left: 0, right: 0, bottom: 0,
+              zIndex: 59, background: "rgba(250,248,244,0.98)",
+              overflowY: "auto", padding: "0 32px",
+              animation: "slideD .2s ease",
+              overscrollBehavior: "contain",
+            }}>
+              <div style={{ maxWidth: 1120, margin: "0 auto", paddingTop: 12, paddingBottom: 24 }}>
+                <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { if (!headerVisible) preserveScroll(); setShowStats(false); }} />
               </div>
-            )
+            </div>
           )}
 
           {apiError && (

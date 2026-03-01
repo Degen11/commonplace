@@ -28,8 +28,8 @@ export const baseCSS = `
   @keyframes savePulse{0%{background-color:rgba(5,150,105,0.12);border-radius:4px}100%{background-color:transparent}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
-  @keyframes viewFade{from{opacity:0}to{opacity:1}}
-  @keyframes exitShrink{to{opacity:0;transform:scale(0.97);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;overflow:hidden}}
+  @keyframes overlayFade{from{opacity:0}to{opacity:1}}
+  @keyframes exitFade{to{opacity:0}}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spin{animation:spin 1s linear infinite}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}

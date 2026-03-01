@@ -36,8 +36,7 @@ export default function CardItem({
         ...(q.favorite ? CZ.favCard : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
         ...(dragId === q.id ? { opacity: .4 } : {}),
-        animation: isDeleting ? "exitShrink .2s ease forwards" : "fadeUp .3s ease both",
-        animationDelay: isDeleting ? "0s" : `${Math.min(index, 10) * 30}ms`,
+        ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
       onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}

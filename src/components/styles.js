@@ -66,7 +66,7 @@ export const baseCSS = `
   .qrow{cursor:grab;transition:background 0.18s ease}
   .qrow:active{cursor:grabbing}
   .qrow:hover{background:rgba(55,53,47,0.05) !important}
-  .qrow:hover .row-actions{opacity:1 !important}
+  .qrow:hover .row-actions{opacity:1 !important;pointer-events:auto !important}
   .qrow:hover .checkbox{opacity:1 !important}
 
   /* Inline edit affordances */
@@ -361,8 +361,8 @@ export const Z = {
     marginBottom:0,
     textAlign:"left",
   },
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE",transition:"background .18s ease, opacity .15s",minHeight:48,background:"#fff"},
-  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #E3E2DE",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#fff"},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #E3E2DE",transition:"background .18s ease, opacity .15s",minHeight:48,background:"#fff",position:"relative"},
+  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #E3E2DE",transition:"background .12s ease, opacity .15s",minHeight:34,background:"#fff",position:"relative"},
   favRow:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid #D3D3D0",borderColor:"#D3D3D0",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
@@ -374,7 +374,7 @@ export const Z = {
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{width:96,display:"flex",gap:1,opacity:0.25,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
+  rowAct:{position:"absolute",right:0,top:0,bottom:0,display:"flex",gap:1,opacity:0,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center",paddingRight:4,paddingLeft:20,background:"linear-gradient(to right, transparent 0%, #fff 20%)",pointerEvents:"none",zIndex:1},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#6B6764",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
 
   // Edit form

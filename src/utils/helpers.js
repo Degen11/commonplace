@@ -405,10 +405,11 @@ export function decodeShareData(hash) {
 }
 
 // ===================== SHARE AS IMAGE =====================
-// Draws a 1080×1080 PNG card for a single quote and returns a Blob.
-// catColor: { bg: string, text: string } from getCatColor().
-export async function generateShareImage(q, catColor) {
+// Draws a 1080×1080 branded PNG card for a single quote and returns a Blob.
+export async function generateShareImage(q) {
   const W = 1080, H = 1080, PAD = 72;
+  const ACCENT = "#3C5775";
+  const SAND = "#FAF8F4";
 
   await document.fonts.ready;
 
@@ -417,18 +418,22 @@ export async function generateShareImage(q, catColor) {
   canvas.height = H;
   const ctx = canvas.getContext("2d");
 
-  // Background
-  ctx.fillStyle = "#FFFFFF";
+  // ── Sand background ──
+  ctx.fillStyle = SAND;
   ctx.fillRect(0, 0, W, H);
 
-  // Thin border inset
+  // ── Dark blue accent stripe at top ──
+  ctx.fillStyle = ACCENT;
+  ctx.fillRect(0, 0, W, 6);
+
+  // ── Subtle inner border ──
   ctx.strokeStyle = "#E8E3DA";
   ctx.lineWidth = 1.5;
   const bi = 32;
   ctx.strokeRect(bi, bi, W - bi * 2, H - bi * 2);
 
-  // Decorative open-quote watermark
-  ctx.fillStyle = "rgba(60,87,117,0.06)";
+  // ── Decorative open-quote watermark (dark blue tint) ──
+  ctx.fillStyle = "rgba(60,87,117,0.07)";
   ctx.font = `bold 280px 'Playfair Display', Georgia, serif`;
   ctx.textAlign = "left";
   ctx.fillText("\u201C", PAD - 10, PAD + 220);
@@ -460,15 +465,14 @@ export async function generateShareImage(q, catColor) {
     lines[7] = last + "\u2026";
   }
 
-  // ── Vertical centering ──
+  // ── Vertical centering (no category pill = more breathing room) ──
   const lineH = 62;
   const blockH = lines.length * lineH;
-  const attrH = 28; // attribution font size
-  const pillH = 36;
-  const totalH = blockH + 36 + attrH + 48 + pillH;
-  const textStartY = Math.round(Math.max(PAD + 180, (H - totalH) * 0.44 + lineH));
+  const attrH = 28;
+  const totalH = blockH + 40 + attrH;
+  const textStartY = Math.round(Math.max(PAD + 180, (H - totalH) * 0.46 + lineH));
 
-  // Draw quote lines
+  // ── Draw quote lines ──
   ctx.fillStyle = "#1A1814";
   ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
   ctx.textAlign = "left";
@@ -476,46 +480,103 @@ export async function generateShareImage(q, catColor) {
     ctx.fillText(line, textX, textStartY + i * lineH);
   });
 
-  // Attribution
-  const attrY = textStartY + blockH + 36;
-  ctx.fillStyle = "#9A9590";
+  // ── Attribution with dark blue em-dash ──
+  const attrY = textStartY + blockH + 40;
+  ctx.fillStyle = ACCENT;
   ctx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
-  ctx.fillText(`\u2014 ${q.source}`, textX, attrY);
+  const dash = "\u2014 ";
+  const dashW = ctx.measureText(dash).width;
+  ctx.fillText(dash, textX, attrY);
+  ctx.fillStyle = "#9A9590";
+  ctx.fillText(q.source, textX + dashW, attrY);
 
-  // Category pill
-  const pillY = attrY + 48;
-  ctx.font = `600 18px 'DM Sans', -apple-system, sans-serif`;
-  const pillTxt = q.category;
-  const pillTxtW = ctx.measureText(pillTxt).width;
-  const px = 18, py = 8;
-  const pillW = pillTxtW + px * 2;
-  ctx.fillStyle = catColor.bg;
-  _roundRect(ctx, textX, pillY - pillH + py, pillW, pillH, 6);
-  ctx.fill();
-  ctx.fillStyle = catColor.text;
-  ctx.fillText(pillTxt, textX + px, pillY + py - 2);
-
-  // Branding
-  ctx.fillStyle = "#C8C4BC";
-  ctx.font = `500 20px 'DM Sans', -apple-system, sans-serif`;
-  ctx.textAlign = "right";
-  ctx.fillText("\u2756 Commonplace", W - PAD - 8, H - PAD - 12);
+  // ── Branding: book icon + "Commonplace" in Playfair Display ──
+  _drawBranding(ctx, W, H, PAD, ACCENT);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(b => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/png");
   });
 }
 
-function _roundRect(ctx, x, y, w, h, r) {
+// Draw the book icon from Logo.jsx SVG paths onto canvas
+function _drawBookIcon(ctx, x, y, size, color) {
+  const s = size / 32; // SVG viewBox is 32x32
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.fillStyle = "none";
+
+  // Left page
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.moveTo(16, 7);
+  ctx.bezierCurveTo(13.5, 5.5, 10, 5, 7, 5);
+  ctx.bezierCurveTo(5.5, 5, 4, 5.8, 4, 7.5);
+  ctx.lineTo(4, 23.5);
+  ctx.bezierCurveTo(4, 25, 5.5, 25.5, 7, 25.5);
+  ctx.bezierCurveTo(10, 25.5, 13.5, 26.2, 16, 28);
+  ctx.stroke();
+
+  // Right page
+  ctx.beginPath();
+  ctx.moveTo(16, 7);
+  ctx.bezierCurveTo(18.5, 5.5, 22, 5, 25, 5);
+  ctx.bezierCurveTo(26.5, 5, 28, 5.8, 28, 7.5);
+  ctx.lineTo(28, 23.5);
+  ctx.bezierCurveTo(28, 25, 26.5, 25.5, 25, 25.5);
+  ctx.bezierCurveTo(22, 25.5, 18.5, 26.2, 16, 28);
+  ctx.stroke();
+
+  // Spine
+  ctx.beginPath();
+  ctx.moveTo(16, 7);
+  ctx.lineTo(16, 28);
+  ctx.stroke();
+
+  // Bookmark ribbon (filled with 20% opacity)
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(21, 5);
+  ctx.lineTo(21, 14);
+  ctx.lineTo(23, 12.5);
+  ctx.lineTo(25, 14);
+  ctx.lineTo(25, 5);
   ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(21, 5);
+  ctx.lineTo(21, 14);
+  ctx.lineTo(23, 12.5);
+  ctx.lineTo(25, 14);
+  ctx.lineTo(25, 5);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// Render branded footer: book icon + "Commonplace" in Playfair Display
+function _drawBranding(ctx, W, H, PAD, color) {
+  const brandY = H - PAD - 12;
+  const fontSize = 22;
+  const iconSize = 26;
+
+  ctx.fillStyle = color;
+  ctx.font = `700 ${fontSize}px 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = "right";
+  const textW = ctx.measureText("Commonplace").width;
+  const textX = W - PAD - 8;
+  ctx.fillText("Commonplace", textX, brandY);
+
+  // Draw book icon to the left of the text
+  const iconX = textX - textW - iconSize - 8;
+  const iconY = brandY - iconSize + 4;
+  _drawBookIcon(ctx, iconX, iconY, iconSize, color);
 }

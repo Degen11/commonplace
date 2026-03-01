@@ -38,8 +38,8 @@ export function CopyBtn({ q, onCopy, copiedId }) {
       data-tip={isCopied ? "Copied!" : "Copy quote and source"}
       style={{ ...Z.actBtn, ...(isCopied ? { color: "#059669" } : {}) }}
       onClick={e => { e.stopPropagation(); if (!isCopied) onCopy(q); }}
-      onMouseEnter={e => !isCopied && (e.currentTarget.style.color = "#2383E2")}
-      onMouseLeave={e => !isCopied && (e.currentTarget.style.color = isCopied ? "#059669" : "#6B6764")}
+      onMouseEnter={e => !isCopied && (e.currentTarget.style.color = "#3C5775")}
+      onMouseLeave={e => !isCopied && (e.currentTarget.style.color = "#C8C4BC")}
     >
       {isCopied ? <Check size={16} strokeWidth={2} /> : <Copy size={16} strokeWidth={1.5} />}
     </button>

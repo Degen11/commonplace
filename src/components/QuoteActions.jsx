@@ -16,7 +16,7 @@ export function FavBtn({ q, onFav }) {
       }}
       onMouseLeave={e => {
         if (!q.favorite) {
-          e.currentTarget.style.color = "#6B6764";
+          e.currentTarget.style.color = "#C8C4BC";
         }
       }}
     >
@@ -58,7 +58,7 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
       onClick={e => { e.stopPropagation(); if (!loading) onReidentify(q); }}
       disabled={loading}
       onMouseEnter={e => !loading && (e.currentTarget.style.color = "#059669")}
-      onMouseLeave={e => !loading && (e.currentTarget.style.color = "#6B6764")}
+      onMouseLeave={e => !loading && (e.currentTarget.style.color = "#C8C4BC")}
     >
       <RefreshCw
         size={16}
@@ -77,7 +77,7 @@ export function DelBtn({ q, onDelete }) {
       style={Z.actBtn}
       onClick={e => { e.stopPropagation(); onDelete(q.id); }}
       onMouseEnter={e => e.currentTarget.style.color = "#EF4444"}
-      onMouseLeave={e => e.currentTarget.style.color = "#6B6764"}
+      onMouseLeave={e => e.currentTarget.style.color = "#C8C4BC"}
     >
       <Trash2 size={16} strokeWidth={1.5} />
     </button>
@@ -92,7 +92,7 @@ export function ShareImageBtn({ q, onShareImage }) {
       style={Z.actBtn}
       onClick={e => { e.stopPropagation(); onShareImage(q); }}
       onMouseEnter={e => { e.currentTarget.style.color = "#7C3AED"; }}
-      onMouseLeave={e => { e.currentTarget.style.color = "#6B6764"; }}
+      onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; }}
     >
       <Share2 size={16} strokeWidth={1.5} />
     </button>

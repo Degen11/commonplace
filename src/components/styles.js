@@ -369,12 +369,12 @@ export const Z = {
   entryText:{fontSize:14,lineHeight:1.65,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.35,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   // #8 srcCol flex instead of fixed width
-  srcCol:{minWidth:100,maxWidth:180,flex:"0 1 180px",display:"flex",alignItems:"center",gap:4,paddingRight:6,flexWrap:"wrap"},
+  srcCol:{minWidth:100,maxWidth:180,flex:"0 1 180px",display:"flex",alignItems:"center",paddingLeft:0,paddingRight:6},
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{flex:"0 0 130px",display:"flex",gap:1,opacity:0.25,transition:"opacity .15s",justifyContent:"flex-end",alignItems:"center"},
-  actBtn:{background:"none",border:"none",cursor:"pointer",color:"#6B6764",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
+  rowAct:{flex:"0 0 130px",display:"flex",gap:1,justifyContent:"flex-end",alignItems:"center"},
+  actBtn:{background:"none",border:"none",cursor:"pointer",color:"#C8C4BC",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
 
   // Edit form
   textarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:60,lineHeight:1.6,background:"#fff"},

@@ -75,7 +75,7 @@ const COL_CONFIG = {
 };
 
 // Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { flex: "0 1 120px", minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, overflow: 'visible' };
+const CATEGORY_CELL_STYLE = { flex: "0 0 120px", width: 120, display: 'flex', alignItems: 'center', gap: 6, overflow: 'visible' };
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({
@@ -232,7 +232,7 @@ export default function TableView({
           <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
           <span
             className="inline-cat"
-            style={{ ...Z.tag, background: col.bg, color: col.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, flex: 1, cursor: "pointer" }}
+            style={{ ...Z.tag, background: col.bg, color: col.text, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90, cursor: "pointer" }}
             onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
             title="Click to change category"
           >{q.category}</span>

@@ -77,7 +77,7 @@ const COL_CONFIG = {
 };
 
 // Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { flex: "0 1 140px", minWidth: 60, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', paddingRight: 8, position: "relative", zIndex: 2 };
+const CATEGORY_CELL_STYLE = { flex: "0 1 140px", minWidth: 60, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', paddingRight: 8 };
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({
@@ -95,12 +95,6 @@ function TableRow({
   const insertClass = dragInsert?.id === q.id
     ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
     : "";
-
-  // Determine the effective row background so the actions overlay gradient matches
-  const rowBg = (needsAtt && sortBy === "confidence") ? "#FFFBEB"
-    : q.favorite ? "#FFFDF5"
-    : isSel ? "#F0F7FF"
-    : "#fff";
 
   return (
     <div className={`qrow ${insertClass}`}
@@ -130,11 +124,7 @@ function TableRow({
 
       {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
 
-      <div className="row-actions" style={{
-        ...Z.rowAct,
-        background: `linear-gradient(to right, transparent 0%, ${rowBg} 20%)`,
-        ...(isMobile ? { opacity: 1, pointerEvents: "auto" } : {}),
-      }}>
+      <div className="row-actions" style={{ ...Z.rowAct, ...(isMobile ? { opacity: 1 } : {}) }}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
         <ShareImageBtn q={q} onShareImage={actionProps.onShareImage} />
@@ -293,6 +283,7 @@ export default function TableView({
               {COL_CONFIG[colKey].label}
             </div>
           ))}
+          <div style={{ flex: "0 0 130px" }} />
         </div>
       )}
 

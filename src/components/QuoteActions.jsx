@@ -7,18 +7,8 @@ export function FavBtn({ q, onFav }) {
     <button
       className="act-btn ui-tip"
       data-tip={q.favorite ? "Remove from favorites" : "Add to favorites"}
-      style={Z.actBtn}
+      style={{ ...Z.actBtn, "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
       onClick={e => { e.stopPropagation(); onFav(q.id); }}
-      onMouseEnter={e => {
-        if (!q.favorite) {
-          e.currentTarget.style.color = "#F59E0B";
-        }
-      }}
-      onMouseLeave={e => {
-        if (!q.favorite) {
-          e.currentTarget.style.color = "#C8C4BC";
-        }
-      }}
     >
       <Star
         size={16}
@@ -36,10 +26,8 @@ export function CopyBtn({ q, onCopy, copiedId }) {
     <button
       className="act-btn ui-tip"
       data-tip={isCopied ? "Copied!" : "Copy quote and source"}
-      style={{ ...Z.actBtn, ...(isCopied ? { color: "#059669" } : {}) }}
+      style={{ ...Z.actBtn, "--hover-color": "#2383E2", ...(isCopied ? { color: "#059669" } : {}) }}
       onClick={e => { e.stopPropagation(); if (!isCopied) onCopy(q); }}
-      onMouseEnter={e => !isCopied && (e.currentTarget.style.color = "#3C5775")}
-      onMouseLeave={e => !isCopied && (e.currentTarget.style.color = "#C8C4BC")}
     >
       {isCopied ? <Check size={16} strokeWidth={2} /> : <Copy size={16} strokeWidth={1.5} />}
     </button>
@@ -53,12 +41,11 @@ export function ReidentifyBtn({ q, onReidentify, loading }) {
       data-tip={loading ? "Re-identifying…" : "Re-identify with AI"}
       style={{
         ...Z.actBtn,
+        "--hover-color": "#059669",
         ...(loading ? { opacity: 0.5, cursor: "wait" } : {}),
       }}
       onClick={e => { e.stopPropagation(); if (!loading) onReidentify(q); }}
       disabled={loading}
-      onMouseEnter={e => !loading && (e.currentTarget.style.color = "#059669")}
-      onMouseLeave={e => !loading && (e.currentTarget.style.color = "#C8C4BC")}
     >
       <RefreshCw
         size={16}
@@ -74,10 +61,8 @@ export function DelBtn({ q, onDelete }) {
     <button
       className="act-btn ui-tip"
       data-tip="Delete entry"
-      style={Z.actBtn}
+      style={{ ...Z.actBtn, "--hover-color": "#EF4444" }}
       onClick={e => { e.stopPropagation(); onDelete(q.id); }}
-      onMouseEnter={e => e.currentTarget.style.color = "#EF4444"}
-      onMouseLeave={e => e.currentTarget.style.color = "#C8C4BC"}
     >
       <Trash2 size={16} strokeWidth={1.5} />
     </button>
@@ -89,10 +74,8 @@ export function ShareImageBtn({ q, onShareImage }) {
     <button
       className="act-btn ui-tip"
       data-tip="Save as image"
-      style={Z.actBtn}
+      style={{ ...Z.actBtn, "--hover-color": "#7C3AED" }}
       onClick={e => { e.stopPropagation(); onShareImage(q); }}
-      onMouseEnter={e => { e.currentTarget.style.color = "#7C3AED"; }}
-      onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; }}
     >
       <Share2 size={16} strokeWidth={1.5} />
     </button>

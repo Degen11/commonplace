@@ -25,9 +25,11 @@ export const baseCSS = `
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(16px)}}
-  @keyframes savePulse{0%{background-color:rgba(60,87,117,0.14);border-radius:4px}100%{background-color:transparent}}
+  @keyframes savePulse{0%{background-color:rgba(5,150,105,0.12);border-radius:4px}100%{background-color:transparent}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+  @keyframes viewFade{from{opacity:0}to{opacity:1}}
+  @keyframes exitShrink{to{opacity:0;transform:scale(0.97);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;overflow:hidden}}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spin{animation:spin 1s linear infinite}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
@@ -130,6 +132,11 @@ export const baseCSS = `
   .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
   .load-more-btn{transition:all .15s ease}
   .load-more-btn:hover{background:#EFF6FF !important;border-color:#93C5FD !important}
+
+  /* Confirm modal button hovers */
+  .confirm-cancel:hover{background:#F5F5F4 !important;border-color:#D3D3D0 !important}
+  .confirm-yes:hover{opacity:.9}
+  .dismiss-link:hover{opacity:.7}
 
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}
@@ -257,7 +264,7 @@ export const Z = {
   // Live feed
   feedWrap:{marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
   feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"#fff",border:"1px solid #E3E2DE",borderRadius:7,fontSize:12,animation:"fadeUp .2s ease"},
-  feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:10,flexShrink:0},
+  feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:11,flexShrink:0},
   feedItemText:{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#37352F"},
   feedItemSrc:{color:"#9B9A97",flexShrink:0,maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},
 
@@ -268,7 +275,7 @@ export const Z = {
   hdrBtn:{padding:"6px 12px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,color:"#37352F",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   exportBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",fontSize:12,fontWeight:600,color:"#37352F",cursor:"pointer",fontFamily:"inherit"},
   addMoreBtn:{padding:"6px 14px",border:"1px solid #2383E2",borderRadius:6,background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  startOverBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",color:"#37352F",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  startOverBtn:{padding:"6px 14px",border:"1px solid #FECACA",borderRadius:6,background:"#fff",color:"#B91C1C",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtn:{padding:"6px 14px",border:"1px solid #E3E2DE",borderRadius:6,background:"#fff",color:"#37352F",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtnActive:{border:"1px solid #7C3AED",background:"#F5F3FF",color:"#7C3AED"},
 

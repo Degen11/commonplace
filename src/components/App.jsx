@@ -35,7 +35,7 @@ import { baseCSS, Z } from "./styles";
 import {
   Search, ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
   AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2,
-  List, AlignJustify, LayoutGrid, X, ChevronDown,
+  List, AlignJustify, LayoutGrid, X, ChevronDown, CheckCircle,
 } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
@@ -44,6 +44,7 @@ const LS_COL_ORDER  = "commonplace_col_order";
 const LS_VIEW       = "commonplace_view";
 const LS_SORT       = "commonplace_sort";
 const LS_FILTERS    = "commonplace_filters";
+const LS_DRAFT      = "commonplace_draft";
 
 const _initFilters = (() => {
   try { const s = localStorage.getItem("commonplace_filters"); if (s) return JSON.parse(s); } catch(e) {}
@@ -61,7 +62,11 @@ const SORT_OPTIONS = [
 export default function Commonplace() {
   const [phase, setPhase]                     = useState("input");
   const [fadeClass, setFadeClass]             = useState("phase-in");
-  const [rawInput, setRawInput]               = useState("");
+  const [rawInput, setRawInput]               = useState(() => {
+    try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
+  });
+  const [deletingId, setDeletingId]           = useState(null);
+  const [processingDone, setProcessingDone]   = useState(false);
   const [quotes, setQuotes]                   = useState([]);
   const [customCats, setCustomCats]           = useState([]);
   const [progress, setProgress]               = useState(null);
@@ -227,6 +232,17 @@ export default function Commonplace() {
   useEffect(() => {
     try { localStorage.setItem(LS_FILTERS, JSON.stringify({ cat: catFilter, fav: favFilter, search })); } catch(e) {}
   }, [catFilter, favFilter, search]);
+
+  // Auto-save raw input draft (QW7)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        if (rawInput.trim()) localStorage.setItem(LS_DRAFT, rawInput);
+        else localStorage.removeItem(LS_DRAFT);
+      } catch(e) {}
+    }, 500);
+    return () => clearTimeout(t);
+  }, [rawInput]);
 
   // ── Mount: shared link OR restore session ──
   useEffect(() => {
@@ -478,6 +494,7 @@ export default function Commonplace() {
       if (skippedCount > 0) msg += ` · ${skippedCount} skipped`;
       showToast(msg);
     };
+    reader.onerror = () => showToast("Couldn't read file — it may be corrupted or inaccessible.");
     reader.readAsText(file);
   };
 
@@ -633,7 +650,13 @@ export default function Commonplace() {
 
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
     setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
-    setProgress(null); setIsProcessing(false); goPhase("results");
+    // Brief success moment before showing results (QW5)
+    setProcessingDone(true);
+    setProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
+    try { localStorage.removeItem(LS_DRAFT); } catch(e) {}
+    setTimeout(() => {
+      setProgress(null); setIsProcessing(false); setProcessingDone(false); goPhase("results");
+    }, 1200);
   };
 
   const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
@@ -742,7 +765,7 @@ const handleDupesContinue = async () => {
 
   const handleClear = () => {
     try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} setIsSharedView(false);
-    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); } catch(e) {}
+    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch(e) {}
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
@@ -753,15 +776,20 @@ const handleDupesContinue = async () => {
   const handleDelete = (id) => {
     const deleted = quotes.find(q => q.id === id);
     const idx = quotes.findIndex(q => q.id === id);
-    setQuotes(p => p.filter(q => q.id !== id));
-    undoRef.current = { quote: deleted, index: idx };
-    showToast("Entry deleted", "Undo", () => {
-      if (undoRef.current) {
-        const { quote, index } = undoRef.current;
-        setQuotes(p => { const n = [...p]; n.splice(Math.min(index, n.length), 0, quote); return n; });
-        undoRef.current = null;
-      }
-    });
+    // Soft exit animation (M2)
+    setDeletingId(id);
+    setTimeout(() => {
+      setDeletingId(null);
+      setQuotes(p => p.filter(q => q.id !== id));
+      undoRef.current = { quote: deleted, index: idx };
+      showToast("Entry deleted", "Undo", () => {
+        if (undoRef.current) {
+          const { quote, index } = undoRef.current;
+          setQuotes(p => { const n = [...p]; n.splice(Math.min(index, n.length), 0, quote); return n; });
+          undoRef.current = null;
+        }
+      });
+    }, 200);
   };
 
   const handleShare = () => {
@@ -1086,7 +1114,8 @@ const handleDupesContinue = async () => {
           progress={progress}
           identifiedFeed={identifiedFeed}
           customCats={customCats}
-          onCancel={() => { setIsProcessing(false); setProgress(null); goPhase("input"); }}
+          processingDone={processingDone}
+          onCancel={() => { setIsProcessing(false); setProgress(null); setProcessingDone(false); goPhase("input"); }}
         />
       )}
 
@@ -1107,8 +1136,8 @@ const handleDupesContinue = async () => {
                 </div>
                 <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 20, lineHeight: 1.5 }}>This will clear all {quotes.length} entries and remove them from your saved session. This cannot be undone.</p>
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button style={{ ...Z.confirmCancel, padding: "8px 20px" }} onClick={() => setConfirmClear(false)}>Keep my entries</button>
-                  <button style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
+                  <button className="confirm-cancel" style={{ ...Z.confirmCancel, padding: "8px 20px" }} onClick={() => setConfirmClear(false)}>Keep my entries</button>
+                  <button className="confirm-yes" style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
                 </div>
               </div>
             </div>
@@ -1125,8 +1154,8 @@ const handleDupesContinue = async () => {
                 </div>
                 <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 20, lineHeight: 1.5 }}>This will remove {selected.size} selected entries. You can undo immediately after.</p>
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button style={{ ...Z.confirmCancel, padding: "8px 20px" }} onClick={() => setConfirmBulkDel(false)}>Keep entries</button>
-                  <button style={Z.confirmYes} onClick={bulkDel}>Delete {selected.size} entries</button>
+                  <button className="confirm-cancel" style={{ ...Z.confirmCancel, padding: "8px 20px" }} onClick={() => setConfirmBulkDel(false)}>Keep entries</button>
+                  <button className="confirm-yes" style={Z.confirmYes} onClick={bulkDel}>Delete {selected.size} entries</button>
                 </div>
               </div>
             </div>
@@ -1212,6 +1241,9 @@ const handleDupesContinue = async () => {
 
           {showStats && (
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Collection statistics"
               style={{
                 position: "fixed", inset: 0, zIndex: 1000,
                 background: "rgba(0,0,0,.4)",
@@ -1219,6 +1251,16 @@ const handleDupesContinue = async () => {
                 padding: 24, animation: "fadeUp .15s ease",
               }}
               onClick={e => { if (e.target === e.currentTarget) { if (!headerVisible) preserveScroll(); setShowStats(false); } }}
+              ref={el => { if (el && !el.dataset.trapped) { el.dataset.trapped = "1"; el.focus(); } }}
+              tabIndex={-1}
+              onKeyDown={e => {
+                if (e.key !== "Tab") return;
+                const focusable = e.currentTarget.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (!focusable.length) return;
+                const first = focusable[0], last = focusable[focusable.length - 1];
+                if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+                else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+              }}
             >
               <div style={{ maxWidth: 720, width: "100%" }}>
                 <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { if (!headerVisible) preserveScroll(); setShowStats(false); }} />
@@ -1231,7 +1273,7 @@ const handleDupesContinue = async () => {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} strokeWidth={2} /> {apiError}</span>
               <div style={{ display: "flex", gap: 8 }}>
                 {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
-                <button style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
+                <button className="dismiss-link" style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
               </div>
             </div>
           )}
@@ -1351,6 +1393,7 @@ const handleDupesContinue = async () => {
 
           {/* TABLE VIEW */}
           {view === "table" && (
+            <div key={`view-table-${compact}`} style={{ animation: "viewFade .2s ease" }}>
             <TableView
               filtered={visible}
               selected={selected}
@@ -1376,13 +1419,15 @@ const handleDupesContinue = async () => {
               sortBy={sortBy}
               isMobile={isMobile}
               savedPulse={savedPulse}
+              deletingId={deletingId}
             />
+            </div>
           )}
 
           {/* CARD VIEW — with long-press to select (change #8) */}
           {view === "cards" && (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-              {visible.map(q => {
+            <div key="view-cards" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8, animation: "viewFade .2s ease" }}>
+              {visible.map((q, idx) => {
                 const col = getCatColor(q.category, customCats);
                 const isSel = selected.has(q.id);
                 const isEd  = editingId === q.id;
@@ -1412,6 +1457,8 @@ const handleDupesContinue = async () => {
                     handleDragOver={handleDragOver}
                     handleDragEnd={handleDragEnd}
                     savedPulse={savedPulse}
+                    index={idx}
+                    deletingId={deletingId}
                   />
                 );
               })}

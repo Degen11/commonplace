@@ -1,7 +1,7 @@
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
-import { baseCSS, Z } from "./styles";
+import { Z } from "./styles";
 import { smartSplit } from "../utils/helpers";
 import { EXAMPLE_QUOTES } from "../data/constants";
 import {
@@ -34,7 +34,6 @@ export default function InputPhase({
 
   return (
     <div style={Z.wrap} className={fadeClass}>
-      <style>{baseCSS}</style>
 
       <div style={Z.landing}>
         {savedSession && (

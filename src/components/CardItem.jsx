@@ -13,7 +13,7 @@ export default function CardItem({
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   handleDragStart, handleDragOver, handleDragEnd,
-  savedPulse, index = 0, deletingId,
+  savedPulse, deletingId,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
@@ -25,6 +25,7 @@ export default function CardItem({
   return (
     <div
       className="qcard"
+      data-id={q.id}
       draggable={!isEd && inlineEdit?.id !== q.id}
       onDragStart={() => handleDragStart(q.id)}
       onDragOver={e => handleDragOver(e, q.id)}

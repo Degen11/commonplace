@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Z } from "./styles";
 import LOCAL_DB from "../data/localQuotes";
 import { normalize } from "../utils/helpers";

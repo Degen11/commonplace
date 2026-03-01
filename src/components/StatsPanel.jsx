@@ -78,7 +78,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
       <PanelHeader onClose={onClose} />
 
       {/* KPI row */}
-      <div style={{
+      <div className="kpi-grid" style={{
         display: "grid",
         gridTemplateColumns: "repeat(4, 1fr)",
         gap: 12,
@@ -96,16 +96,6 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
                 padding: "16px 12px",
                 transition: "all 0.2s ease",
                 cursor: "default",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
-                e.currentTarget.style.borderColor = "#D4D4D0";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-                e.currentTarget.style.borderColor = "#E3E2DE";
               }}
             >
               <Icon 

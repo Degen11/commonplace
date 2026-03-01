@@ -1,5 +1,6 @@
 import { Star, Copy, Check, RefreshCw, Trash2 } from "lucide-react";
 import { Z } from "./styles";
+import { CONF_COLORS } from "../data/constants";
 
 export function FavBtn({ q, onFav }) {
   return (
@@ -84,12 +85,11 @@ export function DelBtn({ q, onDelete }) {
 }
 
 export function ConfDot({ q, CONF_LABELS }) {
-  const colors = { high: "#10B981", medium: "#F59E0B", low: "#EF4444" };
   return (
     <span
       className="conf-tooltip"
       data-tip={CONF_LABELS[q.confidence] || "Unknown"}
-      style={{ ...Z.confDot, background: colors[q.confidence] || "#D1D5DB" }}
+      style={{ ...Z.confDot, background: CONF_COLORS[q.confidence] || "#D1D5DB" }}
     />
   );
 }

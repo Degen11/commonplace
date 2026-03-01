@@ -35,7 +35,7 @@ import { baseCSS, Z } from "./styles";
 import {
   Search, ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
   AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2,
-  List, AlignJustify, LayoutGrid,
+  List, AlignJustify, LayoutGrid, X, ChevronDown,
 } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
@@ -277,6 +277,12 @@ export default function Commonplace() {
     obs.observe(headerRef.current);
     return () => obs.disconnect();
   }, [phase]);
+
+  // Close dropdowns when scrolling between main/mini header
+  useEffect(() => {
+    setShowExport(false);
+    setShowSort(false);
+  }, [headerVisible]);
 
   // ── Scroll position preservation for mini-header actions ──
   // When panels (Stats, Add More) are toggled from the sticky mini-header,
@@ -1149,15 +1155,15 @@ const handleDupesContinue = async () => {
                   </button>
                 </div>
               )}
-              <button className="ui-tip ui-tip-below" data-tip="Collection insights" style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
+              <button className="ui-tip ui-tip-below hdr-btn" data-tip="Collection insights" style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
                 {showStats ? "Hide stats" : "Stats"}
               </button>
               <div ref={exportRef} style={{ position: "relative" }}>
-                <button className="ui-tip ui-tip-below" data-tip="Export or share your collection" style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
                 {showExport && headerVisible && exportDropdownContent}
               </div>
-              <button className="ui-tip ui-tip-below" data-tip="Add more quotes" style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add more</button>
-              <button className="ui-tip ui-tip-below" data-tip="Clear all and start over" style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
+              <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
+              <button className="ui-tip ui-tip-below hdr-btn new-batch-btn" data-tip="Clear all and start over" style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
             </div>
           </div>
 
@@ -1183,12 +1189,12 @@ const handleDupesContinue = async () => {
                       <LayoutGrid size={14} strokeWidth={1.5} />
                     </button>
                   </div>
-                  <button style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
+                  <button className="hdr-btn" style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
                   <div ref={miniExportRef} style={{ position: "relative" }}>
-                    <button style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+                    <button className="hdr-btn" style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
                     {showExport && exportDropdownContent}
                   </div>
-                  <button style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>＋ Add</button>
+                  <button className="hdr-btn" style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
                 </div>
               </div>
             </div>
@@ -1227,7 +1233,7 @@ const handleDupesContinue = async () => {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
               {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
               {stats.dupes > 0 && <><span style={Z.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-              <button style={Z.statsDismiss} onClick={() => setStats(null)}>✕</button>
+              <button style={Z.statsDismiss} onClick={() => setStats(null)}><X size={14} strokeWidth={2} /></button>
             </div>
           )}
 
@@ -1260,7 +1266,7 @@ const handleDupesContinue = async () => {
                 <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
                 <button className="ui-tip" data-tip="Apply to selected" style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
                 <button className="ui-tip" data-tip="Delete selected entries" style={Z.bulkDelBtn} onClick={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}>Delete</button>
-                <button className="ui-tip" data-tip="Clear selection" style={Z.bulkX} onClick={() => setSelected(new Set())}>✕</button>
+                <button className="ui-tip" data-tip="Clear selection" style={Z.bulkX} onClick={() => setSelected(new Set())}><X size={14} strokeWidth={2} /></button>
               </div>
             </div>
           )}
@@ -1268,17 +1274,20 @@ const handleDupesContinue = async () => {
           <div ref={toolbarRef} style={Z.toolbar}>
             <div style={Z.srchW}><span style={Z.srchI}><Search size={13} strokeWidth={2} /></span>
               <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
-              {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={Z.clrBtn} onClick={() => setSearch("")}>✕</button>}
+              {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={Z.clrBtn} onClick={() => setSearch("")}><X size={12} strokeWidth={2} /></button>}
             </div>
             <div ref={sortRef} style={{ position: "relative" }}>
               <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
-                Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<span style={{ fontSize: 10, marginLeft: 4, opacity: .4 }}>▾</span>
+                Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<ChevronDown size={12} style={{ marginLeft: 2, opacity: .5 }} />
               </button>
-              {showSort && (
-                <div style={Z.sortDrop}>
-                  {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...Z.sortOpt, ...(sortBy === o.key ? Z.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
-                </div>
-              )}
+              <div style={{
+                ...Z.sortDrop,
+                opacity: showSort ? 1 : 0,
+                transform: showSort ? "translateY(0)" : "translateY(-4px)",
+                pointerEvents: showSort ? "auto" : "none",
+              }}>
+                {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...Z.sortOpt, ...(sortBy === o.key ? Z.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
+              </div>
             </div>
           </div>
 
@@ -1288,7 +1297,7 @@ const handleDupesContinue = async () => {
               <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
               {favCount > 0 && (
                 <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
-                  ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
+                  ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}>{favCount}</span>
                 </button>
               )}
               {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
@@ -1299,7 +1308,7 @@ const handleDupesContinue = async () => {
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
-                  {customCats.includes(c) && <span className="ui-tip" data-tip="Remove category" style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
+                  {customCats.includes(c) && <span className="ui-tip" data-tip="Remove category" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
                 </button>;
               })}
               {showNewCat ? (
@@ -1401,6 +1410,7 @@ const handleDupesContinue = async () => {
           )}
 {hasMore && (
   <button
+    className="load-more-btn"
     onClick={loadMore}
     style={{
       display: "block",
@@ -1432,15 +1442,15 @@ const handleDupesContinue = async () => {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 12 }}>
                 {catFilter !== "All" && (
                   <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: getCatColor(catFilter, customCats).text, cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
-                    onClick={() => setCatFilter("All")}>{catFilter} ✕</button>
+                    onClick={() => setCatFilter("All")}>{catFilter} <X size={10} strokeWidth={2} /></button>
                 )}
                 {search && (
                   <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: "#37352F", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
-                    onClick={() => setSearch("")}>"{search}" ✕</button>
+                    onClick={() => setSearch("")}>"{search}" <X size={10} strokeWidth={2} /></button>
                 )}
                 {favFilter && (
                   <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #FDE68A", background: "#FEF3C7", fontSize: 12, color: "#D97706", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
-                    onClick={() => setFavFilter(false)}>★ Favorites ✕</button>
+                    onClick={() => setFavFilter(false)}>★ Favorites <X size={10} strokeWidth={2} /></button>
                 )}
               </div>
               <button style={{

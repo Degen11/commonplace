@@ -49,7 +49,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                 boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
               }}>
                 {/* Comparison header */}
-                <div style={{
+                <div className="dupe-compare" style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
                   borderBottom: "1px solid #F1F1EF",
@@ -77,7 +77,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                 </div>
                 
                 {/* Content */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxHeight: 200, overflowY: "auto" }}>
+                <div className="dupe-compare" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxHeight: 200, overflowY: "auto" }}>
                   <div style={{
                     padding: 16,
                     background: "#FAFAFA",

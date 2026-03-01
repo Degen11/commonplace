@@ -238,7 +238,7 @@ export default function TableView({
           <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
           <span
             className="inline-cat"
-            style={{ ...Z.tag, background: col.bg, color: col.text, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, minWidth: 0, flex: "1 1 auto", cursor: "pointer" }}
+            style={{ ...Z.tag, background: col.bg, color: col.text, display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
             onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
             title="Click to change category"
           >{q.category}</span>

@@ -16,7 +16,7 @@ import {
 export default function StatsPanel({ quotes, computedStats, cc, customCats, onClose }) {
   // Esc to close
   useEffect(() => {
-    const h = e => { if (e.key === "Escape") onClose(); };
+    const h = e => { if (e.key === "Escape") { document.activeElement?.blur(); onClose(); } };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
@@ -125,7 +125,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
 
 const EmptyState = ({ count, onClose }) => {
   useEffect(() => {
-    const h = e => { if (e.key === "Escape") onClose(); };
+    const h = e => { if (e.key === "Escape") { document.activeElement?.blur(); onClose(); } };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);

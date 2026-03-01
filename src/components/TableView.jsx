@@ -49,7 +49,7 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
       display: "flex", flexWrap: "wrap", gap: 4, width: 220,
       animation: "slideD .12s ease",
     }}>
-      {allCats.map(c => {
+      {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => {
         const col = getCatColor(c, customCats);
         const isActive = c === current;
         return (

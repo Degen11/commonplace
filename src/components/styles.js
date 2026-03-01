@@ -137,6 +137,9 @@ export const baseCSS = `
   .confirm-yes:hover{opacity:.9}
   .dismiss-link:hover{opacity:.7}
 
+  /* Action buttons: remove mouse-focus outline, keep keyboard-focus outline */
+  .act-btn:focus:not(:focus-visible){outline:none}
+
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}
 

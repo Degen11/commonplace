@@ -1,10 +1,28 @@
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
 import useLongPress from "../hooks/useLongPress";
 import EditForm from "./EditForm";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { CONF_LABELS } from "../data/constants";
 import { Z, CZ } from "./styles";
+
+// ── Inline source input with local state (saves on blur/Enter) ──
+function CardSourceInput({ initial, onSave, onCancel }) {
+  const [val, setVal] = useState(initial);
+  return (
+    <input
+      style={Z.inlineSrcInput}
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onKeyDown={e => {
+        if (e.key === "Enter") { e.preventDefault(); onSave(val); }
+        if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
+      }}
+      onBlur={() => onSave(val)}
+      autoFocus
+    />
+  );
+}
 
 // ── Card item component with long-press support (change #8) ──
 export default function CardItem({
@@ -57,7 +75,7 @@ export default function CardItem({
         <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
           <FavBtn q={q} onFav={actionProps.onFav} />
           <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
-          <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
+          <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying.has(q.id)} />
           <DelBtn q={q} onDelete={actionProps.onDelete} />
         </div>
       </div>
@@ -69,7 +87,7 @@ export default function CardItem({
             <div style={CZ.srcRow}>
               <span style={{ color: "#D3D3D0" }}>—</span>
               {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-                ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
+                ? <CardSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
                 : <span className={`inline-src${savedPulse?.id === q.id && savedPulse?.field === "source" ? " save-pulse" : ""}`} style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
               }
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />

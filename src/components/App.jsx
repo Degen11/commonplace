@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
@@ -156,7 +156,7 @@ export default function Commonplace() {
   const [reviewQueue, setReviewQueue]         = useState([]);
   const [dragId, setDragId]                   = useState(null);
   const [copiedId, setCopiedId]               = useState(null);
-  const [reidentifyingId, setReidentifyingId] = useState(null);
+  const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
   const [dragInsert, setDragInsert]           = useState(null);
   const [headerVisible, setHeaderVisible]     = useState(true);
   const [savedPulse, setSavedPulse]           = useState(null);
@@ -451,14 +451,15 @@ export default function Commonplace() {
   };
 
   const reIdentify = async (q) => {
-    setReidentifyingId(q.id);
+    setReidentifyingIds(prev => new Set(prev).add(q.id));
+    const clearId = () => setReidentifyingIds(prev => { const s = new Set(prev); s.delete(q.id); return s; });
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       const snapshot = { ...q };
       setQuotes(prev => prev.map(x => x.id === q.id ? {
         ...x, source: local.source, category: local.category, confidence: local.confidence,
       } : x));
-      setReidentifyingId(null);
+      clearId();
       showToast(describeChanges(q, local.source, local.category), "Undo", () => {
         setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
       });
@@ -486,7 +487,7 @@ export default function Commonplace() {
     } catch {
       showToast("Couldn't reach AI. Try again.");
     }
-    setReidentifyingId(null);
+    clearId();
   };
 
   // ── Copy single quote to clipboard ──
@@ -710,32 +711,41 @@ export default function Commonplace() {
   const handleDragEnd = () => { setDragId(null); setDragInsert(null); lastDragTarget.current = null; lastDragHalf.current = null; };
 
   // ── Filtering & sorting ──
-  let filtered = quotes.filter(q => {
-    if (catFilter !== "All" && q.category !== catFilter) return false;
-    if (favFilter && !q.favorite) return false;
-    if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-  if (sortBy === "confidence") filtered = [...filtered].sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
-  else if (sortBy === "alpha")    filtered = [...filtered].sort((a, b) => a.text.localeCompare(b.text));
-  else if (sortBy === "category") filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
+  const filtered = useMemo(() => {
+    const result = quotes.filter(q => {
+      if (catFilter !== "All" && q.category !== catFilter) return false;
+      if (favFilter && !q.favorite) return false;
+      if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+    if (sortBy === "confidence") result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
+    else if (sortBy === "alpha")    result.sort((a, b) => a.text.localeCompare(b.text));
+    else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category));
+    return result;
+  }, [quotes, catFilter, favFilter, search, sortBy]);
   const paginationKey = `${catFilter}-${favFilter}-${search}-${sortBy}-${quotes.length}`;
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
 
-  const cc           = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
-  const favCount     = quotes.filter(q => q.favorite).length;
+  const { cc, favCount, unknownCount, topCats } = useMemo(() => {
+    const cc = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
+    return {
+      cc,
+      favCount: quotes.filter(q => q.favorite).length,
+      unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
+      topCats: Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4),
+    };
+  }, [quotes]);
   const showBulkBar  = selected.size > 0;
-  const unknownCount = quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length;
-  const topCats      = Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4);
   const hasActiveFilters = catFilter !== "All" || favFilter || search;
 
-  const computedStats = quotes.length > 0 ? (() => {
+  const computedStats = useMemo(() => {
+    if (quotes.length === 0) return null;
     const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
     const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
     const sorted   = [...quotes].sort((a, b) => a.text.length - b.text.length);
     const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);
     return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
-  })() : null;
+  }, [quotes]);
 
   const actionProps = {
     onFav:        id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
@@ -743,7 +753,7 @@ export default function Commonplace() {
     onCopy:       copyQuote,
     onReidentify: reIdentify,
     copiedId,
-    reidentifying: reidentifyingId,
+    reidentifying: reidentifyingIds,
   };
 
   // ── Export dropdown content (shared between main header and mini-header) ──

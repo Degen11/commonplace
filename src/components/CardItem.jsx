@@ -13,6 +13,7 @@ export default function CardItem({
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   handleDragStart, handleDragOver, handleDragEnd,
+  savedPulse,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
@@ -47,7 +48,7 @@ export default function CardItem({
             ? <select style={Z.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
                 {allCats.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-            : <span className="inline-cat" style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
+            : <span className={`inline-cat${savedPulse?.id === q.id && savedPulse?.field === "category" ? " save-pulse" : ""}`} style={{ ...Z.tag, background: col.bg, color: col.text }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}</span>
           }
         </div>
         <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
@@ -66,7 +67,7 @@ export default function CardItem({
               <span style={{ color: "#D3D3D0" }}>—</span>
               {inlineEdit?.id === q.id && inlineEdit?.field === "source"
                 ? <input style={Z.inlineSrcInput} value={q.source} onChange={e => saveInlineField(q.id, "source", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus />
-                : <span className="inline-src" style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
+                : <span className={`inline-src${savedPulse?.id === q.id && savedPulse?.field === "source" ? " save-pulse" : ""}`} style={CZ.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span>
               }
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             </div>

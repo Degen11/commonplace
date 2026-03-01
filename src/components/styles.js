@@ -24,6 +24,8 @@ export const baseCSS = `
   @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(16px)}}
+  @keyframes savePulse{0%{background-color:rgba(60,87,117,0.14);border-radius:4px}100%{background-color:transparent}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -113,6 +115,14 @@ export const baseCSS = `
   /* Category pills horizontal scroll */
   .cat-scroll::-webkit-scrollbar{display:none}
   .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
+
+  /* Focus-visible accessibility */
+  button:focus-visible,a:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px;border-radius:4px}
+  input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:1px}
+  .check:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px}
+
+  /* Save pulse for inline edits */
+  .save-pulse{animation:savePulse .5s ease}
 
   /* Responsive: stack split layout on small screens */
   @media (max-width: 768px) {

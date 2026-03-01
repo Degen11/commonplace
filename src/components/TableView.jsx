@@ -137,6 +137,7 @@ export default function TableView({
   setColumnOrder,
   sortBy,
   isMobile,
+  savedPulse,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -194,7 +195,7 @@ export default function TableView({
       );
     case "source":
       return (
-        <div key="source" className="src-col" style={Z.srcCol}>
+        <div key="source" className={`src-col${savedPulse?.id === q.id && savedPulse?.field === "source" ? " save-pulse" : ""}`} style={Z.srcCol}>
           <div style={{ display: "flex", flexDirection: "column", gap: 0, flex: 1, minWidth: 0 }}>
             {inlineEdit?.id === q.id && inlineEdit?.field === "source"
               ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
@@ -210,7 +211,7 @@ export default function TableView({
       );
     case "category":
       return (
-        <div key="category" style={CATEGORY_CELL_STYLE}>
+        <div key="category" className={savedPulse?.id === q.id && savedPulse?.field === "category" ? "save-pulse" : ""} style={CATEGORY_CELL_STYLE}>
           {inlineEdit?.id === q.id && inlineEdit?.field === "category" ? (
             <>
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />

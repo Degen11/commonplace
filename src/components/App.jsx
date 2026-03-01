@@ -43,6 +43,12 @@ const LS_CATS       = "commonplace_cats";
 const LS_COL_ORDER  = "commonplace_col_order";
 const LS_VIEW       = "commonplace_view";
 const LS_SORT       = "commonplace_sort";
+const LS_FILTERS    = "commonplace_filters";
+
+const _initFilters = (() => {
+  try { const s = localStorage.getItem("commonplace_filters"); if (s) return JSON.parse(s); } catch(e) {}
+  return {};
+})();
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
@@ -82,9 +88,9 @@ export default function Commonplace() {
     } catch(e) {}
     return false;
   });
-  const [catFilter, setCatFilter]             = useState("All");
-  const [favFilter, setFavFilter]             = useState(false);
-  const [search, setSearch]                   = useState("");
+  const [catFilter, setCatFilter]             = useState(_initFilters.cat || "All");
+  const [favFilter, setFavFilter]             = useState(!!_initFilters.fav);
+  const [search, setSearch]                   = useState(_initFilters.search || "");
   const [sortBy, setSortBy]                   = useState(() => {
     try {
       const saved = localStorage.getItem(LS_SORT);
@@ -127,6 +133,8 @@ export default function Commonplace() {
   const [reidentifyingId, setReidentifyingId] = useState(null);
   const [dragInsert, setDragInsert]           = useState(null);
   const [headerVisible, setHeaderVisible]     = useState(true);
+  const [savedPulse, setSavedPulse]           = useState(null);
+  const [catFade, setCatFade]                 = useState({ left: false, right: false });
 
   // Column order state — persisted to localStorage
   const [columnOrder, setColumnOrder] = useState(() => {
@@ -153,6 +161,8 @@ export default function Commonplace() {
   const lastSelectedIndex      = useRef(null);
   const toolbarRef             = useRef(null);
   const pendingScrollAdjust    = useRef(null);
+  const catScrollRef           = useRef(null);
+  const storageLimitWarned     = useRef(false);
 
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
@@ -184,9 +194,17 @@ export default function Commonplace() {
   useEffect(() => {
     if (quotes.length > 0 && !isSharedView) {
       try {
-        localStorage.setItem(LS_QUOTES, JSON.stringify(quotes));
-        localStorage.setItem(LS_CATS, JSON.stringify(customCats));
-      } catch(e) {}
+        const data = JSON.stringify(quotes);
+        const catsData = JSON.stringify(customCats);
+        if (!storageLimitWarned.current && data.length + catsData.length > 4 * 1024 * 1024) {
+          storageLimitWarned.current = true;
+          showToast("Large collection — consider exporting a backup.");
+        }
+        localStorage.setItem(LS_QUOTES, data);
+        localStorage.setItem(LS_CATS, catsData);
+      } catch(e) {
+        showToast("Couldn't save — storage may be full. Export to keep your data safe.");
+      }
     }
   }, [quotes, customCats, isSharedView]);
 
@@ -205,6 +223,11 @@ export default function Commonplace() {
     try { localStorage.setItem(LS_SORT, sortBy); } catch(e) {}
   }, [sortBy]);
 
+  // Persist filter state
+  useEffect(() => {
+    try { localStorage.setItem(LS_FILTERS, JSON.stringify({ cat: catFilter, fav: favFilter, search })); } catch(e) {}
+  }, [catFilter, favFilter, search]);
+
   // ── Mount: shared link OR restore session ──
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -214,6 +237,9 @@ export default function Commonplace() {
         setQuotes(decoded); setPhase("results"); setIsSharedView(true);
         return;
       }
+      // Shared link was corrupted or empty
+      showToast("This shared link couldn't be loaded — it may be corrupted.");
+      try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {}
     }
     try {
       const saved = localStorage.getItem(LS_QUOTES);
@@ -224,7 +250,10 @@ export default function Commonplace() {
           setSavedSession({ quotes: q, customCats: cats });
         }
       }
-    } catch(e) {}
+    } catch(e) {
+      showToast("Saved session couldn't be loaded. Starting fresh.");
+      try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e2) {}
+    }
   }, []);
 
   // ── Responsive ──
@@ -270,6 +299,24 @@ export default function Commonplace() {
     }
     pendingScrollAdjust.current = null;
   }, [showStats, showAddMore, view, compact]);
+
+  // ── Category pill scroll fade ──
+  const updateCatFade = useCallback(() => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    setCatFade({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft < el.scrollWidth - el.clientWidth - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(updateCatFade, 100);
+    window.addEventListener("resize", updateCatFade);
+    return () => { clearTimeout(t); window.removeEventListener("resize", updateCatFade); };
+  }, [updateCatFade]);
+
+  useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter, updateCatFade]);
 
   // ── Click-outside for dropdowns and edit form ──
   useEffect(() => {
@@ -367,11 +414,14 @@ export default function Commonplace() {
     reader.onload = (e) => {
       let content = e.target.result;
       let formatLabel = null;
+      let skippedCount = 0;
 
       if (ext === "txt" && content.includes("==========")) {
         // Kindle My Clippings.txt
+        const totalClips = content.split("==========").filter(c => c.trim()).length;
         const entries = parseKindleClippings(content);
         if (entries.length > 0) {
+          skippedCount = totalClips - entries.length;
           content = entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
           formatLabel = "Kindle highlights";
         }
@@ -379,8 +429,10 @@ export default function Commonplace() {
         const headerLine = content.split("\n")[0]?.toLowerCase() || "";
         if (headerLine.includes("highlight")) {
           // Readwise export
+          const totalDataLines = content.split("\n").filter((l, i) => i > 0 && l.trim()).length;
           const entries = parseReadwiseCSV(content);
           if (entries.length > 0) {
+            skippedCount = totalDataLines - entries.length;
             content = entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
             formatLabel = "Readwise";
           }
@@ -404,9 +456,11 @@ export default function Commonplace() {
       setRawInput(content);
       setImportedFileName(file.name);
       const count = smartSplit(content).length;
-      showToast(formatLabel
+      let msg = formatLabel
         ? `Loaded ${count} entries from ${file.name} (${formatLabel})`
-        : `Loaded ${count} entries from ${file.name}`);
+        : `Loaded ${count} entries from ${file.name}`;
+      if (skippedCount > 0) msg += ` · ${skippedCount} skipped`;
+      showToast(msg);
     };
     reader.readAsText(file);
   };
@@ -418,23 +472,30 @@ export default function Commonplace() {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
       return `[${i}] ${it.text}${hintStr}`;
     }).join("\n");
-    const r = await fetch("/api/identify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Requested-With": "CommonplaceApp",
-      },
-      body: JSON.stringify({
-        formatting: withFormatting,
-        messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
-      }),
-    });
-    if (!r.ok) throw new Error(`API returned ${r.status}`);
-    const d = await r.json();
-    if (d.error) throw new Error(d.error.message || "API error");
-    const t = d.content.map(x => x.text || "").join("");
-    const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
-    return Array.isArray(parsed) ? parsed : [];
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const r = await fetch("/api/identify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "CommonplaceApp",
+        },
+        body: JSON.stringify({
+          formatting: withFormatting,
+          messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
+        }),
+        signal: controller.signal,
+      });
+      if (!r.ok) throw new Error(`API returned ${r.status}`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message || "API error");
+      const t = d.content.map(x => x.text || "").join("");
+      const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
+      return Array.isArray(parsed) ? parsed : [];
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }, []);
 
   // ── Re-identify a single entry ──
@@ -664,8 +725,8 @@ const handleDupesContinue = async () => {
   };
 
   const handleClear = () => {
-    window.history.replaceState(null, "", window.location.pathname); setIsSharedView(false);
-    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
+    try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} setIsSharedView(false);
+    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); } catch(e) {}
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
@@ -762,6 +823,8 @@ const handleDupesContinue = async () => {
       return { ...q, [field]: newVal, confidence: "high" };
     }));
     setInlineEdit(null);
+    setSavedPulse({ id, field });
+    setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), 600);
   };
   // Change #1: Undo for bulk edit — snapshot affected quotes before mutation
   const applyBulk  = () => {
@@ -993,7 +1056,7 @@ const handleDupesContinue = async () => {
             goPhase("results");
           }}
           onDismissSession={() => {
-            try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e) {}
+            try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); } catch(e) {}
             setSavedSession(null);
           }}
           fileInputRef={fileInputRef}
@@ -1056,7 +1119,7 @@ const handleDupesContinue = async () => {
           {isSharedView && (
             <div style={Z.shareBanner}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({quotes.length} entries)</span>
-              <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); window.history.replaceState(null, "", window.location.pathname); }}>Make it yours</button>
+              <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} }}>Make it yours</button>
             </div>
           )}
 
@@ -1219,30 +1282,35 @@ const handleDupesContinue = async () => {
             </div>
           </div>
 
-          <div className="cat-scroll" style={Z.cats}>
-            <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
-            {favCount > 0 && (
-              <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
-                ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
-              </button>
-            )}
-            {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
-              const col = getCatColor(c, customCats); const on = catFilter === c;
-              const count = cc[c];
-              const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-              return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
-                {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
-                {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
-                {customCats.includes(c) && <span className="ui-tip" data-tip="Remove category" style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
-              </button>;
-            })}
-            {showNewCat ? (
-              <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-                <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
-                <button style={Z.newCatSv} onClick={addCat}>Add</button>
-              </div>
-            ) : <button className="ui-tip ui-tip-below" data-tip="Add custom category" style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+          <div style={{ position: "sticky", top: 0, zIndex: 50, background: "#FAF8F4", borderBottom: "1px solid #E3E2DE" }}>
+            <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
+              style={{ ...Z.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
+              <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
+              {favCount > 0 && (
+                <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
+                  ★ Favorites<span style={{ opacity: .5, fontSize: 11 }}>{favCount}</span>
+                </button>
+              )}
+              {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
+                const col = getCatColor(c, customCats); const on = catFilter === c;
+                const count = cc[c];
+                const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
+                return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
+                  {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
+                  {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
+                  {customCats.includes(c) && <span className="ui-tip" data-tip="Remove category" style={{ opacity: .4, fontSize: 10, cursor: "pointer" }} onClick={e => { e.stopPropagation(); remCat(c); }}>✕</span>}
+                </button>;
+              })}
+              {showNewCat ? (
+                <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                  <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
+                  <button style={Z.newCatSv} onClick={addCat}>Add</button>
+                </div>
+              ) : <button className="ui-tip ui-tip-below" data-tip="Add custom category" style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+            </div>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, #FAF8F4, transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
+            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, #FAF8F4, transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
           </div>
 
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
@@ -1289,6 +1357,7 @@ const handleDupesContinue = async () => {
               setColumnOrder={setColumnOrder}
               sortBy={sortBy}
               isMobile={isMobile}
+              savedPulse={savedPulse}
             />
           )}
 
@@ -1324,6 +1393,7 @@ const handleDupesContinue = async () => {
                     handleDragStart={handleDragStart}
                     handleDragOver={handleDragOver}
                     handleDragEnd={handleDragEnd}
+                    savedPulse={savedPulse}
                   />
                 );
               })}

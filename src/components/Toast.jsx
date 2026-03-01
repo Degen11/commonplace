@@ -1,16 +1,23 @@
-import { useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Z } from "./styles";
 
 export default function Toast({ message, action, onAction, onDismiss }) {
   const duration = action ? 5000 : 2500;
+  const [exiting, setExiting] = useState(false);
+
+  const triggerExit = useCallback(() => {
+    if (exiting) return;
+    setExiting(true);
+    setTimeout(onDismiss, 180);
+  }, [onDismiss, exiting]);
 
   useEffect(() => {
-    const t = setTimeout(onDismiss, duration);
+    const t = setTimeout(triggerExit, duration);
     return () => clearTimeout(t);
-  }, [onDismiss, duration]);
+  }, [triggerExit, duration]);
 
   return (
-    <div style={Z.toast}>
+    <div style={{ ...Z.toast, animation: exiting ? "toastOut .18s ease forwards" : "toastIn .2s ease" }}>
       <div style={Z.toastContent}>
         <span style={{
           maxWidth: 280,

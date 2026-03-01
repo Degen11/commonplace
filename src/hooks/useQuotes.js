@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   DEFAULT_CATEGORIES, REORDERABLE_COLS,
 } from "../data/constants";
@@ -27,7 +27,7 @@ export default function useQuotes(showToast) {
   });
 
   const storageLimitWarned = useRef(false);
-  const allCats = [...DEFAULT_CATEGORIES, ...customCats];
+  const allCats = useMemo(() => [...DEFAULT_CATEGORIES, ...customCats], [customCats]);
 
   // ── Persist quotes + custom categories ──
   useEffect(() => {

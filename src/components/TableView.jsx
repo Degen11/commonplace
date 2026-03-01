@@ -32,14 +32,16 @@ function InlineSourceInput({ initial, onSave, onCancel }) {
 // ── Inline category select (pill picker) ──
 function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }) {
   const ref = useRef(null);
+  const onCancelRef = useRef(onCancel);
+  onCancelRef.current = onCancel;
 
   useEffect(() => {
-    const handleKey = e => { if (e.key === "Escape") { e.stopPropagation(); onCancel(); } };
-    const handleClickOutside = e => { if (ref.current && !ref.current.contains(e.target)) onCancel(); };
+    const handleKey = e => { if (e.key === "Escape") { e.stopPropagation(); onCancelRef.current(); } };
+    const handleClickOutside = e => { if (ref.current && !ref.current.contains(e.target)) onCancelRef.current(); };
     document.addEventListener("keydown", handleKey);
     document.addEventListener("mousedown", handleClickOutside);
     return () => { document.removeEventListener("keydown", handleKey); document.removeEventListener("mousedown", handleClickOutside); };
-  }, [onCancel]);
+  }, []);
 
   return (
     <div ref={ref} onClick={e => e.stopPropagation()} style={{
@@ -125,7 +127,7 @@ function TableRow({
       <div className="row-actions" style={Z.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
-        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying === q.id} />
+        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying.has(q.id)} />
         <DelBtn q={q} onDelete={actionProps.onDelete} />
       </div>
     </div>

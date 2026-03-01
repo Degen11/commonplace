@@ -7,7 +7,6 @@ import useQuotes from "../hooks/useQuotes";
 import useProcessing from "../hooks/useProcessing";
 
 // Data
-import { localLookup } from "../data/localQuotes";
 import {
   VIBE_TAGS, QUOTED_CATS,
   CONF_ORDER, getCatColor,
@@ -19,6 +18,7 @@ import {
   exportCSV, exportMD, exportJSON, exportTXT,
   copyToClipboard, richCopyToClipboard, encodeShareData,
   parseKindleClippings, parseReadwiseCSV, parseCSVLine,
+  generateShareImage,
 } from "../utils/helpers";
 
 // Components
@@ -130,6 +130,7 @@ export default function Commonplace() {
   const [catFilter, setCatFilter]             = useState(_initFilters.cat || "All");
   const [favFilter, setFavFilter]             = useState(!!_initFilters.fav);
   const [search, setSearch]                   = useState(_initFilters.search || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(_initFilters.search || "");
   const [sortBy, setSortBy]                   = useState(() => {
     try {
       const saved = localStorage.getItem(LS_SORT);
@@ -239,6 +240,12 @@ export default function Commonplace() {
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, [view]);
+
+  // ── Search debounce (150ms) — avoids re-filtering on every keystroke ──
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 150);
+    return () => clearTimeout(t);
+  }, [search]);
 
   // ── Sticky header observer ──
   useEffect(() => {
@@ -453,6 +460,7 @@ export default function Commonplace() {
   const reIdentify = async (q) => {
     setReidentifyingIds(prev => new Set(prev).add(q.id));
     const clearId = () => setReidentifyingIds(prev => { const s = new Set(prev); s.delete(q.id); return s; });
+    const { localLookup } = await import("../data/localQuotes");
     const local = localLookup(q.text, null, { exactOnly: true });
     if (local) {
       const snapshot = { ...q };
@@ -502,6 +510,23 @@ export default function Commonplace() {
         showToast("Copied!");
       })
       .catch(() => showToast("Couldn't copy — try manually selecting the text."));
+  };
+
+  // ── Share single quote as PNG image ──
+  const shareAsImage = async (q) => {
+    const catColor = getCatColor(q.category, customCats);
+    try {
+      const blob = await generateShareImage(q, catColor);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "commonplace-quote.png";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Image saved!");
+    } catch {
+      showToast("Couldn't generate image.");
+    }
   };
 
   const handleProcess  = () => processEntries(rawInput, false, formattingEnabled);
@@ -715,15 +740,15 @@ export default function Commonplace() {
     const result = quotes.filter(q => {
       if (catFilter !== "All" && q.category !== catFilter) return false;
       if (favFilter && !q.favorite) return false;
-      if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
+      if (debouncedSearch && !q.text.toLowerCase().includes(debouncedSearch.toLowerCase()) && !q.source.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
       return true;
     });
     if (sortBy === "confidence") result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
     else if (sortBy === "alpha")    result.sort((a, b) => a.text.localeCompare(b.text));
     else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category));
     return result;
-  }, [quotes, catFilter, favFilter, search, sortBy]);
-  const paginationKey = `${catFilter}-${favFilter}-${search}-${sortBy}-${quotes.length}`;
+  }, [quotes, catFilter, favFilter, debouncedSearch, sortBy]);
+  const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${quotes.length}`;
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
 
   const { cc, favCount, unknownCount, topCats } = useMemo(() => {
@@ -748,10 +773,11 @@ export default function Commonplace() {
   }, [quotes]);
 
   const actionProps = {
-    onFav:        id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
-    onDelete:     handleDelete,
-    onCopy:       copyQuote,
-    onReidentify: reIdentify,
+    onFav:         id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
+    onDelete:      handleDelete,
+    onCopy:        copyQuote,
+    onReidentify:  reIdentify,
+    onShareImage:  shareAsImage,
     copiedId,
     reidentifying: reidentifyingIds,
   };

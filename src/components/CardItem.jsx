@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import useLongPress from "../hooks/useLongPress";
 import EditForm from "./EditForm";
-import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
+import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot, ShareImageBtn } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { CONF_LABELS } from "../data/constants";
 import { Z, CZ } from "./styles";
@@ -75,6 +75,7 @@ export default function CardItem({
         <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
           <FavBtn q={q} onFav={actionProps.onFav} />
           <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
+          <ShareImageBtn q={q} onShareImage={actionProps.onShareImage} />
           <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying.has(q.id)} />
           <DelBtn q={q} onDelete={actionProps.onDelete} />
         </div>

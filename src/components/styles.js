@@ -297,7 +297,7 @@ export const Z = {
   shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"#fff",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 
   // Stats panel
-  statsPanel:{background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:12,padding:20,margin:"12px 0",animation:"slideD .2s ease"},
+  statsPanel:{background:"#FAFAFA",border:"1px solid #E3E2DE",borderRadius:14,padding:20,margin:0,animation:"slideD .2s ease",boxShadow:"0 8px 32px rgba(0,0,0,.12)"},
   statsPanelTitle:{fontSize:14,fontWeight:600,color:"#37352F",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
   statsPanelClose:{background:"none",border:"none",color:"#9B9A97",cursor:"pointer",fontSize:16,padding:"0 4px"},
   statsSection:{display:"flex",flexDirection:"column",gap:10},

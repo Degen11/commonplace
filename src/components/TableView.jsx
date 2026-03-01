@@ -107,7 +107,7 @@ function TableRow({
         ...(q.favorite ? Z.favRow : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
         ...(dragId === q.id ? { opacity: .4 } : {}),
-        animation: deletingId === q.id ? "exitShrink .2s ease forwards" : "fadeUp .25s ease",
+        ...(deletingId === q.id ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
     >
       <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>

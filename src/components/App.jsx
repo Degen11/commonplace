@@ -300,14 +300,17 @@ export default function Commonplace() {
     setShowSort(false);
   }, [headerVisible]);
 
-  // Lock body scroll when stats overlay is open
+  // Lock body scroll when stats overlay is open (compensate scrollbar width to prevent layout shift)
   useEffect(() => {
     if (showStats) {
+      const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarW}px`;
     } else {
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => { document.body.style.overflow = ''; document.body.style.paddingRight = ''; };
   }, [showStats]);
 
   // ── Scroll position preservation for mini-header actions ──
@@ -1248,7 +1251,7 @@ const handleDupesContinue = async () => {
                 position: "fixed", inset: 0, zIndex: 1000,
                 background: "rgba(0,0,0,.4)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                padding: 24, animation: "fadeUp .15s ease",
+                padding: 24, animation: "overlayFade .15s ease",
               }}
               onClick={e => { if (e.target === e.currentTarget) { if (!headerVisible) preserveScroll(); setShowStats(false); } }}
               ref={el => { if (el && !el.dataset.trapped) { el.dataset.trapped = "1"; el.focus(); } }}
@@ -1393,7 +1396,7 @@ const handleDupesContinue = async () => {
 
           {/* TABLE VIEW */}
           {view === "table" && (
-            <div key={`view-table-${compact}`} style={{ animation: "viewFade .2s ease" }}>
+            <div>
             <TableView
               filtered={visible}
               selected={selected}
@@ -1426,7 +1429,7 @@ const handleDupesContinue = async () => {
 
           {/* CARD VIEW — with long-press to select (change #8) */}
           {view === "cards" && (
-            <div key="view-cards" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8, animation: "viewFade .2s ease" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
               {visible.map((q, idx) => {
                 const col = getCatColor(q.category, customCats);
                 const isSel = selected.has(q.id);

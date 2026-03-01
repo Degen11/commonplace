@@ -514,9 +514,8 @@ export default function Commonplace() {
 
   // ── Share single quote as PNG image ──
   const shareAsImage = async (q) => {
-    const catColor = getCatColor(q.category, customCats);
     try {
-      const blob = await generateShareImage(q, catColor);
+      const blob = await generateShareImage(q);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

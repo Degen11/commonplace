@@ -1,4 +1,4 @@
-import { baseCSS, Z } from "./styles";
+import { Z } from "./styles";
 import { getCatColor } from "../data/constants";
 import { CheckCircle } from "lucide-react";
 
@@ -15,7 +15,6 @@ export default function ProcessingPhase({
 
   return (
     <div style={Z.wrap} className={fadeClass}>
-      <style>{baseCSS}</style>
       <nav style={Z.nav}>
         <span style={Z.navLogo}>Commonplace</span>
         <div style={Z.navRight}>

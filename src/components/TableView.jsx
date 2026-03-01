@@ -3,7 +3,7 @@ import EditForm from "./EditForm";
 import useLongPress from "../hooks/useLongPress";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
-import { getCatColor, CONF_LABELS, REORDERABLE_COLS } from "../data/constants";
+import { getCatColor, CONF_LABELS } from "../data/constants";
 import { Z } from "./styles";
 
 // ── Inline source text input ──
@@ -80,8 +80,8 @@ const CATEGORY_CELL_STYLE = { flex: "0 0 120px", width: 120, display: 'flex', al
 // ── Row component with long-press support (change #8) ──
 function TableRow({
   q, isSel, isEd, needsAtt, sortBy, dragId, dragInsert, isMobile,
-  inlineEdit, columnOrder, compact, allCats, customCats, actionProps,
-  toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
+  inlineEdit, columnOrder, compact, actionProps,
+  toggleSel,
   handleDragStart, handleDragOver, handleDragEnd, renderColCell,
   deletingId,
 }) {
@@ -96,6 +96,7 @@ function TableRow({
 
   return (
     <div className={`qrow ${insertClass}`}
+      data-id={q.id}
       draggable={!isEd && inlineEdit?.id !== q.id}
       onDragStart={() => handleDragStart(q.id)}
       onDragOver={e => handleDragOver(e, q.id)}

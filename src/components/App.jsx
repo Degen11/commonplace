@@ -3,19 +3,21 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
 import useToasts from "../hooks/useToasts";
+import useQuotes from "../hooks/useQuotes";
+import useProcessing from "../hooks/useProcessing";
 
 // Data
 import { localLookup } from "../data/localQuotes";
 import {
-  DEFAULT_CATEGORIES, SOURCE_CATEGORIES, VIBE_TAGS, QUOTED_CATS,
-  CONF_ORDER, getCatColor, REORDERABLE_COLS
+  VIBE_TAGS, QUOTED_CATS,
+  CONF_ORDER, getCatColor,
 } from "../data/constants";
 
 // Utils
 import {
-  normalize, similarity, smartParse, smartSplit, basicFormat,
+  smartSplit,
   exportCSV, exportMD, exportJSON, exportTXT,
-  copyToClipboard, richCopyToClipboard, encodeShareData, decodeShareData,
+  copyToClipboard, richCopyToClipboard, encodeShareData,
   parseKindleClippings, parseReadwiseCSV, parseCSVLine,
 } from "../utils/helpers";
 
@@ -28,19 +30,21 @@ import ProcessingPhase from "./ProcessingPhase";
 import TableView from "./TableView";
 import CardItem from "./CardItem";
 import Footer from "./Footer";
+import HeaderBar from "./HeaderBar";
+import ToolbarSection from "./ToolbarSection";
+import BulkBar from "./BulkBar";
 import Logo from "./Logo";
-import { baseCSS, Z } from "./styles";
+import { Z } from "./styles";
 
 // Icons
 import {
   Search, ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
   AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2,
-  List, AlignJustify, LayoutGrid, X, ChevronDown, CheckCircle,
+  List, AlignJustify, LayoutGrid, X,
 } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
 const LS_CATS       = "commonplace_cats";
-const LS_COL_ORDER  = "commonplace_col_order";
 const LS_VIEW       = "commonplace_view";
 const LS_SORT       = "commonplace_sort";
 const LS_FILTERS    = "commonplace_filters";
@@ -60,16 +64,46 @@ const SORT_OPTIONS = [
 
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
+  // ── Phase / UI chrome ──
   const [phase, setPhase]                     = useState("input");
   const [fadeClass, setFadeClass]             = useState("phase-in");
   const [rawInput, setRawInput]               = useState(() => {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
+
+  // ── Toasts ──
+  const { toasts, showToast, dismissToast } = useToasts();
+
+  // ── Quote store (core state + persistence) ──
+  const {
+    quotes, setQuotes,
+    customCats, setCustomCats,
+    columnOrder, setColumnOrder,
+    allCats,
+    isSharedView, setIsSharedView,
+    savedSession, setSavedSession,
+  } = useQuotes(showToast);
+
+  // ── Phase transition ──
+  const goPhase = useCallback((next) => {
+    setFadeClass("phase-out");
+    setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
+  }, []);
+
+  // ── Processing pipeline ──
+  const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
+  const {
+    isProcessing, processingDone, progress, identifiedFeed,
+    apiError, setApiError, failedEntries,
+    stats, setStats,
+    pendingDupes, dupeDecisions, setDupeDecisions,
+    formattingEnabled, setFormattingEnabled,
+    processEntries, handleDupesContinue, retryFailed,
+    identifyBatch, resetProcessingState,
+  } = processing;
+
+  // ── View / filter / sort state ──
   const [deletingId, setDeletingId]           = useState(null);
-  const [processingDone, setProcessingDone]   = useState(false);
-  const [quotes, setQuotes]                   = useState([]);
-  const [customCats, setCustomCats]           = useState([]);
-  const [progress, setProgress]               = useState(null);
   const [view, setView]                       = useState(() => {
     try {
       const saved = localStorage.getItem(LS_VIEW);
@@ -113,68 +147,41 @@ export default function Commonplace() {
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
   const [showStats, setShowStats]             = useState(false);
-  const [stats, setStats]                     = useState(null);
-  const [apiError, setApiError]               = useState(null);
   const [showAddMore, setShowAddMore]         = useState(false);
   const [addMoreInput, setAddMoreInput]       = useState("");
   const [addMoreFormatting, setAddMoreFormatting] = useState(false);
   const [confirmClear, setConfirmClear]       = useState(false);
   const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
-  const [isProcessing, setIsProcessing]       = useState(false);
   const [confirmBulkDel, setConfirmBulkDel]   = useState(false);
   const [reviewQueue, setReviewQueue]         = useState([]);
   const [dragId, setDragId]                   = useState(null);
-  const [failedEntries, setFailedEntries]     = useState([]);
-  const [isSharedView, setIsSharedView]       = useState(false);
-  const [formattingEnabled, setFormattingEnabled] = useState(false);
-  const [identifiedFeed, setIdentifiedFeed]   = useState([]);
-  const [savedSession, setSavedSession]       = useState(null);
-  const [inputTab, setInputTab]               = useState("paste");
-  const [isDragOver, setIsDragOver]           = useState(false);
-  const [importedFileName, setImportedFileName] = useState(null);
-  const [pendingDupes, setPendingDupes]       = useState([]);
-  const [dupeDecisions, setDupeDecisions]     = useState({});
   const [copiedId, setCopiedId]               = useState(null);
   const [reidentifyingId, setReidentifyingId] = useState(null);
   const [dragInsert, setDragInsert]           = useState(null);
   const [headerVisible, setHeaderVisible]     = useState(true);
   const [savedPulse, setSavedPulse]           = useState(null);
   const [catFade, setCatFade]                 = useState({ left: false, right: false });
+  const [inputTab, setInputTab]               = useState("paste");
+  const [isDragOver, setIsDragOver]           = useState(false);
+  const [importedFileName, setImportedFileName] = useState(null);
 
-  // Column order state — persisted to localStorage
-  const [columnOrder, setColumnOrder] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_COL_ORDER);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length === REORDERABLE_COLS.length &&
-            REORDERABLE_COLS.every(c => parsed.includes(c))) return parsed;
-      }
-    } catch(e) {}
-    return [...REORDERABLE_COLS];
-  });
-
-  const { toasts, showToast, dismissToast } = useToasts();
-
+  // ── Refs ──
   const undoRef                = useRef(null);
   const addMoreRef             = useRef(null);
   const exportRef              = useRef(null);
   const miniExportRef          = useRef(null);
   const sortRef                = useRef(null);
-  const pendingContinuationRef = useRef(null);
   const fileInputRef           = useRef(null);
   const lastSelectedIndex      = useRef(null);
   const toolbarRef             = useRef(null);
   const pendingScrollAdjust    = useRef(null);
   const catScrollRef           = useRef(null);
-  const storageLimitWarned     = useRef(false);
+  const headerRef              = useRef(null);
 
-  const allCats = [...DEFAULT_CATEGORIES, ...customCats];
-
-  // Helper functions
+  // ── Helper functions ──
   const sanitizeCategoryName = (name) => {
     return name
-      .replace(/[<>\"'&]/g, '')
+      .replace(/[<>"'&]/g, '')
       .trim()
       .slice(0, 50);
   };
@@ -189,36 +196,14 @@ export default function Commonplace() {
     setEditingId(null);
   };
 
-  // ── Phase transition ──
-  const goPhase = useCallback((next) => {
-    setFadeClass("phase-out");
-    setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
-  }, []);
-
-  // ── LocalStorage persistence ──
+  // ── Mount: set initial phase if shared link loaded quotes ──
   useEffect(() => {
-    if (quotes.length > 0 && !isSharedView) {
-      try {
-        const data = JSON.stringify(quotes);
-        const catsData = JSON.stringify(customCats);
-        if (!storageLimitWarned.current && data.length + catsData.length > 4 * 1024 * 1024) {
-          storageLimitWarned.current = true;
-          showToast("Large collection — consider exporting a backup.");
-        }
-        localStorage.setItem(LS_QUOTES, data);
-        localStorage.setItem(LS_CATS, catsData);
-      } catch(e) {
-        showToast("Couldn't save — storage may be full. Export to keep your data safe.");
-      }
+    if (isSharedView && quotes.length > 0 && phase === "input") {
+      setPhase("results");
     }
-  }, [quotes, customCats, isSharedView]);
+  }, [isSharedView, quotes.length, phase]);
 
-  // Persist column order
-  useEffect(() => {
-    try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) {}
-  }, [columnOrder]);
-
-  // Persist view preference (change #6)
+  // ── Persist view preference ──
   useEffect(() => {
     try { localStorage.setItem(LS_VIEW, JSON.stringify({ view, compact })); } catch(e) {}
   }, [view, compact]);
@@ -233,7 +218,7 @@ export default function Commonplace() {
     try { localStorage.setItem(LS_FILTERS, JSON.stringify({ cat: catFilter, fav: favFilter, search })); } catch(e) {}
   }, [catFilter, favFilter, search]);
 
-  // Auto-save raw input draft (QW7)
+  // Auto-save raw input draft
   useEffect(() => {
     const t = setTimeout(() => {
       try {
@@ -243,34 +228,6 @@ export default function Commonplace() {
     }, 500);
     return () => clearTimeout(t);
   }, [rawInput]);
-
-  // ── Mount: shared link OR restore session ──
-  useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash.startsWith("s=")) {
-      const decoded = decodeShareData(hash.slice(2));
-      if (decoded?.length > 0) {
-        setQuotes(decoded); setPhase("results"); setIsSharedView(true);
-        return;
-      }
-      // Shared link was corrupted or empty
-      showToast("This shared link couldn't be loaded — it may be corrupted.");
-      try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {}
-    }
-    try {
-      const saved = localStorage.getItem(LS_QUOTES);
-      if (saved) {
-        const q = JSON.parse(saved);
-        if (q?.length > 0) {
-          const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
-          setSavedSession({ quotes: q, customCats: cats });
-        }
-      }
-    } catch(e) {
-      showToast("Saved session couldn't be loaded. Starting fresh.");
-      try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e2) {}
-    }
-  }, []);
 
   // ── Responsive ──
   useEffect(() => {
@@ -284,7 +241,6 @@ export default function Commonplace() {
   }, [view]);
 
   // ── Sticky header observer ──
-  const headerRef = useRef(null);
   useEffect(() => {
     if (phase !== "results" || !headerRef.current) return;
     const obs = new IntersectionObserver(([entry]) => {
@@ -300,7 +256,7 @@ export default function Commonplace() {
     setShowSort(false);
   }, [headerVisible]);
 
-  // Lock body scroll when stats overlay is open (compensate scrollbar width to prevent layout shift)
+  // Lock body scroll when stats overlay is open
   useEffect(() => {
     if (showStats) {
       const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
@@ -314,9 +270,6 @@ export default function Commonplace() {
   }, [showStats]);
 
   // ── Scroll position preservation for mini-header actions ──
-  // When panels (Stats, Add More) are toggled from the sticky mini-header,
-  // they insert/remove content above the viewport, shifting visible content.
-  // This records the toolbar position before the change so we can compensate.
   const preserveScroll = useCallback(() => {
     if (toolbarRef.current && !headerVisible) {
       pendingScrollAdjust.current = toolbarRef.current.getBoundingClientRect().top;
@@ -358,8 +311,7 @@ export default function Commonplace() {
     const h = e => {
       if (exportRef.current && !exportRef.current.contains(e.target) && (!miniExportRef.current || !miniExportRef.current.contains(e.target))) setShowExport(false);
       if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
-      
-      // Close edit form if clicking outside the table/cards area
+
       if (editingId) {
         const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
         if (!clickedInside) {
@@ -371,43 +323,34 @@ export default function Commonplace() {
     return () => document.removeEventListener("mousedown", h);
   }, [editingId]);
 
-  // ── Keyboard shortcuts (changes #2, #3) ──
+  // ── Keyboard shortcuts ──
   useEffect(() => {
     const h = e => {
-      // Don't trigger if user is typing in an input/textarea
       if (e.target.matches('input, textarea, select')) return;
-      
-      // Escape: prioritized dismissal chain
+
       if (e.key === 'Escape') {
-        // Priority 0: Close any open modal
         if (confirmClear) { setConfirmClear(false); return; }
         if (confirmBulkDel) { setConfirmBulkDel(false); return; }
-        // Priority 1: Close dropdowns
         if (showExport) { setShowExport(false); return; }
         if (showSort) { setShowSort(false); return; }
-        // Priority 2: Clear selection if any entries are selected
         if (selected.size > 0) {
           setSelected(new Set());
           lastSelectedIndex.current = null;
           return;
         }
-        // Priority 3: Close edit form if open and no field is focused
         if (editingId) {
           setEditingId(null);
           if (reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
           return;
         }
-        // Priority 4: Clear search
         if (search) {
           setSearch('');
           return;
         }
       }
-      
-      // Cmd/Ctrl + A: Select all visible quotes
+
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
-        // Compute filtered inline to avoid dependency issues
         const visibleQuotes = quotes.filter(q => {
           if (catFilter !== "All" && q.category !== catFilter) return false;
           if (favFilter && !q.favorite) return false;
@@ -421,7 +364,7 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort]);
+  }, [search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue.length, showToast]);
 
   // Reset shift-click index when filters change
   useEffect(() => {
@@ -452,7 +395,6 @@ export default function Commonplace() {
       let skippedCount = 0;
 
       if (ext === "txt" && content.includes("==========")) {
-        // Kindle My Clippings.txt
         const totalClips = content.split("==========").filter(c => c.trim()).length;
         const entries = parseKindleClippings(content);
         if (entries.length > 0) {
@@ -463,7 +405,6 @@ export default function Commonplace() {
       } else if (ext === "csv") {
         const headerLine = content.split("\n")[0]?.toLowerCase() || "";
         if (headerLine.includes("highlight")) {
-          // Readwise export
           const totalDataLines = content.split("\n").filter((l, i) => i > 0 && l.trim()).length;
           const entries = parseReadwiseCSV(content);
           if (entries.length > 0) {
@@ -472,7 +413,6 @@ export default function Commonplace() {
             formatLabel = "Readwise";
           }
         } else {
-          // Generic CSV
           const lines = content.split("\n");
           const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, "").trim().toLowerCase());
           const textCol = ["text","quote","quotes","content","entry"].reduce((found, key) => {
@@ -500,39 +440,6 @@ export default function Commonplace() {
     reader.onerror = () => showToast("Couldn't read file — it may be corrupted or inaccessible.");
     reader.readAsText(file);
   };
-
-  // ── API: batch identification ──
-  const identifyBatch = useCallback(async (items, withFormatting = false) => {
-    if (items.length === 0) return [];
-    const quotesBlock = items.map((it, i) => {
-      const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
-      return `[${i}] ${it.text}${hintStr}`;
-    }).join("\n");
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    try {
-      const r = await fetch("/api/identify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "CommonplaceApp",
-        },
-        body: JSON.stringify({
-          formatting: withFormatting,
-          messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
-        }),
-        signal: controller.signal,
-      });
-      if (!r.ok) throw new Error(`API returned ${r.status}`);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message || "API error");
-      const t = d.content.map(x => x.text || "").join("");
-      const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
-      return Array.isArray(parsed) ? parsed : [];
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }, []);
 
   // ── Re-identify a single entry ──
   const describeChanges = (oldQ, newSource, newCategory) => {
@@ -596,190 +503,26 @@ export default function Commonplace() {
       .catch(() => showToast("Couldn't copy — try manually selecting the text."));
   };
 
-  // ── Processing pipeline ──
-  const runProcessing = async (unique, appendMode, useFormatting = false) => {
-    const localMatches = []; const needsApi = [];
-    unique.forEach((p, i) => {
-      const match = localLookup(p.text, p.hint);
-      if (match) localMatches.push({ ...p, idx: i, result: match });
-      else needsApi.push({ ...p, idx: i });
-    });
-
-    if (localMatches.length > 0) {
-      setIdentifiedFeed(localMatches.map(m => ({
-        text: useFormatting ? basicFormat(m.text) : m.text,
-        source: m.result.source, category: m.result.category,
-      })));
-    }
-
-    setProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need AI...`, phase: "local" });
-
-    const apiResults = new Map(); let apiFailed = false; const failed = []; const BATCH_SIZE = 20;
-    if (needsApi.length > 0) {
-      for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
-        const chunk = needsApi.slice(i, i + BATCH_SIZE);
-        setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
-        try {
-          const results = await identifyBatch(chunk, useFormatting);
-          results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-          setIdentifiedFeed(prev => [...prev, ...results.map(r => {
-            const item = chunk[r.i];
-            return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
-          })]);
-        } catch {
-          apiFailed = true; chunk.forEach(c => failed.push(c));
-          setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
-          break;
-        }
-      }
-    }
-    if (failed.length > 0) setFailedEntries(failed);
-
-    const newQuotes = unique.map((p, i) => {
-      const local = localMatches.find(m => m.idx === i);
-      if (local) {
-        const text = useFormatting ? basicFormat(p.text) : p.text;
-        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
-      }
-      const api = apiResults.get(i);
-      if (api) {
-        const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
-        const validCats = new Set([...allCats, ...VIBE_TAGS]);
-        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
-      }
-      const text = useFormatting ? basicFormat(p.text) : p.text;
-      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
-    });
-
-    appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
-    setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
-    // Brief success moment before showing results (QW5)
-    setProcessingDone(true);
-    setProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
-    try { localStorage.removeItem(LS_DRAFT); } catch(e) {}
-    setTimeout(() => {
-      setProgress(null); setIsProcessing(false); setProcessingDone(false); goPhase("results");
-    }, 1200);
-  };
-
-  const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
-    const lines = smartSplit(inputText.trim());
-    if (!lines.length) return;
-
-    const parsed = lines.map(l => smartParse(l));
-    const existingTexts = appendMode ? quotes.map(q => normalize(q.text)) : [];
-    
-    const unique = []; 
-    const seen = new Map(existingTexts.map(t => {
-      const q = quotes.find(q => normalize(q.text) === t);
-      return [t, q];
-    }));
-    const nearDupes = [];
-
-    parsed.forEach(p => {
-      const norm = normalize(p.text);
-      const matchedNorm = [...seen.keys()].find(s => similarity(s, norm) > 0.55);
-      
-      if (matchedNorm) {
-        const matchedQuote = seen.get(matchedNorm);
-        nearDupes.push({ 
-          incoming: p, 
-          matchedText: matchedQuote?.text || matchedNorm, 
-          matchedSource: matchedQuote?.source || null 
-        });
-      } else {
-        unique.push(p); 
-        seen.set(norm, { text: p.text, source: p.hint });
-      }
-    });
-
-    if (nearDupes.length > 0) {
-      setPendingDupes(nearDupes);
-      setDupeDecisions(Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])));
-      pendingContinuationRef.current = { unique, seen, appendMode, totalParsed: parsed.length, useFormatting };
-      return;
-    }
-
-    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
-    setStats({ dupes: 0, total: unique.length });
-    await runProcessing(unique, appendMode, useFormatting);
-  };
-
-const handleDupesContinue = async () => {
-  const { unique, appendMode, useFormatting } = pendingContinuationRef.current;
-  let keptCount = 0;
-  
-  pendingDupes.forEach((dupe, i) => {
-    const decision = dupeDecisions[i];
-    const norm = normalize(dupe.incoming.text);
-    
-    if (decision === "keep") {
-      // Just add it - user explicitly wants to keep it
-      unique.push(dupe.incoming);
-      keptCount++;
-    } else if (decision === "merge") {
-      // Merge sources: keep new text but combine sources
-      const mergedSource = dupe.matchedSource && dupe.incoming.hint
-        ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
-        : dupe.incoming.hint || dupe.matchedSource || "Unknown";
-      
-      unique.push({ ...dupe.incoming, hint: mergedSource });
-      keptCount++;
-    }
-    // "skip" does nothing
-  });
-  
-  const dupes = pendingDupes.length - keptCount;
-  setPendingDupes([]); 
-  setDupeDecisions({});
-  pendingContinuationRef.current = null;
-  
-  setIsProcessing(true); 
-  setFailedEntries([]); 
-  setIdentifiedFeed([]); 
-  goPhase("processing"); 
-  setApiError(null);
-  setStats({ dupes, total: unique.length });
-  await runProcessing(unique, appendMode, useFormatting);
-};
-
-  const retryFailed = async () => {
-    if (!failedEntries.length) return;
-    setApiError(null);
-    
-    const entriesToRetry = [...failedEntries];
-    const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` — ${e.hint}` : ""}`).join("\n");
-    
-    try {
-      await processEntries(text, true, formattingEnabled);
-      setFailedEntries([]);
-    } catch (error) {
-      setApiError(`Retry failed. You can try again or edit manually.`);
-    }
-  };
-
   const handleProcess  = () => processEntries(rawInput, false, formattingEnabled);
-  const handleAddMore  = () => { 
-    if (!addMoreInput.trim()) return; 
-    processEntries(addMoreInput, true, addMoreFormatting); 
-    setAddMoreInput(""); 
-    setShowAddMore(false); 
+  const handleAddMore  = () => {
+    if (!addMoreInput.trim()) return;
+    processEntries(addMoreInput, true, addMoreFormatting);
+    setAddMoreInput("");
+    setShowAddMore(false);
   };
 
   const handleClear = () => {
     try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} setIsSharedView(false);
     try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch(e) {}
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
-    setCatFilter("All"); setFavFilter(false); setSearch(""); setStats(null); setApiError(null);
-    setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setFailedEntries([]);
-    setShowStats(false); setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
-    setPendingDupes([]); setDupeDecisions({}); pendingContinuationRef.current = null;
+    setCatFilter("All"); setFavFilter(false); setSearch(""); resetProcessingState();
+    setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setShowStats(false);
+    setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
   };
 
   const handleDelete = (id) => {
     const deleted = quotes.find(q => q.id === id);
     const idx = quotes.findIndex(q => q.id === id);
-    // Soft exit animation (M2)
     setDeletingId(id);
     setTimeout(() => {
       setDeletingId(null);
@@ -810,7 +553,6 @@ const handleDupesContinue = async () => {
   // ── Inline actions ──
   const toggleSel = (id, shiftKey = false) => {
     if (shiftKey && lastSelectedIndex.current !== null) {
-      // Shift-click: select range
       const currentIndex = filtered.findIndex(q => q.id === id);
       const lastIndex = lastSelectedIndex.current;
       const start = Math.min(currentIndex, lastIndex);
@@ -823,7 +565,6 @@ const handleDupesContinue = async () => {
       });
       lastSelectedIndex.current = currentIndex;
     } else {
-      // Normal click: toggle single
       setSelected(p => {
         const n = new Set(p);
         n.has(id) ? n.delete(id) : n.add(id);
@@ -836,11 +577,9 @@ const handleDupesContinue = async () => {
     if (filtered.length === 0) return;
     const allSelected = filtered.every(q => selected.has(q.id));
     if (allSelected) {
-      // Deselect all
       setSelected(new Set());
       lastSelectedIndex.current = null;
     } else {
-      // Select all visible
       setSelected(new Set(filtered.map(q => q.id)));
       lastSelectedIndex.current = null;
     }
@@ -848,7 +587,6 @@ const handleDupesContinue = async () => {
   const saveEdit   = (id, text, source, category) => {
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
     setEditingId(null);
-    // Advance review queue if active
     if (reviewQueue.length > 0) {
       const remaining = reviewQueue.filter(rid => rid !== id);
       setReviewQueue(remaining);
@@ -873,7 +611,6 @@ const handleDupesContinue = async () => {
     setSavedPulse({ id, field });
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), 600);
   };
-  // Change #1: Undo for bulk edit — snapshot affected quotes before mutation
   const applyBulk  = () => {
     const affectedIds = new Set(selected);
     const snapshot = quotes.filter(q => affectedIds.has(q.id)).map(q => ({ ...q }));
@@ -933,27 +670,30 @@ const handleDupesContinue = async () => {
     }
   };
 
-  const addCat  = () => { 
+  const addCat  = () => {
     const sanitized = sanitizeCategoryName(newCatName);
     if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
       showToast("Invalid or duplicate category name");
       return;
     }
-    setCustomCats(p => [...p, sanitized]); 
-    setNewCatName(""); 
-    setShowNewCat(false); 
+    setCustomCats(p => [...p, sanitized]);
+    setNewCatName("");
+    setShowNewCat(false);
   };
   const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
 
-  // ── Row drag reorder ──
+  // ── Row drag reorder (throttled — only re-renders when target or half changes) ──
   const lastDragTarget = useRef(null);
-  const handleDragStart = (id) => { setDragId(id); lastDragTarget.current = null; };
+  const lastDragHalf = useRef(null);
+  const handleDragStart = (id) => { setDragId(id); lastDragTarget.current = null; lastDragHalf.current = null; };
   const handleDragOver  = (e, targetId) => {
     e.preventDefault();
     if (!dragId || dragId === targetId) { setDragInsert(null); return; }
-    // Determine whether cursor is in top or bottom half of the target element
     const rect = e.currentTarget.getBoundingClientRect();
     const half = (e.clientY - rect.top) < rect.height / 2 ? "above" : "below";
+    // Skip if neither the target nor the half changed — avoids redundant renders
+    if (lastDragTarget.current === targetId && lastDragHalf.current === half) return;
+    lastDragHalf.current = half;
     setDragInsert({ id: targetId, pos: half });
     if (lastDragTarget.current === targetId) return;
     lastDragTarget.current = targetId;
@@ -967,7 +707,7 @@ const handleDupesContinue = async () => {
       return arr;
     });
   };
-  const handleDragEnd = () => { setDragId(null); setDragInsert(null); lastDragTarget.current = null; };
+  const handleDragEnd = () => { setDragId(null); setDragInsert(null); lastDragTarget.current = null; lastDragHalf.current = null; };
 
   // ── Filtering & sorting ──
   let filtered = quotes.filter(q => {
@@ -1118,13 +858,13 @@ const handleDupesContinue = async () => {
           identifiedFeed={identifiedFeed}
           customCats={customCats}
           processingDone={processingDone}
-          onCancel={() => { setIsProcessing(false); setProgress(null); setProcessingDone(false); goPhase("input"); }}
+          onCancel={() => { processing.setIsProcessing(false); processing.setProgress(null); processing.setProcessingDone(false); goPhase("input"); }}
         />
       )}
 
       {/* ── Results phase ── */}
       {phase === "results" && (
-        <div style={Z.wrap} className={fadeClass}><style>{baseCSS}</style>
+        <div style={Z.wrap} className={fadeClass}>
 
           {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
 
@@ -1171,43 +911,30 @@ const handleDupesContinue = async () => {
             </div>
           )}
 
-          <div ref={headerRef} style={Z.header}>
-            <div>
-              <h1 style={{ ...Z.title, display: "flex", alignItems: "center", gap: 10 }}><Logo size={28} /> Commonplace</h1>
-              <p style={Z.sub}>
-                {filtered.length < quotes.length
-                  ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
-                  : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
-                }
-                {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
-                {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-              {!isMobile && (
-                <div style={Z.viewTog}>
-                  <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
-                    <List size={16} strokeWidth={1.5} />
-                  </button>
-                  <button className="ui-tip ui-tip-below" data-tip="Compact view" style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
-                    <AlignJustify size={16} strokeWidth={1.5} />
-                  </button>
-                  <button className="ui-tip ui-tip-below" data-tip="Card view" style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")}>
-                    <LayoutGrid size={16} strokeWidth={1.5} />
-                  </button>
-                </div>
-              )}
-              <button className="ui-tip ui-tip-below hdr-btn" data-tip="Collection insights" style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
-                {showStats ? "Hide stats" : "Stats"}
-              </button>
-              <div ref={exportRef} style={{ position: "relative" }}>
-                <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-                {showExport && headerVisible && exportDropdownContent}
-              </div>
-              <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
-              <button className="ui-tip ui-tip-below hdr-btn new-batch-btn" data-tip="Clear all and start over" style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
-            </div>
-          </div>
+          <HeaderBar
+            quotes={quotes}
+            filtered={filtered}
+            topCats={topCats}
+            customCats={customCats}
+            view={view}
+            compact={compact}
+            setView={setView}
+            setCompact={setCompact}
+            showStats={showStats}
+            setShowStats={setShowStats}
+            showExport={showExport}
+            setShowExport={setShowExport}
+            showAddMore={showAddMore}
+            setShowAddMore={setShowAddMore}
+            isMobile={isMobile}
+            setConfirmClear={setConfirmClear}
+            addMoreRef={addMoreRef}
+            exportRef={exportRef}
+            headerRef={headerRef}
+            headerVisible={headerVisible}
+            exportDropdownContent={exportDropdownContent}
+            getCatColor={getCatColor}
+          />
 
           {/* Sticky mini-header when main header scrolls out */}
           {!headerVisible && !isMobile && (
@@ -1291,7 +1018,6 @@ const handleDupesContinue = async () => {
             </div>
           )}
 
-          {/* UPDATED: Add More panel with formatting toggle */}
           {showAddMore && (
             headerVisible ? (
               <div style={Z.addMorePanel}>
@@ -1313,68 +1039,48 @@ const handleDupesContinue = async () => {
           )}
 
           {showBulkBar && (
-            <div style={Z.bulkBar}>
-              <span style={Z.bulkN}>{selected.size} selected</span>
-              <div style={Z.bulkF}>
-                <select style={Z.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
-                <input style={Z.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
-                <button className="ui-tip" data-tip="Apply to selected" style={{ ...Z.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
-                <button className="ui-tip" data-tip="Delete selected entries" style={Z.bulkDelBtn} onClick={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}>Delete</button>
-                <button className="ui-tip" data-tip="Clear selection" style={Z.bulkX} onClick={() => setSelected(new Set())}><X size={14} strokeWidth={2} /></button>
-              </div>
-            </div>
+            <BulkBar
+              selected={selected}
+              setSelected={setSelected}
+              bulkEditCat={bulkEditCat}
+              setBulkEditCat={setBulkEditCat}
+              bulkEditSource={bulkEditSource}
+              setBulkEditSource={setBulkEditSource}
+              allCats={allCats}
+              applyBulk={applyBulk}
+              onDelete={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}
+            />
           )}
 
-          <div ref={toolbarRef} style={Z.toolbar}>
-            <div style={Z.srchW}><span style={Z.srchI}><Search size={13} strokeWidth={2} /></span>
-              <input style={Z.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
-              {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={Z.clrBtn} onClick={() => setSearch("")}><X size={12} strokeWidth={2} /></button>}
-            </div>
-            <div ref={sortRef} style={{ position: "relative" }}>
-              <button style={{ ...Z.sortBtn, ...(sortBy !== "default" ? { borderColor: "#2383E2", color: "#2383E2" } : {}) }} onClick={() => setShowSort(!showSort)}>
-                Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<ChevronDown size={12} style={{ marginLeft: 2, opacity: .5 }} />
-              </button>
-              <div style={{
-                ...Z.sortDrop,
-                opacity: showSort ? 1 : 0,
-                transform: showSort ? "translateY(0)" : "translateY(-4px)",
-                pointerEvents: showSort ? "auto" : "none",
-              }}>
-                {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...Z.sortOpt, ...(sortBy === o.key ? Z.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ position: "sticky", top: 0, zIndex: 50, background: "#FAF8F4", borderBottom: "1px solid #E3E2DE" }}>
-            <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
-              style={{ ...Z.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button onClick={() => setCatFilter("All")} style={{ ...Z.catPill, ...(catFilter === "All" && !favFilter ? Z.catOn : {}) }}>All</button>
-              {favCount > 0 && (
-                <button onClick={() => setFavFilter(!favFilter)} style={{ ...Z.catPill, ...(favFilter ? { background: "#FEF3C7", color: "#D97706", borderColor: "#FDE68A" } : {}) }}>
-                  ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}>{favCount}</span>
-                </button>
-              )}
-              {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
-                const col = getCatColor(c, customCats); const on = catFilter === c;
-                const count = cc[c];
-                const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...Z.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
-                  {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
-                  {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
-                  {customCats.includes(c) && <span className="ui-tip" data-tip="Remove category" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
-                </button>;
-              })}
-              {showNewCat ? (
-                <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-                  <input style={Z.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
-                  <button style={Z.newCatSv} onClick={addCat}>Add</button>
-                </div>
-              ) : <button className="ui-tip ui-tip-below" data-tip="Add custom category" style={Z.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
-            </div>
-            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, #FAF8F4, transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
-            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, #FAF8F4, transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
-          </div>
+          <ToolbarSection
+            search={search}
+            setSearch={setSearch}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            showSort={showSort}
+            setShowSort={setShowSort}
+            catFilter={catFilter}
+            setCatFilter={setCatFilter}
+            favFilter={favFilter}
+            setFavFilter={setFavFilter}
+            favCount={favCount}
+            allCats={allCats}
+            customCats={customCats}
+            cc={cc}
+            quotes={quotes}
+            showNewCat={showNewCat}
+            setShowNewCat={setShowNewCat}
+            newCatName={newCatName}
+            setNewCatName={setNewCatName}
+            addCat={addCat}
+            remCat={remCat}
+            toolbarRef={toolbarRef}
+            sortRef={sortRef}
+            catScrollRef={catScrollRef}
+            updateCatFade={updateCatFade}
+            catFade={catFade}
+            getCatColor={getCatColor}
+          />
 
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
             <div style={Z.attentionBar}>
@@ -1427,7 +1133,7 @@ const handleDupesContinue = async () => {
             </div>
           )}
 
-          {/* CARD VIEW — with long-press to select (change #8) */}
+          {/* CARD VIEW */}
           {view === "cards" && (
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
               {visible.map((q, idx) => {
@@ -1497,7 +1203,6 @@ const handleDupesContinue = async () => {
               <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>
                 Try removing a filter to see more entries
               </p>
-              {/* Removable filter chips */}
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 12 }}>
                 {catFilter !== "All" && (
                   <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: getCatColor(catFilter, customCats).text, cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
@@ -1529,4 +1234,3 @@ const handleDupesContinue = async () => {
     </>
   );
 }
-

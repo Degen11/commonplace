@@ -77,7 +77,7 @@ const COL_CONFIG = {
 };
 
 // Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { flex: "0 1 140px", minWidth: 60, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', paddingRight: 8 };
+const CATEGORY_CELL_STYLE = { flex: "0 1 140px", minWidth: 60, display: 'flex', alignItems: 'center', gap: 6, overflow: 'visible', paddingRight: 8 };
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({
@@ -124,7 +124,7 @@ function TableRow({
 
       {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
 
-      <div className="row-actions" style={{ ...Z.rowAct, ...(isMobile ? { opacity: 1 } : {}) }}>
+      <div className="row-actions" style={Z.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
         <ShareImageBtn q={q} onShareImage={actionProps.onShareImage} />

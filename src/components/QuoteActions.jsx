@@ -89,7 +89,9 @@ export function ConfDot({ q, CONF_LABELS }) {
     <span
       className="conf-tooltip"
       data-tip={CONF_LABELS[q.confidence] || "Unknown"}
-      style={{ ...Z.confDot, background: CONF_COLORS[q.confidence] || "#D1D5DB" }}
-    />
+      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, flexShrink: 0, cursor: "help" }}
+    >
+      <span style={{ ...Z.confDot, background: CONF_COLORS[q.confidence] || "#D1D5DB", pointerEvents: "none" }} />
+    </span>
   );
 }

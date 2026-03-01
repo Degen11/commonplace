@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import EditForm from "./EditForm";
 import useLongPress from "../hooks/useLongPress";
 import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot } from "./QuoteActions";
@@ -29,24 +29,41 @@ function InlineSourceInput({ initial, onSave, onCancel }) {
   );
 }
 
-// ── Inline category select ──
-function InlineCategorySelect({ current, allCats, onSave, onCancel }) {
-  const [val, setVal] = useState(current);
+// ── Inline category select (pill picker) ──
+function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleKey = e => { if (e.key === "Escape") { e.stopPropagation(); onCancel(); } };
+    const handleClickOutside = e => { if (ref.current && !ref.current.contains(e.target)) onCancel(); };
+    document.addEventListener("keydown", handleKey);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => { document.removeEventListener("keydown", handleKey); document.removeEventListener("mousedown", handleClickOutside); };
+  }, [onCancel]);
+
   return (
-    <select
-      style={Z.inlineCatSel}
-      value={val}
-      onChange={e => setVal(e.target.value)}
-      onBlur={() => onSave(val)}
-      onKeyDown={e => {
-        if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onSave(val); }
-        if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-      }}
-      onClick={e => e.stopPropagation()}
-      autoFocus
-    >
-      {allCats.map(c => <option key={c} value={c}>{c}</option>)}
-    </select>
+    <div ref={ref} onClick={e => e.stopPropagation()} style={{
+      position: "absolute", top: "100%", left: 0, zIndex: 200,
+      background: "#fff", border: "1px solid #E3E2DE", borderRadius: 8,
+      boxShadow: "0 4px 16px rgba(0,0,0,.1)", padding: 6,
+      display: "flex", flexWrap: "wrap", gap: 4, width: 220,
+      animation: "slideD .12s ease",
+    }}>
+      {allCats.map(c => {
+        const col = getCatColor(c, customCats);
+        const isActive = c === current;
+        return (
+          <button key={c} onClick={() => onSave(c)} style={{
+            ...Z.tag, background: col.bg, color: col.text,
+            border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
+            cursor: "pointer", fontFamily: "inherit",
+            fontSize: 11, padding: "3px 8px", borderRadius: 4,
+          }}>
+            {c}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -58,7 +75,7 @@ const COL_CONFIG = {
 };
 
 // Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { flex: "0 1 120px", minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' };
+const CATEGORY_CELL_STYLE = { flex: "0 1 120px", minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, overflow: 'visible' };
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({
@@ -211,22 +228,16 @@ export default function TableView({
       );
     case "category":
       return (
-        <div key="category" className={savedPulse?.id === q.id && savedPulse?.field === "category" ? "save-pulse" : ""} style={CATEGORY_CELL_STYLE}>
-          {inlineEdit?.id === q.id && inlineEdit?.field === "category" ? (
-            <>
-              <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-              <InlineCategorySelect current={q.category} allCats={allCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
-            </>
-          ) : (
-            <>
-              <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-              <span
-                className="inline-cat"
-                style={{ ...Z.tag, background: col.bg, color: col.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120 }}
-                onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-                title="Click to change category"
-              >{q.category}</span>
-            </>
+        <div key="category" className={savedPulse?.id === q.id && savedPulse?.field === "category" ? "save-pulse" : ""} style={{ ...CATEGORY_CELL_STYLE, position: "relative" }}>
+          <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+          <span
+            className="inline-cat"
+            style={{ ...Z.tag, background: col.bg, color: col.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120, cursor: "pointer" }}
+            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+            title="Click to change category"
+          >{q.category}</span>
+          {inlineEdit?.id === q.id && inlineEdit?.field === "category" && (
+            <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
           )}
         </div>
       );

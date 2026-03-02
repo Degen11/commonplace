@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { VIBE_TAGS } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
@@ -21,8 +21,25 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   const pendingContinuationRef = useRef(null);
 
+  // FIX: Guard state updates after unmount
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Safe state setters — no-op if unmounted
+  const safeSetIsProcessing   = useCallback((v) => { if (mountedRef.current) setIsProcessing(v); }, []);
+  const safeSetProcessingDone = useCallback((v) => { if (mountedRef.current) setProcessingDone(v); }, []);
+  const safeSetProgress       = useCallback((v) => { if (mountedRef.current) setProgress(v); }, []);
+  const safeSetIdentifiedFeed = useCallback((v) => { if (mountedRef.current) setIdentifiedFeed(v); }, []);
+  const safeSetApiError       = useCallback((v) => { if (mountedRef.current) setApiError(v); }, []);
+  const safeSetFailedEntries  = useCallback((v) => { if (mountedRef.current) setFailedEntries(v); }, []);
+  const safeSetStats          = useCallback((v) => { if (mountedRef.current) setStats(v); }, []);
+
   // ── API: batch identification ──
-  const identifyBatch = useCallback(async (items, withFormatting = false) => {
+  // Accepts an optional external AbortSignal for cancellation by callers (e.g. reIdentify)
+  const identifyBatch = useCallback(async (items, withFormatting = false, externalSignal) => {
     if (items.length === 0) return [];
     const quotesBlock = items.map((it, i) => {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
@@ -30,6 +47,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     }).join("\n");
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    // If an external signal is provided, abort our controller when it fires
+    if (externalSignal) {
+      if (externalSignal.aborted) { clearTimeout(timeoutId); throw new DOMException("Aborted", "AbortError"); }
+      externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+
     try {
       const r = await fetch("/api/identify", {
         method: "POST",
@@ -67,35 +91,40 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       else needsApi.push({ ...p, idx: i });
     });
 
+    if (!mountedRef.current) return;
+
     if (localMatches.length > 0) {
-      setIdentifiedFeed(localMatches.map(m => ({
+      safeSetIdentifiedFeed(localMatches.map(m => ({
         text: useFormatting ? basicFormat(m.text) : m.text,
         source: m.result.source, category: m.result.category,
       })));
     }
 
-    setProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need AI...`, phase: "local" });
+    safeSetProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need AI...`, phase: "local" });
 
     const apiResults = new Map(); let apiFailed = false; const failed = []; const BATCH_SIZE = 20;
     if (needsApi.length > 0) {
       for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
+        if (!mountedRef.current) return;
         const chunk = needsApi.slice(i, i + BATCH_SIZE);
-        setProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
+        safeSetProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
         try {
           const results = await identifyBatch(chunk, useFormatting);
+          if (!mountedRef.current) return;
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-          setIdentifiedFeed(prev => [...prev, ...results.map(r => {
+          safeSetIdentifiedFeed(prev => [...prev, ...results.map(r => {
             const item = chunk[r.i];
             return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
           })]);
         } catch {
           apiFailed = true; chunk.forEach(c => failed.push(c));
-          setApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
+          safeSetApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
           break;
         }
       }
     }
-    if (failed.length > 0) setFailedEntries(failed);
+    if (!mountedRef.current) return;
+    if (failed.length > 0) safeSetFailedEntries(failed);
 
     const validCats = new Set([...allCats, ...VIBE_TAGS]);
     const newQuotes = unique.map((p, i) => {
@@ -113,13 +142,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
     });
 
+    if (!mountedRef.current) return;
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
-    setStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
-    setProcessingDone(true);
-    setProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
+    safeSetStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
+    safeSetProcessingDone(true);
+    safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
     try { localStorage.removeItem(LS_DRAFT); } catch(e) {}
     setTimeout(() => {
-      setProgress(null); setIsProcessing(false); setProcessingDone(false); goPhase("results");
+      if (!mountedRef.current) return;
+      safeSetProgress(null); safeSetIsProcessing(false); safeSetProcessingDone(false); goPhase("results");
     }, 1200);
   };
 
@@ -161,8 +192,8 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       return;
     }
 
-    setIsProcessing(true); setFailedEntries([]); setIdentifiedFeed([]); goPhase("processing"); setApiError(null);
-    setStats({ dupes: 0, total: unique.length });
+    safeSetIsProcessing(true); safeSetFailedEntries([]); safeSetIdentifiedFeed([]); goPhase("processing"); safeSetApiError(null);
+    safeSetStats({ dupes: 0, total: unique.length });
     await runProcessing(unique, appendMode, useFormatting);
   };
 
@@ -192,27 +223,27 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     setDupeDecisions({});
     pendingContinuationRef.current = null;
 
-    setIsProcessing(true);
-    setFailedEntries([]);
-    setIdentifiedFeed([]);
+    safeSetIsProcessing(true);
+    safeSetFailedEntries([]);
+    safeSetIdentifiedFeed([]);
     goPhase("processing");
-    setApiError(null);
-    setStats({ dupes, total: finalUnique.length });
+    safeSetApiError(null);
+    safeSetStats({ dupes, total: finalUnique.length });
     await runProcessing(finalUnique, appendMode, useFormatting);
   };
 
   const retryFailed = async () => {
     if (!failedEntries.length) return;
-    setApiError(null);
+    safeSetApiError(null);
 
     const entriesToRetry = [...failedEntries];
-    const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` — ${e.hint}` : ""}`).join("\n");
+    const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` \u2014 ${e.hint}` : ""}`).join("\n");
 
     try {
       await processEntries(text, true, formattingEnabled);
-      setFailedEntries([]);
+      safeSetFailedEntries([]);
     } catch (error) {
-      setApiError(`Retry failed. You can try again or edit manually.`);
+      safeSetApiError(`Retry failed. You can try again or edit manually.`);
     }
   };
 

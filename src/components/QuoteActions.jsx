@@ -1,4 +1,5 @@
-import { Star, Copy, Check, RefreshCw, Trash2, Share2 } from "lucide-react";
+import { useRef, useEffect } from "react";
+import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis } from "lucide-react";
 import { Z } from "./styles";
 import { CONF_COLORS } from "../data/constants";
 
@@ -20,65 +21,62 @@ export function FavBtn({ q, onFav }) {
   );
 }
 
-export function CopyBtn({ q, onCopy, copiedId }) {
-  const isCopied = copiedId === q.id;
-  return (
-    <button
-      className="act-btn ui-tip"
-      data-tip={isCopied ? "Copied!" : "Copy quote and source"}
-      style={{ ...Z.actBtn, "--hover-color": "#2383E2", ...(isCopied ? { color: "#059669" } : {}) }}
-      onClick={e => { e.stopPropagation(); if (!isCopied) onCopy(q); }}
-    >
-      {isCopied ? <Check size={16} strokeWidth={2} /> : <Copy size={16} strokeWidth={1.5} />}
-    </button>
-  );
-}
+export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
+  const menuRef = useRef(null);
+  const btnRef = useRef(null);
 
-export function ReidentifyBtn({ q, onReidentify, loading }) {
-  return (
-    <button
-      className="act-btn ui-tip"
-      data-tip={loading ? "Re-identifying…" : "Re-identify with AI"}
-      style={{
-        ...Z.actBtn,
-        "--hover-color": "#059669",
-        ...(loading ? { opacity: 0.5, cursor: "wait" } : {}),
-      }}
-      onClick={e => { e.stopPropagation(); if (!loading) onReidentify(q); }}
-      disabled={loading}
-    >
-      <RefreshCw
-        size={16}
-        strokeWidth={1.5}
-        className={loading ? "spin" : ""}
-      />
-    </button>
-  );
-}
+  const isCopied = actionProps.copiedId === q.id;
+  const isReidentifying = actionProps.reidentifying.has(q.id);
 
-export function DelBtn({ q, onDelete }) {
   return (
-    <button
-      className="act-btn ui-tip"
-      data-tip="Delete entry"
-      style={{ ...Z.actBtn, "--hover-color": "#EF4444" }}
-      onClick={e => { e.stopPropagation(); onDelete(q.id); }}
-    >
-      <Trash2 size={16} strokeWidth={1.5} />
-    </button>
-  );
-}
-
-export function ShareImageBtn({ q, onShareImage }) {
-  return (
-    <button
-      className="act-btn ui-tip"
-      data-tip="Save as image"
-      style={{ ...Z.actBtn, "--hover-color": "#7C3AED" }}
-      onClick={e => { e.stopPropagation(); onShareImage(q); }}
-    >
-      <Share2 size={16} strokeWidth={1.5} />
-    </button>
+    <div style={Z.overflowWrap}>
+      <button
+        ref={btnRef}
+        className="overflow-btn act-btn"
+        style={{ ...Z.actBtn, "--hover-color": "#37352F" }}
+        onClick={e => { e.stopPropagation(); onToggle(); }}
+      >
+        <Ellipsis size={16} strokeWidth={2} />
+      </button>
+      {isOpen && (
+        <div ref={menuRef} data-overflow-menu style={Z.overflowMenu} onClick={e => e.stopPropagation()}>
+          <button
+            className="overflow-menu-item"
+            style={{ ...Z.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
+            onClick={() => { if (!isCopied) actionProps.onCopy(q); }}
+          >
+            {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
+            <span>{isCopied ? "Copied!" : "Copy"}</span>
+          </button>
+          <button
+            className="overflow-menu-item"
+            style={{ ...Z.overflowMenuItem, ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}) }}
+            onClick={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
+            disabled={isReidentifying}
+          >
+            <RefreshCw size={14} strokeWidth={1.5} className={isReidentifying ? "spin" : ""} />
+            <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
+          </button>
+          <button
+            className="overflow-menu-item"
+            style={Z.overflowMenuItem}
+            onClick={() => { actionProps.onShareImage(q); }}
+          >
+            <Share2 size={14} strokeWidth={1.5} />
+            <span>Share</span>
+          </button>
+          <div style={Z.overflowMenuDivider} />
+          <button
+            className="overflow-menu-item-destructive"
+            style={Z.overflowMenuItemDestructive}
+            onClick={() => { actionProps.onDelete(q.id); }}
+          >
+            <Trash2 size={14} strokeWidth={1.5} />
+            <span>Delete</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

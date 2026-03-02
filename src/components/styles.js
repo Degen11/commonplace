@@ -31,6 +31,7 @@ export const baseCSS = `
   @keyframes overlayFade{from{opacity:0}to{opacity:1}}
   @keyframes exitFade{to{opacity:0}}
   @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes menuIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
   .spin{animation:spin 1s linear infinite}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   html{scroll-behavior:smooth}
@@ -139,6 +140,12 @@ export const baseCSS = `
 
   /* Action button hover — driven by --hover-color custom property */
   .act-btn:hover{color:var(--hover-color) !important}
+
+  /* Overflow menu — hidden until row hover */
+  .overflow-btn{opacity:0;transition:opacity .12s ease}
+  .qrow:hover .overflow-btn{opacity:1}
+  .overflow-menu-item:hover{background:#F1F1EF !important}
+  .overflow-menu-item-destructive:hover{background:#FEF2F2 !important;color:#DC2626 !important}
 
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}
@@ -376,8 +383,13 @@ export const Z = {
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{flex:"0 0 130px",display:"flex",gap:1,justifyContent:"flex-end",alignItems:"center"},
+  rowAct:{flex:"0 0 68px",display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"#C8C4BC",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
+  overflowWrap:{position:"relative"},
+  overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"#fff",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  overflowMenuItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#37352F",cursor:"pointer",borderRadius:5,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
+  overflowMenuDivider:{height:1,background:"#E3E2DE",margin:"4px 0"},
+  overflowMenuItemDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#EB5757",cursor:"pointer",borderRadius:5,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease, color .1s ease"},
 
   // Edit form
   textarea:{width:"100%",border:"1px solid #E3E2DE",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"#37352F",resize:"vertical",minHeight:60,lineHeight:1.6,background:"#fff"},

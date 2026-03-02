@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import EditForm from "./EditForm";
 import useLongPress from "../hooks/useLongPress";
-import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot, ShareImageBtn } from "./QuoteActions";
+import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { Z } from "./styles";
@@ -70,14 +70,19 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
 }
 
 // Column configuration
-const COL_CONFIG = {
-  content:  { label: "Content",  style: { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, textAlign: "left" } },
-  source:   { label: "Source",   style: { flex: "0 1 180px", minWidth: 100, maxWidth: 180, paddingLeft: 0, paddingRight: 6, textAlign: "left" } },
-  category: { label: "Category", style: { flex: "0 1 140px", minWidth: 60, paddingLeft: 0, paddingRight: 8, textAlign: "left" } },
+// Shared column base styles — used by both <th>-equivalent headers and <td>-equivalent cells
+const COL_BASE = {
+  content:  { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, display: "flex", alignItems: "center" },
+  source:   { flex: "0 1 180px", minWidth: 100, maxWidth: 180, paddingLeft: 0, paddingRight: 6, display: "flex", alignItems: "center" },
+  category: { flex: "0 1 140px", minWidth: 60, paddingLeft: 0, paddingRight: 8, display: "flex", alignItems: "center" },
 };
 
-// Performance: Extract inline style object
-const CATEGORY_CELL_STYLE = { flex: "0 1 140px", minWidth: 60, display: 'flex', alignItems: 'center', gap: 6, overflow: 'visible', paddingRight: 8 };
+const COL_CONFIG = {
+  content:  { label: "Content",  style: { ...COL_BASE.content, textAlign: "left" } },
+  source:   { label: "Source",   style: { ...COL_BASE.source, textAlign: "left" } },
+  category: { label: "Category", style: { ...COL_BASE.category, textAlign: "left" } },
+};
+
 
 // ── Row component with long-press support (change #8) ──
 function TableRow({
@@ -86,6 +91,7 @@ function TableRow({
   toggleSel,
   handleDragStart, handleDragOver, handleDragEnd, renderColCell,
   deletingId,
+  openMenuId, setOpenMenuId,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
@@ -126,10 +132,12 @@ function TableRow({
 
       <div className="row-actions" style={Z.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
-        <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
-        <ShareImageBtn q={q} onShareImage={actionProps.onShareImage} />
-        <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying.has(q.id)} />
-        <DelBtn q={q} onDelete={actionProps.onDelete} />
+        <OverflowMenu
+          q={q}
+          actionProps={actionProps}
+          isOpen={openMenuId === q.id}
+          onToggle={() => setOpenMenuId(prev => prev === q.id ? null : q.id)}
+        />
       </div>
     </div>
   );
@@ -164,6 +172,19 @@ export default function TableView({
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Close overflow menu when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handleDown = (e) => {
+      if (!e.target.closest(".overflow-btn") && !e.target.closest("[data-overflow-menu]")) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleDown);
+    return () => document.removeEventListener("mousedown", handleDown);
+  }, [openMenuId]);
 
   const handleColDragStart = (e, colId) => {
     e.stopPropagation();
@@ -208,7 +229,7 @@ export default function TableView({
   switch(colKey) {
     case "content":
       return (
-        <div key="content" style={{ ...COL_CONFIG.content.style, paddingRight: 12 }}
+        <div key="content" style={COL_BASE.content}
           onClick={() => { if (!isEd) setEditingId(q.id); }}>
           {isEd
             ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
@@ -218,23 +239,21 @@ export default function TableView({
       );
     case "source":
       return (
-        <div key="source" className={`src-col${savedPulse?.id === q.id && savedPulse?.field === "source" ? " save-pulse" : ""}`} style={Z.srcCol}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0, flex: 1, minWidth: 0 }}>
-            {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-              ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
-              : <span
-                  className="inline-src"
-                  style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
-                  title={q.source}
-                  onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-                >{q.source}</span>
-            }
-          </div>
+        <div key="source" className={`src-col${savedPulse?.id === q.id && savedPulse?.field === "source" ? " save-pulse" : ""}`} style={COL_BASE.source}>
+          {inlineEdit?.id === q.id && inlineEdit?.field === "source"
+            ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
+            : <span
+                className="inline-src"
+                style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                title={q.source}
+                onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+              >{q.source}</span>
+          }
         </div>
       );
     case "category":
       return (
-        <div key="category" className={savedPulse?.id === q.id && savedPulse?.field === "category" ? "save-pulse" : ""} style={{ ...CATEGORY_CELL_STYLE, position: "relative" }}>
+        <div key="category" className={savedPulse?.id === q.id && savedPulse?.field === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
           <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
           <span
             className="inline-cat"
@@ -283,7 +302,7 @@ export default function TableView({
               {COL_CONFIG[colKey].label}
             </div>
           ))}
-          <div style={{ flex: "0 0 130px" }} />
+          <div style={{ flex: "0 0 68px" }} />
         </div>
       )}
 
@@ -318,6 +337,8 @@ export default function TableView({
             handleDragEnd={handleDragEnd}
             renderColCell={renderColCell}
             deletingId={deletingId}
+            openMenuId={openMenuId}
+            setOpenMenuId={setOpenMenuId}
           />
         );
       })}

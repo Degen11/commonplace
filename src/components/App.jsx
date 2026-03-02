@@ -981,6 +981,7 @@ export default function Commonplace() {
               selected={selected}
               hasActiveFilters={hasActiveFilters}
               showToast={showToast}
+              syncStatus={syncStatus}
             />
           )}
 

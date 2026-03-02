@@ -23,6 +23,12 @@ export default function useSync({ onCloudData }) {
   const mountedRef = useRef(true);
   const initialLoadDone = useRef(false);
 
+  // Allow external callers (e.g. QuotesContext) to mark initial load complete
+  // so push is unblocked even when data came from localStorage, not pull().
+  const markReady = useCallback(() => {
+    initialLoadDone.current = true;
+  }, []);
+
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
@@ -103,5 +109,6 @@ export default function useSync({ onCloudData }) {
     lastSynced,
     pull,
     schedulePush,
+    markReady,
   };
 }

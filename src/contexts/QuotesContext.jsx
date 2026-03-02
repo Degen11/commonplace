@@ -88,7 +88,7 @@ export function QuotesProvider({ children }) {
     setSavedSession({ quotes: cloudQuotes, customCats: cloudCats, fromCloud: true });
   }, []);
 
-  const { syncStatus, lastSynced, pull, schedulePush } = useSync({
+  const { syncStatus, lastSynced, pull, schedulePush, markReady } = useSync({
     onCloudData: handleCloudData,
   });
 
@@ -154,6 +154,7 @@ export function QuotesProvider({ children }) {
         if (q?.length > 0) {
           const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
           initialLoadDone.current = true;
+          markReady(); // Unblock sync push — data came from localStorage, not pull()
           setSavedSession({ quotes: q, customCats: cats });
           return;
         }
@@ -165,7 +166,7 @@ export function QuotesProvider({ children }) {
 
     // No local data — try to pull from Supabase
     pull();
-  }, [showToast, pull]);
+  }, [showToast, pull, markReady]);
 
   const value = useMemo(() => ({
     quotes, setQuotes,

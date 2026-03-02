@@ -12,6 +12,7 @@ export default function MiniHeader({
   preserveScroll,
   quotes, filtered, selected, hasActiveFilters,
   showToast,
+  syncStatus,
 }) {
   return (
     <div style={{
@@ -21,7 +22,13 @@ export default function MiniHeader({
       backdropFilter: "blur(8px)", animation: "slideD .15s ease",
     }}>
       <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Logo size={16} /><span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span></span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Logo size={16} />
+          <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
+          {syncStatus === "syncing" && <span style={{ color: "#9B9A97", fontSize: 11 }}>Saving...</span>}
+          {syncStatus === "synced" && <span style={{ color: "#16A34A", fontSize: 11 }}>Saved</span>}
+          {syncStatus === "error" && <span style={{ color: "#DC2626", fontSize: 11 }}>Sync error</span>}
+        </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <div style={Z.viewTog}>
             <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>

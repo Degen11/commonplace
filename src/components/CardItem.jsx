@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import useLongPress from "../hooks/useLongPress";
 import EditForm from "./EditForm";
-import { FavBtn, DelBtn, CopyBtn, ReidentifyBtn, ConfDot, ShareImageBtn } from "./QuoteActions";
+import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { CONF_LABELS } from "../data/constants";
 import { Z, CZ } from "./styles";
@@ -37,6 +37,19 @@ export default function CardItem({
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
   );
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleDown = (e) => {
+      if (!e.target.closest(".overflow-btn") && !e.target.closest("[data-overflow-menu]")) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleDown);
+    return () => document.removeEventListener("mousedown", handleDown);
+  }, [menuOpen]);
 
   const isDeleting = deletingId === q.id;
 
@@ -74,10 +87,12 @@ export default function CardItem({
         </div>
         <div className="ca" style={{ ...CZ.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
           <FavBtn q={q} onFav={actionProps.onFav} />
-          <CopyBtn q={q} onCopy={actionProps.onCopy} copiedId={actionProps.copiedId} />
-          <ShareImageBtn q={q} onShareImage={actionProps.onShareImage} />
-          <ReidentifyBtn q={q} onReidentify={actionProps.onReidentify} loading={actionProps.reidentifying.has(q.id)} />
-          <DelBtn q={q} onDelete={actionProps.onDelete} />
+          <OverflowMenu
+            q={q}
+            actionProps={actionProps}
+            isOpen={menuOpen}
+            onToggle={() => setMenuOpen(prev => !prev)}
+          />
         </div>
       </div>
       {isEd

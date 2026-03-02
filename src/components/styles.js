@@ -141,9 +141,10 @@ export const baseCSS = `
   /* Action button hover — driven by --hover-color custom property */
   .act-btn:hover{color:var(--hover-color) !important}
 
-  /* Overflow menu — hidden until row hover */
+  /* Overflow menu — hidden until row/card hover */
   .overflow-btn{opacity:0;transition:opacity .12s ease}
   .qrow:hover .overflow-btn{opacity:1}
+  .qcard:hover .overflow-btn{opacity:1}
   .overflow-menu-item:hover{background:#F1F1EF !important}
   .overflow-menu-item-destructive:hover{background:#FEF2F2 !important;color:#DC2626 !important}
 

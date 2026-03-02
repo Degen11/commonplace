@@ -72,9 +72,9 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
 // Column configuration
 // Shared column base styles — used by both <th>-equivalent headers and <td>-equivalent cells
 const COL_BASE = {
-  content:  { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 12, display: "flex", alignItems: "center" },
-  source:   { flex: "0 1 180px", minWidth: 100, maxWidth: 180, paddingLeft: 0, paddingRight: 6, display: "flex", alignItems: "center" },
-  category: { flex: "0 1 140px", minWidth: 60, paddingLeft: 0, paddingRight: 8, display: "flex", alignItems: "center" },
+  content:  { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 16, display: "flex", alignItems: "center" },
+  source:   { flex: "0 1 180px", minWidth: 100, maxWidth: 180, paddingLeft: 10, paddingRight: 12, display: "flex", alignItems: "center", borderLeft: "1px solid rgba(0,0,0,0.04)" },
+  category: { flex: "0 1 140px", minWidth: 80, paddingLeft: 10, paddingRight: 8, display: "flex", alignItems: "center", borderLeft: "1px solid rgba(0,0,0,0.04)" },
 };
 
 const COL_CONFIG = {

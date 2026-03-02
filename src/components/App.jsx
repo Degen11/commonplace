@@ -76,6 +76,7 @@ export default function Commonplace() {
     allCats,
     isSharedView, setIsSharedView,
     savedSession, setSavedSession,
+    syncStatus,
   } = useQuotesContext();
 
   // ── Phase / UI chrome ──
@@ -960,6 +961,7 @@ export default function Commonplace() {
               headerVisible={headerVisible}
               exportDropdownContent={exportDropdownContent}
               getCatColor={getCatColor}
+              syncStatus={syncStatus}
             />
           </SectionErrorBoundary>
 

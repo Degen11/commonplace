@@ -18,6 +18,7 @@ export default function HeaderBar({
   headerVisible,
   exportDropdownContent,
   getCatColor,
+  syncStatus,
 }) {
   return (
     <div ref={headerRef} style={Z.header}>
@@ -30,6 +31,12 @@ export default function HeaderBar({
           }
           {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
           {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
+          {syncStatus && syncStatus !== "idle" && (
+            <span style={{ color: "#D3D3D0" }}> · </span>
+          )}
+          {syncStatus === "syncing" && <span style={{ color: "#9B9A97", fontSize: 12 }}>Saving...</span>}
+          {syncStatus === "synced" && <span style={{ color: "#16A34A", fontSize: 12 }}>Saved</span>}
+          {syncStatus === "error" && <span style={{ color: "#DC2626", fontSize: 12 }}>Sync error</span>}
         </p>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

@@ -2,8 +2,8 @@ import { createContext, useContext, useState, useRef, useEffect, useMemo, useCal
 import {
   DEFAULT_CATEGORIES, REORDERABLE_COLS,
 } from "../data/constants";
-
 import { useToastContext } from "./ToastContext";
+import useSync from "../hooks/useSync";
 
 const QuotesContext = createContext(null);
 
@@ -11,9 +11,9 @@ const LS_QUOTES    = "commonplace_quotes";
 const LS_CATS      = "commonplace_cats";
 const LS_COL_ORDER = "commonplace_col_order";
 
-// Hard cap: 5 MB for quotes + categories combined.
-// Beyond this we refuse writes and prompt the user to export.
-const STORAGE_HARD_CAP = 5 * 1024 * 1024;
+// localStorage is now a local cache; Supabase is the durable store.
+// We still warn at 4 MB but no longer hard-refuse writes — the data
+// is safe in the cloud even if localStorage fills up.
 const STORAGE_WARN_THRESHOLD = 4 * 1024 * 1024;
 
 function validateShareQuote(raw) {
@@ -23,7 +23,6 @@ function validateShareQuote(raw) {
   if (text.length === 0 || text.length > 5000) return null;
   if (source.length > 500) return null;
   if (category.length > 100) return null;
-  // Strip any HTML-like content
   const clean = (s) => s.replace(/<[^>]*>/g, "").trim();
   return {
     id: crypto.randomUUID(),
@@ -70,7 +69,30 @@ export function QuotesProvider({ children }) {
   const storageLimitWarned = useRef(false);
   const allCats = useMemo(() => [...DEFAULT_CATEGORIES, ...customCats], [customCats]);
 
-  // ── Debounced persistence of quotes + custom categories ──
+  // Track whether initial data load (localStorage or cloud) is complete
+  const initialLoadDone = useRef(false);
+
+  // ── Cloud sync ──
+  const handleCloudData = useCallback((cloudQuotes, cloudCats) => {
+    // Only use cloud data if localStorage was empty (cloud = backup)
+    // This runs before savedSession is shown, so we check quotes state
+    if (initialLoadDone.current) return; // Already loaded from localStorage
+
+    setQuotes(cloudQuotes);
+    setCustomCats(cloudCats);
+    // Also write to localStorage as cache
+    try {
+      localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
+      localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
+    } catch(e) { /* ignore */ }
+    setSavedSession({ quotes: cloudQuotes, customCats: cloudCats, fromCloud: true });
+  }, []);
+
+  const { syncStatus, lastSynced, pull, schedulePush } = useSync({
+    onCloudData: handleCloudData,
+  });
+
+  // ── Debounced persistence to localStorage ──
   const saveTimerRef = useRef(null);
 
   const persistQuotes = useCallback((q, cats, shared) => {
@@ -80,21 +102,15 @@ export function QuotesProvider({ children }) {
       const catsData = JSON.stringify(cats);
       const totalSize = data.length + catsData.length;
 
-      // Hard cap — refuse the write
-      if (totalSize > STORAGE_HARD_CAP) {
-        showToast("Collection too large to save. Please export a backup and remove some entries.");
-        return;
-      }
-
       if (!storageLimitWarned.current && totalSize > STORAGE_WARN_THRESHOLD) {
         storageLimitWarned.current = true;
-        showToast("Large collection \u2014 consider exporting a backup.");
+        showToast("Large collection \u2014 your data is backed up to the cloud.");
       }
 
       localStorage.setItem(LS_QUOTES, data);
       localStorage.setItem(LS_CATS, catsData);
     } catch(e) {
-      showToast("Couldn't save \u2014 storage may be full. Export to keep your data safe.");
+      // localStorage full — that's fine, data is in Supabase
     }
   }, [showToast]);
 
@@ -105,6 +121,13 @@ export function QuotesProvider({ children }) {
     }, 300);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [quotes, customCats, isSharedView, persistQuotes]);
+
+  // ── Push to Supabase whenever quotes/categories change ──
+  useEffect(() => {
+    if (isSharedView) return;
+    if (quotes.length === 0) return;
+    schedulePush(quotes, customCats);
+  }, [quotes, customCats, isSharedView, schedulePush]);
 
   // Persist column order
   useEffect(() => {
@@ -118,6 +141,7 @@ export function QuotesProvider({ children }) {
       const decoded = safeDecodeShareData(hash.slice(2));
       if (decoded?.length > 0) {
         setQuotes(decoded); setIsSharedView(true);
+        initialLoadDone.current = true;
         return;
       }
       showToast("This shared link couldn't be loaded \u2014 it may be corrupted.");
@@ -129,14 +153,19 @@ export function QuotesProvider({ children }) {
         const q = JSON.parse(saved);
         if (q?.length > 0) {
           const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
+          initialLoadDone.current = true;
           setSavedSession({ quotes: q, customCats: cats });
+          return;
         }
       }
     } catch(e) {
       showToast("Saved session couldn't be loaded. Starting fresh.");
       try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e2) { /* ignore */ }
     }
-  }, [showToast]);
+
+    // No local data — try to pull from Supabase
+    pull();
+  }, [showToast, pull]);
 
   const value = useMemo(() => ({
     quotes, setQuotes,
@@ -145,7 +174,9 @@ export function QuotesProvider({ children }) {
     allCats,
     isSharedView, setIsSharedView,
     savedSession, setSavedSession,
-  }), [quotes, customCats, columnOrder, allCats, isSharedView, savedSession]);
+    syncStatus,
+    lastSynced,
+  }), [quotes, customCats, columnOrder, allCats, isSharedView, savedSession, syncStatus, lastSynced]);
 
   return (
     <QuotesContext.Provider value={value}>

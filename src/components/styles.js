@@ -380,7 +380,7 @@ export const Z = {
   entryText:{fontSize:14,lineHeight:1.65,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.35,color:"#37352F",whiteSpace:"pre-wrap",cursor:"text"},
   // #8 srcCol flex instead of fixed width
-  srcCol:{minWidth:100,maxWidth:180,flex:"0 1 180px",display:"flex",alignItems:"center",paddingLeft:10,paddingRight:12,borderLeft:"1px solid rgba(0,0,0,0.04)"},
+  srcCol:{minWidth:100,maxWidth:220,flex:"0 1 220px",display:"flex",alignItems:"center",paddingLeft:10,paddingRight:12,borderLeft:"1px solid rgba(0,0,0,0.04)"},
   srcText:{fontSize:12,color:"#9B9A97",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},

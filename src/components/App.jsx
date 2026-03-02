@@ -2,9 +2,11 @@ import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } fr
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useInfiniteScroll from "../hooks/useInfiniteScroll";
-import useToasts from "../hooks/useToasts";
-import useQuotes from "../hooks/useQuotes";
 import useProcessing from "../hooks/useProcessing";
+
+// Contexts
+import { useToastContext } from "../contexts/ToastContext";
+import { useQuotesContext } from "../contexts/QuotesContext";
 
 // Data
 import {
@@ -15,8 +17,6 @@ import {
 // Utils
 import {
   smartSplit,
-  exportCSV, exportMD, exportJSON, exportTXT,
-  copyToClipboard, richCopyToClipboard, encodeShareData,
   parseKindleClippings, parseReadwiseCSV, parseCSVLine,
   generateShareImage,
 } from "../utils/helpers";
@@ -24,7 +24,6 @@ import {
 // Components
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
-import StatsPanel from "./StatsPanel";
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
 import TableView from "./TableView";
@@ -33,14 +32,18 @@ import Footer from "./Footer";
 import HeaderBar from "./HeaderBar";
 import ToolbarSection from "./ToolbarSection";
 import BulkBar from "./BulkBar";
-import Logo from "./Logo";
+import SectionErrorBoundary from "./SectionErrorBoundary";
+import MiniHeader from "./MiniHeader";
+import ConfirmModal from "./ConfirmModal";
+import StatsOverlay from "./StatsOverlay";
+import AddMorePanel from "./AddMorePanel";
+import ExportDropdown from "./ExportDropdown";
+import EmptyState from "./EmptyState";
 import { Z } from "./styles";
 
 // Icons
 import {
-  Search, ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
-  AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2,
-  List, AlignJustify, LayoutGrid, X,
+  AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2, X,
 } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
@@ -64,17 +67,8 @@ const SORT_OPTIONS = [
 
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
-  // ── Phase / UI chrome ──
-  const [phase, setPhase]                     = useState("input");
-  const [fadeClass, setFadeClass]             = useState("phase-in");
-  const [rawInput, setRawInput]               = useState(() => {
-    try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
-  });
-
-  // ── Toasts ──
-  const { toasts, showToast, dismissToast } = useToasts();
-
-  // ── Quote store (core state + persistence) ──
+  // ── Contexts ──
+  const { toasts, showToast, dismissToast } = useToastContext();
   const {
     quotes, setQuotes,
     customCats, setCustomCats,
@@ -82,7 +76,14 @@ export default function Commonplace() {
     allCats,
     isSharedView, setIsSharedView,
     savedSession, setSavedSession,
-  } = useQuotes(showToast);
+  } = useQuotesContext();
+
+  // ── Phase / UI chrome ──
+  const [phase, setPhase]                     = useState("input");
+  const [fadeClass, setFadeClass]             = useState("phase-in");
+  const [rawInput, setRawInput]               = useState(() => {
+    try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
+  });
 
   // ── Phase transition ──
   const goPhase = useCallback((next) => {
@@ -178,6 +179,7 @@ export default function Commonplace() {
   const pendingScrollAdjust    = useRef(null);
   const catScrollRef           = useRef(null);
   const headerRef              = useRef(null);
+  const reidentifyAbortRefs    = useRef(new Map()); // FIX: abort controllers for re-identify
 
   // ── Helper functions ──
   const sanitizeCategoryName = (name) => {
@@ -382,13 +384,52 @@ export default function Commonplace() {
   useEffect(() => {
     const baseTitle = "Commonplace";
     if (phase === "processing" && progress) {
-      document.title = `(${progress.done}/${progress.total}) Organizing... — ${baseTitle}`;
+      document.title = `(${progress.done}/${progress.total}) Organizing... \u2014 ${baseTitle}`;
     } else if (quotes.length > 0) {
       document.title = `(${quotes.length}) ${baseTitle}`;
     } else {
       document.title = baseTitle;
     }
   }, [quotes, phase, progress]);
+
+  // ── FIX: Clean up ghost IDs in selection Set when quotes change ──
+  useEffect(() => {
+    if (selected.size === 0) return;
+    const quoteIds = new Set(quotes.map(q => q.id));
+    setSelected(prev => {
+      const cleaned = new Set();
+      let changed = false;
+      for (const id of prev) {
+        if (quoteIds.has(id)) {
+          cleaned.add(id);
+        } else {
+          changed = true;
+        }
+      }
+      return changed ? cleaned : prev;
+    });
+  }, [quotes, selected.size]);
+
+  // ── FIX: Filter reviewQueue when quotes change ──
+  useEffect(() => {
+    if (reviewQueue.length === 0) return;
+    const quoteIds = new Set(quotes.map(q => q.id));
+    setReviewQueue(prev => {
+      const filtered = prev.filter(id => quoteIds.has(id));
+      return filtered.length !== prev.length ? filtered : prev;
+    });
+  }, [quotes, reviewQueue.length]);
+
+  // ── FIX: Abort re-identify controllers on unmount ──
+  useEffect(() => {
+    const refs = reidentifyAbortRefs.current;
+    return () => {
+      for (const controller of refs.values()) {
+        controller.abort();
+      }
+      refs.clear();
+    };
+  }, []);
 
   // ── File import ──
   const handleFileImport = (file) => {
@@ -441,41 +482,57 @@ export default function Commonplace() {
       let msg = formatLabel
         ? `Loaded ${count} entries from ${file.name} (${formatLabel})`
         : `Loaded ${count} entries from ${file.name}`;
-      if (skippedCount > 0) msg += ` · ${skippedCount} skipped`;
+      if (skippedCount > 0) msg += ` \u00b7 ${skippedCount} skipped`;
       showToast(msg);
     };
-    reader.onerror = () => showToast("Couldn't read file — it may be corrupted or inaccessible.");
+    reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.");
     reader.readAsText(file);
   };
 
-  // ── Re-identify a single entry ──
+  // ── Re-identify a single entry (FIX: with AbortController) ──
   const describeChanges = (oldQ, newSource, newCategory) => {
     const parts = [];
-    if (newSource !== oldQ.source) parts.push(`source → ${newSource}`);
-    if (newCategory !== oldQ.category) parts.push(`${oldQ.category} → ${newCategory}`);
-    if (parts.length === 0) return "Re-identified — no changes";
+    if (newSource !== oldQ.source) parts.push(`source \u2192 ${newSource}`);
+    if (newCategory !== oldQ.category) parts.push(`${oldQ.category} \u2192 ${newCategory}`);
+    if (parts.length === 0) return "Re-identified \u2014 no changes";
     return `Re-identified: ${parts.join(", ")}`;
   };
 
   const reIdentify = async (q) => {
+    // Cancel any existing in-flight request for this quote
+    const existing = reidentifyAbortRefs.current.get(q.id);
+    if (existing) existing.abort();
+
+    const controller = new AbortController();
+    reidentifyAbortRefs.current.set(q.id, controller);
+
     setReidentifyingIds(prev => new Set(prev).add(q.id));
-    const clearId = () => setReidentifyingIds(prev => { const s = new Set(prev); s.delete(q.id); return s; });
-    const { localLookup } = await import("../data/localQuotes");
-    const local = localLookup(q.text, null, { exactOnly: true });
-    if (local) {
-      const snapshot = { ...q };
-      setQuotes(prev => prev.map(x => x.id === q.id ? {
-        ...x, source: local.source, category: local.category, confidence: local.confidence,
-      } : x));
-      clearId();
-      showToast(describeChanges(q, local.source, local.category), "Undo", () => {
-        setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
-      });
-      return;
-    }
-    const item = { text: q.text, hint: null };
+    const clearId = () => {
+      reidentifyAbortRefs.current.delete(q.id);
+      setReidentifyingIds(prev => { const s = new Set(prev); s.delete(q.id); return s; });
+    };
+
     try {
-      const results = await identifyBatch([item]);
+      const { localLookup } = await import("../data/localQuotes");
+      if (controller.signal.aborted) return;
+
+      const local = localLookup(q.text, null, { exactOnly: true });
+      if (local) {
+        const snapshot = { ...q };
+        setQuotes(prev => prev.map(x => x.id === q.id ? {
+          ...x, source: local.source, category: local.category, confidence: local.confidence,
+        } : x));
+        clearId();
+        showToast(describeChanges(q, local.source, local.category), "Undo", () => {
+          setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
+        });
+        return;
+      }
+
+      const item = { text: q.text, hint: null };
+      const results = await identifyBatch([item], false, controller.signal);
+      if (controller.signal.aborted) return;
+
       if (results.length > 0) {
         const r = results[0];
         const validCats = new Set([...allCats, ...VIBE_TAGS]);
@@ -492,7 +549,8 @@ export default function Commonplace() {
           setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
         });
       }
-    } catch {
+    } catch (err) {
+      if (err.name === "AbortError") return;
       showToast("Couldn't reach AI. Try again.");
     }
     clearId();
@@ -501,15 +559,15 @@ export default function Commonplace() {
   // ── Copy single quote to clipboard ──
   const copyQuote = (q) => {
     const text = QUOTED_CATS.has(q.category)
-      ? `"${q.text}" — ${q.source}`
-      : `${q.text} — ${q.source}`;
+      ? `"${q.text}" \u2014 ${q.source}`
+      : `${q.text} \u2014 ${q.source}`;
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopiedId(q.id);
         setTimeout(() => setCopiedId(prev => prev === q.id ? null : prev), 1200);
         showToast("Copied!");
       })
-      .catch(() => showToast("Couldn't copy — try manually selecting the text."));
+      .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text."));
   };
 
   // ── Share single quote as PNG image ──
@@ -563,18 +621,6 @@ export default function Commonplace() {
     }, 200);
   };
 
-  const handleShare = () => {
-    const encoded = encodeShareData(quotes);
-    const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
-    if (encoded.length > 6000) showToast(`Link may be too long for some browsers (${quotes.length} entries). Consider exporting instead.`);
-    navigator.clipboard.writeText(url).then(() => {
-      if (encoded.length <= 6000) showToast("Shareable link copied to clipboard!");
-    }).catch(() => {
-      showToast("Couldn't copy — try manually copying from the address bar.");
-      window.location.hash = `s=${encoded}`;
-    });
-  };
-
   // ── Inline actions ──
   const toggleSel = (id, shiftKey = false) => {
     if (shiftKey && lastSelectedIndex.current !== null) {
@@ -622,7 +668,7 @@ export default function Commonplace() {
           if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 150);
       } else {
-        showToast("Review complete — all entries updated!");
+        showToast("Review complete \u2014 all entries updated!");
       }
     }
   };
@@ -716,7 +762,6 @@ export default function Commonplace() {
     if (!dragId || dragId === targetId) { setDragInsert(null); return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const half = (e.clientY - rect.top) < rect.height / 2 ? "above" : "below";
-    // Skip if neither the target nor the half changed — avoids redundant renders
     if (lastDragTarget.current === targetId && lastDragHalf.current === half) return;
     lastDragHalf.current = half;
     setDragInsert({ id: targetId, pos: half });
@@ -781,68 +826,15 @@ export default function Commonplace() {
     reidentifying: reidentifyingIds,
   };
 
-  // ── Export dropdown content (shared between main header and mini-header) ──
   const exportDropdownContent = (
-    <div style={Z.expDrop}>
-      <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#9B9A97", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-        Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
-      </div>
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard</button>
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied — paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={14} strokeWidth={1.5} /> Rich copy</button>
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { handleShare(); setShowExport(false); }}><Link size={14} strokeWidth={1.5} /> Shareable link</button>
-      {quotes.length > 80 && <span style={Z.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — export a file instead</span>}
-      <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Markdown</button>
-      <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
-      {hasActiveFilters && (<>
-        <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-        <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-          Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
-        </div>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Filtered TXT</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Filtered CSV</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Filtered MD</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(filtered); showToast(`Exported ${filtered.length} as JSON`); setShowExport(false); }}>{"{ }"} Filtered JSON</button>
-      </>)}
-      {selected.size > 0 && (<>
-        <div style={{ height: 1, background: "#F1F1EF", margin: "2px 0" }} />
-        <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#059669", borderBottom: "1px solid #F1F1EF", marginBottom: 2 }}>
-          Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
-        </div>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel).then(() => showToast(`Copied ${sel.length} selected entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel); showToast(`Exported ${sel.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Selected CSV</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel); showToast(`Exported ${sel.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Selected MD</button>
-        <button className="dd-opt" style={{...Z.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel); showToast(`Exported ${sel.length} as JSON`); setShowExport(false); }}>{"{ }"} Selected JSON</button>
-      </>)}
-    </div>
-  );
-
-  // ── Add More panel content (shared between in-flow and fixed overlay) ──
-  const addMorePanelContent = (
-    <>
-      <textarea ref={addMoreRef} style={{ ...Z.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
-        placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-          <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={Z.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
-            <div style={{ ...Z.fmtToggleTrack, background: addMoreFormatting ? "#1A1814" : "#E0DCD4" }}>
-              <div style={{ ...Z.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
-            </div>
-            Clean up formatting
-          </label>
-          <span style={{ fontSize: 12, color: "#9B9A97" }}>
-            {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button style={Z.editCancel} onClick={() => { setShowAddMore(false); setAddMoreInput(""); }}>Cancel</button>
-          <button style={{ ...Z.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={handleAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
-        </div>
-      </div>
-    </>
+    <ExportDropdown
+      quotes={quotes}
+      filtered={filtered}
+      selected={selected}
+      hasActiveFilters={hasActiveFilters}
+      showToast={showToast}
+      setShowExport={setShowExport}
+    />
   );
 
   // ========================== RENDER ==========================
@@ -860,41 +852,45 @@ export default function Commonplace() {
 
       {/* ── Input phase ── */}
       {phase === "input" && (
-        <InputPhase
-          fadeClass={fadeClass}
-          rawInput={rawInput} setRawInput={setRawInput}
-          inputTab={inputTab} setInputTab={setInputTab}
-          isDragOver={isDragOver} setIsDragOver={setIsDragOver}
-          importedFileName={importedFileName}
-          formattingEnabled={formattingEnabled} setFormattingEnabled={setFormattingEnabled}
-          savedSession={savedSession}
-          isProcessing={isProcessing}
-          onProcess={handleProcess}
-          onFileImport={handleFileImport}
-          onRestoreSession={() => {
-            setQuotes(savedSession.quotes || []);
-            setCustomCats(savedSession.customCats || []);
-            setSavedSession(null);
-            goPhase("results");
-          }}
-          onDismissSession={() => {
-            try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); } catch(e) {}
-            setSavedSession(null);
-          }}
-          fileInputRef={fileInputRef}
-        />
+        <SectionErrorBoundary name="Input">
+          <InputPhase
+            fadeClass={fadeClass}
+            rawInput={rawInput} setRawInput={setRawInput}
+            inputTab={inputTab} setInputTab={setInputTab}
+            isDragOver={isDragOver} setIsDragOver={setIsDragOver}
+            importedFileName={importedFileName}
+            formattingEnabled={formattingEnabled} setFormattingEnabled={setFormattingEnabled}
+            savedSession={savedSession}
+            isProcessing={isProcessing}
+            onProcess={handleProcess}
+            onFileImport={handleFileImport}
+            onRestoreSession={() => {
+              setQuotes(savedSession.quotes || []);
+              setCustomCats(savedSession.customCats || []);
+              setSavedSession(null);
+              goPhase("results");
+            }}
+            onDismissSession={() => {
+              try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); } catch(e) {}
+              setSavedSession(null);
+            }}
+            fileInputRef={fileInputRef}
+          />
+        </SectionErrorBoundary>
       )}
 
       {/* ── Processing phase ── */}
       {phase === "processing" && (
-        <ProcessingPhase
-          fadeClass={fadeClass}
-          progress={progress}
-          identifiedFeed={identifiedFeed}
-          customCats={customCats}
-          processingDone={processingDone}
-          onCancel={() => { processing.setIsProcessing(false); processing.setProgress(null); processing.setProcessingDone(false); goPhase("input"); }}
-        />
+        <SectionErrorBoundary name="Processing">
+          <ProcessingPhase
+            fadeClass={fadeClass}
+            progress={progress}
+            identifiedFeed={identifiedFeed}
+            customCats={customCats}
+            processingDone={processingDone}
+            onCancel={() => { processing.setIsProcessing(false); processing.setProgress(null); processing.setProcessingDone(false); goPhase("input"); }}
+          />
+        </SectionErrorBoundary>
       )}
 
       {/* ── Results phase ── */}
@@ -904,39 +900,33 @@ export default function Commonplace() {
           {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
 
           {confirmClear && (
-            <div style={Z.modalOverlay} role="dialog" aria-modal="true" aria-label="Confirm clear" onClick={() => setConfirmClear(false)}>
-              <div style={{ ...Z.confirmBox, borderTop: "3px solid #EA580C" }} onClick={e => e.stopPropagation()}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <AlertTriangle size={20} color="#EA580C" strokeWidth={2} />
-                  </div>
-                  <p style={{ fontSize: 15, fontWeight: 600 }}>Start fresh?</p>
-                </div>
-                <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 20, lineHeight: 1.5 }}>This will clear all {quotes.length} entries and remove them from your saved session. This cannot be undone.</p>
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button className="confirm-cancel" style={{ ...Z.confirmCancel, padding: "8px 20px" }} onClick={() => setConfirmClear(false)}>Keep my entries</button>
-                  <button className="confirm-yes" style={Z.confirmYes} onClick={handleClear}>Clear everything</button>
-                </div>
-              </div>
-            </div>
+            <ConfirmModal
+              icon={<AlertTriangle size={20} color="#EA580C" strokeWidth={2} />}
+              iconColor="#EA580C"
+              iconBg="#FFF7ED"
+              borderColor="#EA580C"
+              title="Start fresh?"
+              description={`This will clear all ${quotes.length} entries and remove them from your saved session. This cannot be undone.`}
+              cancelLabel="Keep my entries"
+              confirmLabel="Clear everything"
+              onCancel={() => setConfirmClear(false)}
+              onConfirm={handleClear}
+            />
           )}
 
           {confirmBulkDel && (
-            <div style={Z.modalOverlay} role="dialog" aria-modal="true" aria-label="Confirm delete" onClick={() => setConfirmBulkDel(false)}>
-              <div style={{ ...Z.confirmBox, borderTop: "3px solid #EB5757" }} onClick={e => e.stopPropagation()}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Trash2 size={20} color="#EB5757" strokeWidth={2} />
-                  </div>
-                  <p style={{ fontSize: 15, fontWeight: 600 }}>Delete {selected.size} entries?</p>
-                </div>
-                <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 20, lineHeight: 1.5 }}>This will remove {selected.size} selected entries. You can undo immediately after.</p>
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button className="confirm-cancel" style={{ ...Z.confirmCancel, padding: "8px 20px" }} onClick={() => setConfirmBulkDel(false)}>Keep entries</button>
-                  <button className="confirm-yes" style={Z.confirmYes} onClick={bulkDel}>Delete {selected.size} entries</button>
-                </div>
-              </div>
-            </div>
+            <ConfirmModal
+              icon={<Trash2 size={20} color="#EB5757" strokeWidth={2} />}
+              iconColor="#EB5757"
+              iconBg="#FEF2F2"
+              borderColor="#EB5757"
+              title={`Delete ${selected.size} entries?`}
+              description={`This will remove ${selected.size} selected entries. You can undo immediately after.`}
+              cancelLabel="Keep entries"
+              confirmLabel={`Delete ${selected.size} entries`}
+              onCancel={() => setConfirmBulkDel(false)}
+              onConfirm={bulkDel}
+            />
           )}
 
           {isSharedView && (
@@ -946,91 +936,62 @@ export default function Commonplace() {
             </div>
           )}
 
-          <HeaderBar
-            quotes={quotes}
-            filtered={filtered}
-            topCats={topCats}
-            customCats={customCats}
-            view={view}
-            compact={compact}
-            setView={setView}
-            setCompact={setCompact}
-            showStats={showStats}
-            setShowStats={setShowStats}
-            showExport={showExport}
-            setShowExport={setShowExport}
-            showAddMore={showAddMore}
-            setShowAddMore={setShowAddMore}
-            isMobile={isMobile}
-            setConfirmClear={setConfirmClear}
-            addMoreRef={addMoreRef}
-            exportRef={exportRef}
-            headerRef={headerRef}
-            headerVisible={headerVisible}
-            exportDropdownContent={exportDropdownContent}
-            getCatColor={getCatColor}
-          />
+          <SectionErrorBoundary name="Header">
+            <HeaderBar
+              quotes={quotes}
+              filtered={filtered}
+              topCats={topCats}
+              customCats={customCats}
+              view={view}
+              compact={compact}
+              setView={setView}
+              setCompact={setCompact}
+              showStats={showStats}
+              setShowStats={setShowStats}
+              showExport={showExport}
+              setShowExport={setShowExport}
+              showAddMore={showAddMore}
+              setShowAddMore={setShowAddMore}
+              isMobile={isMobile}
+              setConfirmClear={setConfirmClear}
+              addMoreRef={addMoreRef}
+              exportRef={exportRef}
+              headerRef={headerRef}
+              headerVisible={headerVisible}
+              exportDropdownContent={exportDropdownContent}
+              getCatColor={getCatColor}
+            />
+          </SectionErrorBoundary>
 
           {/* Sticky mini-header when main header scrolls out */}
           {!headerVisible && !isMobile && (
-            <div style={{
-              position: "fixed", top: 0, left: 0, right: 0, zIndex: 60,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              background: "rgba(250,248,244,0.95)", borderBottom: "1px solid #E3E2DE",
-              backdropFilter: "blur(8px)", animation: "slideD .15s ease",
-            }}>
-              <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Logo size={16} /><span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span></span>
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <div style={Z.viewTog}>
-                    <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
-                      <List size={14} strokeWidth={1.5} />
-                    </button>
-                    <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
-                      <AlignJustify size={14} strokeWidth={1.5} />
-                    </button>
-                    <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
-                      <LayoutGrid size={14} strokeWidth={1.5} />
-                    </button>
-                  </div>
-                  <button className="hdr-btn" style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
-                  <div ref={miniExportRef} style={{ position: "relative" }}>
-                    <button className="hdr-btn" style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-                    {showExport && exportDropdownContent}
-                  </div>
-                  <button className="hdr-btn" style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
-                </div>
-              </div>
-            </div>
+            <MiniHeader
+              view={view} setView={setView}
+              compact={compact} setCompact={setCompact}
+              showStats={showStats} setShowStats={setShowStats}
+              showExport={showExport} setShowExport={setShowExport}
+              showAddMore={showAddMore} setShowAddMore={setShowAddMore}
+              addMoreRef={addMoreRef}
+              miniExportRef={miniExportRef}
+              preserveScroll={preserveScroll}
+              quotes={quotes}
+              filtered={filtered}
+              selected={selected}
+              hasActiveFilters={hasActiveFilters}
+              showToast={showToast}
+            />
           )}
 
           {showStats && (
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Collection statistics"
-              style={{
-                position: "fixed", inset: 0, zIndex: 1000,
-                background: "rgba(0,0,0,.4)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                padding: 24, animation: "overlayFade .15s ease",
-              }}
-              onClick={e => { if (e.target === e.currentTarget) { if (!headerVisible) preserveScroll(); setShowStats(false); } }}
-              ref={el => { if (el && !el.dataset.trapped) { el.dataset.trapped = "1"; el.focus(); } }}
-              tabIndex={-1}
-              onKeyDown={e => {
-                if (e.key !== "Tab") return;
-                const focusable = e.currentTarget.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-                if (!focusable.length) return;
-                const first = focusable[0], last = focusable[focusable.length - 1];
-                if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
-                else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
-              }}
-            >
-              <div style={{ maxWidth: 720, width: "100%" }}>
-                <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={() => { if (!headerVisible) preserveScroll(); setShowStats(false); }} />
-              </div>
-            </div>
+            <StatsOverlay
+              quotes={quotes}
+              computedStats={computedStats}
+              cc={cc}
+              customCats={customCats}
+              headerVisible={headerVisible}
+              preserveScroll={preserveScroll}
+              onClose={() => setShowStats(false)}
+            />
           )}
 
           {apiError && (
@@ -1056,7 +1017,13 @@ export default function Commonplace() {
           {showAddMore && (
             headerVisible ? (
               <div style={Z.addMorePanel}>
-                {addMorePanelContent}
+                <AddMorePanel
+                  addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
+                  addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
+                  addMoreRef={addMoreRef}
+                  onAddMore={handleAddMore}
+                  onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
+                />
               </div>
             ) : (
               <div style={{
@@ -1067,7 +1034,13 @@ export default function Commonplace() {
                 animation: "slideD .2s ease",
               }}>
                 <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-                  {addMorePanelContent}
+                  <AddMorePanel
+                    addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
+                    addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
+                    addMoreRef={addMoreRef}
+                    onAddMore={handleAddMore}
+                    onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
+                  />
                 </div>
               </div>
             )
@@ -1087,35 +1060,37 @@ export default function Commonplace() {
             />
           )}
 
-          <ToolbarSection
-            search={search}
-            setSearch={setSearch}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            showSort={showSort}
-            setShowSort={setShowSort}
-            catFilter={catFilter}
-            setCatFilter={setCatFilter}
-            favFilter={favFilter}
-            setFavFilter={setFavFilter}
-            favCount={favCount}
-            allCats={allCats}
-            customCats={customCats}
-            cc={cc}
-            quotes={quotes}
-            showNewCat={showNewCat}
-            setShowNewCat={setShowNewCat}
-            newCatName={newCatName}
-            setNewCatName={setNewCatName}
-            addCat={addCat}
-            remCat={remCat}
-            toolbarRef={toolbarRef}
-            sortRef={sortRef}
-            catScrollRef={catScrollRef}
-            updateCatFade={updateCatFade}
-            catFade={catFade}
-            getCatColor={getCatColor}
-          />
+          <SectionErrorBoundary name="Toolbar">
+            <ToolbarSection
+              search={search}
+              setSearch={setSearch}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showSort={showSort}
+              setShowSort={setShowSort}
+              catFilter={catFilter}
+              setCatFilter={setCatFilter}
+              favFilter={favFilter}
+              setFavFilter={setFavFilter}
+              favCount={favCount}
+              allCats={allCats}
+              customCats={customCats}
+              cc={cc}
+              quotes={quotes}
+              showNewCat={showNewCat}
+              setShowNewCat={setShowNewCat}
+              newCatName={newCatName}
+              setNewCatName={setNewCatName}
+              addCat={addCat}
+              remCat={remCat}
+              toolbarRef={toolbarRef}
+              sortRef={sortRef}
+              catScrollRef={catScrollRef}
+              updateCatFade={updateCatFade}
+              catFade={catFade}
+              getCatColor={getCatColor}
+            />
+          </SectionErrorBoundary>
 
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
             <div style={Z.attentionBar}>
@@ -1131,82 +1106,86 @@ export default function Commonplace() {
                 <span style={Z.attentionCount}>{unknownCount}</span>
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
-              <button className="ui-tip" data-tip="Step through entries that need attention" style={Z.attentionBtn} onClick={startReviewFlow}>Review now →</button>
+              <button className="ui-tip" data-tip="Step through entries that need attention" style={Z.attentionBtn} onClick={startReviewFlow}>Review now &rarr;</button>
             </div>
           ))}
 
           {/* TABLE VIEW */}
           {view === "table" && (
-            <div>
-            <TableView
-              filtered={visible}
-              selected={selected}
-              toggleSel={toggleSel}
-              selAll={selAll}
-              editingId={editingId}
-              setEditingId={setEditingId}
-              inlineEdit={inlineEdit}
-              setInlineEdit={setInlineEdit}
-              saveEdit={saveEdit}
-              saveInlineField={saveInlineField}
-              allCats={allCats}
-              customCats={customCats}
-              actionProps={actionProps}
-              compact={compact}
-              dragId={dragId}
-              dragInsert={dragInsert}
-              handleDragStart={handleDragStart}
-              handleDragOver={handleDragOver}
-              handleDragEnd={handleDragEnd}
-              columnOrder={columnOrder}
-              setColumnOrder={setColumnOrder}
-              sortBy={sortBy}
-              isMobile={isMobile}
-              savedPulse={savedPulse}
-              deletingId={deletingId}
-            />
-            </div>
+            <SectionErrorBoundary name="Table view">
+              <div>
+              <TableView
+                filtered={visible}
+                selected={selected}
+                toggleSel={toggleSel}
+                selAll={selAll}
+                editingId={editingId}
+                setEditingId={setEditingId}
+                inlineEdit={inlineEdit}
+                setInlineEdit={setInlineEdit}
+                saveEdit={saveEdit}
+                saveInlineField={saveInlineField}
+                allCats={allCats}
+                customCats={customCats}
+                actionProps={actionProps}
+                compact={compact}
+                dragId={dragId}
+                dragInsert={dragInsert}
+                handleDragStart={handleDragStart}
+                handleDragOver={handleDragOver}
+                handleDragEnd={handleDragEnd}
+                columnOrder={columnOrder}
+                setColumnOrder={setColumnOrder}
+                sortBy={sortBy}
+                isMobile={isMobile}
+                savedPulse={savedPulse}
+                deletingId={deletingId}
+              />
+              </div>
+            </SectionErrorBoundary>
           )}
 
           {/* CARD VIEW */}
           {view === "cards" && (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-              {visible.map((q, idx) => {
-                const col = getCatColor(q.category, customCats);
-                const isSel = selected.has(q.id);
-                const isEd  = editingId === q.id;
-                const needsAtt = q.confidence === "low" || q.category === "Unknown";
-                return (
-                  <CardItem
-                    key={q.id}
-                    q={q}
-                    col={col}
-                    isSel={isSel}
-                    isEd={isEd}
-                    needsAtt={needsAtt}
-                    sortBy={sortBy}
-                    dragId={dragId}
-                    isMobile={isMobile}
-                    inlineEdit={inlineEdit}
-                    allCats={allCats}
-                    actionProps={actionProps}
-                    toggleSel={toggleSel}
-                    startEditing={startEditing}
-                    startInlineEdit={startInlineEdit}
-                    saveEdit={saveEdit}
-                    saveInlineField={saveInlineField}
-                    setInlineEdit={setInlineEdit}
-                    setEditingId={setEditingId}
-                    handleDragStart={handleDragStart}
-                    handleDragOver={handleDragOver}
-                    handleDragEnd={handleDragEnd}
-                    savedPulse={savedPulse}
-                    index={idx}
-                    deletingId={deletingId}
-                  />
-                );
-              })}
-            </div>
+            <SectionErrorBoundary name="Card view">
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
+                {visible.map((q, idx) => {
+                  const col = getCatColor(q.category, customCats);
+                  const isSel = selected.has(q.id);
+                  const isEd  = editingId === q.id;
+                  const needsAtt = q.confidence === "low" || q.category === "Unknown";
+                  return (
+                    <CardItem
+                      key={q.id}
+                      q={q}
+                      col={col}
+                      isSel={isSel}
+                      isEd={isEd}
+                      needsAtt={needsAtt}
+                      sortBy={sortBy}
+                      dragId={dragId}
+                      isMobile={isMobile}
+                      inlineEdit={inlineEdit}
+                      allCats={allCats}
+                      actionProps={actionProps}
+                      toggleSel={toggleSel}
+                      startEditing={startEditing}
+                      startInlineEdit={startInlineEdit}
+                      saveEdit={saveEdit}
+                      saveInlineField={saveInlineField}
+                      setInlineEdit={setInlineEdit}
+                      setEditingId={setEditingId}
+                      handleDragStart={handleDragStart}
+                      handleDragOver={handleDragOver}
+                      handleDragEnd={handleDragEnd}
+                      savedPulse={savedPulse}
+                      index={idx}
+                      deletingId={deletingId}
+                    />
+                  );
+                })}
+              </div>
+            </SectionErrorBoundary>
           )}
 {hasMore && (
   <button
@@ -1230,35 +1209,13 @@ export default function Commonplace() {
   </button>
 )}
           {filtered.length === 0 && (
-            <div style={{ ...Z.empty, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-              <Search size={48} color="#D4D4D0" strokeWidth={1.5} style={{ marginBottom: 16 }} />
-              <p style={{ fontSize: 14, fontWeight: 500, color: "#6A6660", marginBottom: 8 }}>
-                No results found
-              </p>
-              <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 16 }}>
-                Try removing a filter to see more entries
-              </p>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 12 }}>
-                {catFilter !== "All" && (
-                  <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: getCatColor(catFilter, customCats).text, cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
-                    onClick={() => setCatFilter("All")}>{catFilter} <X size={10} strokeWidth={2} /></button>
-                )}
-                {search && (
-                  <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #E3E2DE", background: "#fff", fontSize: 12, color: "#37352F", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
-                    onClick={() => setSearch("")}>"{search}" <X size={10} strokeWidth={2} /></button>
-                )}
-                {favFilter && (
-                  <button style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #FDE68A", background: "#FEF3C7", fontSize: 12, color: "#D97706", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
-                    onClick={() => setFavFilter(false)}>★ Favorites <X size={10} strokeWidth={2} /></button>
-                )}
-              </div>
-              <button style={{
-                background: "#F0F0EE", border: "none", color: "#6A6660", cursor: "pointer",
-                fontSize: 13, fontFamily: "inherit", fontWeight: 500, padding: "8px 20px",
-                borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 6,
-              }}
-                onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Reset all filters</button>
-            </div>
+            <EmptyState
+              catFilter={catFilter} setCatFilter={setCatFilter}
+              favFilter={favFilter} setFavFilter={setFavFilter}
+              search={search} setSearch={setSearch}
+              setSortBy={setSortBy}
+              customCats={customCats}
+            />
           )}
 
           {showBulkBar && <div style={{ height: 64 }} />}

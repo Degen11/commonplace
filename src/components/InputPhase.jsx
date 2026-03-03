@@ -17,12 +17,9 @@ export default function InputPhase({
   isDragOver, setIsDragOver,
   importedFileName,
   formattingEnabled, setFormattingEnabled,
-  savedSession,
   isProcessing,
   onProcess,
   onFileImport,
-  onRestoreSession,
-  onDismissSession,
   fileInputRef,
 }) {
   const handleDropZone = (e) => {
@@ -36,16 +33,6 @@ export default function InputPhase({
     <div style={Z.wrap} className={fadeClass}>
 
       <div style={Z.landing}>
-        {savedSession && (
-          <div style={{ ...Z.restoreBanner, maxWidth: "none", width: "100%" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FolderOpen size={15} strokeWidth={1.5} /> You have <strong>{savedSession.quotes.length}</strong> entries saved from your last session</span>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button style={Z.restoreBtn} onClick={onRestoreSession}>Restore session</button>
-              <button style={Z.restoreDismiss} onClick={onDismissSession}>Dismiss</button>
-            </div>
-          </div>
-        )}
-
         {/* ── Two-column split layout ── */}
         <div className="split-layout" style={Z.splitLayout}>
 

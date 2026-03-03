@@ -10,23 +10,37 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
 ];
 
-// Rate limiting (same pattern as identify.js)
+// Rate limiting — durable via Supabase RPC, with in-memory fallback
 const rateMap = new Map();
 const RATE_LIMIT = 60;
-const RATE_WINDOW = 60 * 1000;
 
-function checkRateLimit(ip) {
+function checkRateLimitInMemory(ip) {
   const now = Date.now();
   for (const [key, entry] of rateMap) {
-    if (now - entry.start > RATE_WINDOW * 2) rateMap.delete(key);
+    if (now - entry.start > 120000) rateMap.delete(key);
   }
   const entry = rateMap.get(ip);
-  if (!entry || now - entry.start > RATE_WINDOW) {
+  if (!entry || now - entry.start > 60000) {
     rateMap.set(ip, { start: now, count: 1 });
     return true;
   }
   entry.count++;
   return entry.count <= RATE_LIMIT;
+}
+
+async function checkRateLimit(ip, supabase) {
+  if (!supabase) return checkRateLimitInMemory(ip);
+  try {
+    const { data, error } = await supabase.rpc('check_rate_limit', {
+      p_ip: ip,
+      p_limit: RATE_LIMIT,
+      p_window_sec: 60,
+    });
+    if (error) throw error;
+    return data;
+  } catch {
+    return checkRateLimitInMemory(ip);
+  }
 }
 
 function setCorsHeaders(req, res) {
@@ -117,14 +131,15 @@ export default async function handler(req, res) {
   if (!req.headers['x-requested-with']) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  if (!checkRateLimit(ip)) {
-    return res.status(429).json({ error: 'Too many requests' });
-  }
-
   const supabase = getSupabase();
   if (!supabase) {
     return res.status(500).json({ error: 'Storage not configured' });
+  }
+
+  // Rate limit by IP (durable via Supabase, with in-memory fallback)
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  if (!(await checkRateLimit(ip, supabase))) {
+    return res.status(429).json({ error: 'Too many requests' });
   }
 
   // ── GET: Fetch quotes for a device ──

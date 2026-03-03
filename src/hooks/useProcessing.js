@@ -10,6 +10,7 @@ const LS_DRAFT = "commonplace_draft";
 export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const [isProcessing, setIsProcessing]       = useState(false);
   const [processingDone, setProcessingDone]   = useState(false);
+  const autoTransitionRef = useRef(null);
   const [progress, setProgress]               = useState(null);
   const [identifiedFeed, setIdentifiedFeed]   = useState([]);
   const [apiError, setApiError]               = useState(null);
@@ -148,10 +149,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     safeSetProcessingDone(true);
     safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
     try { localStorage.removeItem(LS_DRAFT); } catch(e) {}
-    setTimeout(() => {
+    // Auto-transition after 3s (user can skip via "View my collection" button)
+    if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
+    autoTransitionRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
+      autoTransitionRef.current = null;
       safeSetProgress(null); safeSetIsProcessing(false); safeSetProcessingDone(false); goPhase("results");
-    }, 1200);
+    }, 3000);
   };
 
   const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
@@ -247,8 +251,21 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     }
   };
 
+  // Skip the auto-transition timer and go directly to results
+  const skipToResults = useCallback(() => {
+    if (autoTransitionRef.current) {
+      clearTimeout(autoTransitionRef.current);
+      autoTransitionRef.current = null;
+    }
+    safeSetProgress(null);
+    safeSetIsProcessing(false);
+    safeSetProcessingDone(false);
+    goPhase("results");
+  }, [goPhase, safeSetProgress, safeSetIsProcessing, safeSetProcessingDone]);
+
   // Reset processing-specific state (called by handleClear in App)
   const resetProcessingState = () => {
+    if (autoTransitionRef.current) { clearTimeout(autoTransitionRef.current); autoTransitionRef.current = null; }
     setStats(null);
     setApiError(null);
     setFailedEntries([]);
@@ -269,6 +286,6 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     formattingEnabled, setFormattingEnabled,
     identifyBatch,
     processEntries, handleDupesContinue, retryFailed,
-    resetProcessingState,
+    skipToResults, resetProcessingState,
   };
 }

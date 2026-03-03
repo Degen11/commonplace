@@ -75,6 +75,11 @@ export const baseCSS = `
   .inline-cat{cursor:pointer !important;transition:opacity .12s,background .12s}
   .inline-cat:hover{opacity:0.75 !important;background:rgba(60,87,117,0.08) !important}
 
+  /* Edit hint icons — appear on hover to signal click-to-edit */
+  .edit-hint{opacity:0;transition:opacity .12s;flex-shrink:0;pointer-events:none}
+  .qrow:hover .edit-hint,.qcard:hover .edit-hint{opacity:0.45}
+  @media(max-width:640px){.edit-hint{opacity:0.35}}
+
   /* Checkbox hover affordance */
   .checkbox:hover .check{border-color:#3C5775 !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
 

@@ -52,10 +52,33 @@ export function safeDecodeShareData(hash) {
 export function QuotesProvider({ children }) {
   const { showToast } = useToastContext();
 
-  const [quotes, setQuotes]           = useState([]);
-  const [customCats, setCustomCats]   = useState([]);
+  // Synchronously initialize from localStorage to avoid flash of input phase.
+  // Shared links skip localStorage (handled in mount effect).
+  const [quotes, setQuotes] = useState(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash.startsWith("s=")) return [];
+    try {
+      const saved = localStorage.getItem(LS_QUOTES);
+      if (saved) {
+        const q = JSON.parse(saved);
+        if (Array.isArray(q) && q.length > 0) return q;
+      }
+    } catch(e) { /* mount effect handles errors */ }
+    return [];
+  });
+  const [customCats, setCustomCats] = useState(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash.startsWith("s=")) return [];
+    try {
+      const saved = localStorage.getItem(LS_CATS);
+      if (saved) {
+        const cats = JSON.parse(saved);
+        if (Array.isArray(cats)) return cats;
+      }
+    } catch(e) { /* ignore */ }
+    return [];
+  });
   const [isSharedView, setIsSharedView] = useState(false);
-  const [savedSession, setSavedSession] = useState(null);
 
   const [columnOrder, setColumnOrder] = useState(() => {
     try {
@@ -105,8 +128,8 @@ export function QuotesProvider({ children }) {
   // ── Cloud sync ──
   const handleCloudData = useCallback((cloudQuotes, cloudCats) => {
     // Only use cloud data if localStorage was empty (cloud = backup)
-    // This runs before savedSession is shown, so we check quotes state
     if (initialLoadDone.current) return; // Already loaded from localStorage
+    initialLoadDone.current = true;
 
     setQuotes(cloudQuotes);
     setCustomCats(cloudCats);
@@ -115,7 +138,6 @@ export function QuotesProvider({ children }) {
       localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
       localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
     } catch(e) { /* ignore */ }
-    setSavedSession({ quotes: cloudQuotes, customCats: cloudCats, fromCloud: true });
   }, []);
 
   const handleSyncError = useCallback((message) => {
@@ -169,8 +191,9 @@ export function QuotesProvider({ children }) {
     try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) { /* ignore */ }
   }, [columnOrder]);
 
-  // ── Mount: shared link OR restore session ──
+  // ── Mount: shared link OR mark ready / pull from cloud ──
   useEffect(() => {
+    // 1. Check for shared link
     const hash = window.location.hash.slice(1);
     if (hash.startsWith("s=")) {
       const decoded = safeDecodeShareData(hash.slice(2));
@@ -182,15 +205,15 @@ export function QuotesProvider({ children }) {
       showToast("This shared link couldn't be loaded \u2014 it may be corrupted.");
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
     }
+
+    // 2. If quotes were loaded synchronously from localStorage, just mark ready
     try {
       const saved = localStorage.getItem(LS_QUOTES);
       if (saved) {
         const q = JSON.parse(saved);
         if (q?.length > 0) {
-          const cats = JSON.parse(localStorage.getItem(LS_CATS) || "[]");
           initialLoadDone.current = true;
-          markReady(); // Unblock sync push — data came from localStorage, not pull()
-          setSavedSession({ quotes: q, customCats: cats });
+          markReady();
           return;
         }
       }
@@ -199,7 +222,7 @@ export function QuotesProvider({ children }) {
       try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e2) { /* ignore */ }
     }
 
-    // No local data — try to pull from Supabase
+    // 3. No local data — try to pull from Supabase (auto-restores via handleCloudData)
     pull();
   }, [showToast, pull, markReady]);
 
@@ -209,11 +232,10 @@ export function QuotesProvider({ children }) {
     columnOrder, setColumnOrder,
     allCats,
     isSharedView, setIsSharedView,
-    savedSession, setSavedSession,
     syncStatus,
     lastSynced,
     trackDeletion,
-  }), [quotes, customCats, columnOrder, allCats, isSharedView, savedSession, syncStatus, lastSynced, trackDeletion]);
+  }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, trackDeletion]);
 
   return (
     <QuotesContext.Provider value={value}>

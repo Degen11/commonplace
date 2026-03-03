@@ -33,7 +33,7 @@ const S = {
   root: {
     display: "flex",
     flexDirection: "column",
-    gap: 16,
+    gap: 12,
     width: "100%",
   },
   stepRow: {
@@ -67,7 +67,7 @@ const S = {
     overflow: "hidden",
     border: `1px solid ${dark ? DARK_BORDER : "#E8E3DA"}`,
     background: dark ? DARK_BG : "#fff",
-    minHeight: 180,
+    height: 260,
     position: "relative",
     transition: "background 0.8s ease, border-color 0.8s ease",
     textAlign: "left",
@@ -299,23 +299,23 @@ export default function HowItWorksAnimation() {
           <div style={{ ...S.progressBar, width: `${progress}%` }} />
         )}
 
-      </div>
-
-      {/* Replay button — below the stage */}
-      {step === 4 && (
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        {/* Replay button — inside the stage, bottom-right corner */}
+        {step === 4 && (
           <button onClick={replay} style={{
-            background: "none", border: "none", padding: 2,
+            position: "absolute", bottom: 8, right: 8,
+            background: "none", border: "none", padding: 4,
             cursor: "pointer", display: "flex", alignItems: "center",
             justifyContent: "center", color: "#C8C4BC", transition: "color 0.2s ease",
+            zIndex: 10,
           }}
             onMouseEnter={e => { e.currentTarget.style.color = "#6A6660"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; }}
           >
-            <RefreshCw size={10} strokeWidth={1.5} />
+            <RefreshCw size={12} strokeWidth={1.5} />
           </button>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }

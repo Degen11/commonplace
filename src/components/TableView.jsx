@@ -209,6 +209,9 @@ const MemoTableRow = memo(function TableRow({
   if (prev.savedPulseField !== next.savedPulseField) return false;
   if (prev.isMenuOpen !== next.isMenuOpen) return false;
   if (prev.insertClass !== next.insertClass) return false;
+  // actionProps: re-render when copy/reidentify state changes for this row
+  if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
+  if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;
 });
 

@@ -181,7 +181,7 @@ export const Z = {
   landing:{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:44},
 
   // Split layout (replaces old hero)
-  splitLayout:{display:"grid",gridTemplateColumns:"5fr 6fr",gap:40,alignItems:"start",width:"100%",animation:"fadeUp .5s ease"},
+  splitLayout:{display:"grid",gridTemplateColumns:"5fr 6fr",gap:40,alignItems:"stretch",width:"100%",animation:"fadeUp .5s ease"},
   splitLeft:{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:24,paddingTop:8},
   splitRight:{display:"flex",flexDirection:"column",gap:16},
 

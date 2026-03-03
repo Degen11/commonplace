@@ -49,7 +49,7 @@ export default function InputPhase({
             </div>
 
             {/* Animated "How It Works" demo */}
-            <div id="how" style={{ width: "100%" }}>
+            <div id="how" style={{ width: "100%", marginTop: "auto" }}>
               <HowItWorksAnimation />
             </div>
           </div>

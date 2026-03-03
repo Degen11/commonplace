@@ -11,8 +11,9 @@ const syncPill = {
   borderRadius: 4,
   fontFamily: "'DM Sans', sans-serif",
   letterSpacing: 0.2,
-  lineHeight: "18px",
+  lineHeight: "16px",
   whiteSpace: "nowrap",
+  alignSelf: "center",
 };
 
 const syncStyles = {

@@ -56,7 +56,7 @@ function validateQuote(q) {
   if (!q || typeof q !== 'object') return null;
   if (typeof q.id !== 'string' || typeof q.text !== 'string') return null;
   if (q.text.length === 0 || q.text.length > 10000) return null;
-  return {
+  const validated = {
     id: q.id,
     text: q.text,
     source: typeof q.source === 'string' ? q.source.slice(0, 500) : 'Unknown',
@@ -64,6 +64,43 @@ function validateQuote(q) {
     confidence: ['high', 'medium', 'low'].includes(q.confidence) ? q.confidence : 'low',
     favorite: !!q.favorite,
   };
+  if (typeof q.updatedAt === 'number' && q.updatedAt > 0) {
+    validated.updatedAt = q.updatedAt;
+  }
+  return validated;
+}
+
+// ── Merge quotes by ID: union both sets, keep newer for conflicts ──
+function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
+  const merged = new Map();
+
+  // Start with cloud quotes
+  for (const q of cloudQuotes) {
+    if (q && q.id) merged.set(q.id, q);
+  }
+
+  // Merge client quotes — keep whichever has a newer updatedAt
+  for (const q of clientQuotes) {
+    if (!q || !q.id) continue;
+    const existing = merged.get(q.id);
+    if (!existing || (q.updatedAt || 0) >= (existing.updatedAt || 0)) {
+      merged.set(q.id, q);
+    }
+  }
+
+  // Apply deletions
+  if (Array.isArray(deletedIds)) {
+    for (const entry of deletedIds) {
+      if (!entry || typeof entry.id !== 'string') continue;
+      const deletedAt = typeof entry.deletedAt === 'number' ? entry.deletedAt : 0;
+      const existing = merged.get(entry.id);
+      if (existing && deletedAt >= (existing.updatedAt || 0)) {
+        merged.delete(entry.id);
+      }
+    }
+  }
+
+  return Array.from(merged.values());
 }
 
 export default async function handler(req, res) {
@@ -74,7 +111,7 @@ export default async function handler(req, res) {
   // ── Security checks ──
   const origin = req.headers['origin'] || '';
   const referer = req.headers['referer'] || '';
-  if (!ALLOWED_ORIGINS.some(o => origin.startsWith(o) || referer.startsWith(o))) {
+  if (!ALLOWED_ORIGINS.some(o => origin === o || referer === o || referer.startsWith(o + '/'))) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   if (!req.headers['x-requested-with']) {
@@ -125,7 +162,7 @@ export default async function handler(req, res) {
       return res.status(415).json({ error: 'Content-Type must be application/json' });
     }
 
-    const { device_id, quotes, customCategories } = req.body || {};
+    const { device_id, quotes, customCategories, deletedIds } = req.body || {};
 
     if (!device_id || !UUID_RE.test(device_id)) {
       return res.status(400).json({ error: 'Invalid device_id' });
@@ -154,17 +191,33 @@ export default async function handler(req, res) {
       : [];
 
     try {
+      // Fetch current cloud data for merge
+      const { data: existing } = await supabase
+        .from('device_data')
+        .select('quotes')
+        .eq('device_id', device_id)
+        .maybeSingle();
+
+      const cloudQuotes = existing?.quotes || [];
+
+      // Merge client quotes with cloud quotes (union by ID, newer wins)
+      const merged = mergeQuotes(validated, cloudQuotes, deletedIds);
+
+      if (merged.length > 50000) {
+        return res.status(400).json({ error: 'Too many quotes after merge' });
+      }
+
       const { error } = await supabase
         .from('device_data')
         .upsert({
           device_id: device_id,
-          quotes: validated,
+          quotes: merged,
           custom_categories: cats,
         }, { onConflict: 'device_id' });
 
       if (error) throw error;
 
-      return res.status(200).json({ ok: true, count: validated.length });
+      return res.status(200).json({ ok: true, count: merged.length, merged: true });
     } catch (err) {
       console.error('Sync POST error:', err?.message || 'unknown');
       return res.status(500).json({ error: 'Failed to save data' });

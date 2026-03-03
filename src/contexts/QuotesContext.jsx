@@ -7,9 +7,11 @@ import useSync from "../hooks/useSync";
 
 const QuotesContext = createContext(null);
 
-const LS_QUOTES    = "commonplace_quotes";
-const LS_CATS      = "commonplace_cats";
-const LS_COL_ORDER = "commonplace_col_order";
+const LS_QUOTES      = "commonplace_quotes";
+const LS_CATS        = "commonplace_cats";
+const LS_COL_ORDER   = "commonplace_col_order";
+const LS_DELETED_IDS = "commonplace_deleted_ids";
+const TOMBSTONE_TTL  = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // localStorage is now a local cache; Supabase is the durable store.
 // We still warn at 4 MB but no longer hard-refuse writes — the data
@@ -31,6 +33,7 @@ function validateShareQuote(raw) {
     category: clean(category),
     confidence: "high",
     favorite: fav === 1,
+    updatedAt: Date.now(),
   };
 }
 
@@ -72,6 +75,33 @@ export function QuotesProvider({ children }) {
   // Track whether initial data load (localStorage or cloud) is complete
   const initialLoadDone = useRef(false);
 
+  // Track deleted quote IDs as tombstones for sync merge
+  const deletedIdsRef = useRef(() => {
+    try {
+      const saved = localStorage.getItem(LS_DELETED_IDS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Prune expired tombstones
+          const now = Date.now();
+          return parsed.filter(e => e && now - e.deletedAt < TOMBSTONE_TTL);
+        }
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
+  // Resolve initializer if it's a function (lazy init pattern with useRef)
+  if (typeof deletedIdsRef.current === "function") {
+    deletedIdsRef.current = deletedIdsRef.current();
+  }
+
+  const trackDeletion = useCallback((quoteIds) => {
+    const now = Date.now();
+    const newEntries = quoteIds.map(id => ({ id, deletedAt: now }));
+    deletedIdsRef.current = [...deletedIdsRef.current, ...newEntries];
+    try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(deletedIdsRef.current)); } catch { /* ignore */ }
+  }, []);
+
   // ── Cloud sync ──
   const handleCloudData = useCallback((cloudQuotes, cloudCats) => {
     // Only use cloud data if localStorage was empty (cloud = backup)
@@ -88,8 +118,13 @@ export function QuotesProvider({ children }) {
     setSavedSession({ quotes: cloudQuotes, customCats: cloudCats, fromCloud: true });
   }, []);
 
+  const handleSyncError = useCallback((message) => {
+    showToast(message);
+  }, [showToast]);
+
   const { syncStatus, lastSynced, pull, schedulePush, markReady } = useSync({
     onCloudData: handleCloudData,
+    onSyncError: handleSyncError,
   });
 
   // ── Debounced persistence to localStorage ──
@@ -126,7 +161,7 @@ export function QuotesProvider({ children }) {
   useEffect(() => {
     if (isSharedView) return;
     if (quotes.length === 0) return;
-    schedulePush(quotes, customCats);
+    schedulePush(quotes, customCats, deletedIdsRef.current);
   }, [quotes, customCats, isSharedView, schedulePush]);
 
   // Persist column order
@@ -177,7 +212,8 @@ export function QuotesProvider({ children }) {
     savedSession, setSavedSession,
     syncStatus,
     lastSynced,
-  }), [quotes, customCats, columnOrder, allCats, isSharedView, savedSession, syncStatus, lastSynced]);
+    trackDeletion,
+  }), [quotes, customCats, columnOrder, allCats, isSharedView, savedSession, syncStatus, lastSynced, trackDeletion]);
 
   return (
     <QuotesContext.Provider value={value}>

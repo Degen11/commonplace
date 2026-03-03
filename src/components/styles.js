@@ -32,7 +32,11 @@ export const baseCSS = `
   @keyframes exitFade{to{opacity:0}}
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes menuIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  @keyframes copyPush{0%{transform:scale(1)}40%{transform:scale(.82)}100%{transform:scale(1)}}
+  @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
   .spin{animation:spin 1s linear infinite}
+  .copy-push{animation:copyPush .35s ease}
+  .share-lift{animation:shareLift .35s ease}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
   html{scroll-behavior:smooth}
   div[style]:focus{outline:none;border-color:transparent}
@@ -150,8 +154,14 @@ export const baseCSS = `
   .overflow-btn{opacity:0;transition:opacity .12s ease}
   .qrow:hover .overflow-btn{opacity:1}
   .qcard:hover .overflow-btn{opacity:1}
+  .overflow-menu-item svg{transition:color .15s ease}
   .overflow-menu-item:hover{background:#F1F1EF !important}
+  .overflow-copy:hover svg{color:#2383E2 !important}
+  .overflow-reidentify:hover svg{color:#EA580C !important}
+  .overflow-share:hover svg{color:#7C3AED !important}
+  .overflow-menu-item-destructive svg{transition:color .15s ease}
   .overflow-menu-item-destructive:hover{background:#FEF2F2 !important;color:#DC2626 !important}
+  .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
 
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}

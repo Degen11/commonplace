@@ -147,15 +147,21 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   }, [setQuotes, allCats, showToast, identifyBatch]);
 
   // ── Drag reorder ──
+  // Use a ref for dragId so handleDragOver always reads the latest value
+  // even when called from memoized row components with stale closures.
+  const dragIdRef = useRef(null);
+
   const handleDragStart = useCallback((id) => {
     setDragId(id);
+    dragIdRef.current = id;
     lastDragTarget.current = null;
     lastDragHalf.current = null;
   }, []);
 
   const handleDragOver = useCallback((e, targetId) => {
     e.preventDefault();
-    if (!dragId || dragId === targetId) { setDragInsert(null); return; }
+    const currentDragId = dragIdRef.current;
+    if (!currentDragId || currentDragId === targetId) { setDragInsert(null); return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const half = (e.clientY - rect.top) < rect.height / 2 ? "above" : "below";
     if (lastDragTarget.current === targetId && lastDragHalf.current === half) return;
@@ -165,17 +171,18 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     lastDragTarget.current = targetId;
     setQuotes(prev => {
       const arr = [...prev];
-      const fromIdx = arr.findIndex(q => q.id === dragId);
+      const fromIdx = arr.findIndex(q => q.id === currentDragId);
       const toIdx   = arr.findIndex(q => q.id === targetId);
       if (fromIdx < 0 || toIdx < 0) return prev;
       const [moved] = arr.splice(fromIdx, 1);
       arr.splice(toIdx, 0, moved);
       return arr;
     });
-  }, [dragId, setQuotes]);
+  }, [setQuotes]);
 
   const handleDragEnd = useCallback(() => {
     setDragId(null);
+    dragIdRef.current = null;
     setDragInsert(null);
     lastDragTarget.current = null;
     lastDragHalf.current = null;

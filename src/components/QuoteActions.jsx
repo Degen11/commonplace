@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis } from "lucide-react";
 import { Z } from "./styles";
 import { CONF_COLORS } from "../data/constants";
@@ -24,6 +24,8 @@ export function FavBtn({ q, onFav }) {
 export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
   const menuRef = useRef(null);
   const btnRef = useRef(null);
+  const [copyAnim, setCopyAnim] = useState(false);
+  const [shareAnim, setShareAnim] = useState(false);
 
   const isCopied = actionProps.copiedId === q.id;
   const isReidentifying = actionProps.reidentifying.has(q.id);
@@ -41,15 +43,21 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
       {isOpen && (
         <div ref={menuRef} data-overflow-menu style={Z.overflowMenu} onClick={e => e.stopPropagation()}>
           <button
-            className="overflow-menu-item"
+            className="overflow-menu-item overflow-copy"
             style={{ ...Z.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
-            onClick={() => { if (!isCopied) actionProps.onCopy(q); }}
+            onClick={() => {
+              if (!isCopied) {
+                setCopyAnim(true);
+                setTimeout(() => setCopyAnim(false), 350);
+                actionProps.onCopy(q);
+              }
+            }}
           >
-            {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
+            {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={copyAnim ? "copy-push" : ""} />}
             <span>{isCopied ? "Copied!" : "Copy"}</span>
           </button>
           <button
-            className="overflow-menu-item"
+            className="overflow-menu-item overflow-reidentify"
             style={{ ...Z.overflowMenuItem, ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}) }}
             onClick={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
             disabled={isReidentifying}
@@ -58,11 +66,15 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
             <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
           </button>
           <button
-            className="overflow-menu-item"
+            className="overflow-menu-item overflow-share"
             style={Z.overflowMenuItem}
-            onClick={() => { actionProps.onShareImage(q); }}
+            onClick={() => {
+              setShareAnim(true);
+              setTimeout(() => setShareAnim(false), 350);
+              actionProps.onShareImage(q);
+            }}
           >
-            <Share2 size={14} strokeWidth={1.5} />
+            <Share2 size={14} strokeWidth={1.5} className={shareAnim ? "share-lift" : ""} />
             <span>Share</span>
           </button>
           <div style={Z.overflowMenuDivider} />

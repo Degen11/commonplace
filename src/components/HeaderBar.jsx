@@ -43,9 +43,6 @@ export default function HeaderBar({
       <div>
         <h1 style={{ ...Z.title, display: "flex", alignItems: "center", gap: 10 }}>
           <Logo size={28} /> Commonplace
-          {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
-          {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
-          {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
         </h1>
         <p style={Z.sub}>
           {filtered.length < quotes.length
@@ -57,6 +54,9 @@ export default function HeaderBar({
         </p>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+        {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
+        {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
+        {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
         {!isMobile && (
           <div style={Z.viewTog}>
             <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>

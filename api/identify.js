@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 // Allowed origins — add your production domain and local dev
 const ALLOWED_ORIGINS = [
   'https://commonplace.pro',
@@ -6,32 +8,50 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
 ];
 
-// Simple in-memory rate limiter
-// NOTE: This resets on every Vercel cold start and does NOT reliably
-// persist across invocations. For real protection, use Vercel KV or
-// Upstash Redis. Kept here as a minimal speed bump only.
+const SUPABASE_URL = 'https://aoyagemikimsycaupych.supabase.co';
+const RATE_LIMIT = 30; // max requests per 60s window
+
+function getSupabase() {
+  const key = process.env.SUPABASE_SECRET_KEY
+    || process.env.VITE_SUPABASE_ANON_KEY_COMMONPLACE;
+  if (!key) return null;
+  return createClient(SUPABASE_URL, key);
+}
+
+// In-memory fallback for when Supabase is unavailable (e.g. dev without keys)
 const rateMap = new Map();
-const RATE_LIMIT = 30; // max requests per window
-const RATE_WINDOW = 60 * 1000; // 1 minute
 
-function checkRateLimit(ip) {
+function checkRateLimitInMemory(ip) {
   const now = Date.now();
-
-  // On-demand cleanup of stale entries
   for (const [key, entry] of rateMap) {
-    if (now - entry.start > RATE_WINDOW * 2) {
-      rateMap.delete(key);
-    }
+    if (now - entry.start > 120000) rateMap.delete(key);
   }
-
   const entry = rateMap.get(ip);
-  if (!entry || now - entry.start > RATE_WINDOW) {
+  if (!entry || now - entry.start > 60000) {
     rateMap.set(ip, { start: now, count: 1 });
     return true;
   }
   entry.count++;
-  if (entry.count > RATE_LIMIT) return false;
-  return true;
+  return entry.count <= RATE_LIMIT;
+}
+
+// Durable rate limiter using Supabase RPC (atomic, survives cold starts)
+async function checkRateLimit(ip) {
+  const supabase = getSupabase();
+  if (!supabase) return checkRateLimitInMemory(ip);
+
+  try {
+    const { data, error } = await supabase.rpc('check_rate_limit', {
+      p_ip: ip,
+      p_limit: RATE_LIMIT,
+      p_window_sec: 60,
+    });
+    if (error) throw error;
+    return data;
+  } catch {
+    // Fail open — fall back to in-memory if Supabase is down
+    return checkRateLimitInMemory(ip);
+  }
 }
 
 // ── Helper: set CORS headers for allowed origins ──
@@ -115,9 +135,9 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  // Rate limit by IP
+  // Rate limit by IP (durable via Supabase, with in-memory fallback)
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit(ip))) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
   }
 

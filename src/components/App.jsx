@@ -53,7 +53,6 @@ export default function Commonplace() {
     columnOrder, setColumnOrder,
     allCats,
     isSharedView, setIsSharedView,
-    savedSession, setSavedSession,
     syncStatus,
     trackDeletion,
   } = useQuotesContext();
@@ -161,12 +160,15 @@ export default function Commonplace() {
       .slice(0, 50);
   };
 
-  // ── Mount: set initial phase if shared link loaded quotes ──
-  useEffect(() => {
-    if (isSharedView && quotes.length > 0 && phase === "input") {
+  // ── Auto-restore: go to results when quotes are available ──
+  // Handles localStorage restore, Supabase pull, and shared links.
+  // useLayoutEffect prevents flash of input phase on synchronous loads.
+  useLayoutEffect(() => {
+    if (quotes.length > 0 && phase === "input") {
       setPhase("results");
+      setFadeClass("phase-in");
     }
-  }, [isSharedView, quotes.length, phase]);
+  }, [quotes.length, phase]);
 
   // Auto-save raw input draft
   useEffect(() => {
@@ -401,20 +403,9 @@ export default function Commonplace() {
             isDragOver={isDragOver} setIsDragOver={setIsDragOver}
             importedFileName={importedFileName}
             formattingEnabled={formattingEnabled} setFormattingEnabled={setFormattingEnabled}
-            savedSession={savedSession}
             isProcessing={isProcessing}
             onProcess={handleProcess}
             onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName)}
-            onRestoreSession={() => {
-              setQuotes(savedSession.quotes || []);
-              setCustomCats(savedSession.customCats || []);
-              setSavedSession(null);
-              goPhase("results");
-            }}
-            onDismissSession={() => {
-              try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); } catch(e) {}
-              setSavedSession(null);
-            }}
             fileInputRef={fileInputRef}
           />
         </SectionErrorBoundary>
@@ -430,6 +421,7 @@ export default function Commonplace() {
             customCats={customCats}
             processingDone={processingDone}
             onCancel={() => { processing.setIsProcessing(false); processing.setProgress(null); processing.setProcessingDone(false); goPhase("input"); }}
+            onViewResults={processing.skipToResults}
           />
         </SectionErrorBoundary>
       )}

@@ -86,7 +86,14 @@ export default function useEditState({ quotes, setQuotes, filtered, showToast, t
     setInlineEdit(null);
     setSavedPulse({ id, field });
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), 600);
-  }, [setQuotes]);
+    // First-use inline edit tip
+    try {
+      if (!localStorage.getItem("commonplace_inline_tip")) {
+        localStorage.setItem("commonplace_inline_tip", "1");
+        showToast("Tip: Click any source or category to quickly edit inline");
+      }
+    } catch(e) { /* ignore */ }
+  }, [setQuotes, showToast]);
 
   const toggleSel = useCallback((id, shiftKey = false) => {
     if (shiftKey && lastSelectedIndex.current !== null) {

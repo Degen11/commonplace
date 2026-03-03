@@ -8,6 +8,7 @@ export default function ProcessingPhase({
   identifiedFeed,
   customCats,
   onCancel,
+  onViewResults,
   processingDone,
 }) {
   const doneCount = progress?.done || 0;
@@ -28,6 +29,13 @@ export default function ProcessingPhase({
               <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <h2 style={{ ...Z.procTitle, color: "#059669" }}>All done!</h2>
               <p style={Z.procSub}>{progress?.total || 0} entries organized and ready to explore</p>
+              <button
+                className="proc-btn"
+                style={{ ...Z.processBtn, marginTop: 16, fontSize: 15, padding: "12px 28px" }}
+                onClick={onViewResults}
+              >
+                View my collection &rarr;
+              </button>
             </div>
           </>
         ) : (

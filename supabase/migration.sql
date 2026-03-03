@@ -36,3 +36,44 @@ CREATE TRIGGER device_data_updated_at
   BEFORE UPDATE ON device_data
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
+
+-- ── Rate limiting (durable across serverless cold starts) ──
+CREATE TABLE IF NOT EXISTS rate_limits (
+  ip           TEXT PRIMARY KEY,
+  tokens       INT NOT NULL DEFAULT 30,
+  window_start TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Atomic rate limit check: returns TRUE if allowed, FALSE if blocked.
+-- Uses row-level locking to prevent race conditions.
+CREATE OR REPLACE FUNCTION check_rate_limit(
+  p_ip TEXT,
+  p_limit INT DEFAULT 30,
+  p_window_sec INT DEFAULT 60
+) RETURNS BOOLEAN AS $$
+DECLARE
+  v_row rate_limits%ROWTYPE;
+  v_cutoff TIMESTAMPTZ := now() - make_interval(secs := p_window_sec);
+BEGIN
+  -- Ensure row exists
+  INSERT INTO rate_limits (ip, tokens, window_start)
+  VALUES (p_ip, p_limit, now())
+  ON CONFLICT (ip) DO NOTHING;
+
+  -- Lock and read
+  SELECT * INTO v_row FROM rate_limits WHERE ip = p_ip FOR UPDATE;
+
+  IF v_row.window_start < v_cutoff THEN
+    -- Window expired, reset
+    UPDATE rate_limits SET tokens = p_limit - 1, window_start = now() WHERE ip = p_ip;
+    RETURN TRUE;
+  END IF;
+
+  IF v_row.tokens <= 0 THEN
+    RETURN FALSE;
+  END IF;
+
+  UPDATE rate_limits SET tokens = v_row.tokens - 1 WHERE ip = p_ip;
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;

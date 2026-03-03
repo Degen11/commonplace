@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, memo } from "react";
 import EditForm from "./EditForm";
 import useLongPress from "../hooks/useLongPress";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/helpers";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { Z } from "./styles";
+import { Pencil, ChevronDown } from "lucide-react";
 
 // ── Inline source text input ──
 function InlineSourceInput({ initial, onSave, onCancel }) {
@@ -84,28 +85,76 @@ const COL_CONFIG = {
 };
 
 
-// ── Row component with long-press support (change #8) ──
-function TableRow({
-  q, isSel, isEd, needsAtt, sortBy, dragId, dragInsert, isMobile,
-  inlineEdit, columnOrder, compact, actionProps,
-  toggleSel,
-  handleDragStart, handleDragOver, handleDragEnd, renderColCell,
-  deletingId,
-  openMenuId, setOpenMenuId,
+// ── Memoized row component — only re-renders when its own data changes ──
+const MemoTableRow = memo(function TableRow({
+  q, isSel, isEd, needsAtt, sortBy, isMobile,
+  isInlineEditing, inlineEditField,
+  isDragging, isDeleting, isSavedPulse, savedPulseField,
+  isMenuOpen, insertClass,
+  columnOrder, compact, allCats, customCats, actionProps,
+  toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
+  handleDragStart, handleDragOver, handleDragEnd, setOpenMenuId,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
   );
 
-  const insertClass = dragInsert?.id === q.id
-    ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
-    : "";
+  const col = getCatColor(q.category, customCats);
+
+  const renderColumn = (colKey) => {
+    switch(colKey) {
+      case "content":
+        return (
+          <div key="content" style={COL_BASE.content}
+            onClick={() => { if (!isEd) setEditingId(q.id); }}>
+            {isEd
+              ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
+              : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
+            }
+          </div>
+        );
+      case "source":
+        return (
+          <div key="source" className={`src-col${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={COL_BASE.source}>
+            {isInlineEditing && inlineEditField === "source"
+              ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
+              : <>
+                  <span
+                    className="inline-src"
+                    style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                    title={q.source}
+                    onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
+                  >{q.source}</span>
+                  <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="#C8C4BC" />
+                </>
+            }
+          </div>
+        );
+      case "category":
+        return (
+          <div key="category" className={isSavedPulse && savedPulseField === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
+            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+            <span
+              className="inline-cat"
+              style={{ ...Z.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
+              onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+              title="Click to change category"
+            >{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
+            {isInlineEditing && inlineEditField === "category" && (
+              <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className={`qrow ${insertClass}`}
       data-id={q.id}
-      draggable={!isEd && inlineEdit?.id !== q.id}
+      draggable={!isEd && !isInlineEditing}
       onDragStart={() => handleDragStart(q.id)}
       onDragOver={e => handleDragOver(e, q.id)}
       onDragEnd={handleDragEnd}
@@ -115,8 +164,8 @@ function TableRow({
         ...(isSel ? { background: "#F0F7FF" } : {}),
         ...(q.favorite ? Z.favRow : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
-        ...(dragId === q.id ? { opacity: .4 } : {}),
-        ...(deletingId === q.id ? { animation: "exitFade .18s ease forwards" } : {}),
+        ...(isDragging ? { opacity: .4 } : {}),
+        ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
     >
       <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
@@ -128,20 +177,40 @@ function TableRow({
         </div>
       </div>
 
-      {columnOrder.map(colKey => renderColCell(colKey, q, isEd))}
+      {columnOrder.map(colKey => renderColumn(colKey))}
 
       <div className="row-actions" style={Z.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <OverflowMenu
           q={q}
           actionProps={actionProps}
-          isOpen={openMenuId === q.id}
+          isOpen={isMenuOpen}
           onToggle={() => setOpenMenuId(prev => prev === q.id ? null : q.id)}
         />
       </div>
     </div>
   );
-}
+}, (prev, next) => {
+  // Custom comparator: only re-render when this specific row's data changes.
+  // Callback refs (toggleSel, etc.) are intentionally skipped — they use
+  // callback-form setState so stale closures don't cause incorrect behavior.
+  if (prev.q !== next.q) return false;
+  if (prev.isSel !== next.isSel) return false;
+  if (prev.isEd !== next.isEd) return false;
+  if (prev.compact !== next.compact) return false;
+  if (prev.sortBy !== next.sortBy) return false;
+  if (prev.needsAtt !== next.needsAtt) return false;
+  if (prev.columnOrder !== next.columnOrder) return false;
+  if (prev.isInlineEditing !== next.isInlineEditing) return false;
+  if (prev.inlineEditField !== next.inlineEditField) return false;
+  if (prev.isDragging !== next.isDragging) return false;
+  if (prev.isDeleting !== next.isDeleting) return false;
+  if (prev.isSavedPulse !== next.isSavedPulse) return false;
+  if (prev.savedPulseField !== next.savedPulseField) return false;
+  if (prev.isMenuOpen !== next.isMenuOpen) return false;
+  if (prev.insertClass !== next.insertClass) return false;
+  return true;
+});
 
 export default function TableView({
   filtered,
@@ -224,52 +293,6 @@ export default function TableView({
     setDragColOver(null);
   };
 
-  const renderColCell = (colKey, q, isEd) => {
-  const col = getCatColor(q.category, customCats);
-  switch(colKey) {
-    case "content":
-      return (
-        <div key="content" style={COL_BASE.content}
-          onClick={() => { if (!isEd) setEditingId(q.id); }}>
-          {isEd
-            ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
-            : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
-          }
-        </div>
-      );
-    case "source":
-      return (
-        <div key="source" className={`src-col${savedPulse?.id === q.id && savedPulse?.field === "source" ? " save-pulse" : ""}`} style={COL_BASE.source}>
-          {inlineEdit?.id === q.id && inlineEdit?.field === "source"
-            ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
-            : <span
-                className="inline-src"
-                style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
-                title={q.source}
-                onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-              >{q.source}</span>
-          }
-        </div>
-      );
-    case "category":
-      return (
-        <div key="category" className={savedPulse?.id === q.id && savedPulse?.field === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
-          <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-          <span
-            className="inline-cat"
-            style={{ ...Z.tag, background: col.bg, color: col.text, display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
-            onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-            title="Click to change category"
-          >{q.category}</span>
-          {inlineEdit?.id === q.id && inlineEdit?.field === "category" && (
-            <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
-          )}
-        </div>
-      );
-    default:
-      return null;
-  }
-};
   return (
     <div style={{ overflowX: "visible" }}>
       {filtered.length > 0 && (
@@ -310,18 +333,33 @@ export default function TableView({
         const isSel = selected.has(q.id);
         const isEd = editingId === q.id;
         const needsAtt = q.confidence === "low" || q.category === "Unknown";
+        const isInlineEditing = inlineEdit?.id === q.id;
+        const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+        const isDragging = dragId === q.id;
+        const isDeleting = deletingId === q.id;
+        const isSavedPulse = savedPulse?.id === q.id;
+        const savedPulseField = isSavedPulse ? savedPulse.field : null;
+        const isMenuOpen = openMenuId === q.id;
+        const insertClass = dragInsert?.id === q.id
+          ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
+          : "";
         return (
-          <TableRow
+          <MemoTableRow
             key={q.id}
             q={q}
             isSel={isSel}
             isEd={isEd}
             needsAtt={needsAtt}
             sortBy={sortBy}
-            dragId={dragId}
-            dragInsert={dragInsert}
             isMobile={isMobile}
-            inlineEdit={inlineEdit}
+            isInlineEditing={isInlineEditing}
+            inlineEditField={inlineEditField}
+            isDragging={isDragging}
+            isDeleting={isDeleting}
+            isSavedPulse={isSavedPulse}
+            savedPulseField={savedPulseField}
+            isMenuOpen={isMenuOpen}
+            insertClass={insertClass}
             columnOrder={columnOrder}
             compact={compact}
             allCats={allCats}
@@ -335,9 +373,6 @@ export default function TableView({
             handleDragStart={handleDragStart}
             handleDragOver={handleDragOver}
             handleDragEnd={handleDragEnd}
-            renderColCell={renderColCell}
-            deletingId={deletingId}
-            openMenuId={openMenuId}
             setOpenMenuId={setOpenMenuId}
           />
         );

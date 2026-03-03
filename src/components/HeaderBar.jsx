@@ -4,6 +4,23 @@ import {
   List, AlignJustify, LayoutGrid,
 } from "lucide-react";
 
+const syncPill = {
+  fontSize: 11,
+  fontWeight: 500,
+  padding: "2px 8px",
+  borderRadius: 4,
+  fontFamily: "'DM Sans', sans-serif",
+  letterSpacing: 0.2,
+  lineHeight: "18px",
+  whiteSpace: "nowrap",
+};
+
+const syncStyles = {
+  syncing: { ...syncPill, color: "#9B9A97", background: "#F1F1EF" },
+  synced:  { ...syncPill, color: "#16A34A", background: "#F0FDF4" },
+  error:   { ...syncPill, color: "#DC2626", background: "#FEF2F2" },
+};
+
 export default function HeaderBar({
   quotes, filtered, topCats, customCats,
   view, compact, setView, setCompact,
@@ -23,7 +40,12 @@ export default function HeaderBar({
   return (
     <div ref={headerRef} style={Z.header}>
       <div>
-        <h1 style={{ ...Z.title, display: "flex", alignItems: "center", gap: 10 }}><Logo size={28} /> Commonplace</h1>
+        <h1 style={{ ...Z.title, display: "flex", alignItems: "center", gap: 10 }}>
+          <Logo size={28} /> Commonplace
+          {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
+          {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
+          {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
+        </h1>
         <p style={Z.sub}>
           {filtered.length < quotes.length
             ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
@@ -31,12 +53,6 @@ export default function HeaderBar({
           }
           {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
           {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
-          {syncStatus && syncStatus !== "idle" && (
-            <span style={{ color: "#D3D3D0" }}> · </span>
-          )}
-          {syncStatus === "syncing" && <span style={{ color: "#9B9A97", fontSize: 12 }}>Saving...</span>}
-          {syncStatus === "synced" && <span style={{ color: "#16A34A", fontSize: 12 }}>Saved</span>}
-          {syncStatus === "error" && <span style={{ color: "#DC2626", fontSize: 12 }}>Sync error</span>}
         </p>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

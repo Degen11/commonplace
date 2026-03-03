@@ -97,7 +97,7 @@ export default async function handler(req, res) {
   // ── Origin validation ──
   const origin = req.headers['origin'] || '';
   const referer = req.headers['referer'] || '';
-  const isAllowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o) || referer.startsWith(o));
+  const isAllowed = ALLOWED_ORIGINS.some(o => origin === o || referer === o || referer.startsWith(o + '/'));
   if (!isAllowed) {
     return res.status(403).json({ error: 'Forbidden' });
   }

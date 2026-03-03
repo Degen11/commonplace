@@ -131,15 +131,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       const local = localMatches.find(m => m.idx === i);
       if (local) {
         const text = useFormatting ? basicFormat(p.text) : p.text;
-        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false };
+        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, updatedAt: Date.now() };
       }
       const api = apiResults.get(i);
       if (api) {
         const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
-        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false };
+        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false, updatedAt: Date.now() };
       }
       const text = useFormatting ? basicFormat(p.text) : p.text;
-      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false };
+      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false, updatedAt: Date.now() };
     });
 
     if (!mountedRef.current) return;

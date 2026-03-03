@@ -1,25 +1,17 @@
-import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import useInfiniteScroll from "../hooks/useInfiniteScroll";
 import useProcessing from "../hooks/useProcessing";
+import useViewPreferences from "../hooks/useViewPreferences";
+import useQuoteActions from "../hooks/useQuoteActions";
+import useEditState from "../hooks/useEditState";
 
 // Contexts
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 // Data
-import {
-  VIBE_TAGS, QUOTED_CATS,
-  CONF_ORDER, getCatColor,
-} from "../data/constants";
-
-// Utils
-import {
-  smartSplit,
-  parseKindleClippings, parseReadwiseCSV, parseCSVLine,
-  generateShareImage,
-} from "../utils/helpers";
+import { getCatColor } from "../data/constants";
 
 // Components
 import Toast from "./Toast";
@@ -48,22 +40,8 @@ import {
 
 const LS_QUOTES     = "commonplace_quotes";
 const LS_CATS       = "commonplace_cats";
-const LS_VIEW       = "commonplace_view";
-const LS_SORT       = "commonplace_sort";
 const LS_FILTERS    = "commonplace_filters";
 const LS_DRAFT      = "commonplace_draft";
-
-const _initFilters = (() => {
-  try { const s = localStorage.getItem("commonplace_filters"); if (s) return JSON.parse(s); } catch(e) {}
-  return {};
-})();
-
-const SORT_OPTIONS = [
-  { key: "default",    label: "Default order" },
-  { key: "confidence", label: "Needs attention first" },
-  { key: "alpha",      label: "Alphabetical" },
-  { key: "category",   label: "By category" },
-];
 
 // ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
@@ -77,12 +55,13 @@ export default function Commonplace() {
     isSharedView, setIsSharedView,
     savedSession, setSavedSession,
     syncStatus,
+    trackDeletion,
   } = useQuotesContext();
 
   // ── Phase / UI chrome ──
-  const [phase, setPhase]                     = useState("input");
-  const [fadeClass, setFadeClass]             = useState("phase-in");
-  const [rawInput, setRawInput]               = useState(() => {
+  const [phase, setPhase]         = useState("input");
+  const [fadeClass, setFadeClass] = useState("phase-in");
+  const [rawInput, setRawInput]   = useState(() => {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
 
@@ -104,49 +83,50 @@ export default function Commonplace() {
     identifyBatch, resetProcessingState,
   } = processing;
 
-  // ── View / filter / sort state ──
-  const [deletingId, setDeletingId]           = useState(null);
-  const [view, setView]                       = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_VIEW);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.view) {
-          if (window.innerWidth < 640 && parsed.view === "table") return "cards";
-          return parsed.view;
-        }
-      }
-    } catch(e) {}
-    return window.innerWidth < 640 ? "cards" : "table";
-  });
-  const [compact, setCompact]                 = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_VIEW);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed.compact === "boolean") return parsed.compact;
-      }
-    } catch(e) {}
-    return false;
-  });
-  const [catFilter, setCatFilter]             = useState(_initFilters.cat || "All");
-  const [favFilter, setFavFilter]             = useState(!!_initFilters.fav);
-  const [search, setSearch]                   = useState(_initFilters.search || "");
-  const [debouncedSearch, setDebouncedSearch] = useState(_initFilters.search || "");
-  const [sortBy, setSortBy]                   = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_SORT);
-      if (saved && SORT_OPTIONS.some(o => o.key === saved)) return saved;
-    } catch(e) {}
-    return "default";
-  });
-  const [editingId, setEditingId]             = useState(null);
-  const [inlineEdit, setInlineEdit]           = useState(null);
-  const [selected, setSelected]               = useState(new Set());
-  const [bulkEditCat, setBulkEditCat]         = useState("");
-  const [bulkEditSource, setBulkEditSource]   = useState("");
-  const [newCatName, setNewCatName]           = useState("");
-  const [showNewCat, setShowNewCat]           = useState(false);
+  // ── View preferences (filters, sort, pagination) ──
+  const {
+    view, setView,
+    compact, setCompact,
+    sortBy, setSortBy,
+    catFilter, setCatFilter,
+    favFilter, setFavFilter,
+    search, setSearch,
+    isMobile,
+    filtered, visible, hasMore, remaining, loadMore,
+    cc, favCount, unknownCount, topCats,
+    hasActiveFilters, computedStats,
+  } = useViewPreferences(quotes);
+
+  // ── Edit state (selection, editing, bulk ops) ──
+  const {
+    editingId, setEditingId,
+    inlineEdit, setInlineEdit,
+    selected, setSelected,
+    bulkEditCat, setBulkEditCat,
+    bulkEditSource, setBulkEditSource,
+    reviewQueue, setReviewQueue,
+    confirmBulkDel, setConfirmBulkDel,
+    savedPulse,
+    lastSelectedIndex,
+    startEditing, startInlineEdit,
+    saveEdit, saveInlineField,
+    toggleSel, selAll,
+    applyBulk, bulkDel,
+    startReviewFlow,
+  } = useEditState({ quotes, setQuotes, filtered, showToast, trackDeletion });
+
+  // ── Quote actions (delete, copy, share, reidentify, drag, file import) ──
+  const {
+    deletingId,
+    copiedId,
+    reidentifyingIds,
+    dragId, dragInsert,
+    handleDelete, copyQuote, shareAsImage, reIdentify,
+    handleDragStart, handleDragOver, handleDragEnd,
+    handleFileImport,
+  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion });
+
+  // ── UI chrome state ──
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
   const [showStats, setShowStats]             = useState(false);
@@ -154,33 +134,24 @@ export default function Commonplace() {
   const [addMoreInput, setAddMoreInput]       = useState("");
   const [addMoreFormatting, setAddMoreFormatting] = useState(false);
   const [confirmClear, setConfirmClear]       = useState(false);
-  const [isMobile, setIsMobile]               = useState(window.innerWidth < 640);
-  const [confirmBulkDel, setConfirmBulkDel]   = useState(false);
-  const [reviewQueue, setReviewQueue]         = useState([]);
-  const [dragId, setDragId]                   = useState(null);
-  const [copiedId, setCopiedId]               = useState(null);
-  const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
-  const [dragInsert, setDragInsert]           = useState(null);
+  const [newCatName, setNewCatName]           = useState("");
+  const [showNewCat, setShowNewCat]           = useState(false);
   const [headerVisible, setHeaderVisible]     = useState(true);
-  const [savedPulse, setSavedPulse]           = useState(null);
   const [catFade, setCatFade]                 = useState({ left: false, right: false });
   const [inputTab, setInputTab]               = useState("paste");
   const [isDragOver, setIsDragOver]           = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
 
   // ── Refs ──
-  const undoRef                = useRef(null);
-  const addMoreRef             = useRef(null);
-  const exportRef              = useRef(null);
-  const miniExportRef          = useRef(null);
-  const sortRef                = useRef(null);
-  const fileInputRef           = useRef(null);
-  const lastSelectedIndex      = useRef(null);
-  const toolbarRef             = useRef(null);
-  const pendingScrollAdjust    = useRef(null);
-  const catScrollRef           = useRef(null);
-  const headerRef              = useRef(null);
-  const reidentifyAbortRefs    = useRef(new Map()); // FIX: abort controllers for re-identify
+  const addMoreRef          = useRef(null);
+  const exportRef           = useRef(null);
+  const miniExportRef       = useRef(null);
+  const sortRef             = useRef(null);
+  const fileInputRef        = useRef(null);
+  const toolbarRef          = useRef(null);
+  const pendingScrollAdjust = useRef(null);
+  const catScrollRef        = useRef(null);
+  const headerRef           = useRef(null);
 
   // ── Helper functions ──
   const sanitizeCategoryName = (name) => {
@@ -190,37 +161,12 @@ export default function Commonplace() {
       .slice(0, 50);
   };
 
-  const startEditing = (id) => {
-    setEditingId(id);
-    setInlineEdit(null);
-  };
-
-  const startInlineEdit = (id, field) => {
-    setInlineEdit({ id, field });
-    setEditingId(null);
-  };
-
   // ── Mount: set initial phase if shared link loaded quotes ──
   useEffect(() => {
     if (isSharedView && quotes.length > 0 && phase === "input") {
       setPhase("results");
     }
   }, [isSharedView, quotes.length, phase]);
-
-  // ── Persist view preference ──
-  useEffect(() => {
-    try { localStorage.setItem(LS_VIEW, JSON.stringify({ view, compact })); } catch(e) {}
-  }, [view, compact]);
-
-  // Persist sort preference
-  useEffect(() => {
-    try { localStorage.setItem(LS_SORT, sortBy); } catch(e) {}
-  }, [sortBy]);
-
-  // Persist filter state
-  useEffect(() => {
-    try { localStorage.setItem(LS_FILTERS, JSON.stringify({ cat: catFilter, fav: favFilter, search })); } catch(e) {}
-  }, [catFilter, favFilter, search]);
 
   // Auto-save raw input draft
   useEffect(() => {
@@ -232,23 +178,6 @@ export default function Commonplace() {
     }, 500);
     return () => clearTimeout(t);
   }, [rawInput]);
-
-  // ── Responsive ──
-  useEffect(() => {
-    const h = () => {
-      const m = window.innerWidth < 640;
-      setIsMobile(m);
-      if (m && view === "table") setView("cards");
-    };
-    window.addEventListener("resize", h);
-    return () => window.removeEventListener("resize", h);
-  }, [view]);
-
-  // ── Search debounce (150ms) — avoids re-filtering on every keystroke ──
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 150);
-    return () => clearTimeout(t);
-  }, [search]);
 
   // ── Sticky header observer ──
   useEffect(() => {
@@ -331,7 +260,7 @@ export default function Commonplace() {
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
-  }, [editingId]);
+  }, [editingId, setEditingId]);
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -374,12 +303,7 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue.length, showToast]);
-
-  // Reset shift-click index when filters change
-  useEffect(() => {
-    lastSelectedIndex.current = null;
-  }, [catFilter, favFilter, search, sortBy]);
+  }, [search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue.length, showToast, setEditingId, setSelected, setReviewQueue, setSearch, setConfirmBulkDel, lastSelectedIndex]);
 
   // ── Update document title with quote count ──
   useEffect(() => {
@@ -393,202 +317,9 @@ export default function Commonplace() {
     }
   }, [quotes, phase, progress]);
 
-  // ── FIX: Clean up ghost IDs in selection Set when quotes change ──
-  useEffect(() => {
-    if (selected.size === 0) return;
-    const quoteIds = new Set(quotes.map(q => q.id));
-    setSelected(prev => {
-      const cleaned = new Set();
-      let changed = false;
-      for (const id of prev) {
-        if (quoteIds.has(id)) {
-          cleaned.add(id);
-        } else {
-          changed = true;
-        }
-      }
-      return changed ? cleaned : prev;
-    });
-  }, [quotes, selected.size]);
-
-  // ── FIX: Filter reviewQueue when quotes change ──
-  useEffect(() => {
-    if (reviewQueue.length === 0) return;
-    const quoteIds = new Set(quotes.map(q => q.id));
-    setReviewQueue(prev => {
-      const filtered = prev.filter(id => quoteIds.has(id));
-      return filtered.length !== prev.length ? filtered : prev;
-    });
-  }, [quotes, reviewQueue.length]);
-
-  // ── FIX: Abort re-identify controllers on unmount ──
-  useEffect(() => {
-    const refs = reidentifyAbortRefs.current;
-    return () => {
-      for (const controller of refs.values()) {
-        controller.abort();
-      }
-      refs.clear();
-    };
-  }, []);
-
-  // ── File import ──
-  const handleFileImport = (file) => {
-    if (!file) return;
-    const ext = file.name.split(".").pop().toLowerCase();
-    if (!["txt", "csv"].includes(ext)) { showToast("Only .txt and .csv files are supported"); return; }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      let content = e.target.result;
-      let formatLabel = null;
-      let skippedCount = 0;
-
-      if (ext === "txt" && content.includes("==========")) {
-        const totalClips = content.split("==========").filter(c => c.trim()).length;
-        const entries = parseKindleClippings(content);
-        if (entries.length > 0) {
-          skippedCount = totalClips - entries.length;
-          content = entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
-          formatLabel = "Kindle highlights";
-        }
-      } else if (ext === "csv") {
-        const headerLine = content.split("\n")[0]?.toLowerCase() || "";
-        if (headerLine.includes("highlight")) {
-          const totalDataLines = content.split("\n").filter((l, i) => i > 0 && l.trim()).length;
-          const entries = parseReadwiseCSV(content);
-          if (entries.length > 0) {
-            skippedCount = totalDataLines - entries.length;
-            content = entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
-            formatLabel = "Readwise";
-          }
-        } else {
-          const lines = content.split("\n");
-          const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, "").trim().toLowerCase());
-          const textCol = ["text","quote","quotes","content","entry"].reduce((found, key) => {
-            const idx = headers.indexOf(key);
-            return found >= 0 ? found : idx;
-          }, -1);
-          const colIdx = textCol >= 0 ? textCol : 0;
-          const dataLines = lines.slice(1);
-          content = dataLines.map(l => {
-            const fields = parseCSVLine(l);
-            return fields[colIdx]?.trim() || "";
-          }).filter(Boolean).join("\n");
-        }
-      }
-
-      setRawInput(content);
-      setImportedFileName(file.name);
-      const count = smartSplit(content).length;
-      let msg = formatLabel
-        ? `Loaded ${count} entries from ${file.name} (${formatLabel})`
-        : `Loaded ${count} entries from ${file.name}`;
-      if (skippedCount > 0) msg += ` \u00b7 ${skippedCount} skipped`;
-      showToast(msg);
-    };
-    reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.");
-    reader.readAsText(file);
-  };
-
-  // ── Re-identify a single entry (FIX: with AbortController) ──
-  const describeChanges = (oldQ, newSource, newCategory) => {
-    const parts = [];
-    if (newSource !== oldQ.source) parts.push(`source \u2192 ${newSource}`);
-    if (newCategory !== oldQ.category) parts.push(`${oldQ.category} \u2192 ${newCategory}`);
-    if (parts.length === 0) return "Re-identified \u2014 no changes";
-    return `Re-identified: ${parts.join(", ")}`;
-  };
-
-  const reIdentify = async (q) => {
-    // Cancel any existing in-flight request for this quote
-    const existing = reidentifyAbortRefs.current.get(q.id);
-    if (existing) existing.abort();
-
-    const controller = new AbortController();
-    reidentifyAbortRefs.current.set(q.id, controller);
-
-    setReidentifyingIds(prev => new Set(prev).add(q.id));
-    const clearId = () => {
-      reidentifyAbortRefs.current.delete(q.id);
-      setReidentifyingIds(prev => { const s = new Set(prev); s.delete(q.id); return s; });
-    };
-
-    try {
-      const { localLookup } = await import("../data/localQuotes");
-      if (controller.signal.aborted) return;
-
-      const local = localLookup(q.text, null, { exactOnly: true });
-      if (local) {
-        const snapshot = { ...q };
-        setQuotes(prev => prev.map(x => x.id === q.id ? {
-          ...x, source: local.source, category: local.category, confidence: local.confidence,
-        } : x));
-        clearId();
-        showToast(describeChanges(q, local.source, local.category), "Undo", () => {
-          setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
-        });
-        return;
-      }
-
-      const item = { text: q.text, hint: null };
-      const results = await identifyBatch([item], false, controller.signal);
-      if (controller.signal.aborted) return;
-
-      if (results.length > 0) {
-        const r = results[0];
-        const validCats = new Set([...allCats, ...VIBE_TAGS]);
-        const newSource = r.source || "Unknown";
-        const newCategory = validCats.has(r.category) ? r.category : "Unknown";
-        const snapshot = { ...q };
-        setQuotes(prev => prev.map(x => x.id === q.id ? {
-          ...x,
-          source: newSource,
-          category: newCategory,
-          confidence: r.confidence || "low",
-        } : x));
-        showToast(describeChanges(q, newSource, newCategory), "Undo", () => {
-          setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
-        });
-      }
-    } catch (err) {
-      if (err.name === "AbortError") return;
-      showToast("Couldn't reach AI. Try again.");
-    }
-    clearId();
-  };
-
-  // ── Copy single quote to clipboard ──
-  const copyQuote = (q) => {
-    const text = QUOTED_CATS.has(q.category)
-      ? `"${q.text}" \u2014 ${q.source}`
-      : `${q.text} \u2014 ${q.source}`;
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        setCopiedId(q.id);
-        setTimeout(() => setCopiedId(prev => prev === q.id ? null : prev), 1200);
-        showToast("Copied!");
-      })
-      .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text."));
-  };
-
-  // ── Share single quote as PNG image ──
-  const shareAsImage = async (q) => {
-    try {
-      const blob = await generateShareImage(q);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "commonplace-quote.png";
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast("Image saved!");
-    } catch {
-      showToast("Couldn't generate image.");
-    }
-  };
-
-  const handleProcess  = () => processEntries(rawInput, false, formattingEnabled);
-  const handleAddMore  = () => {
+  // ── Handlers ──
+  const handleProcess = () => processEntries(rawInput, false, formattingEnabled);
+  const handleAddMore = () => {
     if (!addMoreInput.trim()) return;
     processEntries(addMoreInput, true, addMoreFormatting);
     setAddMoreInput("");
@@ -604,145 +335,15 @@ export default function Commonplace() {
     setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
   };
 
-  const handleDelete = (id) => {
-    const deleted = quotes.find(q => q.id === id);
-    const idx = quotes.findIndex(q => q.id === id);
-    setDeletingId(id);
-    setTimeout(() => {
-      setDeletingId(null);
-      setQuotes(p => p.filter(q => q.id !== id));
-      undoRef.current = { quote: deleted, index: idx };
-      showToast("Entry deleted", "Undo", () => {
-        if (undoRef.current) {
-          const { quote, index } = undoRef.current;
-          setQuotes(p => { const n = [...p]; n.splice(Math.min(index, n.length), 0, quote); return n; });
-          undoRef.current = null;
-        }
-      });
-    }, 200);
-  };
-
-  // ── Inline actions ──
-  const toggleSel = (id, shiftKey = false) => {
-    if (shiftKey && lastSelectedIndex.current !== null) {
-      const currentIndex = filtered.findIndex(q => q.id === id);
-      const lastIndex = lastSelectedIndex.current;
-      const start = Math.min(currentIndex, lastIndex);
-      const end = Math.max(currentIndex, lastIndex);
-      const rangeIds = filtered.slice(start, end + 1).map(q => q.id);
-      setSelected(p => {
-        const n = new Set(p);
-        rangeIds.forEach(rangeId => n.add(rangeId));
-        return n;
-      });
-      lastSelectedIndex.current = currentIndex;
-    } else {
-      setSelected(p => {
-        const n = new Set(p);
-        n.has(id) ? n.delete(id) : n.add(id);
-        return n;
-      });
-      lastSelectedIndex.current = filtered.findIndex(q => q.id === id);
-    }
-  };
-  const selAll = () => {
-    if (filtered.length === 0) return;
-    const allSelected = filtered.every(q => selected.has(q.id));
-    if (allSelected) {
-      setSelected(new Set());
-      lastSelectedIndex.current = null;
-    } else {
-      setSelected(new Set(filtered.map(q => q.id)));
-      lastSelectedIndex.current = null;
-    }
-  };
-  const saveEdit   = (id, text, source, category) => {
-    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high" } : q));
-    setEditingId(null);
-    if (reviewQueue.length > 0) {
-      const remaining = reviewQueue.filter(rid => rid !== id);
-      setReviewQueue(remaining);
-      if (remaining.length > 0) {
-        setTimeout(() => {
-          setEditingId(remaining[0]);
-          const el = document.querySelector(`[data-id="${remaining[0]}"]`);
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 150);
-      } else {
-        showToast("Review complete \u2014 all entries updated!");
-      }
-    }
-  };
-  const saveInlineField = (id, field, value) => {
-    setQuotes(p => p.map(q => {
-      if (q.id !== id) return q;
-      const newVal = field === "source" ? (value.trim() || q.source) : value;
-      return { ...q, [field]: newVal, confidence: "high" };
-    }));
-    setInlineEdit(null);
-    setSavedPulse({ id, field });
-    setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), 600);
-  };
-  const applyBulk  = () => {
-    const affectedIds = new Set(selected);
-    const snapshot = quotes.filter(q => affectedIds.has(q.id)).map(q => ({ ...q }));
-    setQuotes(p => p.map(q => {
-      if (!selected.has(q.id)) return q;
-      const u = { ...q };
-      if (bulkEditCat) u.category = bulkEditCat;
-      if (bulkEditSource.trim()) u.source = bulkEditSource.trim();
-      if (bulkEditCat || bulkEditSource.trim()) u.confidence = "high";
-      return u;
-    }));
-    const count = selected.size;
-    setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
-    undoRef.current = { bulkSnapshot: snapshot };
-    showToast(`${count} entries updated`, "Undo", () => {
-      if (undoRef.current?.bulkSnapshot) {
-        const snap = undoRef.current.bulkSnapshot;
-        const snapMap = new Map(snap.map(q => [q.id, q]));
-        setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
-        undoRef.current = null;
-      }
-    });
-  };
-  const bulkDel = () => {
-    setConfirmBulkDel(false);
-    const deletedQuotes = quotes.filter(q => selected.has(q.id));
-    const deletedIds = new Set(selected);
-    setQuotes(p => p.filter(q => !deletedIds.has(q.id)));
-    setSelected(new Set());
-    showToast(`${deletedQuotes.length} entries deleted`, "Undo", () => {
-      setQuotes(p => {
-        const restored = [...p];
-        deletedQuotes.forEach(dq => {
-          const origIdx = quotes.findIndex(q => q.id === dq.id);
-          restored.splice(Math.min(origIdx, restored.length), 0, dq);
-        });
-        return restored;
-      });
-    });
-  };
-  const startReviewFlow = () => {
+  const handleStartReview = () => {
     setSortBy("confidence");
     setCatFilter("All");
     setFavFilter(false);
     setSearch("");
-    const attentionIds = quotes
-      .filter(q => q.confidence === "low" || q.category === "Unknown")
-      .sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0))
-      .map(q => q.id);
-    setReviewQueue(attentionIds);
-    if (attentionIds.length > 0) {
-      setTimeout(() => {
-        setEditingId(attentionIds[0]);
-        const el = document.querySelector(`[data-id="${attentionIds[0]}"]`);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 150);
-    }
+    startReviewFlow();
   };
 
-  const addCat  = () => {
+  const addCat = () => {
     const sanitized = sanitizeCategoryName(newCatName);
     if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
       showToast("Invalid or duplicate category name");
@@ -752,73 +353,12 @@ export default function Commonplace() {
     setNewCatName("");
     setShowNewCat(false);
   };
-  const remCat  = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown" } : q)); if (catFilter === c) setCatFilter("All"); };
+  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
 
-  // ── Row drag reorder (throttled — only re-renders when target or half changes) ──
-  const lastDragTarget = useRef(null);
-  const lastDragHalf = useRef(null);
-  const handleDragStart = (id) => { setDragId(id); lastDragTarget.current = null; lastDragHalf.current = null; };
-  const handleDragOver  = (e, targetId) => {
-    e.preventDefault();
-    if (!dragId || dragId === targetId) { setDragInsert(null); return; }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const half = (e.clientY - rect.top) < rect.height / 2 ? "above" : "below";
-    if (lastDragTarget.current === targetId && lastDragHalf.current === half) return;
-    lastDragHalf.current = half;
-    setDragInsert({ id: targetId, pos: half });
-    if (lastDragTarget.current === targetId) return;
-    lastDragTarget.current = targetId;
-    setQuotes(prev => {
-      const arr = [...prev];
-      const fromIdx = arr.findIndex(q => q.id === dragId);
-      const toIdx   = arr.findIndex(q => q.id === targetId);
-      if (fromIdx < 0 || toIdx < 0) return prev;
-      const [moved] = arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, moved);
-      return arr;
-    });
-  };
-  const handleDragEnd = () => { setDragId(null); setDragInsert(null); lastDragTarget.current = null; lastDragHalf.current = null; };
-
-  // ── Filtering & sorting ──
-  const filtered = useMemo(() => {
-    const result = quotes.filter(q => {
-      if (catFilter !== "All" && q.category !== catFilter) return false;
-      if (favFilter && !q.favorite) return false;
-      if (debouncedSearch && !q.text.toLowerCase().includes(debouncedSearch.toLowerCase()) && !q.source.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
-      return true;
-    });
-    if (sortBy === "confidence") result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
-    else if (sortBy === "alpha")    result.sort((a, b) => a.text.localeCompare(b.text));
-    else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category));
-    return result;
-  }, [quotes, catFilter, favFilter, debouncedSearch, sortBy]);
-  const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${quotes.length}`;
-  const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
-
-  const { cc, favCount, unknownCount, topCats } = useMemo(() => {
-    const cc = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
-    return {
-      cc,
-      favCount: quotes.filter(q => q.favorite).length,
-      unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
-      topCats: Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4),
-    };
-  }, [quotes]);
-  const showBulkBar  = selected.size > 0;
-  const hasActiveFilters = catFilter !== "All" || favFilter || search;
-
-  const computedStats = useMemo(() => {
-    if (quotes.length === 0) return null;
-    const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
-    const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const sorted   = [...quotes].sort((a, b) => a.text.length - b.text.length);
-    const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);
-    return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
-  }, [quotes]);
+  const showBulkBar = selected.size > 0;
 
   const actionProps = {
-    onFav:         id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite } : x)),
+    onFav:         id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)),
     onDelete:      handleDelete,
     onCopy:        copyQuote,
     onReidentify:  reIdentify,
@@ -864,7 +404,7 @@ export default function Commonplace() {
             savedSession={savedSession}
             isProcessing={isProcessing}
             onProcess={handleProcess}
-            onFileImport={handleFileImport}
+            onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName)}
             onRestoreSession={() => {
               setQuotes(savedSession.quotes || []);
               setCustomCats(savedSession.customCats || []);
@@ -1109,7 +649,7 @@ export default function Commonplace() {
                 <span style={Z.attentionCount}>{unknownCount}</span>
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
-              <button className="ui-tip" data-tip="Step through entries that need attention" style={Z.attentionBtn} onClick={startReviewFlow}>Review now &rarr;</button>
+              <button className="ui-tip" data-tip="Step through entries that need attention" style={Z.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
             </div>
           ))}
 

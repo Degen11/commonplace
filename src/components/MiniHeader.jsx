@@ -43,11 +43,11 @@ export default function MiniHeader({
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Logo size={16} />
           <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
+        </span>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
           {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
           {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
-        </span>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <div style={Z.viewTog}>
             <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
               <List size={14} strokeWidth={1.5} />

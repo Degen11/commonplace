@@ -3,6 +3,23 @@ import Logo from "./Logo";
 import ExportDropdown from "./ExportDropdown";
 import { Z } from "./styles";
 
+const syncPill = {
+  fontSize: 10,
+  fontWeight: 500,
+  padding: "1px 6px",
+  borderRadius: 4,
+  fontFamily: "'DM Sans', sans-serif",
+  letterSpacing: 0.2,
+  lineHeight: "16px",
+  whiteSpace: "nowrap",
+};
+
+const syncStyles = {
+  syncing: { ...syncPill, color: "#9B9A97", background: "#F1F1EF" },
+  synced:  { ...syncPill, color: "#16A34A", background: "#F0FDF4" },
+  error:   { ...syncPill, color: "#DC2626", background: "#FEF2F2" },
+};
+
 export default function MiniHeader({
   view, setView, compact, setCompact,
   showStats, setShowStats,
@@ -25,9 +42,9 @@ export default function MiniHeader({
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Logo size={16} />
           <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
-          {syncStatus === "syncing" && <span style={{ color: "#9B9A97", fontSize: 11 }}>Saving...</span>}
-          {syncStatus === "synced" && <span style={{ color: "#16A34A", fontSize: 11 }}>Saved</span>}
-          {syncStatus === "error" && <span style={{ color: "#DC2626", fontSize: 11 }}>Sync error</span>}
+          {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
+          {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
+          {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <div style={Z.viewTog}>

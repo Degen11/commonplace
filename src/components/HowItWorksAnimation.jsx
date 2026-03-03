@@ -44,10 +44,10 @@ const S = {
   stepItem: (active, done) => ({
     display: "flex",
     alignItems: "center",
-    gap: 6,
-    padding: "6px 12px",
+    gap: 7,
+    padding: "7px 14px",
     borderRadius: 6,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: active || done ? 600 : 400,
     color: active ? CP_ACCENT : done ? "#1A1814" : "#C8C4BC",
     background: active ? "rgba(60,87,117,0.08)" : "transparent",
@@ -55,12 +55,12 @@ const S = {
     whiteSpace: "nowrap",
   }),
   stepDivider: {
-    width: 20,
+    width: 22,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     color: "#D3D3D0",
-    fontSize: 10,
+    fontSize: 12,
   },
   stage: (dark) => ({
     borderRadius: 10,
@@ -251,24 +251,6 @@ export default function HowItWorksAnimation() {
 
   return (
     <div style={S.root}>
-      {/* Step indicators */}
-      <div style={S.stepRow}>
-        {STEPS.map((s, i) => {
-          const stepNum = i + 1;
-          const active = activeStep === stepNum;
-          const done = activeStep > stepNum || step >= 4;
-          return (
-            <div key={s.label} style={{ display: "flex", alignItems: "center" }}>
-              {i > 0 && <div style={S.stepDivider}>→</div>}
-              <div style={S.stepItem(active, done)}>
-                <s.Icon size={14} strokeWidth={active ? 2 : 1.5} />
-                {s.label}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* Animation stage — dark bg for paste/identify, transitions to white for organize */}
       <div style={S.stage(isDark)}>
 
@@ -318,6 +300,24 @@ export default function HowItWorksAnimation() {
           </button>
         )}
 
+      </div>
+
+      {/* Step indicators — below animation */}
+      <div style={S.stepRow}>
+        {STEPS.map((s, i) => {
+          const stepNum = i + 1;
+          const active = activeStep === stepNum;
+          const done = activeStep > stepNum || step >= 4;
+          return (
+            <div key={s.label} style={{ display: "flex", alignItems: "center" }}>
+              {i > 0 && <div style={S.stepDivider}>→</div>}
+              <div style={S.stepItem(active, done)}>
+                <s.Icon size={16} strokeWidth={active ? 2 : 1.5} />
+                {s.label}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

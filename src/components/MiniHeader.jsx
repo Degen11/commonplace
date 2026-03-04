@@ -1,7 +1,7 @@
 import { List, AlignJustify, LayoutGrid } from "lucide-react";
 import Logo from "./Logo";
 import ExportDropdown from "./ExportDropdown";
-import { Z } from "./styles";
+import { styles } from "./styles";
 
 const syncPill = {
   fontSize: 10,
@@ -48,20 +48,20 @@ export default function MiniHeader({
           {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
           {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
           {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
-          <div style={Z.viewTog}>
-            <button style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
+          <div style={styles.viewTog}>
+            <button style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
               <List size={14} strokeWidth={1.5} />
             </button>
-            <button style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
+            <button style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
               <AlignJustify size={14} strokeWidth={1.5} />
             </button>
-            <button style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
+            <button style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
               <LayoutGrid size={14} strokeWidth={1.5} />
             </button>
           </div>
-          <button className="hdr-btn" style={{ ...Z.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
+          <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? styles.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
           <div ref={miniExportRef} style={{ position: "relative" }}>
-            <button className="hdr-btn" style={{ ...Z.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export &darr;</button>
+            <button className="hdr-btn" style={{ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export &darr;</button>
             {showExport && (
               <ExportDropdown
                 quotes={quotes}
@@ -73,7 +73,7 @@ export default function MiniHeader({
               />
             )}
           </div>
-          <button className="hdr-btn" style={{ ...Z.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
+          <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
         </div>
       </div>
     </div>

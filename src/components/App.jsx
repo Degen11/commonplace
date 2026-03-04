@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useProcessing from "../hooks/useProcessing";
@@ -6,14 +6,11 @@ import useViewPreferences from "../hooks/useViewPreferences";
 import useQuoteActions from "../hooks/useQuoteActions";
 import useEditState from "../hooks/useEditState";
 
-// Contexts
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
-// Data
 import { getCatColor } from "../data/constants";
 
-// Components
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
 import InputPhase from "./InputPhase";
@@ -31,9 +28,8 @@ import StatsOverlay from "./StatsOverlay";
 import AddMorePanel from "./AddMorePanel";
 import ExportDropdown from "./ExportDropdown";
 import EmptyState from "./EmptyState";
-import { Z } from "./styles";
+import { styles } from "./styles";
 
-// Icons
 import {
   AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2, X,
 } from "lucide-react";
@@ -43,9 +39,7 @@ const LS_CATS       = "commonplace_cats";
 const LS_FILTERS    = "commonplace_filters";
 const LS_DRAFT      = "commonplace_draft";
 
-// ===================== MAIN COMPONENT =====================
 export default function Commonplace() {
-  // ── Contexts ──
   const { toasts, showToast, dismissToast } = useToastContext();
   const {
     quotes, setQuotes,
@@ -57,20 +51,17 @@ export default function Commonplace() {
     trackDeletion,
   } = useQuotesContext();
 
-  // ── Phase / UI chrome ──
   const [phase, setPhase]         = useState("input");
   const [fadeClass, setFadeClass] = useState("phase-in");
   const [rawInput, setRawInput]   = useState(() => {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
 
-  // ── Phase transition ──
   const goPhase = useCallback((next) => {
     setFadeClass("phase-out");
     setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
   }, []);
 
-  // ── Processing pipeline ──
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
   const {
     isProcessing, processingDone, progress, identifiedFeed,
@@ -82,7 +73,6 @@ export default function Commonplace() {
     identifyBatch, resetProcessingState,
   } = processing;
 
-  // ── View preferences (filters, sort, pagination) ──
   const {
     view, setView,
     compact, setCompact,
@@ -96,7 +86,6 @@ export default function Commonplace() {
     hasActiveFilters, computedStats,
   } = useViewPreferences(quotes);
 
-  // ── Edit state (selection, editing, bulk ops) ──
   const {
     editingId, setEditingId,
     inlineEdit, setInlineEdit,
@@ -114,7 +103,6 @@ export default function Commonplace() {
     startReviewFlow,
   } = useEditState({ quotes, setQuotes, filtered, showToast, trackDeletion });
 
-  // ── Quote actions (delete, copy, share, reidentify, drag, file import) ──
   const {
     deletingId,
     copiedId,
@@ -125,7 +113,6 @@ export default function Commonplace() {
     handleFileImport,
   } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion });
 
-  // ── UI chrome state ──
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
   const [showStats, setShowStats]             = useState(false);
@@ -141,7 +128,6 @@ export default function Commonplace() {
   const [isDragOver, setIsDragOver]           = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
 
-  // ── Refs ──
   const addMoreRef          = useRef(null);
   const exportRef           = useRef(null);
   const miniExportRef       = useRef(null);
@@ -152,7 +138,6 @@ export default function Commonplace() {
   const catScrollRef        = useRef(null);
   const headerRef           = useRef(null);
 
-  // ── Helper functions ──
   const sanitizeCategoryName = (name) => {
     return name
       .replace(/[<>"'&]/g, '')
@@ -160,9 +145,7 @@ export default function Commonplace() {
       .slice(0, 50);
   };
 
-  // ── Auto-restore: go to results when quotes are available ──
-  // Handles localStorage restore, Supabase pull, and shared links.
-  // useLayoutEffect prevents flash of input phase on synchronous loads.
+  // useLayoutEffect prevents flash of input phase on synchronous loads
   useLayoutEffect(() => {
     if (quotes.length > 0 && phase === "input") {
       setPhase("results");
@@ -181,7 +164,6 @@ export default function Commonplace() {
     return () => clearTimeout(t);
   }, [rawInput]);
 
-  // ── Sticky header observer ──
   useEffect(() => {
     if (phase !== "results" || !headerRef.current) return;
     const obs = new IntersectionObserver(([entry]) => {
@@ -210,7 +192,7 @@ export default function Commonplace() {
     return () => { document.body.style.overflow = ''; document.body.style.paddingRight = ''; };
   }, [showStats]);
 
-  // ── Scroll position preservation for mini-header actions ──
+  // Preserve scroll position when toggling panels via mini-header
   const preserveScroll = useCallback(() => {
     if (toolbarRef.current && !headerVisible) {
       pendingScrollAdjust.current = toolbarRef.current.getBoundingClientRect().top;
@@ -229,7 +211,6 @@ export default function Commonplace() {
     pendingScrollAdjust.current = null;
   }, [showStats, showAddMore, view, compact]);
 
-  // ── Category pill scroll fade ──
   const updateCatFade = useCallback(() => {
     const el = catScrollRef.current;
     if (!el) return;
@@ -247,7 +228,6 @@ export default function Commonplace() {
 
   useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter, updateCatFade]);
 
-  // ── Click-outside for dropdowns and edit form ──
   useEffect(() => {
     const h = e => {
       if (exportRef.current && !exportRef.current.contains(e.target) && (!miniExportRef.current || !miniExportRef.current.contains(e.target))) setShowExport(false);
@@ -264,27 +244,31 @@ export default function Commonplace() {
     return () => document.removeEventListener("mousedown", h);
   }, [editingId, setEditingId]);
 
-  // ── Keyboard shortcuts ──
+  // Keyboard shortcuts — use a ref to avoid re-registering on every state change
+  const kbStateRef = useRef({});
+  kbStateRef.current = { search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue };
+
   useEffect(() => {
     const h = e => {
       if (e.target.matches('input, textarea, select')) return;
+      const s = kbStateRef.current;
 
       if (e.key === 'Escape') {
-        if (confirmClear) { setConfirmClear(false); return; }
-        if (confirmBulkDel) { setConfirmBulkDel(false); return; }
-        if (showExport) { setShowExport(false); return; }
-        if (showSort) { setShowSort(false); return; }
-        if (selected.size > 0) {
+        if (s.confirmClear) { setConfirmClear(false); return; }
+        if (s.confirmBulkDel) { setConfirmBulkDel(false); return; }
+        if (s.showExport) { setShowExport(false); return; }
+        if (s.showSort) { setShowSort(false); return; }
+        if (s.selected.size > 0) {
           setSelected(new Set());
           lastSelectedIndex.current = null;
           return;
         }
-        if (editingId) {
+        if (s.editingId) {
           setEditingId(null);
-          if (reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
+          if (s.reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
           return;
         }
-        if (search) {
+        if (s.search) {
           setSearch('');
           return;
         }
@@ -292,10 +276,10 @@ export default function Commonplace() {
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
-        const visibleQuotes = quotes.filter(q => {
-          if (catFilter !== "All" && q.category !== catFilter) return false;
-          if (favFilter && !q.favorite) return false;
-          if (search && !q.text.toLowerCase().includes(search.toLowerCase()) && !q.source.toLowerCase().includes(search.toLowerCase())) return false;
+        const visibleQuotes = s.quotes.filter(q => {
+          if (s.catFilter !== "All" && q.category !== s.catFilter) return false;
+          if (s.favFilter && !q.favorite) return false;
+          if (s.search && !q.text.toLowerCase().includes(s.search.toLowerCase()) && !q.source.toLowerCase().includes(s.search.toLowerCase())) return false;
           return true;
         });
         if (visibleQuotes.length > 0) {
@@ -305,9 +289,8 @@ export default function Commonplace() {
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
-  }, [search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue.length, showToast, setEditingId, setSelected, setReviewQueue, setSearch, setConfirmBulkDel, lastSelectedIndex]);
+  }, [showToast, setEditingId, setSelected, setReviewQueue, setSearch, setConfirmBulkDel, lastSelectedIndex]);
 
-  // ── Update document title with quote count ──
   useEffect(() => {
     const baseTitle = "Commonplace";
     if (phase === "processing" && progress) {
@@ -319,7 +302,6 @@ export default function Commonplace() {
     }
   }, [quotes, phase, progress]);
 
-  // ── Handlers ──
   const handleProcess = () => processEntries(rawInput, false, formattingEnabled);
   const handleAddMore = () => {
     if (!addMoreInput.trim()) return;
@@ -359,15 +341,17 @@ export default function Commonplace() {
 
   const showBulkBar = selected.size > 0;
 
-  const actionProps = {
-    onFav:         id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)),
+  const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
+
+  const actionProps = useMemo(() => ({
+    onFav,
     onDelete:      handleDelete,
     onCopy:        copyQuote,
     onReidentify:  reIdentify,
     onShareImage:  shareAsImage,
     copiedId,
     reidentifying: reidentifyingIds,
-  };
+  }), [onFav, handleDelete, copyQuote, reIdentify, shareAsImage, copiedId, reidentifyingIds]);
 
   const exportDropdownContent = (
     <ExportDropdown
@@ -380,7 +364,6 @@ export default function Commonplace() {
     />
   );
 
-  // ========================== RENDER ==========================
   return (
     <>
       <Analytics />
@@ -428,7 +411,7 @@ export default function Commonplace() {
 
       {/* ── Results phase ── */}
       {phase === "results" && (
-        <div style={Z.wrap} className={fadeClass}>
+        <div style={styles.wrap} className={fadeClass}>
 
           {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
 
@@ -463,9 +446,9 @@ export default function Commonplace() {
           )}
 
           {isSharedView && (
-            <div style={Z.shareBanner}>
+            <div style={styles.shareBanner}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({quotes.length} entries)</span>
-              <button style={Z.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} }}>Make it yours</button>
+              <button style={styles.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} }}>Make it yours</button>
             </div>
           )}
 
@@ -530,28 +513,28 @@ export default function Commonplace() {
           )}
 
           {apiError && (
-            <div style={Z.errorBar}>
+            <div style={styles.errorBar}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} strokeWidth={2} /> {apiError}</span>
               <div style={{ display: "flex", gap: 8 }}>
-                {failedEntries.length > 0 && <button style={Z.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
+                {failedEntries.length > 0 && <button style={styles.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
                 <button className="dismiss-link" style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
               </div>
             </div>
           )}
 
           {stats && (
-            <div style={Z.statsBar}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} strokeWidth={2} /> <strong>{stats.local}</strong> matched locally</span><span style={Z.statDot} />
+            <div style={styles.statsBar}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} strokeWidth={2} /> <strong>{stats.local}</strong> matched locally</span><span style={styles.statDot} />
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
-              {stats.failed > 0 && <><span style={Z.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
-              {stats.dupes > 0 && <><span style={Z.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-              <button style={Z.statsDismiss} onClick={() => setStats(null)}><X size={14} strokeWidth={2} /></button>
+              {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
+              {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
+              <button style={styles.statsDismiss} onClick={() => setStats(null)}><X size={14} strokeWidth={2} /></button>
             </div>
           )}
 
           {showAddMore && (
             headerVisible ? (
-              <div style={Z.addMorePanel}>
+              <div style={styles.addMorePanel}>
                 <AddMorePanel
                   addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
                   addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
@@ -628,20 +611,20 @@ export default function Commonplace() {
           </SectionErrorBoundary>
 
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
-            <div style={Z.attentionBar}>
+            <div style={styles.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={Z.attentionCount}>{reviewQueue.length}</span>
+                <span style={styles.attentionCount}>{reviewQueue.length}</span>
                 <span>{reviewQueue.length === 1 ? "entry" : "entries"} remaining in review</span>
               </div>
-              <button style={{ ...Z.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
+              <button style={{ ...styles.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
             </div>
           ) : sortBy !== "confidence" && (
-            <div style={Z.attentionBar}>
+            <div style={styles.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={Z.attentionCount}>{unknownCount}</span>
+                <span style={styles.attentionCount}>{unknownCount}</span>
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
-              <button className="ui-tip" data-tip="Step through entries that need attention" style={Z.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
+              <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
             </div>
           ))}
 
@@ -684,11 +667,16 @@ export default function Commonplace() {
           {view === "cards" && (
             <SectionErrorBoundary name="Card view">
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-                {visible.map((q, idx) => {
+                {visible.map((q) => {
                   const col = getCatColor(q.category, customCats);
                   const isSel = selected.has(q.id);
                   const isEd  = editingId === q.id;
                   const needsAtt = q.confidence === "low" || q.category === "Unknown";
+                  const isInlineEditing = inlineEdit?.id === q.id;
+                  const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+                  const isDeleting = deletingId === q.id;
+                  const isSavedPulse = savedPulse?.id === q.id;
+                  const savedPulseField = isSavedPulse ? savedPulse.field : null;
                   return (
                     <CardItem
                       key={q.id}
@@ -700,7 +688,10 @@ export default function Commonplace() {
                       sortBy={sortBy}
                       dragId={dragId}
                       isMobile={isMobile}
-                      inlineEdit={inlineEdit}
+                      isInlineEditing={isInlineEditing}
+                      inlineEditField={inlineEditField}
+                      isSavedPulse={isSavedPulse}
+                      savedPulseField={savedPulseField}
                       allCats={allCats}
                       actionProps={actionProps}
                       toggleSel={toggleSel}
@@ -713,9 +704,7 @@ export default function Commonplace() {
                       handleDragStart={handleDragStart}
                       handleDragOver={handleDragOver}
                       handleDragEnd={handleDragEnd}
-                      savedPulse={savedPulse}
-                      index={idx}
-                      deletingId={deletingId}
+                      isDeleting={isDeleting}
                     />
                   );
                 })}
@@ -755,7 +744,7 @@ export default function Commonplace() {
 
           {showBulkBar && <div style={{ height: 64 }} />}
 
-          <Footer styles={Z} />
+          <Footer styles={styles} />
         </div>
       )}
     </>

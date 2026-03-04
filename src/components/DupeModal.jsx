@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Z } from "./styles";
+import { styles } from "./styles";
 import { Search } from "lucide-react";
 
 export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecisions, onContinue }) {
@@ -20,19 +20,19 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
   const keptCount = Object.values(dupeDecisions).filter(d => d === "keep" || d === "merge").length;
 
   return (
-    <div style={Z.dupeModalOverlay} role="dialog" aria-modal="true" aria-label="Duplicate detection" onClick={onContinue}>
-      <div ref={boxRef} tabIndex={-1} style={{ ...Z.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
-        <div style={Z.dupeModalHeader}>
+    <div style={styles.dupeModalOverlay} role="dialog" aria-modal="true" aria-label="Duplicate detection" onClick={onContinue}>
+      <div ref={boxRef} tabIndex={-1} style={{ ...styles.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+        <div style={styles.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Search size={22} color="#3C5775" strokeWidth={1.5} />
-            <div style={Z.dupeModalTitle}>Possible Duplicates Detected</div>
+            <div style={styles.dupeModalTitle}>Possible Duplicates Detected</div>
           </div>
-          <div style={Z.dupeModalSub}>
+          <div style={styles.dupeModalSub}>
             We found {pendingDupes.length} {pendingDupes.length === 1 ? "entry" : "entries"} similar to ones already in your collection.
           </div>
         </div>
 
-        <div style={{ ...Z.dupeList, padding: "16px 24px", overflowY: "auto", flex: 1, minHeight: 0 }}>
+        <div style={{ ...styles.dupeList, padding: "16px 24px", overflowY: "auto", flex: 1, minHeight: 0 }}>
           {pendingDupes.map((dupe, i) => {
             const decision = dupeDecisions[i];
             const isKeep = decision === "keep";

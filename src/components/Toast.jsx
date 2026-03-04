@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Z } from "./styles";
+import { styles } from "./styles";
 
 export default function Toast({ message, action, onAction, onDismiss }) {
   const duration = action ? 5000 : 2500;
@@ -17,8 +17,8 @@ export default function Toast({ message, action, onAction, onDismiss }) {
   }, [triggerExit, duration]);
 
   return (
-    <div style={{ ...Z.toast, animation: exiting ? "toastOut .18s ease forwards" : "toastIn .2s ease" }}>
-      <div style={Z.toastContent}>
+    <div style={{ ...styles.toast, animation: exiting ? "toastOut .18s ease forwards" : "toastIn .2s ease" }}>
+      <div style={styles.toastContent}>
         <span style={{
           maxWidth: 280,
           overflow: "hidden",
@@ -26,7 +26,7 @@ export default function Toast({ message, action, onAction, onDismiss }) {
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical",
         }}>{message}</span>
-        {action && <button style={Z.toastAction} onClick={onAction}>{action}</button>}
+        {action && <button style={styles.toastAction} onClick={onAction}>{action}</button>}
         <span className="toast-bar" style={{ "--toast-duration": `${duration}ms` }} />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import Logo from "./Logo";
-import { Z } from "./styles";
+import { styles } from "./styles";
 import {
   List, AlignJustify, LayoutGrid,
 } from "lucide-react";
@@ -39,12 +39,12 @@ export default function HeaderBar({
   syncStatus,
 }) {
   return (
-    <div ref={headerRef} style={Z.header}>
+    <div ref={headerRef} style={styles.header}>
       <div>
-        <h1 style={{ ...Z.title, display: "flex", alignItems: "center", gap: 10 }}>
+        <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
           <Logo size={28} /> Commonplace
         </h1>
-        <p style={Z.sub}>
+        <p style={styles.sub}>
           {filtered.length < quotes.length
             ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
             : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
@@ -58,27 +58,27 @@ export default function HeaderBar({
         {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
         {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
         {!isMobile && (
-          <div style={Z.viewTog}>
-            <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...Z.viewBtn, ...(view === "table" && !compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
+          <div style={styles.viewTog}>
+            <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
               <List size={16} strokeWidth={1.5} />
             </button>
-            <button className="ui-tip ui-tip-below" data-tip="Compact view" style={{ ...Z.viewBtn, ...(view === "table" && compact ? Z.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
+            <button className="ui-tip ui-tip-below" data-tip="Compact view" style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
               <AlignJustify size={16} strokeWidth={1.5} />
             </button>
-            <button className="ui-tip ui-tip-below" data-tip="Card view" style={{ ...Z.viewBtn, ...(view === "cards" ? Z.viewOn : {}) }} onClick={() => setView("cards")}>
+            <button className="ui-tip ui-tip-below" data-tip="Card view" style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={() => setView("cards")}>
               <LayoutGrid size={16} strokeWidth={1.5} />
             </button>
           </div>
         )}
-        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Collection insights" style={{ ...Z.statsBtn, ...(showStats ? Z.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Collection insights" style={{ ...styles.statsBtn, ...(showStats ? styles.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
           {showStats ? "Hide stats" : "Stats"}
         </button>
         <div ref={exportRef} style={{ position: "relative" }}>
-          <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={Z.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+          <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={styles.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
           {showExport && headerVisible && exportDropdownContent}
         </div>
-        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={Z.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
-        <button className="ui-tip ui-tip-below hdr-btn new-batch-btn" data-tip="Clear all and start over" style={Z.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
+        <button className="ui-tip ui-tip-below hdr-btn new-batch-btn" data-tip="Clear all and start over" style={styles.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { Z } from "./styles";
-import { normalize } from "../utils/helpers";
+import { styles } from "./styles";
+import { normalize } from "../utils/textFormatting";
 import { Lightbulb } from "lucide-react";
 
 // Finds the closest local DB match to the current text.
@@ -57,7 +57,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
       onClick={e => e.stopPropagation()}
     >
       <textarea
-        style={{ ...Z.textarea, minHeight: 40, fontSize: 13, padding: 8 }}
+        style={{ ...styles.textarea, minHeight: 40, fontSize: 13, padding: 8 }}
         value={text}
         onChange={e => { setText(e.target.value); setDismissed(false); }}
         onKeyDown={e => {
@@ -118,7 +118,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
 
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <input
-          style={Z.editIn}
+          style={styles.editIn}
           value={source}
           onChange={e => setSource(e.target.value)}
           placeholder="Source..."
@@ -128,14 +128,14 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
           }}
         />
         <select
-          style={Z.editSel}
+          style={styles.editSel}
           value={category}
           onChange={e => setCategory(e.target.value)}
         >
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button style={Z.editSave} onClick={() => onSave(q.id, text, source, category)}>Save</button>
-        <button style={Z.editCancel} onClick={onCancel}>Cancel</button>
+        <button style={styles.editSave} onClick={() => onSave(q.id, text, source, category)}>Save</button>
+        <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
       </div>
 
     </div>

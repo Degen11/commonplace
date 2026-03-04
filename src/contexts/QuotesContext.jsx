@@ -39,7 +39,8 @@ function validateShareQuote(raw) {
 
 export function safeDecodeShareData(hash) {
   try {
-    const json = decodeURIComponent(escape(atob(hash)));
+    const bytes = Uint8Array.from(atob(hash), c => c.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
     const arr = JSON.parse(json);
     if (!Array.isArray(arr) || arr.length === 0 || arr.length > 10000) return null;
     const validated = arr.map(validateShareQuote).filter(Boolean);

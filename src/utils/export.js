@@ -1,6 +1,6 @@
 import { QUOTED_CATS } from "../data/constants";
 
-export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text}\u201D` : q.text;
+export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text || ""}\u201D` : (q.text || "");
 
 function groupByCategory(quotes) {
   const grouped = {};
@@ -12,16 +12,19 @@ function download(content, name, type) {
   const b = new Blob([content], { type });
   const u = URL.createObjectURL(b);
   const a = document.createElement("a");
-  a.href = u; a.download = name; a.click();
-  URL.revokeObjectURL(u);
+  a.href = u; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(u), 100);
 }
 
 export function exportCSV(quotes) {
   const rows = [["Text", "Source", "Category", "Favorite"]];
   quotes.forEach(q => rows.push([
-    `"${q.text.replace(/"/g, '""')}"`,
-    `"${q.source.replace(/"/g, '""')}"`,
-    q.category,
+    `"${(q.text || "").replace(/"/g, '""')}"`,
+    `"${(q.source || "").replace(/"/g, '""')}"`,
+    q.category || "",
     q.favorite ? "yes" : "no",
   ]));
   download(rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv");
@@ -34,9 +37,10 @@ export function exportMD(quotes) {
     md += `## ${cat}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2B50" : "";
+      const t = q.text || ""; const s = q.source || "";
       QUOTED_CATS.has(q.category)
-        ? md += `> \u201C${q.text}\u201D\n> \u2014 *${q.source}*${f}\n\n`
-        : md += `- **${q.text}** \u2014 ${q.source}${f}\n`;
+        ? md += `> \u201C${t}\u201D\n> \u2014 *${s}*${f}\n\n`
+        : md += `- **${t}** \u2014 ${s}${f}\n`;
     });
     md += "\n";
   });
@@ -44,7 +48,7 @@ export function exportMD(quotes) {
 }
 
 export function exportJSON(quotes) {
-  const data = quotes.map(q => ({ text: q.text, source: q.source, category: q.category, confidence: q.confidence, favorite: q.favorite }));
+  const data = quotes.map(q => ({ text: q.text || "", source: q.source || "", category: q.category || "", confidence: q.confidence, favorite: q.favorite }));
   download(JSON.stringify(data, null, 2), "commonplace-export.json", "application/json");
 }
 
@@ -55,9 +59,10 @@ export function exportTXT(quotes) {
     text += `${cat.toUpperCase()}\n${"\u2500".repeat(cat.length)}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
+      const t = q.text || ""; const s = q.source || "";
       QUOTED_CATS.has(q.category)
-        ? text += `"${q.text}" \u2014 ${q.source}${f}\n`
-        : text += `${q.text} \u2014 ${q.source}${f}\n`;
+        ? text += `"${t}" \u2014 ${s}${f}\n`
+        : text += `${t} \u2014 ${s}${f}\n`;
     });
     text += "\n";
   });
@@ -71,11 +76,12 @@ export function richCopyToClipboard(quotes) {
     text += `\u2726 ${cat.toUpperCase()}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
+      const t = q.text || ""; const s = q.source || "";
       if (QUOTED_CATS.has(q.category)) {
-        text += `\u201C${q.text}\u201D\n`;
-        text += `    \u2014 ${q.source}${f}\n\n`;
+        text += `\u201C${t}\u201D\n`;
+        text += `    \u2014 ${s}${f}\n\n`;
       } else {
-        text += `${q.text} \u2014 ${q.source}${f}\n\n`;
+        text += `${t} \u2014 ${s}${f}\n\n`;
       }
     });
   });
@@ -89,7 +95,8 @@ export function copyToClipboard(quotes) {
     text += `${cat}\n${"\u2500".repeat(cat.length)}\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      QUOTED_CATS.has(q.category) ? text += `"${q.text}" \u2014 ${q.source}${f}\n` : text += `${q.text} \u2014 ${q.source}${f}\n`;
+      const t = q.text || ""; const s = q.source || "";
+      QUOTED_CATS.has(q.category) ? text += `"${t}" \u2014 ${s}${f}\n` : text += `${t} \u2014 ${s}${f}\n`;
     });
     text += "\n";
   });
@@ -97,6 +104,9 @@ export function copyToClipboard(quotes) {
 }
 
 export function encodeShareData(quotes) {
-  const minimal = quotes.map(q => [q.text, q.source, q.category, q.favorite ? 1 : 0]);
-  return btoa(unescape(encodeURIComponent(JSON.stringify(minimal))));
+  const minimal = quotes.map(q => [q.text || "", q.source || "", q.category || "", q.favorite ? 1 : 0]);
+  const bytes = new TextEncoder().encode(JSON.stringify(minimal));
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
 }

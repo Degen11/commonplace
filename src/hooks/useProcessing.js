@@ -71,8 +71,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       if (!r.ok) throw new Error(`API returned ${r.status}`);
       const d = await r.json();
       if (d.error) throw new Error(d.error.message || "API error");
+      if (!d.content || !Array.isArray(d.content)) throw new Error("Invalid API response structure");
       const t = d.content.map(x => x.text || "").join("");
-      const parsed = JSON.parse(t.replace(/```json|```/g, "").trim());
+      const raw = t.replace(/```json|```/g, "").trim();
+      if (!raw) return [];
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch { throw new Error("API returned malformed JSON"); }
       return Array.isArray(parsed) ? parsed : [];
     } finally {
       clearTimeout(timeoutId);
@@ -202,6 +206,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   };
 
   const handleDupesContinue = async () => {
+    if (!pendingContinuationRef.current) return;
     const { unique, appendMode, useFormatting } = pendingContinuationRef.current;
     // Clone unique to avoid mutating the ref's array
     const finalUnique = [...unique];

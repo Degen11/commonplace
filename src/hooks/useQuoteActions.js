@@ -15,11 +15,16 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const reidentifyAbortRefs  = useRef(new Map());
   const lastDragTarget       = useRef(null);
   const lastDragHalf         = useRef(null);
+  const mountedRef           = useRef(true);
+  const quotesRef            = useRef(quotes);
+  quotesRef.current = quotes;
 
-  // ── Abort re-identify controllers on unmount ──
+  // ── Mount guard + abort re-identify controllers on unmount ──
   useEffect(() => {
+    mountedRef.current = true;
     const refs = reidentifyAbortRefs.current;
     return () => {
+      mountedRef.current = false;
       for (const controller of refs.values()) {
         controller.abort();
       }
@@ -29,10 +34,11 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
   // ── Delete ──
   const handleDelete = useCallback((id) => {
-    const deleted = quotes.find(q => q.id === id);
-    const idx = quotes.findIndex(q => q.id === id);
+    const deleted = quotesRef.current.find(q => q.id === id);
+    const idx = quotesRef.current.findIndex(q => q.id === id);
     setDeletingId(id);
     setTimeout(() => {
+      if (!mountedRef.current) return;
       setDeletingId(null);
       setQuotes(p => p.filter(q => q.id !== id));
       trackDeletion([id]);
@@ -45,7 +51,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         }
       });
     }, 200);
-  }, [quotes, setQuotes, showToast, trackDeletion]);
+  }, [setQuotes, showToast, trackDeletion]);
 
   // ── Copy single quote ──
   const copyQuote = useCallback((q) => {
@@ -55,7 +61,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopiedId(q.id);
-        setTimeout(() => setCopiedId(prev => prev === q.id ? null : prev), 1200);
+        setTimeout(() => { if (mountedRef.current) setCopiedId(prev => prev === q.id ? null : prev); }, 1200);
         showToast("Copied!");
       })
       .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text."));
@@ -69,8 +75,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       const a = document.createElement("a");
       a.href = url;
       a.download = "commonplace-quote.png";
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
       showToast("Image saved!");
     } catch {
       showToast("Couldn't generate image.");

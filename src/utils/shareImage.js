@@ -29,7 +29,7 @@ export async function generateShareImage(q) {
   const textX = PAD + 8;
   const textMaxW = W - PAD * 2 - 16;
   ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
-  const words = q.text.split(" ");
+  const words = (q.text || "").split(" ");
   const lines = [];
   let cur = "";
   for (const word of words) {
@@ -72,7 +72,7 @@ export async function generateShareImage(q) {
   const dashW = ctx.measureText(dash).width;
   ctx.fillText(dash, textX, attrY);
   ctx.fillStyle = "#9A9590";
-  ctx.fillText(q.source, textX + dashW, attrY);
+  ctx.fillText(q.source || "", textX + dashW, attrY);
 
   drawBranding(ctx, W, H, PAD, ACCENT);
 

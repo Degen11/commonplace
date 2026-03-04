@@ -48,9 +48,9 @@ export default function ProcessingPhase({
           <div style={styles.procCard}>
             <div style={styles.procTop}>
               <span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span>
-              <span style={{ color: isComplete ? "#059669" : "#9B9A97" }}>{Math.round((progress.done / progress.total) * 100)}%</span>
+              <span style={{ color: isComplete ? "#059669" : "#9B9A97" }}>{progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%</span>
             </div>
-            <div style={styles.track}><div style={{ ...styles.fill, width: `${(progress.done / progress.total) * 100}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
+            <div style={styles.track}><div style={{ ...styles.fill, width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 0}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
           </div>
         )}
@@ -68,10 +68,10 @@ export default function ProcessingPhase({
         )}
         {identifiedFeed.length > 0 && !isComplete && (
           <div style={styles.feedWrap}>
-            {[...identifiedFeed].reverse().map((item, i) => {
+            {[...identifiedFeed].reverse().map((item, i, arr) => {
               const col = getCatColor(item.category, customCats);
               return (
-                <div key={i} style={styles.feedItem}>
+                <div key={`${arr.length - 1 - i}`} style={styles.feedItem}>
                   <span style={{ ...styles.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
                   <span style={styles.feedItemText}>{item.text}</span>
                   <span style={styles.feedItemSrc}>{item.source}</span>

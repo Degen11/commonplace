@@ -246,7 +246,7 @@ export default function Commonplace() {
 
   // Keyboard shortcuts — use a ref to avoid re-registering on every state change
   const kbStateRef = useRef({});
-  kbStateRef.current = { search, editingId, quotes, catFilter, favFilter, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue };
+  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, filtered };
 
   useEffect(() => {
     const h = e => {
@@ -276,14 +276,8 @@ export default function Commonplace() {
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
-        const visibleQuotes = s.quotes.filter(q => {
-          if (s.catFilter !== "All" && q.category !== s.catFilter) return false;
-          if (s.favFilter && !q.favorite) return false;
-          if (s.search && !q.text.toLowerCase().includes(s.search.toLowerCase()) && !q.source.toLowerCase().includes(s.search.toLowerCase())) return false;
-          return true;
-        });
-        if (visibleQuotes.length > 0) {
-          setSelected(new Set(visibleQuotes.map(q => q.id)));
+        if (s.filtered.length > 0) {
+          setSelected(new Set(s.filtered.map(q => q.id)));
         }
       }
     };

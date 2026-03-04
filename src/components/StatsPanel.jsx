@@ -1,4 +1,4 @@
-import { Z } from "./styles";
+import { styles } from "./styles";
 import { getCatColor, CONF_COLORS } from "../data/constants";
 import { useMemo, useEffect } from "react";
 
@@ -51,7 +51,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
   const topSrcs = computedStats.topSrcs.slice(0, 4);
 
   return (
-    <div style={Z.statsPanel}>
+    <div style={styles.statsPanel}>
       <PanelHeader onClose={onClose} />
 
       {/* KPI row — compact */}
@@ -131,7 +131,7 @@ const EmptyState = ({ count, onClose }) => {
   }, [onClose]);
 
   return (
-    <div style={Z.statsPanel}>
+    <div style={styles.statsPanel}>
       <PanelHeader onClose={onClose} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", color: "#9B9A97" }}>
         <BarChart3 size={40} color="#D4D4D0" style={{ marginBottom: 12, strokeWidth: 1.5 }} />

@@ -2,9 +2,9 @@ import { useState, useCallback, useEffect, useRef, memo } from "react";
 import EditForm from "./EditForm";
 import useLongPress from "../hooks/useLongPress";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
-import { displayText } from "../utils/helpers";
+import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
-import { Z } from "./styles";
+import { styles } from "./styles";
 import { Pencil, ChevronDown } from "lucide-react";
 
 // ── Inline source text input ──
@@ -13,7 +13,7 @@ function InlineSourceInput({ initial, onSave, onCancel }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <input
-        style={Z.inlineSrcInput}
+        style={styles.inlineSrcInput}
         value={val}
         onChange={e => setVal(e.target.value)}
         onKeyDown={e => {
@@ -57,7 +57,7 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
         const isActive = c === current;
         return (
           <button key={c} onClick={() => onSave(c)} style={{
-            ...Z.tag, background: col.bg, color: col.text,
+            ...styles.tag, background: col.bg, color: col.text,
             border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
             cursor: "pointer", fontFamily: "inherit",
             fontSize: 11, padding: "3px 8px", borderRadius: 4,
@@ -110,7 +110,7 @@ const MemoTableRow = memo(function TableRow({
             onClick={() => { if (!isEd) setEditingId(q.id); }}>
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
-              : <p style={compact ? Z.entryTextCompact : Z.entryText}>{displayText(q)}</p>
+              : <p style={compact ? styles.entryTextCompact : styles.entryText}>{displayText(q)}</p>
             }
           </div>
         );
@@ -122,7 +122,7 @@ const MemoTableRow = memo(function TableRow({
               : <>
                   <span
                     className="inline-src"
-                    style={{ ...Z.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                    style={{ ...styles.srcText, ...(compact ? { fontSize: 11 } : {}) }}
                     title={q.source}
                     onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
                   >{q.source}</span>
@@ -137,7 +137,7 @@ const MemoTableRow = memo(function TableRow({
             <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             <span
               className="inline-cat"
-              style={{ ...Z.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
+              style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
               onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
               title="Click to change category"
             >{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
@@ -160,17 +160,17 @@ const MemoTableRow = memo(function TableRow({
       onDragEnd={handleDragEnd}
       {...(isMobile ? longPress : {})}
       style={{
-        ...(compact ? Z.rowCompact : Z.row),
+        ...(compact ? styles.rowCompact : styles.row),
         ...(isSel ? { background: "#F0F7FF" } : {}),
-        ...(q.favorite ? Z.favRow : {}),
+        ...(q.favorite ? styles.favRow : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
         ...(isDragging ? { opacity: .4 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
     >
-      <div className="checkbox" style={{ ...Z.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
+      <div className="checkbox" style={{ ...styles.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
         <div
-          style={{ ...Z.check, ...(isSel ? Z.checkOn : {}) }}
+          style={{ ...styles.check, ...(isSel ? styles.checkOn : {}) }}
           onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
         >
           {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
@@ -179,7 +179,7 @@ const MemoTableRow = memo(function TableRow({
 
       {columnOrder.map(colKey => renderColumn(colKey))}
 
-      <div className="row-actions" style={Z.rowAct}>
+      <div className="row-actions" style={styles.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <OverflowMenu
           q={q}
@@ -299,10 +299,10 @@ export default function TableView({
   return (
     <div style={{ overflowX: "visible" }}>
       {filtered.length > 0 && (
-        <div style={Z.tHead}>
-          <div className="ui-tip ui-tip-below" data-tip="Select all" style={Z.chkW}>
+        <div style={styles.tHead}>
+          <div className="ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
             <div
-              style={{ ...Z.check, ...(filtered.length > 0 && filtered.every(q => selected.has(q.id)) ? Z.checkOn : {}) }}
+              style={{ ...styles.check, ...(filtered.length > 0 && filtered.every(q => selected.has(q.id)) ? styles.checkOn : {}) }}
               onClick={(e) => { e.currentTarget.blur(); selAll(); }}
             >
               {filtered.length > 0 && filtered.every(q => selected.has(q.id)) && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}

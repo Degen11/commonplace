@@ -1,6 +1,6 @@
 import { Search, X } from "lucide-react";
 import { getCatColor } from "../data/constants";
-import { Z } from "./styles";
+import { styles } from "./styles";
 
 export default function EmptyState({
   catFilter, setCatFilter,
@@ -10,7 +10,7 @@ export default function EmptyState({
   customCats,
 }) {
   return (
-    <div style={{ ...Z.empty, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ ...styles.empty, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
       <Search size={48} color="#D4D4D0" strokeWidth={1.5} style={{ marginBottom: 16 }} />
       <p style={{ fontSize: 14, fontWeight: 500, color: "#6A6660", marginBottom: 8 }}>
         No results found

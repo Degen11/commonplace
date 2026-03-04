@@ -3,7 +3,7 @@ import { VIBE_TAGS } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
-} from "../utils/helpers";
+} from "../utils/textFormatting";
 
 const LS_DRAFT = "commonplace_draft";
 
@@ -22,7 +22,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   const pendingContinuationRef = useRef(null);
 
-  // FIX: Guard state updates after unmount
+  // Guard state updates after unmount
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;

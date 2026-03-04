@@ -1,10 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { VIBE_TAGS, QUOTED_CATS } from "../data/constants";
-import {
-  smartSplit,
-  parseKindleClippings, parseReadwiseCSV, parseCSVLine,
-  generateShareImage,
-} from "../utils/helpers";
+import { smartSplit } from "../utils/textFormatting";
+import { parseKindleClippings, parseReadwiseCSV, parseCSVLine } from "../utils/parsers";
+import { generateShareImage } from "../utils/shareImage";
 
 export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion }) {
   const [deletingId, setDeletingId]             = useState(null);

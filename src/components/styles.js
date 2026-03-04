@@ -1,19 +1,8 @@
-// ===================== COMMONPLACE ACCENT =====================
 export const CP_ACCENT       = "#3C5775";
 export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";
 export const CP_ACCENT_TEXT  = "#2D4259";
 
-// ===================== Z-INDEX SCALE =====================
-// 50   — sticky category pills
-// 59   — stats / add-more overlays (below mini-header)
-// 60   — sticky mini-header
-// 100  — dropdowns (export, sort)
-// 200  — tooltips
-// 500  — bulk-action bar
-// 1000 — modal overlays (confirm, dupe)
-// 2000 — toast notifications
-
-// ===================== BASE CSS =====================
+// z-index scale: 50 pills, 59 overlays, 60 mini-header, 100 dropdowns, 200 tooltips, 500 bulk bar, 1000 modals, 2000 toasts
 export const baseCSS = `
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#FAF8F4;color:#1A1814}
@@ -177,8 +166,7 @@ export const baseCSS = `
   }
 `;
 
-// ===================== MAIN STYLES =====================
-export const Z = {
+export const styles = {
   // Layout
   wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:"'DM Sans',-apple-system,sans-serif",fontSize:14,color:"#1A1814",minHeight:"100vh",background:"#FAF8F4"},
 
@@ -440,8 +428,7 @@ export const Z = {
   toastAction:{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,color:"#fff",padding:"3px 10px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 };
 
-// ===================== CARD STYLES =====================
-export const CZ = {
+export const cardStyles = {
   card:{background:"#fff",border:"1px solid #E3E2DE",borderRadius:8,padding:16,transition:"all .15s",cursor:"grab"},
   favCard:{boxShadow:"inset 3px 0 0 #F59E0B",background:"#FFFDF5"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},

@@ -42,9 +42,9 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
 
   const kpis = [
     { value: quotes.length, label: "entries", icon: FileText, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
-    { value: stats.uniqueSources, label: "sources", icon: BookOpen, color: "#3C5775", iconColor: "var(--cp-text-muted)" },
+    { value: stats.uniqueSources, label: "sources", icon: BookOpen, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
     { value: computedStats.avgWords, label: "avg words", icon: Hash, color: "var(--cp-text-muted)", iconColor: "var(--cp-text-muted)" },
-    { value: stats.favCount, label: "favorites", icon: Star, color: "#D97706", iconColor: "#B45309" },
+    { value: stats.favCount, label: "favorites", icon: Star, color: "#D97706", iconColor: "#D97706" },
   ];
 
   const catEntries = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -201,11 +201,11 @@ const CompactBar = ({ label, count, pct, color, maxW }) => (
 
 const AttentionBanner = ({ count }) => (
   <div style={{
-    marginTop: 12, padding: "10px 14px", background: "#FFF7ED",
-    border: "1px solid #FED7AA", borderRadius: 8, fontSize: 13,
-    color: "#92400E", display: "flex", alignItems: "center", gap: 8,
+    marginTop: 12, padding: "10px 14px", background: "rgba(234,88,12,0.08)",
+    border: "1px solid rgba(234,88,12,0.2)", borderRadius: 8, fontSize: 13,
+    color: "#EA580C", display: "flex", alignItems: "center", gap: 8,
   }}>
-    <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0 }} />
+    <AlertCircle size={16} color="#EA580C" style={{ flexShrink: 0 }} />
     <span>
       <strong style={{ fontWeight: 600 }}>{count}</strong>{" "}
       {count === 1 ? "entry needs" : "entries need"} review

@@ -18,8 +18,8 @@ const syncPill = {
 
 const syncStyles = {
   syncing: { ...syncPill, color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
-  synced:  { ...syncPill, color: "#16A34A", background: "#F0FDF4" },
-  error:   { ...syncPill, color: "#DC2626", background: "#FEF2F2" },
+  synced:  { ...syncPill, color: "#16A34A", background: "rgba(34,197,94,0.10)" },
+  error:   { ...syncPill, color: "#DC2626", background: "rgba(220,38,38,0.10)" },
 };
 
 export default function HeaderBar({

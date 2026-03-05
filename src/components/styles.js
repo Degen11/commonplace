@@ -184,6 +184,30 @@ export const baseCSS = `
     .dupe-compare { grid-template-columns: 1fr !important; }
   }
 
+  /* ═══════════ Homepage redesign ═══════════ */
+  @keyframes scrollBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+  .hp-scroll-hint{animation:scrollBounce 2s ease-in-out infinite}
+  .hp-primary{transition:all .2s ease}
+  .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.3);transform:translateY(-1px)}
+  .hp-ghost{transition:all .2s ease}
+  .hp-ghost:hover{background:var(--cp-bg-hover);border-color:var(--cp-border-dim)}
+  .hp-feature-card{transition:all .25s ease}
+  .hp-feature-card:hover{border-color:rgba(60,87,117,0.2) !important;transform:translateY(-3px);box-shadow:var(--cp-shadow-card)}
+  html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
+  @media (max-width: 768px) {
+    .hp-features-grid{grid-template-columns:1fr !important}
+    .hp-hero-headline{font-size:36px !important;letter-spacing:-1px !important}
+    .hp-hero-sub{font-size:16px !important}
+    .hp-section{padding:64px 20px !important}
+    .hp-hero{min-height:80vh !important}
+  }
+  @media (max-width: 480px) {
+    .hp-hero-headline{font-size:28px !important}
+    .hp-ctas{flex-direction:column !important;width:100%}
+    .hp-ctas button{width:100%;justify-content:center}
+    .hp-timeline-quote{flex-direction:column !important;align-items:flex-start !important;gap:4px !important}
+  }
+
   /* Dark mode — element-level overrides */
   html.dark .inline-src:hover{color:var(--cp-text) !important;text-decoration-color:rgba(200,200,200,0.35)}
   html.dark .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important;border-color:rgba(220,38,38,0.3) !important}

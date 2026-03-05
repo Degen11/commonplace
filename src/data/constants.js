@@ -22,37 +22,37 @@ export const QUOTED_CATS = new Set(["Film","TV","Book","Music","Speech","Person"
 
 export const CAT_COLORS = {
   // Source categories
-  Film:         { bg: "#F3E8FF",   text: "#7C3AED" },
-  TV:           { bg: "#DCFCE7",   text: "#16A34A" },
-  Book:         { bg: "#FEF3C7",   text: "#D97706" },
-  Music:        { bg: "#FFE4E6",   text: "#E11D48" },
-  Speech:       { bg: "#DBEAFE",   text: "#2563EB" },
-  Person:       { bg: "#F0ABFC33", text: "#A21CAF" },
-  Phrase:       { bg: "#E0F2FE",   text: "#0284C7" },
+  Film:         { bg: "rgba(139,92,246,0.14)",   text: "#7C3AED" },   // violet
+  TV:           { bg: "rgba(34,197,94,0.14)",     text: "#16A34A" },   // green
+  Book:         { bg: "rgba(217,119,6,0.14)",     text: "#D97706" },   // amber
+  Music:        { bg: "rgba(225,29,72,0.12)",     text: "#E11D48" },   // rose
+  Speech:       { bg: "rgba(59,130,246,0.14)",    text: "#2563EB" },   // blue
+  Person:       { bg: "rgba(168,85,247,0.14)",    text: "#9333EA" },   // purple
+  Phrase:       { bg: "rgba(14,165,233,0.14)",    text: "#0891B2" },   // cyan
 
   // Vibe tags
-  Aphorism:     { bg: "#FEF9C3",   text: "#A16207" },
-  Philosophical:{ bg: "#EDE9FE",   text: "#5B21B6" },
-  Observation:  { bg: "#CCFBF1",   text: "#0D9488" },
-  Comedic:      { bg: "#FFF7ED",   text: "#EA580C" },
-  Poetic:       { bg: "#FCE7F3",   text: "#BE185D" },
-  Existential:  { bg: "#F1F5F9",   text: "#475569" },
-  Motivational: { bg: "#DCFCE7",   text: "#15803D" },
-  Cynical:      { bg: "#FEE2E2",   text: "#991B1B" },
-  Identity:     { bg: "#EDE9FE",   text: "#7C3AED" },
-  Reflection:   { bg: "#E0F2FE",   text: "#0369A1" },
+  Aphorism:     { bg: "rgba(180,83,9,0.12)",      text: "#B45309" },   // amber-dark
+  Philosophical:{ bg: "rgba(99,102,241,0.14)",    text: "#6366F1" },   // indigo
+  Observation:  { bg: "rgba(20,184,166,0.14)",    text: "#0D9488" },   // teal
+  Comedic:      { bg: "rgba(249,115,22,0.12)",    text: "#EA580C" },   // orange
+  Poetic:       { bg: "rgba(219,39,119,0.12)",    text: "#DB2777" },   // pink
+  Existential:  { bg: "rgba(100,116,139,0.12)",   text: "#64748B" },   // slate
+  Motivational: { bg: "rgba(5,150,105,0.14)",     text: "#059669" },   // emerald
+  Cynical:      { bg: "rgba(220,38,38,0.12)",     text: "#DC2626" },   // red
+  Identity:     { bg: "rgba(124,58,237,0.14)",    text: "#7C3AED" },   // violet
+  Reflection:   { bg: "rgba(2,132,199,0.14)",     text: "#0284C7" },   // sky
 
   // Fallback
-  Unknown:      { bg: "#F1F1EF",   text: "#787774" },
+  Unknown:      { bg: "rgba(120,113,108,0.10)",   text: "#78716C" },   // stone
 };
 
 const CUSTOM_PALETTE = [
-  { bg: "#D1FAE5",   text: "#059669" },
-  { bg: "#FDE68A55", text: "#B45309" },
-  { bg: "#C7D2FE",   text: "#4338CA" },
-  { bg: "#FECACA55", text: "#DC2626" },
-  { bg: "#CCFBF1",   text: "#0D9488" },
-  { bg: "#FED7AA55", text: "#EA580C" },
+  { bg: "rgba(5,150,105,0.14)",    text: "#059669" },
+  { bg: "rgba(180,83,9,0.12)",     text: "#B45309" },
+  { bg: "rgba(67,56,202,0.14)",    text: "#4338CA" },
+  { bg: "rgba(220,38,38,0.12)",    text: "#DC2626" },
+  { bg: "rgba(13,148,136,0.14)",   text: "#0D9488" },
+  { bg: "rgba(234,88,12,0.12)",    text: "#EA580C" },
 ];
 
 export const getCatColor = (c, customCats) =>

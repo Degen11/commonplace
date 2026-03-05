@@ -16,7 +16,7 @@ const syncPill = {
 };
 
 const syncStyles = {
-  syncing: { ...syncPill, color: "#9B9A97", background: "#F1F1EF" },
+  syncing: { ...syncPill, color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
   synced:  { ...syncPill, color: "#16A34A", background: "#F0FDF4" },
   error:   { ...syncPill, color: "#DC2626", background: "#FEF2F2" },
 };

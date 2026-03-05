@@ -76,7 +76,7 @@ export default function InputPhase({
                 >
                   <input ref={fileInputRef} type="file" accept=".txt,.csv,.json,.md" style={{ display: "none" }}
                     onChange={e => { onFileImport(e.target.files[0]); e.target.value = ""; }} />
-                  <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center" }}>{isDragOver ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} /> : <FileText size={32} color="#9B9A97" strokeWidth={1.5} />}</div>
+                  <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center" }}>{isDragOver ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} /> : <FileText size={32} color="var(--cp-text-muted)" strokeWidth={1.5} />}</div>
                   <div style={styles.dropTitle}>{isDragOver ? "Drop it!" : "Drop a file to import"}</div>
                   <div style={styles.dropSub}>Supports .txt, .csv, .json, .md — Kindle, Readwise, Notion, and more</div>
                   {importedFileName && (

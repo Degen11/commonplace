@@ -126,7 +126,7 @@ const MemoTableRow = memo(function TableRow({
                     title={q.source}
                     onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
                   >{q.source}</span>
-                  <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="#C8C4BC" />
+                  <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="var(--cp-text-faint)" />
                 </>
             }
           </div>
@@ -161,9 +161,9 @@ const MemoTableRow = memo(function TableRow({
       {...(isMobile ? longPress : {})}
       style={{
         ...(compact ? styles.rowCompact : styles.row),
-        ...(isSel ? { background: "#F0F7FF" } : {}),
+        ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
         ...(q.favorite ? styles.favRow : {}),
-        ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+        ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .4 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}

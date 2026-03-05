@@ -17,7 +17,7 @@ const syncPill = {
 };
 
 const syncStyles = {
-  syncing: { ...syncPill, color: "#9B9A97", background: "#F1F1EF" },
+  syncing: { ...syncPill, color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
   synced:  { ...syncPill, color: "#16A34A", background: "#F0FDF4" },
   error:   { ...syncPill, color: "#DC2626", background: "#FEF2F2" },
 };
@@ -51,8 +51,8 @@ export default function HeaderBar({
             ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
             : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
           }
-          {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "#D3D3D0" }}> · </span>}
-          {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "#D3D3D0" }}>, </span>}{n} {c}</span>)}
+          {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "var(--cp-text-faint)" }}> · </span>}
+          {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "var(--cp-text-faint)" }}>, </span>}{n} {c}</span>)}
         </p>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

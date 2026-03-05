@@ -48,7 +48,7 @@ export default function ProcessingPhase({
           <div style={styles.procCard}>
             <div style={styles.procTop}>
               <span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span>
-              <span style={{ color: isComplete ? "#059669" : "#9B9A97" }}>{progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%</span>
+              <span style={{ color: isComplete ? "#059669" : "var(--cp-text-muted)" }}>{progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%</span>
             </div>
             <div style={styles.track}><div style={{ ...styles.fill, width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 0}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}

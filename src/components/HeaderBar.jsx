@@ -1,7 +1,7 @@
 import Logo from "./Logo";
 import { styles } from "./styles";
 import {
-  List, AlignJustify, LayoutGrid,
+  List, AlignJustify, LayoutGrid, Moon, Sun,
 } from "lucide-react";
 
 const syncPill = {
@@ -37,6 +37,8 @@ export default function HeaderBar({
   exportDropdownContent,
   getCatColor,
   syncStatus,
+  dark,
+  toggleTheme,
 }) {
   return (
     <div ref={headerRef} style={styles.header}>
@@ -57,6 +59,9 @@ export default function HeaderBar({
         {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
         {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
         {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip={dark ? "Light mode" : "Dark mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
+          {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
+        </button>
         {!isMobile && (
           <div style={styles.viewTog}>
             <button className="ui-tip ui-tip-below" data-tip="Table view" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>

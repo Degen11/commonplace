@@ -46,6 +46,95 @@ export function parseKindleClippings(content) {
   return results;
 }
 
+export function parseJSONQuotes(content) {
+  try {
+    const data = JSON.parse(content);
+    const arr = Array.isArray(data)
+      ? data
+      : (data.quotes || data.highlights || data.entries || data.items || data.data || []);
+    if (!Array.isArray(arr) || arr.length === 0) return [];
+
+    return arr.map(item => {
+      if (typeof item === "string") return { text: item.trim(), hint: null };
+      if (!item || typeof item !== "object") return null;
+      const text = (item.text || item.quote || item.content || item.highlight || item.passage || "").trim();
+      if (!text) return null;
+      const source = (item.source || "").trim();
+      const author = (item.author || item.by || "").trim();
+      const title = (item.title || item.book || item.work || "").trim();
+      const hint = source || (title && author ? `${title} - ${author}` : title || author) || null;
+      return { text, hint };
+    }).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export function parseMarkdownQuotes(content) {
+  const results = [];
+  const lines = content.split("\n");
+  let currentQuote = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+
+    if (trimmed.startsWith("> ") || trimmed === ">") {
+      currentQuote += (currentQuote ? " " : "") + trimmed.slice(1).trim();
+    } else {
+      if (currentQuote) {
+        let hint = null;
+        if (trimmed && /^[—\-~–]/.test(trimmed)) {
+          hint = trimmed.replace(/^[—\-~–]\s*/, "").trim();
+        }
+        results.push({ text: currentQuote.trim(), hint });
+        currentQuote = "";
+      }
+    }
+  }
+  if (currentQuote) results.push({ text: currentQuote.trim(), hint: null });
+
+  return results;
+}
+
+export function parseNotionCSV(content) {
+  const lines = content.split("\n");
+  if (lines.length < 2) return [];
+
+  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+
+  // Notion databases often export with "Name" as the primary column
+  // Look for quote-like columns first, then fall back to "name"
+  const textCols = ["quote", "text", "content", "highlight", "passage", "name"];
+  const textIdx = textCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  if (textIdx < 0) return [];
+
+  const sourceCols = ["source", "author", "by", "attribution"];
+  const sourceIdx = sourceCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+
+  const titleCols = ["title", "book", "work", "film", "movie"];
+  const titleIdx = titleCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const fields = parseCSVLine(lines[i]);
+    const text = fields[textIdx]?.trim();
+    if (!text) continue;
+
+    const source = sourceIdx >= 0 ? fields[sourceIdx]?.trim() : null;
+    const title = titleIdx >= 0 ? fields[titleIdx]?.trim() : null;
+
+    let hint = null;
+    if (source && title) hint = `${title} - ${source}`;
+    else if (title) hint = title;
+    else if (source) hint = source;
+
+    results.push({ text, hint });
+  }
+
+  return results;
+}
+
 export function parseReadwiseCSV(content) {
   const lines = content.split("\n");
   if (lines.length < 2) return [];

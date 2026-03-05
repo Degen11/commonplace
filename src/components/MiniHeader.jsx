@@ -1,4 +1,4 @@
-import { List, AlignJustify, LayoutGrid } from "lucide-react";
+import { List, AlignJustify, LayoutGrid, Moon, Sun } from "lucide-react";
 import Logo from "./Logo";
 import ExportDropdown from "./ExportDropdown";
 import { styles } from "./styles";
@@ -31,18 +31,20 @@ export default function MiniHeader({
   quotes, filtered, selected, hasActiveFilters,
   showToast,
   syncStatus,
+  dark,
+  toggleTheme,
 }) {
   return (
     <div style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 60,
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: "rgba(250,248,244,0.95)", borderBottom: "1px solid #E3E2DE",
+      background: "var(--cp-mini-bg)", borderBottom: "1px solid var(--cp-border)",
       backdropFilter: "blur(8px)", animation: "slideD .15s ease",
     }}>
       <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Logo size={16} />
-          <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#37352F" }}>Commonplace</span>
+          <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "var(--cp-text-secondary)" }}>Commonplace</span>
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
@@ -73,6 +75,9 @@ export default function MiniHeader({
               />
             )}
           </div>
+          <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={toggleTheme}>
+            {dark ? <Sun size={14} strokeWidth={1.5} /> : <Moon size={14} strokeWidth={1.5} />}
+          </button>
           <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
         </div>
       </div>

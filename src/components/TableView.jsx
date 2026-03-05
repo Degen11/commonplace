@@ -25,7 +25,7 @@ function InlineSourceInput({ initial, onSave, onCancel }) {
         onFocus={e => e.target.select()}
         autoFocus
       />
-      <span style={{ fontSize: 10, color: "#C8C4BC", userSelect: "none" }}>Enter to save · Esc to cancel</span>
+      <span style={{ fontSize: 10, color: "var(--cp-text-faint)", userSelect: "none" }}>Enter to save · Esc to cancel</span>
     </div>
   );
 }
@@ -47,8 +47,8 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
   return (
     <div ref={ref} onClick={e => e.stopPropagation()} style={{
       position: "absolute", top: "100%", left: 0, zIndex: 200,
-      background: "#fff", border: "1px solid #E3E2DE", borderRadius: 8,
-      boxShadow: "0 4px 16px rgba(0,0,0,.1)", padding: 6,
+      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
+      boxShadow: "var(--cp-shadow-md)", padding: 6,
       display: "flex", flexWrap: "wrap", gap: 4, width: 220,
       animation: "slideD .12s ease",
     }}>

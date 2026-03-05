@@ -38,13 +38,13 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
             const isKeep = decision === "keep";
             const isMerge = decision === "merge";
             const isSkip = decision === "skip";
-            
+
             return (
               <div key={i} style={{
-                border: "1px solid #F1F1EF",
+                border: "1px solid var(--cp-border)",
                 borderRadius: 14,
                 marginBottom: 16,
-                background: "#fff",
+                background: "var(--cp-bg-card)",
                 overflow: "hidden",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
               }}>
@@ -52,16 +52,16 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                 <div className="dupe-compare" style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
-                  borderBottom: "1px solid #F1F1EF",
-                  background: "#FAFAFA",
+                  borderBottom: "1px solid var(--cp-border)",
+                  background: "var(--cp-bg-panel)",
                 }}>
                   <div style={{
                     padding: "10px 16px",
                     fontSize: 11,
                     fontWeight: 600,
-                    color: "#9B9A97",
+                    color: "var(--cp-text-muted)",
                     letterSpacing: 0.5,
-                    borderRight: "1px solid #F1F1EF",
+                    borderRight: "1px solid var(--cp-border)",
                   }}>
                     EXISTING
                   </div>
@@ -69,35 +69,35 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                     padding: "10px 16px",
                     fontSize: 11,
                     fontWeight: 600,
-                    color: "#9B9A97",
+                    color: "var(--cp-text-muted)",
                     letterSpacing: 0.5,
                   }}>
                     NEW
                   </div>
                 </div>
-                
+
                 {/* Content */}
                 <div className="dupe-compare" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxHeight: 200, overflowY: "auto" }}>
                   <div style={{
                     padding: 16,
-                    background: "#FAFAFA",
-                    borderRight: "1px solid #F1F1EF",
+                    background: "var(--cp-bg-panel)",
+                    borderRight: "1px solid var(--cp-border)",
                   }}>
-                    <div style={{ fontSize: 14, color: "#1A1814", lineHeight: 1.5, marginBottom: 6 }}>
+                    <div style={{ fontSize: 14, color: "var(--cp-text)", lineHeight: 1.5, marginBottom: 6 }}>
                       "{dupe.matchedText}"
                     </div>
                     {dupe.matchedSource && (
-                      <div style={{ fontSize: 12, color: "#9B9A97" }}>
+                      <div style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
                         — {dupe.matchedSource}
                       </div>
                     )}
                   </div>
-                  <div style={{ padding: 16, background: "#fff" }}>
-                    <div style={{ fontSize: 14, color: "#1A1814", lineHeight: 1.5, marginBottom: 6 }}>
+                  <div style={{ padding: 16, background: "var(--cp-bg-card)" }}>
+                    <div style={{ fontSize: 14, color: "var(--cp-text)", lineHeight: 1.5, marginBottom: 6 }}>
                       "{dupe.incoming.text}"
                     </div>
                     {dupe.incoming.hint && (
-                      <div style={{ fontSize: 12, color: "#9B9A97" }}>
+                      <div style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
                         — {dupe.incoming.hint}
                       </div>
                     )}
@@ -109,8 +109,8 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                   display: "flex",
                   gap: 2,
                   padding: "8px 16px",
-                  borderTop: "1px solid #F1F1EF",
-                  background: "#FAFAFA",
+                  borderTop: "1px solid var(--cp-border)",
+                  background: "var(--cp-bg-panel)",
                   justifyContent: "flex-end",
                 }}>
                   <button
@@ -119,16 +119,16 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                       padding: "6px 16px",
                       borderRadius: "20px 0 0 20px",
                       border: "none",
-                      background: isKeep ? "#3C5775" : "white",
-                      color: isKeep ? "white" : "#1A1814",
+                      background: isKeep ? "#3C5775" : "var(--cp-bg-card)",
+                      color: isKeep ? "white" : "var(--cp-text)",
                       fontSize: 13,
                       fontWeight: 500,
                       cursor: "pointer",
-                      borderRight: "1px solid #F1F1EF",
+                      borderRight: "1px solid var(--cp-border)",
                       transition: "all 0.15s ease",
                     }}
                     onMouseEnter={e => !isKeep && (e.currentTarget.style.background = "rgba(60,87,117,0.1)")}
-                    onMouseLeave={e => !isKeep && (e.currentTarget.style.background = "white")}
+                    onMouseLeave={e => !isKeep && (e.currentTarget.style.background = "var(--cp-bg-card)")}
                   >
                     ✓ Keep
                   </button>
@@ -139,18 +139,18 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                         padding: "6px 16px",
                         borderRadius: 0,
                         border: "none",
-                        background: isMerge ? "#059669" : "white",
-                        color: isMerge ? "white" : "#1A1814",
+                        background: isMerge ? "#059669" : "var(--cp-bg-card)",
+                        color: isMerge ? "white" : "var(--cp-text)",
                         fontSize: 13,
                         fontWeight: 500,
                         cursor: "pointer",
-                        borderRight: "1px solid #F1F1EF",
+                        borderRight: "1px solid var(--cp-border)",
                         transition: "all 0.15s ease",
                       }}
                       className="ui-tip"
                       data-tip="Keep new entry, combine sources"
                       onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.1)")}
-                      onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "white")}
+                      onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "var(--cp-bg-card)")}
                     >
                       ↻ Merge
                     </button>
@@ -161,15 +161,15 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
                       padding: "6px 16px",
                       borderRadius: "0 20px 20px 0",
                       border: "none",
-                      background: isSkip ? "#9B9A97" : "white",
-                      color: isSkip ? "white" : "#1A1814",
+                      background: isSkip ? "#9B9A97" : "var(--cp-bg-card)",
+                      color: isSkip ? "white" : "var(--cp-text)",
                       fontSize: 13,
                       fontWeight: 500,
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
                     onMouseEnter={e => !isSkip && (e.currentTarget.style.background = "rgba(155,154,151,0.1)")}
-                    onMouseLeave={e => !isSkip && (e.currentTarget.style.background = "white")}
+                    onMouseLeave={e => !isSkip && (e.currentTarget.style.background = "var(--cp-bg-card)")}
                   >
                     ✕ Skip
                   </button>
@@ -184,8 +184,8 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
           justifyContent: "space-between",
           alignItems: "center",
           padding: "16px 24px",
-          borderTop: "1px solid #F1F1EF",
-          background: "white",
+          borderTop: "1px solid var(--cp-border)",
+          background: "var(--cp-bg-card)",
           flexShrink: 0,
         }}>
           <span style={{

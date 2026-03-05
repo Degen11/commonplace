@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { VIBE_TAGS, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
-import { parseKindleClippings, parseReadwiseCSV, parseCSVLine } from "../utils/parsers";
+import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
 
 export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion }) {
@@ -195,22 +195,41 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   }, []);
 
   // ── File import ──
+  const entriesToContent = (entries) =>
+    entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
+
   const handleFileImport = useCallback((file, setRawInput, setImportedFileName) => {
     if (!file) return;
     const ext = file.name.split(".").pop().toLowerCase();
-    if (!["txt", "csv"].includes(ext)) { showToast("Only .txt and .csv files are supported"); return; }
+    if (!["txt", "csv", "json", "md"].includes(ext)) { showToast("Supported formats: .txt, .csv, .json, .md"); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       let content = e.target.result;
       let formatLabel = null;
       let skippedCount = 0;
 
-      if (ext === "txt" && content.includes("==========")) {
+      if (ext === "json") {
+        const entries = parseJSONQuotes(content);
+        if (entries.length > 0) {
+          content = entriesToContent(entries);
+          formatLabel = "JSON";
+        } else {
+          showToast("Couldn't find quotes in JSON file. Expected an array with text/quote/content fields.");
+          return;
+        }
+      } else if (ext === "md") {
+        const entries = parseMarkdownQuotes(content);
+        if (entries.length > 0) {
+          content = entriesToContent(entries);
+          formatLabel = "Markdown";
+        }
+        // If no blockquotes found, treat the whole file as plain text (one quote per line)
+      } else if (ext === "txt" && content.includes("==========")) {
         const totalClips = content.split("==========").filter(c => c.trim()).length;
         const entries = parseKindleClippings(content);
         if (entries.length > 0) {
           skippedCount = totalClips - entries.length;
-          content = entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
+          content = entriesToContent(entries);
           formatLabel = "Kindle highlights";
         }
       } else if (ext === "csv") {
@@ -220,22 +239,30 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
           const entries = parseReadwiseCSV(content);
           if (entries.length > 0) {
             skippedCount = totalDataLines - entries.length;
-            content = entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
+            content = entriesToContent(entries);
             formatLabel = "Readwise";
           }
         } else {
-          const lines = content.split("\n");
-          const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, "").trim().toLowerCase());
-          const textCol = ["text","quote","quotes","content","entry"].reduce((found, key) => {
-            const idx = headers.indexOf(key);
-            return found >= 0 ? found : idx;
-          }, -1);
-          const colIdx = textCol >= 0 ? textCol : 0;
-          const dataLines = lines.slice(1);
-          content = dataLines.map(l => {
-            const fields = parseCSVLine(l);
-            return fields[colIdx]?.trim() || "";
-          }).filter(Boolean).join("\n");
+          // Try Notion-style CSV (has source/author columns)
+          const notionEntries = parseNotionCSV(content);
+          if (notionEntries.length > 0 && notionEntries.some(e => e.hint)) {
+            content = entriesToContent(notionEntries);
+            formatLabel = "CSV";
+          } else {
+            // Generic CSV fallback
+            const lines = content.split("\n");
+            const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, "").trim().toLowerCase());
+            const textCol = ["text","quote","quotes","content","entry","name"].reduce((found, key) => {
+              const idx = headers.indexOf(key);
+              return found >= 0 ? found : idx;
+            }, -1);
+            const colIdx = textCol >= 0 ? textCol : 0;
+            const dataLines = lines.slice(1);
+            content = dataLines.map(l => {
+              const fields = parseCSVLine(l);
+              return fields[colIdx]?.trim() || "";
+            }).filter(Boolean).join("\n");
+          }
         }
       }
 

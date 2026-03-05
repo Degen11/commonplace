@@ -20,7 +20,7 @@ export default function ConfirmModal({
           </div>
           <p style={{ fontSize: 15, fontWeight: 600 }}>{title}</p>
         </div>
-        <p style={{ fontSize: 13, color: "#9B9A97", marginBottom: 20, lineHeight: 1.5 }}>{description}</p>
+        <p style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 20, lineHeight: 1.5 }}>{description}</p>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onCancel}>{cancelLabel}</button>
           <button className="confirm-yes" style={styles.confirmYes} onClick={onConfirm}>{confirmLabel}</button>

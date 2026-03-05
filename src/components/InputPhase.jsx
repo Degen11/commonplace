@@ -45,7 +45,7 @@ export default function InputPhase({
               </div>
               <p style={styles.heroTagline}>Organize your quote collection</p>
               <p style={styles.splitDesc}>Paste your messy quotes, phrases, and fragments. We'll organize everything and identify the sources.</p>
-              <p style={{ fontSize: 13, color: "#B0ACA6", marginTop: 12, letterSpacing: "0.01em" }}>No signup · Private processing · Instant results · Zero cost</p>
+              <p style={{ fontSize: 13, color: "var(--cp-text-faint)", marginTop: 12, letterSpacing: "0.01em" }}>No signup · Private processing · Instant results · Zero cost</p>
             </div>
 
             {/* Animated "How It Works" demo */}
@@ -74,11 +74,11 @@ export default function InputPhase({
                   onDrop={handleDropZone}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <input ref={fileInputRef} type="file" accept=".txt,.csv" style={{ display: "none" }}
+                  <input ref={fileInputRef} type="file" accept=".txt,.csv,.json,.md" style={{ display: "none" }}
                     onChange={e => { onFileImport(e.target.files[0]); e.target.value = ""; }} />
                   <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center" }}>{isDragOver ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} /> : <FileText size={32} color="#9B9A97" strokeWidth={1.5} />}</div>
-                  <div style={styles.dropTitle}>{isDragOver ? "Drop it!" : "Drop a .txt or .csv file"}</div>
-                  <div style={styles.dropSub}>or click to browse — supports Kindle highlights and Readwise exports</div>
+                  <div style={styles.dropTitle}>{isDragOver ? "Drop it!" : "Drop a file to import"}</div>
+                  <div style={styles.dropSub}>Supports .txt, .csv, .json, .md — Kindle, Readwise, Notion, and more</div>
                   {importedFileName && (
                     <div style={styles.dropFileName}><CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded</div>
                   )}
@@ -104,7 +104,7 @@ export default function InputPhase({
                         </span>
                       )}
                       <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={styles.fmtToggleWrap} onClick={() => setFormattingEnabled(p => !p)}>
-                        <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "#1A1814" : "#E0DCD4" }}>
+                        <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
                           <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
                         </div>
                         Clean up formatting

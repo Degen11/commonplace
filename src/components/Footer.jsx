@@ -10,7 +10,7 @@ export default function Footer({ styles }) {
           href="https://www.degenh.com"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#1A1814", display: "inline-flex", alignItems: "center" }}
+          style={{ color: "var(--cp-text)", display: "inline-flex", alignItems: "center" }}
         >
           <Globe size={16} strokeWidth={1.5} />
         </a>
@@ -18,7 +18,7 @@ export default function Footer({ styles }) {
           href="https://github.com/Degen11"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#1A1814", display: "inline-flex", alignItems: "center" }}
+          style={{ color: "var(--cp-text)", display: "inline-flex", alignItems: "center" }}
         >
           <Github size={16} strokeWidth={1.5} />
         </a>

@@ -19,7 +19,7 @@ export default function ProcessingPhase({
       <nav style={styles.nav}>
         <span style={styles.navLogo}>Commonplace</span>
         <div style={styles.navRight}>
-          <span style={{ color: "#9A9590", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
+          <span style={{ color: "var(--cp-text-muted)", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
         </div>
       </nav>
       <div style={styles.procWrap}>
@@ -55,7 +55,7 @@ export default function ProcessingPhase({
           </div>
         )}
         {!isComplete && (
-          <div style={{ marginTop: 20, borderTop: "1px solid #E3E2DE", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
+          <div style={{ marginTop: 20, borderTop: "1px solid var(--cp-border)", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
             <button
               style={{ ...styles.hdrBtn, padding: "8px 20px", fontSize: 13 }}
               onClick={onCancel}

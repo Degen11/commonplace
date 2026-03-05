@@ -19,15 +19,15 @@ export default class ErrorBoundary extends React.Component {
       return (
         <div style={{
           maxWidth: 480, margin: "80px auto", padding: 32, fontFamily: "system-ui, sans-serif",
-          textAlign: "center", color: "#37352F",
+          textAlign: "center", color: "var(--cp-text-secondary)",
         }}>
           <h2 style={{ fontSize: 20, marginBottom: 8 }}>Something went wrong</h2>
-          <p style={{ fontSize: 14, color: "#787774", marginBottom: 20 }}>
+          <p style={{ fontSize: 14, color: "var(--cp-text-muted)", marginBottom: 20 }}>
             An unexpected error occurred. Your saved data is safe in local storage.
           </p>
-          <details style={{ textAlign: "left", marginBottom: 20, fontSize: 12, color: "#9B9A97" }}>
+          <details style={{ textAlign: "left", marginBottom: 20, fontSize: 12, color: "var(--cp-text-muted)" }}>
             <summary style={{ cursor: "pointer", marginBottom: 6 }}>Error details</summary>
-            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#F7F6F3", padding: 12, borderRadius: 6 }}>
+            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--cp-bg-panel)", padding: 12, borderRadius: 6 }}>
               {this.state.error?.message || "Unknown error"}
             </pre>
           </details>
@@ -35,7 +35,7 @@ export default class ErrorBoundary extends React.Component {
             onClick={this.handleReset}
             style={{
               padding: "8px 20px", fontSize: 14, fontFamily: "inherit",
-              background: "#37352F", color: "#fff", border: "none", borderRadius: 6,
+              background: "var(--cp-text-secondary)", color: "var(--cp-bg)", border: "none", borderRadius: 6,
               cursor: "pointer",
             }}
           >

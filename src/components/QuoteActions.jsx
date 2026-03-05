@@ -35,7 +35,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
       <button
         ref={btnRef}
         className="overflow-btn act-btn"
-        style={{ ...styles.actBtn, "--hover-color": "#37352F" }}
+        style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
         onClick={e => { e.stopPropagation(); onToggle(); }}
       >
         <Ellipsis size={16} strokeWidth={2} />

@@ -45,7 +45,7 @@ export default function ToolbarSection({
         </div>
       </div>
 
-      <div style={{ position: "sticky", top: 0, zIndex: 50, background: "#FAF8F4", borderBottom: "1px solid #E3E2DE" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
         <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
           style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
           <button onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
@@ -72,8 +72,8 @@ export default function ToolbarSection({
             </div>
           ) : <button className="ui-tip ui-tip-below" data-tip="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
         </div>
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, #FAF8F4, transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
-        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, #FAF8F4, transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
       </div>
     </>
   );

@@ -5,6 +5,7 @@ import useProcessing from "../hooks/useProcessing";
 import useViewPreferences from "../hooks/useViewPreferences";
 import useQuoteActions from "../hooks/useQuoteActions";
 import useEditState from "../hooks/useEditState";
+import useTheme from "../hooks/useTheme";
 
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
@@ -122,6 +123,7 @@ export default function Commonplace() {
   const [confirmClear, setConfirmClear]       = useState(false);
   const [newCatName, setNewCatName]           = useState("");
   const [showNewCat, setShowNewCat]           = useState(false);
+  const { dark, toggleTheme } = useTheme();
   const [headerVisible, setHeaderVisible]     = useState(true);
   const [catFade, setCatFade]                 = useState({ left: false, right: false });
   const [inputTab, setInputTab]               = useState("paste");
@@ -304,6 +306,21 @@ export default function Commonplace() {
     setShowAddMore(false);
   };
 
+  const handleQuickAdd = useCallback((text, source, category) => {
+    const newQuote = {
+      id: crypto.randomUUID(),
+      text,
+      source: source || "Unknown",
+      category: category || "Unknown",
+      confidence: "high",
+      favorite: false,
+      updatedAt: Date.now(),
+    };
+    setQuotes(p => [newQuote, ...p]);
+    setShowAddMore(false);
+    showToast("Quote added");
+  }, [setQuotes, showToast]);
+
   const handleClear = () => {
     try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} setIsSharedView(false);
     try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch(e) {}
@@ -471,6 +488,8 @@ export default function Commonplace() {
               exportDropdownContent={exportDropdownContent}
               getCatColor={getCatColor}
               syncStatus={syncStatus}
+              dark={dark}
+              toggleTheme={toggleTheme}
             />
           </SectionErrorBoundary>
 
@@ -491,6 +510,8 @@ export default function Commonplace() {
               hasActiveFilters={hasActiveFilters}
               showToast={showToast}
               syncStatus={syncStatus}
+              dark={dark}
+              toggleTheme={toggleTheme}
             />
           )}
 
@@ -534,14 +555,16 @@ export default function Commonplace() {
                   addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
                   addMoreRef={addMoreRef}
                   onAddMore={handleAddMore}
+                  onQuickAdd={handleQuickAdd}
                   onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
+                  allCats={allCats}
                 />
               </div>
             ) : (
               <div style={{
                 position: "fixed", top: 49, left: 0, right: 0,
-                zIndex: 59, background: "rgba(250,248,244,0.98)",
-                padding: "12px 32px", borderBottom: "1px solid #E3E2DE",
+                zIndex: 59, background: "var(--cp-mini-bg)",
+                padding: "12px 32px", borderBottom: "1px solid var(--cp-border)",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
                 animation: "slideD .2s ease",
               }}>

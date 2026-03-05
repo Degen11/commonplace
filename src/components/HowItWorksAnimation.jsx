@@ -49,7 +49,7 @@ const S = {
     borderRadius: 6,
     fontSize: 14,
     fontWeight: active || done ? 600 : 400,
-    color: active ? CP_ACCENT : done ? "#1A1814" : "#C8C4BC",
+    color: active ? CP_ACCENT : done ? "var(--cp-text)" : "var(--cp-text-faint)",
     background: active ? "rgba(60,87,117,0.08)" : "transparent",
     transition: "all 0.4s ease",
     whiteSpace: "nowrap",
@@ -59,14 +59,14 @@ const S = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#D3D3D0",
+    color: "var(--cp-text-faint)",
     fontSize: 12,
   },
   stage: (dark) => ({
     borderRadius: 10,
     overflow: "hidden",
-    border: `1px solid ${dark ? DARK_BORDER : "#E8E3DA"}`,
-    background: dark ? DARK_BG : "#fff",
+    border: `1px solid ${dark ? DARK_BORDER : "var(--cp-border-light)"}`,
+    background: dark ? DARK_BG : "var(--cp-bg-card)",
     height: 260,
     position: "relative",
     transition: "background 0.8s ease, border-color 0.8s ease",
@@ -124,7 +124,7 @@ const S = {
     alignItems: "center",
     gap: 8,
     padding: "8px 12px",
-    background: "#fff",
+    background: "var(--cp-bg-card)",
     borderRadius: 7,
     border: "1px solid rgba(60,87,117,0.12)",
     boxShadow: "0 1px 3px rgba(60,87,117,0.06)",
@@ -148,7 +148,7 @@ const S = {
   cardText: {
     fontFamily: "'DM Sans',-apple-system,sans-serif",
     fontSize: 12,
-    color: "#37352F",
+    color: "var(--cp-text-secondary)",
     flex: 1,
     minWidth: 0,
     overflow: "hidden",
@@ -158,7 +158,7 @@ const S = {
   cardSrc: {
     fontFamily: "'DM Sans',-apple-system,sans-serif",
     fontSize: 11,
-    color: "#9B9A97",
+    color: "var(--cp-text-muted)",
     whiteSpace: "nowrap",
     flexShrink: 0,
   },
@@ -290,11 +290,11 @@ export default function HowItWorksAnimation() {
             position: "absolute", bottom: 8, right: 8,
             background: "none", border: "none", padding: 4,
             cursor: "pointer", display: "flex", alignItems: "center",
-            justifyContent: "center", color: "#C8C4BC", transition: "color 0.2s ease",
+            justifyContent: "center", color: "var(--cp-text-faint)", transition: "color 0.2s ease",
             zIndex: 10,
           }}
-            onMouseEnter={e => { e.currentTarget.style.color = "#6A6660"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "#C8C4BC"; }}
+            onMouseEnter={e => { e.currentTarget.style.color = "var(--cp-text-muted)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "var(--cp-text-faint)"; }}
           >
             <RefreshCw size={12} strokeWidth={1.5} />
           </button>

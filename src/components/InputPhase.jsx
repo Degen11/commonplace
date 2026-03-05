@@ -189,7 +189,7 @@ const HP = {
 
   // Sections
   section: {
-    padding: "96px 32px",
+    padding: "64px 32px",
   },
   sectionAlt: {
     background: "var(--cp-bg-panel)",
@@ -252,6 +252,7 @@ const HP = {
     alignItems: "center",
     flexShrink: 0,
     width: 8,
+    paddingTop: 3,
   },
   timelineDot: {
     width: 8,
@@ -470,7 +471,7 @@ export default function InputPhase({
             into an organized, searchable library.
           </p>
           <div style={HP.animationWrap}>
-            <HowItWorksAnimation />
+            <HowItWorksAnimation active={howVisible} />
           </div>
         </div>
       </section>

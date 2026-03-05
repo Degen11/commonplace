@@ -198,7 +198,7 @@ export const baseCSS = `
     .hp-features-grid{grid-template-columns:1fr !important}
     .hp-hero-headline{font-size:36px !important;letter-spacing:-1px !important}
     .hp-hero-sub{font-size:16px !important}
-    .hp-section{padding:64px 20px !important}
+    .hp-section{padding:48px 20px !important}
     .hp-hero{min-height:80vh !important}
   }
   @media (max-width: 480px) {

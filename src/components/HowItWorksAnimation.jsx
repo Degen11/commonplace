@@ -165,9 +165,10 @@ const S = {
 };
 
 // ── Component ───────────────────────────────────────────────────────────────
-export default function HowItWorksAnimation() {
+export default function HowItWorksAnimation({ active = true }) {
   // 0 = idle, 1 = paste, 2 = identify, 3 = organize, 4 = done
   const [runKey, setRunKey] = useState(0);
+  const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [lineCount, setLineCount] = useState(0);
   const [scanIndex, setScanIndex] = useState(-1); // which line is currently being scanned
@@ -176,6 +177,11 @@ export default function HowItWorksAnimation() {
   const [showCards, setShowCards] = useState(false);      // cards layer mounted
   const [cardCount, setCardCount] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  // Start only when active becomes true for the first time (or on replay)
+  useEffect(() => {
+    if (active && !started) setStarted(true);
+  }, [active, started]);
 
   const replay = useCallback(() => {
     setStep(0);
@@ -186,10 +192,12 @@ export default function HowItWorksAnimation() {
     setShowCards(false);
     setCardCount(0);
     setProgress(0);
+    setStarted(true);
     setRunKey(k => k + 1);
   }, []);
 
   useEffect(() => {
+    if (!started) return;
     const ts = [];
     const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
 
@@ -244,7 +252,7 @@ export default function HowItWorksAnimation() {
     t(organizeDone, () => setStep(4));
 
     return () => ts.forEach(clearTimeout);
-  }, [runKey]);
+  }, [runKey, started]);
 
   const activeStep = step >= 4 ? 3 : step;
   const isDark = step >= 1 && step < 3;

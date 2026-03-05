@@ -30,10 +30,10 @@ function useScrollReveal(threshold = 0.15) {
 
 // ── Timeline data ────────────────────────────────────────────────────────────
 const TAG_COLORS = {
-  Film:   { bg: "#F3E8FF", text: "#7C3AED" },
-  Speech: { bg: "#DBEAFE", text: "#2563EB" },
-  Person: { bg: "#F0ABFC33", text: "#A21CAF" },
-  Book:   { bg: "#FEF3C7", text: "#D97706" },
+  Film:   { bg: "rgba(139,92,246,0.14)",  text: "#7C3AED" },
+  Speech: { bg: "rgba(59,130,246,0.14)",  text: "#2563EB" },
+  Person: { bg: "rgba(168,85,247,0.14)",  text: "#9333EA" },
+  Book:   { bg: "rgba(217,119,6,0.14)",   text: "#D97706" },
 };
 
 const TIMELINE_MOMENTS = [

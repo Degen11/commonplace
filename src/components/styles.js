@@ -148,7 +148,7 @@ export const baseCSS = `
   .hdr-btn:hover{background:var(--cp-bg-hover)}
   .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
   .load-more-btn{transition:all .15s ease}
-  .load-more-btn:hover{background:#EFF6FF !important;border-color:#93C5FD !important}
+  .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}
 
   /* Confirm modal button hovers */
   .confirm-cancel:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
@@ -168,7 +168,7 @@ export const baseCSS = `
   .overflow-reidentify:hover svg{color:#EA580C !important}
   .overflow-share:hover svg{color:#7C3AED !important}
   .overflow-menu-item-destructive svg{transition:color .15s ease}
-  .overflow-menu-item-destructive:hover{background:#FEF2F2 !important;color:#DC2626 !important}
+  .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
   .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
 
   /* Disabled cursor */
@@ -252,11 +252,11 @@ export const styles = {
 
   // Drop zone
   dropZone:{border:"2px dashed var(--cp-border)",borderRadius:10,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"var(--cp-bg-card)"},
-  dropZoneActive:{borderColor:"#2383E2",background:"#EFF6FF"},
+  dropZoneActive:{borderColor:"#2563EB",background:"rgba(59,130,246,0.08)"},
   dropIcon:{fontSize:32,marginBottom:12},
   dropTitle:{fontSize:14,fontWeight:600,color:"var(--cp-text-secondary)",marginBottom:6},
   dropSub:{fontSize:13,color:"var(--cp-text-muted)"},
-  dropFileName:{display:"inline-flex",alignItems:"center",gap:6,marginTop:12,padding:"6px 12px",background:"#F0FDF4",border:"1px solid #DCFCE7",borderRadius:6,fontSize:12,color:"#16A34A",fontWeight:500},
+  dropFileName:{display:"inline-flex",alignItems:"center",gap:6,marginTop:12,padding:"6px 12px",background:"rgba(34,197,94,0.10)",border:"1px solid rgba(34,197,94,0.20)",borderRadius:6,fontSize:12,color:"#16A34A",fontWeight:500},
 
   bigTextarea:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:8,padding:16,fontSize:14,fontFamily:"inherit",color:"var(--cp-text-secondary)",resize:"vertical",minHeight:240,lineHeight:1.7,background:"var(--cp-bg-card)"},
   inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,flexWrap:"wrap",gap:10},
@@ -338,10 +338,10 @@ export const styles = {
   sub:{fontSize:13,color:"var(--cp-text-muted)",marginTop:6},
   hdrBtn:{padding:"6px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   exportBtn:{padding:"6px 14px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:600,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit"},
-  addMoreBtn:{padding:"6px 14px",border:"1px solid #2383E2",borderRadius:6,background:"#EFF6FF",color:"#2383E2",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  startOverBtn:{padding:"6px 14px",border:"1px solid #FECACA",borderRadius:6,background:"var(--cp-bg-card)",color:"#B91C1C",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  addMoreBtn:{padding:"6px 14px",border:"1px solid #2563EB",borderRadius:6,background:"rgba(59,130,246,0.08)",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  startOverBtn:{padding:"6px 14px",border:"1px solid rgba(220,38,38,0.3)",borderRadius:6,background:"var(--cp-bg-card)",color:"#DC2626",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtn:{padding:"6px 14px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",color:"var(--cp-text-secondary)",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  statsBtnActive:{border:"1px solid #7C3AED",background:"#F5F3FF",color:"#7C3AED"},
+  statsBtnActive:{border:"1px solid #7C3AED",background:"rgba(124,58,237,0.10)",color:"#7C3AED"},
 
   // View toggles (table / compact / cards)
   viewTog:{display:"flex",border:"1px solid var(--cp-border)",borderRadius:6,overflow:"hidden"},
@@ -354,17 +354,17 @@ export const styles = {
   expOptNote:{display:"block",width:"100%",padding:"4px 12px 8px",fontSize:11,color:"var(--cp-text-muted)",fontFamily:"inherit"},
 
   // Bars
-  errorBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,margin:"12px 0",fontSize:13,color:"#991B1B",animation:"slideD .2s ease",gap:12,flexWrap:"wrap"},
+  errorBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(220,38,38,0.08)",border:"1px solid rgba(220,38,38,0.20)",borderRadius:8,margin:"12px 0",fontSize:13,color:"#DC2626",animation:"slideD .2s ease",gap:12,flexWrap:"wrap"},
   retryBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #DC2626",background:"var(--cp-bg-card)",color:"#DC2626",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  statsBar:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#F0FDF4",border:"1px solid #DCFCE7",borderRadius:8,margin:"12px 0",fontSize:13,color:"var(--cp-text-secondary)",flexWrap:"wrap",animation:"slideD .2s ease"},
+  statsBar:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.16)",borderRadius:8,margin:"12px 0",fontSize:13,color:"var(--cp-text-secondary)",flexWrap:"wrap",animation:"slideD .2s ease"},
   statDot:{width:4,height:4,borderRadius:"50%",background:"var(--cp-border-dim)"},
   statsDismiss:{background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14,marginLeft:"auto"},
   addMorePanel:{background:"var(--cp-bg-panel)",border:"1px solid var(--cp-border)",borderRadius:8,padding:14,margin:"12px 0",animation:"slideD .2s ease"},
-  attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#FFF7ED",border:"1px solid #FED7AA",borderRadius:8,margin:"10px 0",fontSize:13,color:"#92400E",animation:"slideD .2s ease",gap:8},
+  attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(234,88,12,0.08)",border:"1px solid rgba(234,88,12,0.20)",borderRadius:8,margin:"10px 0",fontSize:13,color:"#EA580C",animation:"slideD .2s ease",gap:8},
   attentionCount:{fontWeight:700,fontSize:14,color:"#EA580C"},
   attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#EA580C",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
-  shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"#EFF6FF",border:"1px solid #DBEAFE",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
+  shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.16)",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
   shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"var(--cp-bg-card)",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 
   // Stats panel
@@ -465,7 +465,7 @@ export const styles = {
 
   // Input meta
   entryMeta:{fontSize:12,color:"var(--cp-text-muted)"},
-  warnBadge:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,color:"#B45309",background:"#FEF3C7",padding:"2px 8px",borderRadius:50,fontWeight:500},
+  warnBadge:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,color:"#D97706",background:"rgba(217,119,6,0.12)",padding:"2px 8px",borderRadius:50,fontWeight:500},
   fmtToggleWrap:{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"var(--cp-text-muted)",userSelect:"none",cursor:"pointer"},
   fmtToggleTrack:{width:30,height:17,borderRadius:50,transition:"background .2s",flexShrink:0,position:"relative",cursor:"pointer"},
   fmtToggleThumb:{position:"absolute",top:2,width:13,height:13,borderRadius:"50%",background:"#fff",boxShadow:"0 1px 3px rgba(0,0,0,.2)",transition:"left .2s"},

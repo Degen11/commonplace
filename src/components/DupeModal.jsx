@@ -24,7 +24,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
       <div ref={boxRef} tabIndex={-1} style={{ ...styles.dupeModalBox, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={styles.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <Search size={22} color="#3C5775" strokeWidth={1.5} />
+            <Search size={22} color="var(--cp-text-secondary)" strokeWidth={1.5} />
             <div style={styles.dupeModalTitle}>Possible Duplicates Detected</div>
           </div>
           <div style={styles.dupeModalSub}>
@@ -190,7 +190,7 @@ export default function DupeModal({ pendingDupes, dupeDecisions, setDupeDecision
         }}>
           <span style={{
             fontSize: 13,
-            color: "#3C5775",
+            color: "var(--cp-text-secondary)",
             fontWeight: 600,
             background: "rgba(60,87,117,0.1)",
             padding: "4px 14px",

@@ -739,7 +739,7 @@ export default function Commonplace() {
       fontSize: 13,
       color: "#2383E2",
       background: "none",
-      border: "1px solid #E3E2DE",
+      border: "1px solid var(--cp-border)",
       borderRadius: 8,
       cursor: "pointer",
       fontFamily: "inherit",

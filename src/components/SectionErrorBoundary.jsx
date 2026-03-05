@@ -29,7 +29,7 @@ export default class SectionErrorBoundary extends React.Component {
             onClick={this.handleReset}
             style={{
               padding: "6px 16px", fontSize: 12, fontFamily: "inherit",
-              background: "#fff", color: "#991B1B", border: "1px solid #FECACA",
+              background: "var(--cp-bg-card)", color: "#991B1B", border: "1px solid #FECACA",
               borderRadius: 6, cursor: "pointer",
             }}
           >

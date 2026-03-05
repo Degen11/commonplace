@@ -66,7 +66,7 @@ const MemoCardItem = memo(function CardItem({
         ...cardStyles.card,
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
         ...(q.favorite ? cardStyles.favCard : {}),
-        ...(needsAtt && sortBy === "confidence" ? { background: "#FFFBEB" } : {}),
+        ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(dragId === q.id ? { opacity: .4 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
@@ -101,10 +101,10 @@ const MemoCardItem = memo(function CardItem({
           <>
             <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
             <div style={cardStyles.srcRow}>
-              <span style={{ color: "#D3D3D0" }}>—</span>
+              <span style={{ color: "var(--cp-text-faint)" }}>—</span>
               {isInlineEditing && inlineEditField === "source"
                 ? <CardSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
-                : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="#C8C4BC" /></>
+                : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
               }
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             </div>

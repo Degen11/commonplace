@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { styles } from "./styles";
-import { Pencil, Bot } from "lucide-react";
+import { Pencil, Bot, FileText, FolderOpen, CheckCircle } from "lucide-react";
 
 export default function AddMorePanel({
   addMoreInput, setAddMoreInput,
@@ -11,11 +11,15 @@ export default function AddMorePanel({
   onQuickAdd,
   onCancel,
   allCats,
+  onFileImport,
 }) {
   const [tab, setTab] = useState("identify");
   const [quickText, setQuickText] = useState("");
   const [quickSource, setQuickSource] = useState("");
   const [quickCategory, setQuickCategory] = useState("Unknown");
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [importedFileName, setImportedFileName] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleQuickAdd = () => {
     if (!quickText.trim()) return;
@@ -23,6 +27,23 @@ export default function AddMorePanel({
     setQuickText("");
     setQuickSource("");
     setQuickCategory("Unknown");
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file && onFileImport) {
+      onFileImport(file, setAddMoreInput, setImportedFileName);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file && onFileImport) {
+      onFileImport(file, setAddMoreInput, setImportedFileName);
+    }
+    e.target.value = "";
   };
 
   const tabStyle = (active) => ({
@@ -39,6 +60,9 @@ export default function AddMorePanel({
       <div style={{ display: "flex", gap: 2, marginBottom: 10, background: "var(--cp-bg-tab)", borderRadius: 6, padding: 2 }}>
         <button style={tabStyle(tab === "identify")} onClick={() => setTab("identify")}>
           <Bot size={13} strokeWidth={1.5} /> Paste & identify
+        </button>
+        <button style={tabStyle(tab === "import")} onClick={() => setTab("import")}>
+          <FileText size={13} strokeWidth={1.5} /> Import file
         </button>
         <button style={tabStyle(tab === "quick")} onClick={() => setTab("quick")}>
           <Pencil size={13} strokeWidth={1.5} /> Quick add
@@ -66,6 +90,48 @@ export default function AddMorePanel({
               <button style={{ ...styles.editSave, opacity: !addMoreInput.trim() ? .4 : 1 }} onClick={onAddMore} disabled={!addMoreInput.trim()}>Add & identify</button>
             </div>
           </div>
+        </>
+      ) : tab === "import" ? (
+        <>
+          <div
+            className="drop-zone"
+            style={{ ...styles.dropZone, ...(isDragOver ? styles.dropZoneActive : {}), padding: "24px 16px", minHeight: 0 }}
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.csv,.json,.md"
+              style={{ display: "none" }}
+              onChange={handleFileSelect}
+            />
+            <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center", marginBottom: 8 }}>
+              {isDragOver
+                ? <FolderOpen size={24} color="#2563EB" strokeWidth={1.5} />
+                : <FileText size={24} color="var(--cp-text-muted)" strokeWidth={1.5} />}
+            </div>
+            <div style={{ ...styles.dropTitle, fontSize: 13 }}>{isDragOver ? "Drop it!" : "Drop a file or click to browse"}</div>
+            <div style={{ ...styles.dropSub, fontSize: 12 }}>Supports .txt, .csv, .json, .md — Kindle, Readwise, Notion</div>
+            {importedFileName && addMoreInput.trim() && (
+              <div style={{ ...styles.dropFileName, marginTop: 8 }}>
+                <CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {smartSplit(addMoreInput.trim()).length} entries loaded
+              </div>
+            )}
+          </div>
+          {addMoreInput.trim() && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
+                {smartSplit(addMoreInput.trim()).length} entries ready to add
+              </span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
+                <button style={styles.editSave} onClick={onAddMore}>Add & identify</button>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

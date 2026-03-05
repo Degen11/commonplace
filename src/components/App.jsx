@@ -558,6 +558,7 @@ export default function Commonplace() {
                   onQuickAdd={handleQuickAdd}
                   onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
                   allCats={allCats}
+                  onFileImport={handleFileImport}
                 />
               </div>
             ) : (
@@ -575,6 +576,7 @@ export default function Commonplace() {
                     addMoreRef={addMoreRef}
                     onAddMore={handleAddMore}
                     onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
+                    onFileImport={handleFileImport}
                   />
                 </div>
               </div>

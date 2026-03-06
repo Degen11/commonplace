@@ -1,5 +1,4 @@
 import { useRef, useCallback, useEffect, useState } from "react";
-import { mergeQuotes } from "../utils/mergeQuotes";
 
 const LS_DEVICE_ID = "commonplace_device_id";
 const SYNC_DEBOUNCE = 2000; // 2s after last change before pushing
@@ -103,9 +102,15 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!mountedRef.current) return;
       if (r.ok) {
         const data = await r.json();
-        // If server returned merged quotes (includes data from other devices), notify
+        // Only merge from push response if server has quotes we don't have locally
+        // (e.g. added on another device). Skipping when IDs match prevents a
+        // push → setQuotes → schedulePush → push infinite loop.
         if (data.quotes?.length > 0) {
-          onCloudData(data.quotes, latestCustomCats.current, latestCollections.current);
+          const localIds = new Set(quotes.map(q => q.id));
+          const hasNewFromServer = data.quotes.some(q => !localIds.has(q.id));
+          if (hasNewFromServer) {
+            onCloudData(data.quotes, latestCustomCats.current, latestCollections.current);
+          }
         }
         setSyncStatus("synced");
         setLastSynced(new Date());

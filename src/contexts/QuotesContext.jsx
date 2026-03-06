@@ -149,8 +149,11 @@ export function QuotesProvider({ children }) {
       if (cloudQuotes?.length > 0) {
         setQuotes(prev => {
           const merged = mergeQuotes(prev, cloudQuotes, deletedIdsRef.current);
-          // Only update if merge produced changes
-          if (merged.length === prev.length && merged.every((q, i) => q.id === prev[i]?.id)) return prev;
+          // Only update if merge actually added/removed quotes
+          if (merged.length === prev.length) {
+            const prevIds = new Set(prev.map(q => q.id));
+            if (merged.every(q => prevIds.has(q.id))) return prev;
+          }
           return merged;
         });
       }
@@ -169,21 +172,7 @@ export function QuotesProvider({ children }) {
         });
       }
     }
-    // Write merged state to localStorage as cache
-    try {
-      setQuotes(current => {
-        localStorage.setItem(LS_QUOTES, JSON.stringify(current));
-        return current;
-      });
-      setCustomCats(current => {
-        localStorage.setItem(LS_CATS, JSON.stringify(current));
-        return current;
-      });
-      setCollections(current => {
-        if (current.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(current));
-        return current;
-      });
-    } catch(e) { /* ignore */ }
+    // localStorage cache is handled by the existing debounced persistence effects
   }, []);
 
   const handleSyncError = useCallback((message) => {

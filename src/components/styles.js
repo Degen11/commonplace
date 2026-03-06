@@ -6,7 +6,7 @@ export const CP_ACCENT_TEXT  = "#2D4259";
 export const baseCSS = `
   :root{
     --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-bg-panel:#FAFAFA;--cp-bg-hover:rgba(55,53,47,0.05);
-    --cp-bg-tab:#F0EDE6;--cp-bg-input:#FFFFFF;--cp-bg-selected:#F0F7FF;--cp-bg-attention:rgba(234,88,12,0.06);--cp-bg-fav:#FFFDF5;--cp-fav-accent:#EAB308;
+    --cp-bg-tab:#F0EDE6;--cp-bg-input:#FFFFFF;--cp-bg-selected:#F0F7FF;--cp-bg-attention:#FFFBEB;--cp-bg-fav:#FFFDF5;--cp-fav-accent:#F59E0B;
     --cp-text:#1A1814;--cp-text-secondary:#37352F;--cp-text-muted:#9B9A97;--cp-text-faint:#C8C4BC;
     --cp-border:#E3E2DE;--cp-border-light:#E8E3DA;--cp-border-dim:#D3D3D0;
     --cp-shadow-card:0 2px 16px rgba(26,24,20,0.06);--cp-shadow-md:0 4px 16px rgba(0,0,0,.1);
@@ -14,13 +14,13 @@ export const baseCSS = `
     --cp-mini-bg:rgba(250,248,244,0.95);
   }
   html.dark{
-    --cp-bg:#1A1A1E;--cp-bg-card:#26262A;--cp-bg-panel:#222226;--cp-bg-hover:rgba(255,255,255,0.06);
-    --cp-bg-tab:#2E2E32;--cp-bg-input:#2A2A2E;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(239,68,68,0.07);--cp-bg-fav:rgba(250,204,21,0.06);--cp-fav-accent:rgba(250,204,21,0.4);
-    --cp-text:#E8E6E3;--cp-text-secondary:#CCCAC6;--cp-text-muted:#8A8884;--cp-text-faint:#5A5856;
-    --cp-border:#3A3A3E;--cp-border-light:#343438;--cp-border-dim:#4A4A4E;
+    --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
+    --cp-bg-tab:#2E2E2E;--cp-bg-input:#2A2A2A;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(234,88,12,0.07);--cp-bg-fav:rgba(250,204,21,0.06);--cp-fav-accent:rgba(250,204,21,0.4);
+    --cp-text:#E8E8E8;--cp-text-secondary:#CCCCCC;--cp-text-muted:#8A8A8A;--cp-text-faint:#5A5A5A;
+    --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
     --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
-    --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3E;--cp-toggle-off:#4A4A4E;
-    --cp-mini-bg:rgba(26,26,30,0.95);
+    --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
+    --cp-mini-bg:rgba(26,26,26,0.95);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text)}

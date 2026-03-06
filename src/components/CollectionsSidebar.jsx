@@ -62,7 +62,7 @@ function IconPicker({ anchorRef, current, onSelect, onClose }) {
 
   return (
     <div ref={ref} style={{
-      position: "fixed", left: pos.left, bottom: pos.bottom, zIndex: 200,
+      position: "fixed", left: pos.left, bottom: pos.bottom, zIndex: 100,
       background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
       boxShadow: "var(--cp-shadow-md)", padding: 8,
       display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,

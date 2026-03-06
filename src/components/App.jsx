@@ -91,7 +91,7 @@ export default function Commonplace() {
     filtered, visible, hasMore, remaining, loadMore,
     cc, favCount, unknownCount, topCats,
     hasActiveFilters, computedStats,
-  } = useViewPreferences(quotes);
+  } = useViewPreferences(quotes, { activeCollectionId });
 
   const {
     editingId, setEditingId,
@@ -474,7 +474,7 @@ export default function Commonplace() {
       {phase === "results" && (
         <div style={styles.wrap} className={fadeClass}>
 
-          {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
+          {toasts.length > 0 && <Toast key={toasts[0].id} id={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={toasts[0].onAction} onDismiss={dismissToast} />}
 
           {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 

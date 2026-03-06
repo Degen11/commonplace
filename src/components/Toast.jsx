@@ -1,20 +1,30 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { styles } from "./styles";
 
-export default function Toast({ message, action, onAction, onDismiss }) {
+export default function Toast({ id, message, action, onAction, onDismiss }) {
   const duration = action ? 5000 : 2500;
   const [exiting, setExiting] = useState(false);
+  const timerRef = useRef(null);
 
   const triggerExit = useCallback(() => {
     if (exiting) return;
     setExiting(true);
-    setTimeout(onDismiss, 180);
-  }, [onDismiss, exiting]);
+    setTimeout(() => onDismiss(id), 180);
+  }, [onDismiss, exiting, id]);
 
   useEffect(() => {
-    const t = setTimeout(triggerExit, duration);
-    return () => clearTimeout(t);
+    timerRef.current = setTimeout(triggerExit, duration);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [triggerExit, duration]);
+
+  const handleAction = useCallback(() => {
+    // Clear auto-dismiss so it doesn't interfere
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (onAction) onAction();
+    // Dismiss this specific toast immediately
+    setExiting(true);
+    setTimeout(() => onDismiss(id), 180);
+  }, [onAction, onDismiss, id]);
 
   return (
     <div style={{ ...styles.toast, animation: exiting ? "toastOut .18s ease forwards" : "toastIn .2s ease" }}>
@@ -26,7 +36,7 @@ export default function Toast({ message, action, onAction, onDismiss }) {
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical",
         }}>{message}</span>
-        {action && <button style={styles.toastAction} onClick={onAction}>{action}</button>}
+        {action && <button style={styles.toastAction} onClick={handleAction}>{action}</button>}
         <span className="toast-bar" style={{ "--toast-duration": `${duration}ms` }} />
       </div>
     </div>

@@ -19,7 +19,7 @@ function CardSourceInput({ initial, onSave, onCancel }) {
         if (e.key === "Enter") { e.preventDefault(); onSave(val); }
         if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
       }}
-      onBlur={() => onSave(val)}
+      onBlur={() => { if (val !== initial) onSave(val); else onCancel(); }}
       autoFocus
     />
   );

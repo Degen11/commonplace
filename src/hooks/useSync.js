@@ -32,6 +32,7 @@ export default function useSync({ onCloudData, onSyncError }) {
   const latestQuotes = useRef([]);
   const latestCustomCats = useRef([]);
   const latestDeletedIds = useRef([]);
+  const latestCollections = useRef([]);
 
   // Allow external callers (e.g. QuotesContext) to mark initial load complete
   // so push is unblocked even when data came from localStorage, not pull().
@@ -56,7 +57,7 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!mountedRef.current) return;
 
       if (data.quotes?.length > 0) {
-        onCloudData(data.quotes, data.customCategories || []);
+        onCloudData(data.quotes, data.customCategories || [], data.collections || []);
       }
       initialLoadDone.current = true;
     } catch {
@@ -74,6 +75,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     const quotes = latestQuotes.current;
     const customCats = latestCustomCats.current;
     const deletedIds = latestDeletedIds.current;
+    const collections = latestCollections.current;
 
     if (quotes.length === 0) return;
 
@@ -84,6 +86,7 @@ export default function useSync({ onCloudData, onSyncError }) {
         device_id: deviceId.current,
         quotes,
         customCategories: customCats,
+        collections,
       };
       if (deletedIds && deletedIds.length > 0) {
         payload.deletedIds = deletedIds;
@@ -135,13 +138,16 @@ export default function useSync({ onCloudData, onSyncError }) {
   }, [onSyncError]);
 
   // ── Debounced push — call this whenever quotes/categories change ──
-  const schedulePush = useCallback((quotes, customCats, deletedIds) => {
+  const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
     // Update refs so push() and retries always see latest data
     latestQuotes.current = quotes;
     latestCustomCats.current = customCats;
     latestDeletedIds.current = deletedIds;
+    latestCollections.current = collections || [];
 
+    // Clear any pending push AND any pending retry — the new push supersedes both
     if (pushTimer.current) clearTimeout(pushTimer.current);
+    if (retryTimer.current) clearTimeout(retryTimer.current);
     pushTimer.current = setTimeout(() => {
       push();
     }, SYNC_DEBOUNCE);

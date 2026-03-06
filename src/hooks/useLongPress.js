@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 
 // Long-press hook for mobile selection
 export default function useLongPress(onLongPress, ms = 400) {
@@ -35,6 +35,13 @@ export default function useLongPress(onLongPress, ms = 400) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+  }, []);
+
+  // Clean up timer if component unmounts during a long press
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   return { onTouchStart, onTouchMove, onTouchEnd };

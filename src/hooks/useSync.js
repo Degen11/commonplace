@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from "react";
+import { mergeQuotes } from "../utils/mergeQuotes";
 
 const LS_DEVICE_ID = "commonplace_device_id";
 const SYNC_DEBOUNCE = 2000; // 2s after last change before pushing
@@ -101,6 +102,11 @@ export default function useSync({ onCloudData, onSyncError }) {
       });
       if (!mountedRef.current) return;
       if (r.ok) {
+        const data = await r.json();
+        // If server returned merged quotes (includes data from other devices), notify
+        if (data.quotes?.length > 0) {
+          onCloudData(data.quotes, latestCustomCats.current, latestCollections.current);
+        }
         setSyncStatus("synced");
         setLastSynced(new Date());
         consecutiveFailures.current = 0;
@@ -135,7 +141,7 @@ export default function useSync({ onCloudData, onSyncError }) {
         }
       }
     }
-  }, [onSyncError]);
+  }, [onSyncError, onCloudData]);
 
   // ── Debounced push — call this whenever quotes/categories change ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
@@ -151,6 +157,17 @@ export default function useSync({ onCloudData, onSyncError }) {
     pushTimer.current = setTimeout(() => {
       push();
     }, SYNC_DEBOUNCE);
+  }, [push]);
+
+  // Sync when coming back online after being offline
+  useEffect(() => {
+    const handleOnline = () => {
+      if (latestQuotes.current.length > 0 && initialLoadDone.current) {
+        push();
+      }
+    };
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
   }, [push]);
 
   // Cleanup all timers on unmount

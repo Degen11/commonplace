@@ -13,12 +13,15 @@ export const ALLOWED_ORIGINS = [
 // UUID v4 validation
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-// ── Supabase client (lazy, shared) ──
+// ── Supabase client (lazy, cached singleton) ──
+let _supabase = null;
 export function getSupabase() {
+  if (_supabase) return _supabase;
   const key = process.env.SUPABASE_SECRET_KEY
     || process.env.VITE_SUPABASE_ANON_KEY_COMMONPLACE;
   if (!key) return null;
-  return createClient(SUPABASE_URL, key);
+  _supabase = createClient(SUPABASE_URL, key);
+  return _supabase;
 }
 
 // ── Rate limiting ──

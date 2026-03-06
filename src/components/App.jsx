@@ -51,6 +51,7 @@ export default function Commonplace() {
     allCats,
     isSharedView, setIsSharedView,
     syncStatus,
+    initialLoading,
     trackDeletion,
     collections,
     activeCollectionId, setActiveCollectionId,
@@ -93,6 +94,18 @@ export default function Commonplace() {
     hasActiveFilters, computedStats,
   } = useViewPreferences(quotes, { activeCollectionId });
 
+  // Collection scoping — computed before useEditState so selection respects active collection
+  const activeCollectionIdSet = useMemo(() => {
+    if (!activeCollectionId) return null;
+    const col = collections.find(c => c.id === activeCollectionId);
+    return col ? new Set(col.quoteIds) : null;
+  }, [activeCollectionId, collections]);
+
+  const collectionFiltered = useMemo(() => {
+    if (!activeCollectionIdSet) return filtered;
+    return filtered.filter(q => activeCollectionIdSet.has(q.id));
+  }, [filtered, activeCollectionIdSet]);
+
   const {
     editingId, setEditingId,
     inlineEdit, setInlineEdit,
@@ -108,7 +121,7 @@ export default function Commonplace() {
     toggleSel, selAll,
     applyBulk, bulkDel,
     startReviewFlow,
-  } = useEditState({ quotes, setQuotes, filtered, showToast, trackDeletion });
+  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion });
 
   const {
     deletingId,
@@ -253,7 +266,7 @@ export default function Commonplace() {
 
   // Keyboard shortcuts — use a ref to avoid re-registering on every state change
   const kbStateRef = useRef({});
-  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, filtered };
+  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, collectionFiltered };
 
   useEffect(() => {
     const h = e => {
@@ -288,8 +301,8 @@ export default function Commonplace() {
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
-        if (s.filtered.length > 0) {
-          setSelected(new Set(s.filtered.map(q => q.id)));
+        if (s.collectionFiltered.length > 0) {
+          setSelected(new Set(s.collectionFiltered.map(q => q.id)));
         }
       }
     };
@@ -337,7 +350,7 @@ export default function Commonplace() {
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); resetProcessingState();
     setConfirmClear(false); setShowAddMore(false); setSortBy("default"); setShowStats(false);
-    setImportedFileName(null); setInputTab("paste"); setCustomCats([]);
+    setImportedFileName(null); setInputTab("paste"); setCustomCats([]); setActiveCollectionId(null);
   };
 
   const handleStartReview = () => {
@@ -374,18 +387,6 @@ export default function Commonplace() {
     }
     return counts;
   }, [collections, quotes]);
-
-  // Filter by active collection — applied on top of search/sort/category filters
-  const activeCollectionIdSet = useMemo(() => {
-    if (!activeCollectionId) return null;
-    const col = collections.find(c => c.id === activeCollectionId);
-    return col ? new Set(col.quoteIds) : null;
-  }, [activeCollectionId, collections]);
-
-  const collectionFiltered = useMemo(() => {
-    if (!activeCollectionIdSet) return filtered;
-    return filtered.filter(q => activeCollectionIdSet.has(q.id));
-  }, [filtered, activeCollectionIdSet]);
 
   const collectionVisible = useMemo(() => {
     if (!activeCollectionIdSet) return visible;
@@ -444,6 +445,7 @@ export default function Commonplace() {
             importedFileName={importedFileName}
             formattingEnabled={formattingEnabled} setFormattingEnabled={setFormattingEnabled}
             isProcessing={isProcessing}
+            initialLoading={initialLoading}
             onProcess={handleProcess}
             onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName)}
             fileInputRef={fileInputRef}
@@ -760,6 +762,7 @@ export default function Commonplace() {
                 isMobile={isMobile}
                 savedPulse={savedPulse}
                 deletingId={deletingId}
+                searchTerm={search}
               />
               </div>
             </SectionErrorBoundary>
@@ -807,6 +810,7 @@ export default function Commonplace() {
                       handleDragOver={handleDragOver}
                       handleDragEnd={handleDragEnd}
                       isDeleting={isDeleting}
+                      searchTerm={search}
                     />
                   );
                 })}

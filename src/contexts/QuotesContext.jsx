@@ -181,7 +181,7 @@ export function QuotesProvider({ children }) {
     showToast(message);
   }, [showToast]);
 
-  const { syncStatus, lastSynced, pull, schedulePush, markReady } = useSync({
+  const { syncStatus, lastSynced, initialLoading, pull, schedulePush, markReady } = useSync({
     onCloudData: handleCloudData,
     onSyncError: handleSyncError,
   });
@@ -321,12 +321,13 @@ export function QuotesProvider({ children }) {
     isSharedView, setIsSharedView,
     syncStatus,
     lastSynced,
+    initialLoading,
     trackDeletion,
     collections,
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
-  }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, trackDeletion,
+  }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
        collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon]);
 
   return (

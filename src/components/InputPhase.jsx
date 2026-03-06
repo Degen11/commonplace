@@ -8,7 +8,7 @@ import { EXAMPLE_QUOTES } from "../data/constants";
 import {
   Pencil, Upload, FolderOpen, FileText,
   AlertTriangle, CheckCircle, ArrowRight, ChevronDown,
-  Sparkles, PenLine, Download,
+  Sparkles, PenLine, Download, RefreshCw,
 } from "lucide-react";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
@@ -434,6 +434,85 @@ function FormattingPreview({ rawInput }) {
   );
 }
 
+// ── URL Import Panel ─────────────────────────────────────────────────────────
+function UrlImportPanel({ onLoad }) {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const handleFetch = async () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setError(null);
+    setPreview(null);
+    try {
+      const res = await fetch("/api/fetch-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
+      if (!data.lines || data.lines.length === 0) throw new Error("No text content found on that page");
+      setPreview(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: "20px 24px" }}>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          type="url"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") handleFetch(); }}
+          placeholder="https://example.com/quotes"
+          style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+        />
+        <button
+          onClick={handleFetch}
+          disabled={loading || !url.trim()}
+          style={{ padding: "10px 18px", borderRadius: 8, border: "none", background: loading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+        >
+          {loading ? "Fetching..." : "Fetch"}
+        </button>
+      </div>
+      {error && (
+        <div style={{ marginTop: 12, padding: "8px 12px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, fontSize: 13, color: "#DC2626" }}>
+          {error}
+        </div>
+      )}
+      {preview && (
+        <div style={{ marginTop: 12 }}>
+          {preview.title && <div style={{ fontSize: 12, color: "var(--cp-text-muted)", marginBottom: 8 }}>{preview.title}</div>}
+          <div style={{ fontSize: 13, color: "var(--cp-text-secondary)", marginBottom: 12 }}>
+            Found {preview.total} lines{preview.total > 500 ? " (showing first 500)" : ""}
+          </div>
+          <div style={{ maxHeight: 200, overflow: "auto", padding: "10px 12px", background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)", borderRadius: 8, fontSize: 12, lineHeight: 1.6, color: "var(--cp-text-secondary)" }}>
+            {preview.lines.slice(0, 20).map((l, i) => <div key={i} style={{ borderBottom: "1px solid var(--cp-border-light)", padding: "4px 0" }}>{l}</div>)}
+            {preview.lines.length > 20 && <div style={{ padding: "4px 0", color: "var(--cp-text-muted)" }}>...and {preview.lines.length - 20} more</div>}
+          </div>
+          <button
+            onClick={() => onLoad(preview.lines.join("\n"))}
+            style={{ marginTop: 12, padding: "10px 20px", borderRadius: 8, border: "none", background: "#2383E2", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            Use {preview.lines.length} lines
+          </button>
+        </div>
+      )}
+      <p style={{ marginTop: 12, fontSize: 11, color: "var(--cp-text-faint)" }}>
+        Fetches the page and extracts text content. Works best with articles, blog posts, and plain text pages.
+      </p>
+    </div>
+  );
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 export default function InputPhase({
   fadeClass,
@@ -443,6 +522,7 @@ export default function InputPhase({
   importedFileName,
   formattingEnabled, setFormattingEnabled,
   isProcessing,
+  initialLoading,
   onProcess,
   onFileImport,
   fileInputRef,
@@ -547,6 +627,12 @@ export default function InputPhase({
             One per line, messy is fine. We&rsquo;ll sort it all out.
           </p>
 
+          {initialLoading && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", marginBottom: 16, background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)", borderRadius: 10, maxWidth: 640, margin: "0 auto 16px", fontSize: 13, color: "var(--cp-text-muted)" }}>
+              <RefreshCw size={14} strokeWidth={2} className="spin" /> Restoring from cloud&hellip;
+            </div>
+          )}
+
           <div style={{ ...styles.inputCard, maxWidth: 640, margin: "0 auto" }}>
             {/* Tab row */}
             <div style={styles.tabRow}>
@@ -563,6 +649,13 @@ export default function InputPhase({
                 onClick={() => setInputTab("import")}
               >
                 <Upload size={14} strokeWidth={1.5} /> Import File
+              </button>
+              <button
+                className="tab-btn"
+                style={{ ...styles.tabBtn, ...(inputTab === "url" ? styles.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                onClick={() => setInputTab("url")}
+              >
+                <Download size={14} strokeWidth={1.5} /> From URL
               </button>
             </div>
 
@@ -609,15 +702,22 @@ export default function InputPhase({
               </div>
             )}
 
+            {inputTab === "url" && (
+              <UrlImportPanel onLoad={(text) => { setRawInput(text); setInputTab("paste"); }} />
+            )}
+
             <div style={styles.inputFooter}>
               {(() => {
-                const count = rawInput.trim() ? smartSplit(rawInput.trim()).length : 0;
+                const trimmed = rawInput.trim();
+                const count = trimmed ? smartSplit(trimmed).length : 0;
+                const charCount = rawInput.length;
+                const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
                 const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <span style={styles.entryMeta}>
                       {count > 0
-                        ? `${count} ${count === 1 ? "entry" : "entries"} detected`
+                        ? <>{count} {count === 1 ? "entry" : "entries"} detected<span style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
                         : "Quotes, phrases, expressions \u2014 all welcome"}
                     </span>
                     {count > 50 && (

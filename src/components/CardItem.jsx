@@ -1,29 +1,12 @@
 import { useState, useCallback, useEffect, memo } from "react";
 import useLongPress from "../hooks/useLongPress";
 import EditForm from "./EditForm";
+import { InlineSourceInput } from "./InlineEditors";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown } from "lucide-react";
-
-// ── Inline source input with local state (saves on blur/Enter) ──
-function CardSourceInput({ initial, onSave, onCancel }) {
-  const [val, setVal] = useState(initial);
-  return (
-    <input
-      style={styles.inlineSrcInput}
-      value={val}
-      onChange={e => setVal(e.target.value)}
-      onKeyDown={e => {
-        if (e.key === "Enter") { e.preventDefault(); onSave(val); }
-        if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
-      }}
-      onBlur={() => { if (val !== initial) onSave(val); else onCancel(); }}
-      autoFocus
-    />
-  );
-}
 
 const MemoCardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
@@ -103,7 +86,7 @@ const MemoCardItem = memo(function CardItem({
             <div style={cardStyles.srcRow}>
               <span style={{ color: "var(--cp-text-faint)" }}>—</span>
               {isInlineEditing && inlineEditField === "source"
-                ? <CardSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} />
+                ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
                 : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
               }
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />

@@ -8,15 +8,18 @@ function groupByCategory(quotes) {
   return grouped;
 }
 
-function download(content, name, type) {
-  const b = new Blob([content], { type });
-  const u = URL.createObjectURL(b);
+export function downloadBlob(blob, name) {
+  const u = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = u; a.download = name;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(u), 100);
+}
+
+function download(content, name, type) {
+  downloadBlob(new Blob([content], { type }), name);
 }
 
 export function exportCSV(quotes) {

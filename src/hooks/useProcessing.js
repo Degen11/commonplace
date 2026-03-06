@@ -1,11 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { VIBE_TAGS } from "../data/constants";
+import { buildValidCats } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
-
-const LS_DRAFT = "commonplace_draft";
 
 export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const [isProcessing, setIsProcessing]       = useState(false);
@@ -131,9 +129,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (!mountedRef.current) return;
     if (failed.length > 0) safeSetFailedEntries(failed);
 
-    const validCats = new Set([...allCats, ...VIBE_TAGS]);
+    const validCats = buildValidCats(allCats);
+    const localByIdx = new Map(localMatches.map(m => [m.idx, m]));
     const newQuotes = unique.map((p, i) => {
-      const local = localMatches.find(m => m.idx === i);
+      const local = localByIdx.get(i);
       if (local) {
         const text = useFormatting ? basicFormat(p.text) : p.text;
         return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, updatedAt: Date.now() };
@@ -152,7 +151,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     safeSetStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
     safeSetProcessingDone(true);
     safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
-    try { localStorage.removeItem(LS_DRAFT); } catch(e) {}
+    try { localStorage.removeItem("commonplace_draft"); } catch(e) {}
     // Auto-transition after 3s (user can skip via "View my collection" button)
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
     autoTransitionRef.current = setTimeout(() => {

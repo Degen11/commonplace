@@ -1,70 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
 
-// Allowed origins — add your production domain and local dev
-const ALLOWED_ORIGINS = [
-  'https://commonplace.pro',
-  'http://localhost:5173',
-  'http://localhost:4173',
-  'http://localhost:3000',
-];
-
-const SUPABASE_URL = 'https://aoyagemikimsycaupych.supabase.co';
-const RATE_LIMIT = 30; // max requests per 60s window
-
-function getSupabase() {
-  const key = process.env.SUPABASE_SECRET_KEY
-    || process.env.VITE_SUPABASE_ANON_KEY_COMMONPLACE;
-  if (!key) return null;
-  return createClient(SUPABASE_URL, key);
-}
-
-// In-memory fallback for when Supabase is unavailable (e.g. dev without keys)
-const rateMap = new Map();
-
-function checkRateLimitInMemory(ip) {
-  const now = Date.now();
-  for (const [key, entry] of rateMap) {
-    if (now - entry.start > 120000) rateMap.delete(key);
-  }
-  const entry = rateMap.get(ip);
-  if (!entry || now - entry.start > 60000) {
-    rateMap.set(ip, { start: now, count: 1 });
-    return true;
-  }
-  entry.count++;
-  return entry.count <= RATE_LIMIT;
-}
-
-// Durable rate limiter using Supabase RPC (atomic, survives cold starts)
-async function checkRateLimit(ip) {
-  const supabase = getSupabase();
-  if (!supabase) return checkRateLimitInMemory(ip);
-
-  try {
-    const { data, error } = await supabase.rpc('check_rate_limit', {
-      p_ip: ip,
-      p_limit: RATE_LIMIT,
-      p_window_sec: 60,
-    });
-    if (error) throw error;
-    return data;
-  } catch {
-    // Fail open — fall back to in-memory if Supabase is down
-    return checkRateLimitInMemory(ip);
-  }
-}
-
-// ── Helper: set CORS headers for allowed origins ──
-function setCorsHeaders(req, res) {
-  const origin = req.headers['origin'] || '';
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
-}
+const RATE_LIMIT = 30;
 
 // ── Server-side system prompt (never exposed to client) ──
 const SYSTEM_PROMPT = `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
@@ -92,7 +28,6 @@ IDENTIFICATION RULES — follow strictly:
 7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
 Return exactly one JSON object per input item.`;
 
-// Same prompt but with the cleanText field for formatting mode
 const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}'
@@ -101,68 +36,37 @@ const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
 export default async function handler(req, res) {
   setCorsHeaders(req, res);
 
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'Service not configured' });
+  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Service not configured' });
-  }
-
-  // ── Origin validation ──
-  const origin = req.headers['origin'] || '';
-  const referer = req.headers['referer'] || '';
-  const isAllowed = ALLOWED_ORIGINS.some(o => origin === o || referer === o || referer.startsWith(o + '/'));
-  if (!isAllowed) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
-  // ── Content-Type validation ──
-  // Requiring application/json prevents simple form-encoded CSRF
   const ct = req.headers['content-type'] || '';
-  if (!ct.includes('application/json')) {
-    return res.status(415).json({ error: 'Content-Type must be application/json' });
-  }
+  if (!ct.includes('application/json')) return res.status(415).json({ error: 'Content-Type must be application/json' });
+  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
 
-  // ── Custom header check (lightweight CSRF mitigation) ──
-  // Browsers cannot send custom headers in simple requests without preflight
-  if (!req.headers['x-requested-with']) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
-  // Rate limit by IP (durable via Supabase, with in-memory fallback)
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  if (!(await checkRateLimit(ip))) {
+  const supabase = getSupabase();
+  const ip = getClientIp(req);
+  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
   }
 
-  // Validate the request body
   const body = req.body;
   if (!body || !body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
     return res.status(400).json({ error: 'Invalid request format' });
   }
 
-  // Validate the first message structure
   const firstMsg = body.messages[0];
   if (!firstMsg || firstMsg.role !== 'user' || typeof firstMsg.content !== 'string') {
     return res.status(400).json({ error: 'Invalid message format' });
   }
 
-  // Limit input size to prevent abuse
   if (firstMsg.content.length > 10000) {
     return res.status(400).json({ error: 'Input too large. Send fewer quotes per batch.' });
   }
 
-  // ── Detect if client wants formatting mode ──
-  // The client sends a boolean flag; we pick the right server-side prompt.
   const wantsFormatting = body.formatting === true;
 
-  // ── Build safe request — all LLM parameters controlled server-side ──
   const safeBody = {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 4000,
@@ -182,17 +86,13 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      // Log status only — avoid logging full upstream response body
       console.error('Anthropic API error:', response.status);
-
-      // Return generic error to client — never forward upstream details
       return res.status(502).json({ error: 'AI service temporarily unavailable. Please try again.' });
     }
 
     const data = await response.json();
     return res.status(200).json(data);
   } catch (error) {
-    // Log error name/message only — avoid logging stack traces or request details
     console.error('API proxy error:', error?.message || 'unknown');
     return res.status(500).json({ error: 'Failed to reach AI service' });
   }

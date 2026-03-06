@@ -22,10 +22,16 @@ export default function useSync({ onCloudData, onSyncError }) {
   const [lastSynced, setLastSynced] = useState(null);
   const deviceId = useRef(getOrCreateDeviceId());
   const pushTimer = useRef(null);
+  const retryTimer = useRef(null);
   const mountedRef = useRef(true);
   const initialLoadDone = useRef(false);
   const consecutiveFailures = useRef(0);
   const lastErrorNotified = useRef(0);
+
+  // Refs for latest data — retries always read current values instead of stale closures
+  const latestQuotes = useRef([]);
+  const latestCustomCats = useRef([]);
+  const latestDeletedIds = useRef([]);
 
   // Allow external callers (e.g. QuotesContext) to mark initial load complete
   // so push is unblocked even when data came from localStorage, not pull().
@@ -59,11 +65,17 @@ export default function useSync({ onCloudData, onSyncError }) {
   }, [onCloudData]);
 
   // ── Push: send current state to Supabase (with retry) ──
-  const push = useCallback(async (quotes, customCats, deletedIds, retriesLeft = MAX_RETRIES) => {
+  // Reads from refs so retries always push the latest data, not stale closure values.
+  const push = useCallback(async (retriesLeft = MAX_RETRIES) => {
     if (!deviceId.current) return;
     if (!initialLoadDone.current) return;
-    if (quotes.length === 0) return;
     if (!mountedRef.current) return;
+
+    const quotes = latestQuotes.current;
+    const customCats = latestCustomCats.current;
+    const deletedIds = latestDeletedIds.current;
+
+    if (quotes.length === 0) return;
 
     setSyncStatus("syncing");
 
@@ -95,10 +107,10 @@ export default function useSync({ onCloudData, onSyncError }) {
     } catch (err) {
       if (!mountedRef.current) return;
 
-      // Retry with delay
+      // Retry with delay — re-reads latest data from refs on next attempt
       if (retriesLeft > 0) {
-        setTimeout(() => {
-          if (mountedRef.current) push(quotes, customCats, deletedIds, retriesLeft - 1);
+        retryTimer.current = setTimeout(() => {
+          if (mountedRef.current) push(retriesLeft - 1);
         }, RETRY_DELAY);
         return;
       }
@@ -124,16 +136,22 @@ export default function useSync({ onCloudData, onSyncError }) {
 
   // ── Debounced push — call this whenever quotes/categories change ──
   const schedulePush = useCallback((quotes, customCats, deletedIds) => {
+    // Update refs so push() and retries always see latest data
+    latestQuotes.current = quotes;
+    latestCustomCats.current = customCats;
+    latestDeletedIds.current = deletedIds;
+
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(() => {
-      push(quotes, customCats, deletedIds);
+      push();
     }, SYNC_DEBOUNCE);
   }, [push]);
 
-  // Cleanup timer on unmount
+  // Cleanup all timers on unmount
   useEffect(() => {
     return () => {
       if (pushTimer.current) clearTimeout(pushTimer.current);
+      if (retryTimer.current) clearTimeout(retryTimer.current);
     };
   }, []);
 

@@ -114,7 +114,8 @@ export function basicFormat(text) {
   if (properNouns) {
     properNouns.forEach(noun => {
       const lower = noun.toLowerCase();
-      t = t.replace(new RegExp("\\b" + lower + "\\b", "g"), noun);
+      const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      t = t.replace(new RegExp("\\b" + escaped + "\\b", "g"), noun);
     });
   }
 
@@ -156,6 +157,7 @@ export function similarity(a, b) {
   if (na.includes(nb) || nb.includes(na)) return 0.9;
 
   const wa = wordSet(a), wb = wordSet(b);
+  if (wa.size + wb.size === 0) return 0;
   if (!wa.size || !wb.size) return 0;
 
   let overlap = 0;

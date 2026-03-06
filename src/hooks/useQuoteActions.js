@@ -152,6 +152,94 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     clearId();
   }, [setQuotes, allCats, showToast, identifyBatch]);
 
+  // ── Batch re-identify (for selected quotes) ──
+  const batchReIdentify = useCallback(async (quoteIds) => {
+    const qs = quotesRef.current.filter(q => quoteIds.has(q.id));
+    if (qs.length === 0) return;
+
+    const controller = new AbortController();
+    const ids = qs.map(q => q.id);
+    ids.forEach(id => {
+      const existing = reidentifyAbortRefs.current.get(id);
+      if (existing) existing.abort();
+      reidentifyAbortRefs.current.set(id, controller);
+    });
+    setReidentifyingIds(prev => {
+      const s = new Set(prev);
+      ids.forEach(id => s.add(id));
+      return s;
+    });
+
+    const clearIds = () => {
+      ids.forEach(id => reidentifyAbortRefs.current.delete(id));
+      setReidentifyingIds(prev => {
+        const s = new Set(prev);
+        ids.forEach(id => s.delete(id));
+        return s;
+      });
+    };
+
+    try {
+      const { localLookup } = await import("../data/localQuotes");
+      if (controller.signal.aborted) return;
+
+      const needsApi = [];
+      const snapshot = new Map(qs.map(q => [q.id, { ...q }]));
+      const validCats = new Set([...allCats, ...VIBE_TAGS]);
+      let localCount = 0;
+
+      // First pass: try local matches
+      qs.forEach(q => {
+        const local = localLookup(q.text, null, { exactOnly: true });
+        if (local) {
+          setQuotes(prev => prev.map(x => x.id === q.id ? {
+            ...x, source: local.source, category: local.category, confidence: local.confidence, updatedAt: Date.now(),
+          } : x));
+          localCount++;
+        } else {
+          needsApi.push(q);
+        }
+      });
+
+      // Second pass: batch API for remaining
+      if (needsApi.length > 0 && !controller.signal.aborted) {
+        const BATCH_SIZE = 20;
+        for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
+          if (controller.signal.aborted) break;
+          const chunk = needsApi.slice(i, i + BATCH_SIZE);
+          const items = chunk.map(q => ({ text: q.text, hint: null }));
+          try {
+            const results = await identifyBatch(items, false, controller.signal);
+            if (controller.signal.aborted) break;
+            results.forEach(r => {
+              const q = chunk[r.i];
+              if (!q) return;
+              const newSource = r.source || "Unknown";
+              const newCategory = validCats.has(r.category) ? r.category : "Unknown";
+              setQuotes(prev => prev.map(x => x.id === q.id ? {
+                ...x, source: newSource, category: newCategory,
+                confidence: r.confidence || "low", updatedAt: Date.now(),
+              } : x));
+            });
+          } catch (err) {
+            if (err.name === "AbortError") break;
+            // Continue with remaining batches
+          }
+        }
+      }
+
+      clearIds();
+      const total = qs.length;
+      showToast(`Re-identified ${total} ${total === 1 ? "entry" : "entries"}`, "Undo", () => {
+        setQuotes(prev => prev.map(q => snapshot.has(q.id) ? snapshot.get(q.id) : q));
+      });
+    } catch (err) {
+      clearIds();
+      if (err.name === "AbortError") return;
+      showToast("Couldn't reach AI. Try again.");
+    }
+  }, [setQuotes, allCats, showToast, identifyBatch]);
+
   // ── Drag reorder ──
   // Use a ref for dragId so handleDragOver always reads the latest value
   // even when called from memoized row components with stale closures.
@@ -285,7 +373,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     reidentifyingIds,
     dragId, dragInsert,
     undoRef,
-    handleDelete, copyQuote, shareAsImage, reIdentify,
+    handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
     handleDragStart, handleDragOver, handleDragEnd,
     handleFileImport,
   };

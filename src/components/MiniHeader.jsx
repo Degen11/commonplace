@@ -1,25 +1,9 @@
 import { List, AlignJustify, LayoutGrid, Moon, Sun } from "lucide-react";
 import Logo from "./Logo";
 import ExportDropdown from "./ExportDropdown";
-import { styles } from "./styles";
+import { styles, syncPillStyles } from "./styles";
 
-const syncPill = {
-  fontSize: 10,
-  fontWeight: 500,
-  padding: "1px 6px",
-  borderRadius: 4,
-  fontFamily: "'DM Sans', sans-serif",
-  letterSpacing: 0.2,
-  lineHeight: "14px",
-  whiteSpace: "nowrap",
-  alignSelf: "center",
-};
-
-const syncStyles = {
-  syncing: { ...syncPill, color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
-  synced:  { ...syncPill, color: "#16A34A", background: "#F0FDF4" },
-  error:   { ...syncPill, color: "#DC2626", background: "#FEF2F2" },
-};
+const syncStyles = syncPillStyles.mini;
 
 export default function MiniHeader({
   view, setView, compact, setCompact,

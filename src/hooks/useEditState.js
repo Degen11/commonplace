@@ -158,16 +158,24 @@ export default function useEditState({ quotes, setQuotes, filtered, showToast, t
     setConfirmBulkDel(false);
     const deletedQuotes = quotes.filter(q => selected.has(q.id));
     const deletedIds = new Set(selected);
+    const count = deletedQuotes.length;
+    // Snapshot original indices for undo restore
+    const originalIndices = deletedQuotes.map(dq => ({
+      quote: dq,
+      idx: quotes.findIndex(q => q.id === dq.id),
+    }));
     setQuotes(p => p.filter(q => !deletedIds.has(q.id)));
     trackDeletion([...deletedIds]);
     setSelected(new Set());
-    showToast(`${deletedQuotes.length} entries deleted`, "Undo", () => {
+    showToast(`${count} ${count === 1 ? "entry" : "entries"} deleted`, "Undo", () => {
       setQuotes(p => {
         const restored = [...p];
-        deletedQuotes.forEach(dq => {
-          const origIdx = quotes.findIndex(q => q.id === dq.id);
-          restored.splice(Math.min(origIdx, restored.length), 0, dq);
-        });
+        // Re-insert in original order (sort by index to avoid shifting issues)
+        originalIndices
+          .sort((a, b) => a.idx - b.idx)
+          .forEach(({ quote, idx }) => {
+            restored.splice(Math.min(idx, restored.length), 0, quote);
+          });
         return restored;
       });
     });

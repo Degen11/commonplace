@@ -328,7 +328,7 @@ export default function CollectionsSidebar({
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 12px 8px",
+        padding: "12px 12px 8px 0",
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
           Collections
@@ -343,7 +343,7 @@ export default function CollectionsSidebar({
       </div>
 
       {/* Create new — at the top */}
-      <div style={{ padding: "0 8px 6px" }}>
+      <div style={{ padding: "0 8px 6px 0" }}>
         {isCreating ? (
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <input
@@ -385,7 +385,7 @@ export default function CollectionsSidebar({
       </div>
 
       {/* All Quotes */}
-      <div style={{ padding: "2px 8px" }}>
+      <div style={{ padding: "2px 8px 2px 0" }}>
         <button
           onClick={() => setActiveCollectionId(null)}
           style={{
@@ -405,7 +405,7 @@ export default function CollectionsSidebar({
 
       {/* Collections list — only scroll vertically when many items */}
       <div style={{
-        padding: "0 8px 8px",
+        padding: "0 8px 8px 0",
         overflowX: "hidden",
         overflowY: collections.length > 12 ? "auto" : "hidden",
         maxHeight: collections.length > 12 ? 420 : "none",

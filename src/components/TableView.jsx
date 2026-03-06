@@ -38,7 +38,6 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
   const [flipUp, setFlipUp] = useState(false);
 
   useEffect(() => {
-    // Check if dropdown would clip below viewport and flip upward if so
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       if (rect.bottom > window.innerHeight - 8) {
@@ -83,11 +82,17 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
   );
 }
 
-// Column configuration
-const COL_WIDTHS = {
-  content:  {},
-  source:   { width: 220, minWidth: 100, maxWidth: 220 },
-  category: { width: 140, minWidth: 80 },
+// Column configuration — original flex-based layout
+const COL_BASE = {
+  content:  { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 16, display: "flex", alignItems: "center" },
+  source:   { flex: "0 1 220px", minWidth: 100, maxWidth: 220, paddingLeft: 10, paddingRight: 12, display: "flex", alignItems: "center", borderLeft: "1px solid rgba(0,0,0,0.04)" },
+  category: { flex: "0 1 140px", minWidth: 80, paddingLeft: 10, paddingRight: 8, display: "flex", alignItems: "center", borderLeft: "1px solid rgba(0,0,0,0.04)" },
+};
+
+const COL_CONFIG = {
+  content:  { label: "Content",  style: { ...COL_BASE.content, textAlign: "left" } },
+  source:   { label: "Source",   style: { ...COL_BASE.source, textAlign: "left" } },
+  category: { label: "Category", style: { ...COL_BASE.category, textAlign: "left" } },
 };
 
 
@@ -109,26 +114,20 @@ const MemoTableRow = memo(function TableRow({
   const col = getCatColor(q.category, customCats);
 
   const renderColumn = (colKey) => {
-    const tdStyle = colKey === "content"
-      ? { paddingLeft: 0, paddingRight: 16 }
-      : colKey === "source"
-      ? { ...COL_WIDTHS.source, paddingLeft: 10, paddingRight: 12, borderLeft: "1px solid rgba(0,0,0,0.04)" }
-      : { ...COL_WIDTHS.category, paddingLeft: 10, paddingRight: 8, borderLeft: "1px solid rgba(0,0,0,0.04)", overflow: "visible", position: "relative" };
-
     switch(colKey) {
       case "content":
         return (
-          <td key="content" style={tdStyle}
+          <div key="content" style={COL_BASE.content}
             onClick={() => { if (!isEd) setEditingId(q.id); }}>
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
               : <p style={compact ? styles.entryTextCompact : styles.entryText}>{displayText(q)}</p>
             }
-          </td>
+          </div>
         );
       case "source":
         return (
-          <td key="source" className={`src-col${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={tdStyle}>
+          <div key="source" className={`src-col${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={COL_BASE.source}>
             {isInlineEditing && inlineEditField === "source"
               ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
               : <>
@@ -141,24 +140,22 @@ const MemoTableRow = memo(function TableRow({
                   <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="var(--cp-text-faint)" />
                 </>
             }
-          </td>
+          </div>
         );
       case "category":
         return (
-          <td key="category" className={isSavedPulse && savedPulseField === "category" ? "save-pulse" : ""} style={tdStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
-              <span
-                className="inline-cat"
-                style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
-                onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-                title="Click to change category"
-              >{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
-              {isInlineEditing && inlineEditField === "category" && (
-                <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
-              )}
-            </div>
-          </td>
+          <div key="category" className={isSavedPulse && savedPulseField === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
+            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
+            <span
+              className="inline-cat"
+              style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
+              onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
+              title="Click to change category"
+            >{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
+            {isInlineEditing && inlineEditField === "category" && (
+              <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+            )}
+          </div>
         );
       default:
         return null;
@@ -166,7 +163,7 @@ const MemoTableRow = memo(function TableRow({
   };
 
   return (
-    <tr className={`qrow ${insertClass}`}
+    <div className={`qrow ${insertClass}`}
       data-id={q.id}
       draggable={!isEd && !isInlineEditing}
       onDragStart={() => handleDragStart(q.id)}
@@ -182,20 +179,10 @@ const MemoTableRow = memo(function TableRow({
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
     >
-      <td style={styles.dragHandleCell}>
-        <span className="drag-handle" style={styles.dragHandle}>
-          <GripVertical size={14} strokeWidth={1.5} />
-        </span>
-      </td>
-      <td style={{ ...styles.chkW, verticalAlign: "middle" }}>
-        <input
-          type="checkbox"
-          className="sr-checkbox"
-          checked={isSel}
-          onChange={() => {}}
-          aria-label={`Select quote: ${q.text.slice(0, 40)}`}
-          tabIndex={-1}
-        />
+      <div className="drag-handle" style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <GripVertical size={14} strokeWidth={1.5} />
+      </div>
+      <div className="checkbox" style={{ ...styles.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
         <div
           className="checkbox-visual"
           style={{ ...styles.check, ...(isSel ? styles.checkOn : {}) }}
@@ -207,11 +194,11 @@ const MemoTableRow = memo(function TableRow({
         >
           {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
         </div>
-      </td>
+      </div>
 
       {columnOrder.map(colKey => renderColumn(colKey))}
 
-      <td className="row-actions" style={styles.rowAct}>
+      <div className="row-actions" style={styles.rowAct}>
         <FavBtn q={q} onFav={actionProps.onFav} />
         <OverflowMenu
           q={q}
@@ -219,11 +206,10 @@ const MemoTableRow = memo(function TableRow({
           isOpen={isMenuOpen}
           onToggle={() => setOpenMenuId(prev => prev === q.id ? null : q.id)}
         />
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }, (prev, next) => {
-  // Custom comparator: only re-render when this specific row's data changes.
   if (prev.q !== next.q) return false;
   if (prev.isSel !== next.isSel) return false;
   if (prev.isEd !== next.isEd) return false;
@@ -326,111 +312,97 @@ export default function TableView({
   };
 
   const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
-  const COL_LABELS = { content: "Content", source: "Source", category: "Category" };
 
   return (
-    <table style={styles.semanticTable} role="grid">
+    <div style={{ overflowX: "visible" }}>
       {filtered.length > 0 && (
-        <thead>
-          <tr style={styles.tHead}>
-            <th style={styles.dragHandleHeader} />
-            <th className="ui-tip ui-tip-below" data-tip="Select all" style={{ ...styles.chkW, verticalAlign: "middle" }}>
-              <input
-                type="checkbox"
-                className="sr-checkbox"
-                checked={allSelected}
-                onChange={selAll}
-                aria-label="Select all quotes"
-                tabIndex={-1}
-              />
-              <div
-                className="checkbox-visual"
-                style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}
-                onClick={(e) => { e.currentTarget.blur(); selAll(); }}
-                role="checkbox"
-                aria-checked={allSelected}
-                tabIndex={0}
-                onKeyDown={e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); selAll(); } }}
-              >
-                {allSelected && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
-              </div>
-            </th>
-            {columnOrder.map(colKey => (
-              <th
-                key={colKey}
-                className="col-drag-header"
-                style={{
-                  textAlign: "left",
-                  ...(colKey === "source" ? COL_WIDTHS.source : colKey === "category" ? COL_WIDTHS.category : {}),
-                  opacity: dragColId === colKey ? 0.4 : 1,
-                  outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
-                  outlineOffset: 2,
-                  borderRadius: 4,
-                }}
-                draggable
-                onDragStart={e => handleColDragStart(e, colKey)}
-                onDragOver={e => handleColDragOver(e, colKey)}
-                onDrop={e => handleColDrop(e, colKey)}
-                onDragEnd={handleColDragEnd}
-              >
-                {COL_LABELS[colKey]}
-              </th>
-            ))}
-            <th style={{ width: 68 }} />
-          </tr>
-        </thead>
+        <div style={styles.tHead}>
+          <div style={{ width: 20, flexShrink: 0 }} />
+          <div className="ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
+            <div
+              className="checkbox-visual"
+              style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}
+              onClick={(e) => { e.currentTarget.blur(); selAll(); }}
+              role="checkbox"
+              aria-checked={allSelected}
+              tabIndex={0}
+              onKeyDown={e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); selAll(); } }}
+            >
+              {allSelected && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+            </div>
+          </div>
+          {columnOrder.map(colKey => (
+            <div
+              key={colKey}
+              className="col-drag-header"
+              style={{
+                ...COL_CONFIG[colKey].style,
+                opacity: dragColId === colKey ? 0.4 : 1,
+                outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
+                outlineOffset: 2,
+                borderRadius: 4,
+              }}
+              draggable
+              onDragStart={e => handleColDragStart(e, colKey)}
+              onDragOver={e => handleColDragOver(e, colKey)}
+              onDrop={e => handleColDrop(e, colKey)}
+              onDragEnd={handleColDragEnd}
+            >
+              {COL_CONFIG[colKey].label}
+            </div>
+          ))}
+          <div style={{ flex: "0 0 68px" }} />
+        </div>
       )}
 
-      <tbody>
-        {filtered.map(q => {
-          const isSel = selected.has(q.id);
-          const isEd = editingId === q.id;
-          const needsAtt = q.confidence === "low" || q.category === "Unknown";
-          const isInlineEditing = inlineEdit?.id === q.id;
-          const inlineEditField = isInlineEditing ? inlineEdit.field : null;
-          const isDragging = dragId === q.id;
-          const isDeleting = deletingId === q.id;
-          const isSavedPulse = savedPulse?.id === q.id;
-          const savedPulseField = isSavedPulse ? savedPulse.field : null;
-          const isMenuOpen = openMenuId === q.id;
-          const insertClass = dragInsert?.id === q.id
-            ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
-            : "";
-          return (
-            <MemoTableRow
-              key={q.id}
-              q={q}
-              isSel={isSel}
-              isEd={isEd}
-              needsAtt={needsAtt}
-              sortBy={sortBy}
-              isMobile={isMobile}
-              isInlineEditing={isInlineEditing}
-              inlineEditField={inlineEditField}
-              isDragging={isDragging}
-              isDeleting={isDeleting}
-              isSavedPulse={isSavedPulse}
-              savedPulseField={savedPulseField}
-              isMenuOpen={isMenuOpen}
-              insertClass={insertClass}
-              columnOrder={columnOrder}
-              compact={compact}
-              allCats={allCats}
-              customCats={customCats}
-              actionProps={actionProps}
-              toggleSel={toggleSel}
-              setEditingId={setEditingId}
-              setInlineEdit={setInlineEdit}
-              saveEdit={saveEdit}
-              saveInlineField={saveInlineField}
-              handleDragStart={handleDragStart}
-              handleDragOver={handleDragOver}
-              handleDragEnd={handleDragEnd}
-              setOpenMenuId={setOpenMenuId}
-            />
-          );
-        })}
-      </tbody>
-    </table>
+      {filtered.map(q => {
+        const isSel = selected.has(q.id);
+        const isEd = editingId === q.id;
+        const needsAtt = q.confidence === "low" || q.category === "Unknown";
+        const isInlineEditing = inlineEdit?.id === q.id;
+        const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+        const isDragging = dragId === q.id;
+        const isDeleting = deletingId === q.id;
+        const isSavedPulse = savedPulse?.id === q.id;
+        const savedPulseField = isSavedPulse ? savedPulse.field : null;
+        const isMenuOpen = openMenuId === q.id;
+        const insertClass = dragInsert?.id === q.id
+          ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
+          : "";
+        return (
+          <MemoTableRow
+            key={q.id}
+            q={q}
+            isSel={isSel}
+            isEd={isEd}
+            needsAtt={needsAtt}
+            sortBy={sortBy}
+            isMobile={isMobile}
+            isInlineEditing={isInlineEditing}
+            inlineEditField={inlineEditField}
+            isDragging={isDragging}
+            isDeleting={isDeleting}
+            isSavedPulse={isSavedPulse}
+            savedPulseField={savedPulseField}
+            isMenuOpen={isMenuOpen}
+            insertClass={insertClass}
+            columnOrder={columnOrder}
+            compact={compact}
+            allCats={allCats}
+            customCats={customCats}
+            actionProps={actionProps}
+            toggleSel={toggleSel}
+            setEditingId={setEditingId}
+            setInlineEdit={setInlineEdit}
+            saveEdit={saveEdit}
+            saveInlineField={saveInlineField}
+            handleDragStart={handleDragStart}
+            handleDragOver={handleDragOver}
+            handleDragEnd={handleDragEnd}
+            setOpenMenuId={setOpenMenuId}
+          />
+        );
+      })}
+    </div>
   );
 }

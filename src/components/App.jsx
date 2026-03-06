@@ -709,8 +709,7 @@ export default function Commonplace() {
 
           {/* Main content area with optional sidebar */}
           <div style={{ display: "flex", gap: 0 }}>
-            {collections.length > 0 && (
-              <CollectionsSidebar
+            <CollectionsSidebar
                 collections={collections}
                 activeCollectionId={activeCollectionId}
                 setActiveCollectionId={setActiveCollectionId}
@@ -721,8 +720,7 @@ export default function Commonplace() {
                 totalQuotes={quotes.length}
                 collapsed={sidebarCollapsed}
                 setCollapsed={setSidebarCollapsed}
-              />
-            )}
+            />
             <div style={{ flex: 1, minWidth: 0 }}>
 
           {/* TABLE VIEW */}

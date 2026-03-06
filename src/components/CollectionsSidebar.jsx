@@ -279,9 +279,9 @@ export default function CollectionsSidebar({
   if (collapsed) {
     return (
       <div style={{
-        width: 40, flexShrink: 0, borderRight: "1px solid var(--cp-border)",
+        width: 48, flexShrink: 0, paddingRight: 8,
         display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
-        alignSelf: "flex-start",
+        position: "sticky", top: 0, alignSelf: "flex-start",
       }}>
         <button
           onClick={() => setCollapsed(false)}
@@ -317,13 +317,13 @@ export default function CollectionsSidebar({
 
   return (
     <div style={{
-      width: 220, flexShrink: 0, borderRight: "1px solid var(--cp-border)",
+      width: 220, flexShrink: 0, paddingRight: 16,
       display: "flex", flexDirection: "column",
       fontFamily: "'DM Sans',-apple-system,sans-serif",
       animation: "slideD .15s ease",
       overflowX: "hidden",
       overflowY: "hidden",
-      alignSelf: "flex-start",
+      position: "sticky", top: 0, alignSelf: "flex-start",
     }}>
       {/* Header */}
       <div style={{

@@ -12,6 +12,7 @@ export const baseCSS = `
     --cp-shadow-card:0 2px 16px rgba(26,24,20,0.06);--cp-shadow-md:0 4px 16px rgba(0,0,0,.1);
     --cp-overlay:rgba(0,0,0,0.4);--cp-toast-bg:#37352F;--cp-toggle-off:#E0DCD4;
     --cp-mini-bg:rgba(250,248,244,0.95);
+    --cp-accent:#3C5775;
   }
   html.dark{
     --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
@@ -21,6 +22,7 @@ export const baseCSS = `
     --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
     --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
     --cp-mini-bg:rgba(26,26,26,0.95);
+    --cp-accent:#90B4D4;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text)}

@@ -21,9 +21,14 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
   }
 
-  const { url } = req.body || {};
+  const { url, extractMode = 'all' } = req.body || {};
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ error: 'URL is required' });
+  }
+
+  const validModes = ['all', 'quotes', 'main', 'headings'];
+  if (!validModes.includes(extractMode)) {
+    return res.status(400).json({ error: 'Invalid extractMode. Use: all, quotes, main, headings' });
   }
 
   // Validate URL
@@ -66,24 +71,26 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Page content is too large' });
     }
 
-    // Extract text from HTML by stripping tags
+    // Extract text from HTML based on extractMode
     let extracted;
     if (contentType.includes('text/html')) {
-      extracted = htmlToText(text);
+      extracted = extractByMode(text, extractMode);
     } else {
       extracted = text;
     }
 
     // Split into lines, clean up
+    const minLen = extractMode === 'headings' ? 2 : 5;
     const lines = extracted
       .split('\n')
       .map(l => l.trim())
-      .filter(l => l.length > 5 && l.length < 2000);
+      .filter(l => l.length > minLen && l.length < 2000);
 
     return res.status(200).json({
       lines: lines.slice(0, 500), // cap at 500 lines
       total: lines.length,
       title: extractTitle(text, contentType),
+      extractMode,
     });
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -92,6 +99,122 @@ export default async function handler(req, res) {
     console.error('fetch-url error:', err?.message || 'unknown');
     return res.status(500).json({ error: 'Failed to fetch URL' });
   }
+}
+
+function extractByMode(html, mode) {
+  switch (mode) {
+    case 'quotes':
+      return extractQuotes(html);
+    case 'main':
+      return extractMainContent(html);
+    case 'headings':
+      return extractHeadings(html);
+    default:
+      return htmlToText(html);
+  }
+}
+
+function extractQuotes(html) {
+  const quotes = [];
+
+  // Extract <blockquote> content
+  const bqMatches = html.matchAll(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi);
+  for (const m of bqMatches) {
+    const text = stripTags(m[1]).trim();
+    if (text.length > 5) quotes.push(text);
+  }
+
+  // Extract <q> tag content
+  const qMatches = html.matchAll(/<q[^>]*>([\s\S]*?)<\/q>/gi);
+  for (const m of qMatches) {
+    const text = stripTags(m[1]).trim();
+    if (text.length > 5) quotes.push(text);
+  }
+
+  // Extract text in quotation marks from paragraphs (curly and straight quotes)
+  const body = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '');
+  const quotePatterns = [
+    /\u201C([^\u201D]{10,500})\u201D/g,  // curly double quotes
+    /\u2018([^\u2019]{10,500})\u2019/g,  // curly single quotes
+    /"([^"]{10,500})"/g,                  // straight double quotes
+  ];
+  for (const pat of quotePatterns) {
+    const matches = stripTags(body).matchAll(pat);
+    for (const m of matches) {
+      const text = m[1].trim();
+      if (text.length > 10 && !quotes.includes(text)) quotes.push(text);
+    }
+  }
+
+  return quotes.join('\n');
+}
+
+function extractMainContent(html) {
+  // Remove non-content elements
+  let t = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    .replace(/<header[\s\S]*?<\/header>/gi, '')
+    .replace(/<aside[\s\S]*?<\/aside>/gi, '')
+    .replace(/<form[\s\S]*?<\/form>/gi, '');
+
+  // Try to find <article> or <main> content first
+  const articleMatch = t.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
+    || t.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+
+  const source = articleMatch ? articleMatch[1] : t;
+
+  // Extract only paragraph and heading content
+  const blocks = [];
+  const blockPattern = /<(p|h[1-6]|li|blockquote)[^>]*>([\s\S]*?)<\/\1>/gi;
+  let match;
+  while ((match = blockPattern.exec(source)) !== null) {
+    const text = stripTags(match[2]).trim();
+    if (text.length > 20) blocks.push(text);
+  }
+
+  // If we found meaningful blocks, use them; otherwise fall back to full text
+  if (blocks.length > 3) return blocks.join('\n');
+  return htmlToText(html);
+}
+
+function extractHeadings(html) {
+  const headings = [];
+  const hPattern = /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi;
+  let match;
+  while ((match = hPattern.exec(html)) !== null) {
+    const level = match[1];
+    const text = stripTags(match[2]).trim();
+    if (text.length > 0) {
+      headings.push(`${'#'.repeat(Number(level))} ${text}`);
+    }
+  }
+  return headings.join('\n');
+}
+
+function stripTags(html) {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&mdash;/g, '\u2014')
+    .replace(/&ndash;/g, '\u2013')
+    .replace(/&hellip;/g, '\u2026')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#\d+;/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
 }
 
 function htmlToText(html) {

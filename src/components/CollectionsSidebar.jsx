@@ -37,8 +37,8 @@ function getIcon(iconName) {
   return ICON_MAP[iconName] || FolderOpen;
 }
 
-// ── Icon picker popup ──
-function IconPicker({ current, onSelect, onClose }) {
+// ── Icon picker popup — positioned above the icon ──
+function IconPicker({ anchorRef, current, onSelect, onClose }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -49,9 +49,20 @@ function IconPicker({ current, onSelect, onClose }) {
     return () => { document.removeEventListener("mousedown", h); document.removeEventListener("keydown", k); };
   }, [onClose]);
 
+  // Position above the anchor icon using a portal-like fixed position
+  const [pos, setPos] = useState(null);
+  useEffect(() => {
+    if (anchorRef?.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPos({ left: rect.left, bottom: window.innerHeight - rect.top + 6 });
+    }
+  }, [anchorRef]);
+
+  if (!pos) return null;
+
   return (
     <div ref={ref} style={{
-      position: "absolute", left: "100%", top: 0, marginLeft: 4, zIndex: 200,
+      position: "fixed", left: pos.left, bottom: pos.bottom, zIndex: 200,
       background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
       boxShadow: "var(--cp-shadow-md)", padding: 8,
       display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
@@ -74,6 +85,124 @@ function IconPicker({ current, onSelect, onClose }) {
           <Component size={16} strokeWidth={1.5} />
         </button>
       ))}
+    </div>
+  );
+}
+
+// ── Single collection row ──
+function CollectionRow({
+  c, isActive, isEditing, editName, setEditName, handleRename, setEditingId,
+  confirmDeleteId, setConfirmDeleteId, deleteCollection, setActiveCollectionId,
+  iconPickerId, setIconPickerId, updateCollectionIcon, quoteCounts,
+}) {
+  const count = quoteCounts[c.id] || 0;
+  const Icon = getIcon(c.icon);
+  const iconRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
+
+  if (isEditing) {
+    return (
+      <div style={{ display: "flex", gap: 4, padding: "4px 8px", alignItems: "center" }}>
+        <input
+          value={editName}
+          onChange={e => setEditName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") handleRename(c.id); if (e.key === "Escape") setEditingId(null); }}
+          style={{
+            flex: 1, padding: "4px 6px", fontSize: 12, fontFamily: "inherit",
+            border: `1px solid ${CP_ACCENT}`, borderRadius: 4, background: "var(--cp-bg-card)",
+            color: "var(--cp-text)",
+          }}
+          autoFocus
+        />
+        <button onClick={() => handleRename(c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#16A34A", padding: 2 }}>
+          <Check size={14} strokeWidth={2} />
+        </button>
+        <button onClick={() => setEditingId(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}>
+          <X size={14} strokeWidth={2} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "7px 8px", borderRadius: 6, cursor: "pointer",
+        background: isActive ? "var(--cp-bg-hover)" : "transparent",
+        transition: "background .12s",
+        position: "relative",
+      }}
+      onClick={() => setActiveCollectionId(c.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); if (confirmDeleteId === c.id) setConfirmDeleteId(null); }}
+    >
+      <span
+        ref={iconRef}
+        style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
+        onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
+        title="Change icon"
+      >
+        <Icon size={14} strokeWidth={1.5} color={isActive ? CP_ACCENT : "var(--cp-text-muted)"} />
+      </span>
+      {iconPickerId === c.id && (
+        <IconPicker
+          anchorRef={iconRef}
+          current={c.icon || "FolderOpen"}
+          onSelect={iconName => updateCollectionIcon(c.id, iconName)}
+          onClose={() => setIconPickerId(null)}
+        />
+      )}
+      <span style={{
+        flex: 1, fontSize: 13, color: isActive ? CP_ACCENT : "var(--cp-text-secondary)",
+        fontWeight: isActive ? 600 : 400,
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}>
+        {c.name}
+      </span>
+      {/* Count — always in the same spot */}
+      <span style={{
+        fontSize: 11, color: "var(--cp-text-faint)", flexShrink: 0, minWidth: 20, textAlign: "right",
+        opacity: hovered ? 0 : 1, transition: "opacity .1s",
+      }}>
+        {count}
+      </span>
+      {/* Edit/delete overlay — appears on hover in same position as count */}
+      <div style={{
+        position: "absolute", right: 6, top: 0, bottom: 0,
+        display: "flex", alignItems: "center", gap: 2,
+        opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none",
+        transition: "opacity .1s",
+      }}>
+        {confirmDeleteId === c.id ? (
+          <button
+            onClick={e => { e.stopPropagation(); deleteCollection(c.id); setConfirmDeleteId(null); }}
+            style={{
+              background: "none", border: "none", cursor: "pointer", color: "#DC2626",
+              padding: "2px 4px", fontSize: 11, fontWeight: 600, fontFamily: "inherit",
+            }}
+          >
+            Confirm?
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={e => { e.stopPropagation(); setEditingId(c.id); setEditName(c.name); }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}
+              title="Rename"
+            >
+              <Pencil size={12} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}
+              title="Delete"
+            >
+              <Trash2 size={12} strokeWidth={1.5} />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -174,7 +303,8 @@ export default function CollectionsSidebar({
       display: "flex", flexDirection: "column",
       fontFamily: "'DM Sans',-apple-system,sans-serif",
       animation: "slideD .15s ease",
-      overflow: "visible",
+      overflowX: "hidden",
+      overflowY: "hidden",
       alignSelf: "flex-start",
     }}>
       {/* Header */}
@@ -251,104 +381,37 @@ export default function CollectionsSidebar({
         >
           <Library size={15} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>All Quotes</span>
-          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 16, textAlign: "right" }}>{totalQuotes}</span>
+          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 20, textAlign: "right" }}>{totalQuotes}</span>
         </button>
       </div>
 
-      {/* Collections list */}
-      <div style={{ overflowY: "auto", padding: "0 8px 4px" }}>
-        {collections.map(c => {
-          const isActive = activeCollectionId === c.id;
-          const isEditing = editingId === c.id;
-          const count = quoteCounts[c.id] || 0;
-          const Icon = getIcon(c.icon);
-
-          if (isEditing) {
-            return (
-              <div key={c.id} style={{ display: "flex", gap: 4, padding: "4px 0", alignItems: "center" }}>
-                <input
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") handleRename(c.id); if (e.key === "Escape") setEditingId(null); }}
-                  style={{
-                    flex: 1, padding: "4px 6px", fontSize: 12, fontFamily: "inherit",
-                    border: `1px solid ${CP_ACCENT}`, borderRadius: 4, background: "var(--cp-bg-card)",
-                    color: "var(--cp-text)",
-                  }}
-                  autoFocus
-                />
-                <button onClick={() => handleRename(c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#16A34A", padding: 2 }}>
-                  <Check size={14} strokeWidth={2} />
-                </button>
-                <button onClick={() => setEditingId(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}>
-                  <X size={14} strokeWidth={2} />
-                </button>
-              </div>
-            );
-          }
-
-          return (
-            <div
-              key={c.id}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 8px", borderRadius: 6, cursor: "pointer",
-                background: isActive ? "var(--cp-bg-hover)" : "transparent",
-                transition: "background .12s",
-                position: "relative",
-              }}
-              onClick={() => setActiveCollectionId(c.id)}
-            >
-              <span
-                style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
-                onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
-                title="Change icon"
-              >
-                <Icon size={14} strokeWidth={1.5} color={isActive ? CP_ACCENT : "var(--cp-text-muted)"} />
-              </span>
-              {iconPickerId === c.id && (
-                <IconPicker
-                  current={c.icon || "FolderOpen"}
-                  onSelect={iconName => updateCollectionIcon(c.id, iconName)}
-                  onClose={() => setIconPickerId(null)}
-                />
-              )}
-              <span style={{
-                flex: 1, fontSize: 13, color: isActive ? CP_ACCENT : "var(--cp-text-secondary)",
-                fontWeight: isActive ? 600 : 400,
-                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              }}>
-                {c.name}
-              </span>
-              <span style={{ fontSize: 11, color: "var(--cp-text-faint)", flexShrink: 0, minWidth: 16, textAlign: "right" }}>{count}</span>
-              <button
-                onClick={e => { e.stopPropagation(); setEditingId(c.id); setEditName(c.name); }}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-faint)", padding: 2, opacity: 0, transition: "opacity .12s" }}
-                className="coll-edit-btn"
-                title="Rename"
-              >
-                <Pencil size={12} strokeWidth={1.5} />
-              </button>
-              {confirmDeleteId === c.id ? (
-                <button
-                  onClick={e => { e.stopPropagation(); deleteCollection(c.id); setConfirmDeleteId(null); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", padding: 2, fontSize: 11, fontWeight: 600, fontFamily: "inherit" }}
-                >
-                  Confirm
-                </button>
-              ) : (
-                <button
-                  onClick={e => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-faint)", padding: 2, opacity: 0, transition: "opacity .12s" }}
-                  className="coll-edit-btn"
-                  title="Delete"
-                >
-                  <Trash2 size={12} strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
-          );
-        })}
+      {/* Collections list — only scroll vertically when many items */}
+      <div style={{
+        padding: "0 8px 8px",
+        overflowX: "hidden",
+        overflowY: collections.length > 12 ? "auto" : "hidden",
+        maxHeight: collections.length > 12 ? 420 : "none",
+      }}>
+        {collections.map(c => (
+          <CollectionRow
+            key={c.id}
+            c={c}
+            isActive={activeCollectionId === c.id}
+            isEditing={editingId === c.id}
+            editName={editName}
+            setEditName={setEditName}
+            handleRename={handleRename}
+            setEditingId={setEditingId}
+            confirmDeleteId={confirmDeleteId}
+            setConfirmDeleteId={setConfirmDeleteId}
+            deleteCollection={deleteCollection}
+            setActiveCollectionId={setActiveCollectionId}
+            iconPickerId={iconPickerId}
+            setIconPickerId={setIconPickerId}
+            updateCollectionIcon={updateCollectionIcon}
+            quoteCounts={quoteCounts}
+          />
+        ))}
       </div>
     </div>
   );

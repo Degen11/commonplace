@@ -105,9 +105,11 @@ export default function useSync({ onCloudData, onSyncError }) {
         setLastSynced(new Date());
         consecutiveFailures.current = 0;
       } else {
-        throw new Error(`Sync failed (${r.status})`);
+        const body = await r.text().catch(() => "");
+        throw new Error(`Sync failed (${r.status}): ${body}`);
       }
     } catch (err) {
+      console.error("[useSync] push error:", err?.message || err);
       if (!mountedRef.current) return;
 
       // Retry with delay — re-reads latest data from refs on next attempt

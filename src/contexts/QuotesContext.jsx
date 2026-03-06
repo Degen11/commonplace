@@ -4,7 +4,6 @@ import {
 } from "../data/constants";
 import { useToastContext } from "./ToastContext";
 import useSync from "../hooks/useSync";
-import { mergeQuotes } from "../utils/mergeQuotes";
 
 const QuotesContext = createContext(null);
 
@@ -138,41 +137,19 @@ export function QuotesProvider({ children }) {
 
   // ── Cloud sync ──
   const handleCloudData = useCallback((cloudQuotes, cloudCats, cloudCollections) => {
-    if (!initialLoadDone.current) {
-      // First load — no local data, use cloud data directly
-      initialLoadDone.current = true;
-      setQuotes(cloudQuotes);
-      setCustomCats(cloudCats);
-      if (cloudCollections?.length > 0) setCollections(cloudCollections);
-    } else {
-      // Returning user with local data — merge cloud data with local
-      if (cloudQuotes?.length > 0) {
-        setQuotes(prev => {
-          const merged = mergeQuotes(prev, cloudQuotes, deletedIdsRef.current);
-          // Only update if merge actually added/removed quotes
-          if (merged.length === prev.length) {
-            const prevIds = new Set(prev.map(q => q.id));
-            if (merged.every(q => prevIds.has(q.id))) return prev;
-          }
-          return merged;
-        });
-      }
-      if (cloudCats?.length > 0) {
-        setCustomCats(prev => {
-          const catSet = new Set(prev);
-          const newCats = cloudCats.filter(c => !catSet.has(c));
-          return newCats.length > 0 ? [...prev, ...newCats] : prev;
-        });
-      }
-      if (cloudCollections?.length > 0) {
-        setCollections(prev => {
-          const existingIds = new Set(prev.map(c => c.id));
-          const newCols = cloudCollections.filter(c => !existingIds.has(c.id));
-          return newCols.length > 0 ? [...prev, ...newCols] : prev;
-        });
-      }
-    }
-    // localStorage cache is handled by the existing debounced persistence effects
+    // Only use cloud data if localStorage was empty (cloud = backup)
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
+
+    setQuotes(cloudQuotes);
+    setCustomCats(cloudCats);
+    if (cloudCollections?.length > 0) setCollections(cloudCollections);
+    // Also write to localStorage as cache
+    try {
+      localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
+      localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
+      if (cloudCollections?.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections));
+    } catch(e) { /* ignore */ }
   }, []);
 
   const handleSyncError = useCallback((message) => {
@@ -289,8 +266,7 @@ export function QuotesProvider({ children }) {
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
     }
 
-    // 2. If quotes were loaded synchronously from localStorage, mark ready and
-    //    do a background pull to merge any changes from other devices.
+    // 2. If quotes were loaded synchronously from localStorage, just mark ready
     try {
       const saved = localStorage.getItem(LS_QUOTES);
       if (saved) {
@@ -298,7 +274,6 @@ export function QuotesProvider({ children }) {
         if (q?.length > 0) {
           initialLoadDone.current = true;
           markReady();
-          pull(); // background merge — handleCloudData will merge, not replace
           return;
         }
       }

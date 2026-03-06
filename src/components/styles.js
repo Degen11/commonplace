@@ -363,6 +363,7 @@ export const styles = {
   attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(234,88,12,0.08)",border:"1px solid rgba(234,88,12,0.20)",borderRadius:8,margin:"10px 0",fontSize:13,color:"#EA580C",animation:"slideD .2s ease",gap:8},
   attentionCount:{fontWeight:700,fontSize:14,color:"#EA580C"},
   attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#EA580C",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  attentionDismiss:{background:"none",border:"none",color:"#EA580C",cursor:"pointer",fontSize:18,lineHeight:1,padding:"4px 6px",borderRadius:4,opacity:0.6,transition:"opacity .12s"},
 
   shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.16)",borderRadius:8,margin:"12px 0",fontSize:13,color:"#2563EB",animation:"slideD .2s ease",flexWrap:"wrap",gap:8},
   shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"var(--cp-bg-card)",color:"#2563EB",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},

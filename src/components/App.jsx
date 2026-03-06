@@ -129,6 +129,7 @@ export default function Commonplace() {
   const [inputTab, setInputTab]               = useState("paste");
   const [isDragOver, setIsDragOver]           = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
+  const [dismissedAtCount, setDismissedAtCount] = useState(null);
 
   const addMoreRef          = useRef(null);
   const exportRef           = useRef(null);
@@ -637,13 +638,16 @@ export default function Commonplace() {
               </div>
               <button style={{ ...styles.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
             </div>
-          ) : sortBy !== "confidence" && (
+          ) : sortBy !== "confidence" && (dismissedAtCount === null || unknownCount > dismissedAtCount) && (
             <div style={styles.attentionBar}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={styles.attentionCount}>{unknownCount}</span>
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
-              <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
+                <button className="ui-tip" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
+              </div>
             </div>
           ))}
 

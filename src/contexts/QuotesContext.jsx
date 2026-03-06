@@ -137,19 +137,44 @@ export function QuotesProvider({ children }) {
 
   // ── Cloud sync ──
   const handleCloudData = useCallback((cloudQuotes, cloudCats, cloudCollections) => {
-    // Only use cloud data if localStorage was empty (cloud = backup)
-    if (initialLoadDone.current) return;
-    initialLoadDone.current = true;
+    if (!initialLoadDone.current) {
+      // First load — no local data, use cloud data directly
+      initialLoadDone.current = true;
+      setQuotes(cloudQuotes);
+      setCustomCats(cloudCats);
+      if (cloudCollections?.length > 0) setCollections(cloudCollections);
+      try {
+        localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
+        localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
+        if (cloudCollections?.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections));
+      } catch(e) { /* ignore */ }
+      return;
+    }
 
-    setQuotes(cloudQuotes);
-    setCustomCats(cloudCats);
-    if (cloudCollections?.length > 0) setCollections(cloudCollections);
-    // Also write to localStorage as cache
-    try {
-      localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
-      localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
-      if (cloudCollections?.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections));
-    } catch(e) { /* ignore */ }
+    // Returning user — append any cloud quotes missing locally.
+    // Uses ID set check + appends to preserve local order (avoids triggering
+    // a state update and re-push when nothing is new).
+    if (cloudQuotes?.length > 0) {
+      setQuotes(prev => {
+        const localIds = new Set(prev.map(q => q.id));
+        const missing = cloudQuotes.filter(q => !localIds.has(q.id));
+        return missing.length > 0 ? [...prev, ...missing] : prev;
+      });
+    }
+    if (cloudCats?.length > 0) {
+      setCustomCats(prev => {
+        const catSet = new Set(prev);
+        const newCats = cloudCats.filter(c => !catSet.has(c));
+        return newCats.length > 0 ? [...prev, ...newCats] : prev;
+      });
+    }
+    if (cloudCollections?.length > 0) {
+      setCollections(prev => {
+        const existingIds = new Set(prev.map(c => c.id));
+        const newCols = cloudCollections.filter(c => !existingIds.has(c.id));
+        return newCols.length > 0 ? [...prev, ...newCols] : prev;
+      });
+    }
   }, []);
 
   const handleSyncError = useCallback((message) => {
@@ -266,7 +291,8 @@ export function QuotesProvider({ children }) {
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
     }
 
-    // 2. If quotes were loaded synchronously from localStorage, just mark ready
+    // 2. If quotes were loaded synchronously from localStorage, mark ready
+    //    and background-pull to pick up any quotes missing locally.
     try {
       const saved = localStorage.getItem(LS_QUOTES);
       if (saved) {
@@ -274,6 +300,7 @@ export function QuotesProvider({ children }) {
         if (q?.length > 0) {
           initialLoadDone.current = true;
           markReady();
+          pull();
           return;
         }
       }

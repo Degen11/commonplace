@@ -281,7 +281,7 @@ export default function CollectionsSidebar({
       <div style={{
         width: 48, flexShrink: 0, paddingRight: 8,
         display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
-        position: "sticky", top: 0, alignSelf: "flex-start",
+        position: "sticky", top: 44, alignSelf: "flex-start",
       }}>
         <button
           onClick={() => setCollapsed(false)}
@@ -323,7 +323,7 @@ export default function CollectionsSidebar({
       animation: "slideD .15s ease",
       overflowX: "hidden",
       overflowY: "hidden",
-      position: "sticky", top: 0, alignSelf: "flex-start",
+      position: "sticky", top: 44, alignSelf: "flex-start",
     }}>
       {/* Header */}
       <div style={{

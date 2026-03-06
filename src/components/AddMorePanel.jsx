@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { styles } from "./styles";
-import { Pencil, Bot, FileText, FolderOpen, CheckCircle } from "lucide-react";
+import { Pencil, Bot, FileText, FolderOpen, CheckCircle, Link } from "lucide-react";
 
 export default function AddMorePanel({
   addMoreInput, setAddMoreInput,
@@ -19,6 +19,9 @@ export default function AddMorePanel({
   const [quickCategory, setQuickCategory] = useState("Unknown");
   const [isDragOver, setIsDragOver] = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
+  const [urlInput, setUrlInput] = useState("");
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [urlError, setUrlError] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleQuickAdd = () => {
@@ -46,6 +49,29 @@ export default function AddMorePanel({
     e.target.value = "";
   };
 
+  const handleUrlFetch = async () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) return;
+    setUrlLoading(true);
+    setUrlError(null);
+    try {
+      const res = await fetch("/api/fetch-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
+      if (!data.lines || data.lines.length === 0) throw new Error("No text content found");
+      setAddMoreInput(data.lines.join("\n"));
+      setUrlInput("");
+    } catch (e) {
+      setUrlError(e.message);
+    } finally {
+      setUrlLoading(false);
+    }
+  };
+
   const tabStyle = (active) => ({
     flex: 1, padding: "5px 0", border: "none", borderRadius: 5, fontSize: 12, fontWeight: 500,
     cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
@@ -62,7 +88,7 @@ export default function AddMorePanel({
           <Bot size={13} strokeWidth={1.5} /> Paste & identify
         </button>
         <button style={tabStyle(tab === "import")} onClick={() => setTab("import")}>
-          <FileText size={13} strokeWidth={1.5} /> Import file
+          <FileText size={13} strokeWidth={1.5} /> Import
         </button>
         <button style={tabStyle(tab === "quick")} onClick={() => setTab("quick")}>
           <Pencil size={13} strokeWidth={1.5} /> Quick add
@@ -121,6 +147,32 @@ export default function AddMorePanel({
               </div>
             )}
           </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 0", color: "var(--cp-text-faint)", fontSize: 11 }}>
+            <div style={{ flex: 1, height: 1, background: "var(--cp-border-light)" }} />
+            <span>or from URL</span>
+            <div style={{ flex: 1, height: 1, background: "var(--cp-border-light)" }} />
+          </div>
+
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              type="url"
+              value={urlInput}
+              onChange={e => setUrlInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleUrlFetch(); }}
+              placeholder="https://example.com/quotes"
+              style={{ flex: 1, padding: "7px 10px", borderRadius: 6, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 12, fontFamily: "inherit", outline: "none" }}
+            />
+            <button
+              onClick={handleUrlFetch}
+              disabled={urlLoading || !urlInput.trim()}
+              style={{ padding: "7px 12px", borderRadius: 6, border: "none", background: urlLoading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 12, fontWeight: 600, cursor: urlLoading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+            >
+              {urlLoading ? "..." : "Fetch"}
+            </button>
+          </div>
+          {urlError && <div style={{ marginTop: 6, fontSize: 11, color: "#DC2626" }}>{urlError}</div>}
+
           {addMoreInput.trim() && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
               <span style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>

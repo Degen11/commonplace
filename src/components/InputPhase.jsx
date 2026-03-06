@@ -650,13 +650,6 @@ export default function InputPhase({
               >
                 <Upload size={14} strokeWidth={1.5} /> Import File
               </button>
-              <button
-                className="tab-btn"
-                style={{ ...styles.tabBtn, ...(inputTab === "url" ? styles.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-                onClick={() => setInputTab("url")}
-              >
-                <Download size={14} strokeWidth={1.5} /> From URL
-              </button>
             </div>
 
             {inputTab === "paste" && (
@@ -672,6 +665,7 @@ export default function InputPhase({
             )}
 
             {inputTab === "import" && (
+              <>
               <div
                 className="drop-zone"
                 style={{ ...styles.dropZone, ...(isDragOver ? styles.dropZoneActive : {}) }}
@@ -700,10 +694,15 @@ export default function InputPhase({
                   </div>
                 )}
               </div>
-            )}
 
-            {inputTab === "url" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 24px", color: "var(--cp-text-faint)", fontSize: 12 }}>
+                <div style={{ flex: 1, height: 1, background: "var(--cp-border-light)" }} />
+                <span>or import from URL</span>
+                <div style={{ flex: 1, height: 1, background: "var(--cp-border-light)" }} />
+              </div>
+
               <UrlImportPanel onLoad={(text) => { setRawInput(text); setInputTab("paste"); }} />
+              </>
             )}
 
             <div style={styles.inputFooter}>

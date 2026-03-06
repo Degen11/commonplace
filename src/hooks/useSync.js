@@ -101,17 +101,6 @@ export default function useSync({ onCloudData, onSyncError }) {
       });
       if (!mountedRef.current) return;
       if (r.ok) {
-        const data = await r.json();
-        // Only merge from push response if server has quotes we don't have locally
-        // (e.g. added on another device). Skipping when IDs match prevents a
-        // push → setQuotes → schedulePush → push infinite loop.
-        if (data.quotes?.length > 0) {
-          const localIds = new Set(quotes.map(q => q.id));
-          const hasNewFromServer = data.quotes.some(q => !localIds.has(q.id));
-          if (hasNewFromServer) {
-            onCloudData(data.quotes, latestCustomCats.current, latestCollections.current);
-          }
-        }
         setSyncStatus("synced");
         setLastSynced(new Date());
         consecutiveFailures.current = 0;
@@ -146,7 +135,7 @@ export default function useSync({ onCloudData, onSyncError }) {
         }
       }
     }
-  }, [onSyncError, onCloudData]);
+  }, [onSyncError]);
 
   // ── Debounced push — call this whenever quotes/categories change ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {

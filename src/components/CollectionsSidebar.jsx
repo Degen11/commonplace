@@ -74,10 +74,10 @@ function IconPicker({ anchorRef, current, onSelect, onClose }) {
           onClick={() => { onSelect(name); onClose(); }}
           style={{
             background: current === name ? "var(--cp-bg-hover)" : "transparent",
-            border: current === name ? `1.5px solid ${CP_ACCENT}` : "1.5px solid transparent",
+            border: current === name ? "1.5px solid var(--cp-accent)" : "1.5px solid transparent",
             borderRadius: 6, padding: 6, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: current === name ? CP_ACCENT : "var(--cp-text-muted)",
+            color: current === name ? "var(--cp-accent)" : "var(--cp-text-muted)",
             transition: "all .1s",
           }}
           title={name}
@@ -111,7 +111,7 @@ function CollectionRow({
           onKeyDown={e => { if (e.key === "Enter") handleRename(c.id); if (e.key === "Escape") setEditingId(null); }}
           style={{
             flex: 1, padding: "4px 6px", fontSize: 12, fontFamily: "inherit",
-            border: `1px solid ${CP_ACCENT}`, borderRadius: 4, background: "var(--cp-bg-card)",
+            border: "1px solid var(--cp-accent)", borderRadius: 4, background: "var(--cp-bg-card)",
             color: "var(--cp-text)",
           }}
           autoFocus
@@ -134,7 +134,7 @@ function CollectionRow({
         background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "transparent",
         transition: "background .12s",
         position: "relative",
-        ...(dragOver ? { outline: `2px solid ${CP_ACCENT}`, outlineOffset: -2 } : {}),
+        ...(dragOver ? { outline: "2px solid var(--cp-accent)", outlineOffset: -2 } : {}),
       }}
       onClick={() => setActiveCollectionId(c.id)}
       onMouseEnter={() => setHovered(true)}
@@ -149,7 +149,7 @@ function CollectionRow({
         onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
         title="Change icon"
       >
-        <Icon size={14} strokeWidth={1.5} color={isActive ? CP_ACCENT : "var(--cp-text-muted)"} />
+        <Icon size={14} strokeWidth={1.5} color={isActive ? "var(--cp-accent)" : "var(--cp-text-muted)"} />
       </span>
       {iconPickerId === c.id && (
         <IconPicker
@@ -160,7 +160,7 @@ function CollectionRow({
         />
       )}
       <span style={{
-        flex: 1, fontSize: 13, color: isActive ? CP_ACCENT : "var(--cp-text-secondary)",
+        flex: 1, fontSize: 13, color: isActive ? "var(--cp-accent)" : "var(--cp-text-secondary)",
         fontWeight: isActive ? 600 : 400,
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
@@ -222,9 +222,9 @@ function CollapsedDropTarget({ c, isActive, setActiveCollectionId, onDropQuote, 
       style={{
         background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "none",
         border: "none", cursor: "pointer",
-        color: isActive ? CP_ACCENT : "var(--cp-text-muted)",
+        color: isActive ? "var(--cp-accent)" : "var(--cp-text-muted)",
         padding: 6, borderRadius: 6,
-        ...(dragOver ? { outline: `2px solid ${CP_ACCENT}`, outlineOffset: -2 } : {}),
+        ...(dragOver ? { outline: "2px solid var(--cp-accent)", outlineOffset: -2 } : {}),
       }}
       title={c.name}
       onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
@@ -298,7 +298,7 @@ export default function CollectionsSidebar({
           style={{
             background: activeCollectionId === null ? "var(--cp-bg-hover)" : "none",
             border: "none", cursor: "pointer",
-            color: activeCollectionId === null ? CP_ACCENT : "var(--cp-text-muted)",
+            color: activeCollectionId === null ? "var(--cp-accent)" : "var(--cp-text-muted)",
             padding: 6, borderRadius: 6,
           }}
           title="All quotes"
@@ -330,7 +330,7 @@ export default function CollectionsSidebar({
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "12px 12px 8px",
       }}>
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: CP_ACCENT }}>
+        <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
           Collections
         </span>
         <button
@@ -354,7 +354,7 @@ export default function CollectionsSidebar({
               placeholder="Collection name..."
               style={{
                 flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                border: `1px solid ${CP_ACCENT}`, borderRadius: 4, background: "var(--cp-bg-card)",
+                border: "1px solid var(--cp-accent)", borderRadius: 4, background: "var(--cp-bg-card)",
                 color: "var(--cp-text)",
               }}
             />
@@ -392,7 +392,7 @@ export default function CollectionsSidebar({
             display: "flex", alignItems: "center", gap: 8, width: "100%",
             padding: "8px 8px", border: "none", borderRadius: 6,
             background: activeCollectionId === null ? "var(--cp-bg-hover)" : "transparent",
-            color: activeCollectionId === null ? CP_ACCENT : "var(--cp-text-secondary)",
+            color: activeCollectionId === null ? "var(--cp-accent)" : "var(--cp-text-secondary)",
             cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: activeCollectionId === null ? 600 : 400,
             textAlign: "left", transition: "background .12s",
           }}

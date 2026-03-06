@@ -156,7 +156,7 @@ export default async function handler(req, res) {
 
       if (error) throw error;
 
-      return res.status(200).json({ ok: true, count: merged.length, merged: true });
+      return res.status(200).json({ ok: true, count: merged.length, merged: true, quotes: merged });
     } catch (err) {
       console.error('Sync POST error:', err?.message || 'unknown');
       return res.status(500).json({ error: 'Failed to save data' });

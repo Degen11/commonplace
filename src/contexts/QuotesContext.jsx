@@ -4,6 +4,7 @@ import {
 } from "../data/constants";
 import { useToastContext } from "./ToastContext";
 import useSync from "../hooks/useSync";
+import { mergeQuotes } from "../utils/mergeQuotes";
 
 const QuotesContext = createContext(null);
 
@@ -113,13 +114,12 @@ export function QuotesProvider({ children }) {
   const initialLoadDone = useRef(false);
 
   // Track deleted quote IDs as tombstones for sync merge
-  const deletedIdsRef = useRef(() => {
+  const [initDeletedIds] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_DELETED_IDS);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Prune expired tombstones
           const now = Date.now();
           return parsed.filter(e => e && now - e.deletedAt < TOMBSTONE_TTL);
         }
@@ -127,10 +127,7 @@ export function QuotesProvider({ children }) {
     } catch { /* ignore */ }
     return [];
   });
-  // Resolve initializer if it's a function (lazy init pattern with useRef)
-  if (typeof deletedIdsRef.current === "function") {
-    deletedIdsRef.current = deletedIdsRef.current();
-  }
+  const deletedIdsRef = useRef(initDeletedIds);
 
   const trackDeletion = useCallback((quoteIds) => {
     const now = Date.now();
@@ -141,18 +138,51 @@ export function QuotesProvider({ children }) {
 
   // ── Cloud sync ──
   const handleCloudData = useCallback((cloudQuotes, cloudCats, cloudCollections) => {
-    // Only use cloud data if localStorage was empty (cloud = backup)
-    if (initialLoadDone.current) return; // Already loaded from localStorage
-    initialLoadDone.current = true;
-
-    setQuotes(cloudQuotes);
-    setCustomCats(cloudCats);
-    if (cloudCollections?.length > 0) setCollections(cloudCollections);
-    // Also write to localStorage as cache
+    if (!initialLoadDone.current) {
+      // First load — no local data, use cloud data directly
+      initialLoadDone.current = true;
+      setQuotes(cloudQuotes);
+      setCustomCats(cloudCats);
+      if (cloudCollections?.length > 0) setCollections(cloudCollections);
+    } else {
+      // Returning user with local data — merge cloud data with local
+      if (cloudQuotes?.length > 0) {
+        setQuotes(prev => {
+          const merged = mergeQuotes(prev, cloudQuotes, deletedIdsRef.current);
+          // Only update if merge produced changes
+          if (merged.length === prev.length && merged.every((q, i) => q.id === prev[i]?.id)) return prev;
+          return merged;
+        });
+      }
+      if (cloudCats?.length > 0) {
+        setCustomCats(prev => {
+          const catSet = new Set(prev);
+          const newCats = cloudCats.filter(c => !catSet.has(c));
+          return newCats.length > 0 ? [...prev, ...newCats] : prev;
+        });
+      }
+      if (cloudCollections?.length > 0) {
+        setCollections(prev => {
+          const existingIds = new Set(prev.map(c => c.id));
+          const newCols = cloudCollections.filter(c => !existingIds.has(c.id));
+          return newCols.length > 0 ? [...prev, ...newCols] : prev;
+        });
+      }
+    }
+    // Write merged state to localStorage as cache
     try {
-      localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
-      localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
-      if (cloudCollections?.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections));
+      setQuotes(current => {
+        localStorage.setItem(LS_QUOTES, JSON.stringify(current));
+        return current;
+      });
+      setCustomCats(current => {
+        localStorage.setItem(LS_CATS, JSON.stringify(current));
+        return current;
+      });
+      setCollections(current => {
+        if (current.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(current));
+        return current;
+      });
     } catch(e) { /* ignore */ }
   }, []);
 
@@ -270,7 +300,8 @@ export function QuotesProvider({ children }) {
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
     }
 
-    // 2. If quotes were loaded synchronously from localStorage, just mark ready
+    // 2. If quotes were loaded synchronously from localStorage, mark ready and
+    //    do a background pull to merge any changes from other devices.
     try {
       const saved = localStorage.getItem(LS_QUOTES);
       if (saved) {
@@ -278,6 +309,7 @@ export function QuotesProvider({ children }) {
         if (q?.length > 0) {
           initialLoadDone.current = true;
           markReady();
+          pull(); // background merge — handleCloudData will merge, not replace
           return;
         }
       }

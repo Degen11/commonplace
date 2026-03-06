@@ -74,11 +74,22 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('device_data')
         .select('quotes, custom_categories, collections, updated_at')
         .eq('device_id', deviceId)
         .maybeSingle();
+
+      // collections column may not exist yet — retry without it
+      if (error && error.message?.includes('collections')) {
+        const retry = await supabase
+          .from('device_data')
+          .select('quotes, custom_categories, updated_at')
+          .eq('device_id', deviceId)
+          .maybeSingle();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
       if (!data) return res.status(200).json({ quotes: [], customCategories: [], collections: [], updatedAt: null });
@@ -146,14 +157,16 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Too many quotes after merge' });
       }
 
-      const { error } = await supabase
-        .from('device_data')
-        .upsert({
-          device_id: device_id,
-          quotes: merged,
-          custom_categories: cats,
-          collections: validCollections,
-        }, { onConflict: 'device_id' });
+      // Try with collections column; fall back without it if column doesn't exist yet
+      const row = { device_id, quotes: merged, custom_categories: cats, collections: validCollections };
+      let { error } = await supabase.from('device_data').upsert(row, { onConflict: 'device_id' });
+
+      if (error && error.message?.includes('collections')) {
+        // collections column not yet added to table — save without it
+        const { collections: _, ...rowWithout } = row;
+        const retry = await supabase.from('device_data').upsert(rowWithout, { onConflict: 'device_id' });
+        error = retry.error;
+      }
 
       if (error) throw error;
 

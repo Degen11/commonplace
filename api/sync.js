@@ -90,8 +90,9 @@ export default async function handler(req, res) {
         updatedAt: data.updated_at,
       });
     } catch (err) {
-      console.error('Sync GET error:', err?.message || 'unknown');
-      return res.status(500).json({ error: 'Failed to load data' });
+      const detail = err?.message || err?.code || 'unknown';
+      console.error('Sync GET error:', detail);
+      return res.status(500).json({ error: 'Failed to load data', detail });
     }
   }
 
@@ -158,8 +159,9 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ ok: true, count: merged.length, merged: true });
     } catch (err) {
-      console.error('Sync POST error:', err?.message || 'unknown');
-      return res.status(500).json({ error: 'Failed to save data' });
+      const detail = err?.message || err?.code || 'unknown';
+      console.error('Sync POST error:', detail);
+      return res.status(500).json({ error: 'Failed to save data', detail });
     }
   }
 

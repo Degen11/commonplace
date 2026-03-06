@@ -249,6 +249,10 @@ export function QuotesProvider({ children }) {
     }));
   }, []);
 
+  const updateCollectionIcon = useCallback((id, icon) => {
+    setCollections(prev => prev.map(c => c.id === id ? { ...c, icon } : c));
+  }, []);
+
   // ── Mount: shared link OR mark ready / pull from cloud ──
   useEffect(() => {
     // 1. Check for shared link
@@ -296,9 +300,9 @@ export function QuotesProvider({ children }) {
     collections,
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
-    addToCollection, removeFromCollection,
+    addToCollection, removeFromCollection, updateCollectionIcon,
   }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection]);
+       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon]);
 
   return (
     <QuotesContext.Provider value={value}>

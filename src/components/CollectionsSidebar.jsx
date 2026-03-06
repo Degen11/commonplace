@@ -1,6 +1,82 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, ChevronLeft, ChevronRight, FolderOpen, Library, Pencil, Check, X } from "lucide-react";
+import {
+  Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
+  FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
+  Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
+  Quote, Compass, Crown, Gem,
+} from "lucide-react";
 import { CP_ACCENT } from "./styles";
+
+// Icon set for the picker
+const ICON_OPTIONS = [
+  { name: "FolderOpen", Component: FolderOpen },
+  { name: "Bookmark", Component: Bookmark },
+  { name: "Heart", Component: Heart },
+  { name: "Star", Component: Star },
+  { name: "Flame", Component: Flame },
+  { name: "Zap", Component: Zap },
+  { name: "Lightbulb", Component: Lightbulb },
+  { name: "BookOpen", Component: BookOpen },
+  { name: "Coffee", Component: Coffee },
+  { name: "Music", Component: Music },
+  { name: "Feather", Component: Feather },
+  { name: "Leaf", Component: Leaf },
+  { name: "Globe", Component: Globe },
+  { name: "Sparkles", Component: Sparkles },
+  { name: "GraduationCap", Component: GraduationCap },
+  { name: "Rocket", Component: Rocket },
+  { name: "Quote", Component: Quote },
+  { name: "Compass", Component: Compass },
+  { name: "Crown", Component: Crown },
+  { name: "Gem", Component: Gem },
+];
+
+const ICON_MAP = Object.fromEntries(ICON_OPTIONS.map(i => [i.name, i.Component]));
+
+function getIcon(iconName) {
+  return ICON_MAP[iconName] || FolderOpen;
+}
+
+// ── Icon picker popup ──
+function IconPicker({ current, onSelect, onClose }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    const k = e => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("mousedown", h);
+    document.addEventListener("keydown", k);
+    return () => { document.removeEventListener("mousedown", h); document.removeEventListener("keydown", k); };
+  }, [onClose]);
+
+  return (
+    <div ref={ref} style={{
+      position: "absolute", left: "100%", top: 0, marginLeft: 4, zIndex: 200,
+      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
+      boxShadow: "var(--cp-shadow-md)", padding: 8,
+      display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
+      width: 180, animation: "slideD .12s ease",
+    }}>
+      {ICON_OPTIONS.map(({ name, Component }) => (
+        <button
+          key={name}
+          onClick={() => { onSelect(name); onClose(); }}
+          style={{
+            background: current === name ? "var(--cp-bg-hover)" : "transparent",
+            border: current === name ? `1.5px solid ${CP_ACCENT}` : "1.5px solid transparent",
+            borderRadius: 6, padding: 6, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: current === name ? CP_ACCENT : "var(--cp-text-muted)",
+            transition: "all .1s",
+          }}
+          title={name}
+        >
+          <Component size={16} strokeWidth={1.5} />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function CollectionsSidebar({
   collections,
@@ -9,6 +85,7 @@ export default function CollectionsSidebar({
   createCollection,
   deleteCollection,
   renameCollection,
+  updateCollectionIcon,
   quoteCounts,
   totalQuotes,
   collapsed,
@@ -19,6 +96,7 @@ export default function CollectionsSidebar({
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [iconPickerId, setIconPickerId] = useState(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +122,7 @@ export default function CollectionsSidebar({
       <div style={{
         width: 40, flexShrink: 0, borderRight: "1px solid var(--cp-border)",
         display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
+        alignSelf: "flex-start",
       }}>
         <button
           onClick={() => setCollapsed(false)}
@@ -67,21 +146,24 @@ export default function CollectionsSidebar({
         >
           <Library size={16} strokeWidth={1.5} />
         </button>
-        {collections.map(c => (
-          <button
-            key={c.id}
-            onClick={() => setActiveCollectionId(c.id)}
-            style={{
-              background: activeCollectionId === c.id ? "var(--cp-bg-hover)" : "none",
-              border: "none", cursor: "pointer",
-              color: activeCollectionId === c.id ? CP_ACCENT : "var(--cp-text-muted)",
-              padding: 6, borderRadius: 6,
-            }}
-            title={c.name}
-          >
-            <FolderOpen size={16} strokeWidth={1.5} />
-          </button>
-        ))}
+        {collections.map(c => {
+          const Icon = getIcon(c.icon);
+          return (
+            <button
+              key={c.id}
+              onClick={() => setActiveCollectionId(c.id)}
+              style={{
+                background: activeCollectionId === c.id ? "var(--cp-bg-hover)" : "none",
+                border: "none", cursor: "pointer",
+                color: activeCollectionId === c.id ? CP_ACCENT : "var(--cp-text-muted)",
+                padding: 6, borderRadius: 6,
+              }}
+              title={c.name}
+            >
+              <Icon size={16} strokeWidth={1.5} />
+            </button>
+          );
+        })}
       </div>
     );
   }
@@ -92,12 +174,13 @@ export default function CollectionsSidebar({
       display: "flex", flexDirection: "column",
       fontFamily: "'DM Sans',-apple-system,sans-serif",
       animation: "slideD .15s ease",
-      overflow: "hidden",
+      overflow: "visible",
+      alignSelf: "flex-start",
     }}>
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 12px 8px", borderBottom: "1px solid var(--cp-border-light)",
+        padding: "12px 12px 8px",
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: CP_ACCENT }}>
           Collections
@@ -111,8 +194,50 @@ export default function CollectionsSidebar({
         </button>
       </div>
 
+      {/* Create new — at the top */}
+      <div style={{ padding: "0 8px 6px" }}>
+        {isCreating ? (
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <input
+              ref={inputRef}
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); } }}
+              placeholder="Collection name..."
+              style={{
+                flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
+                border: `1px solid ${CP_ACCENT}`, borderRadius: 4, background: "var(--cp-bg-card)",
+                color: "var(--cp-text)",
+              }}
+            />
+            <button
+              onClick={handleCreate}
+              style={{
+                background: CP_ACCENT, border: "none", borderRadius: 4,
+                color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              Add
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsCreating(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6, width: "100%",
+              padding: "6px 8px", border: "1px dashed var(--cp-border-dim)", borderRadius: 6,
+              background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
+              fontFamily: "inherit", fontSize: 12, fontWeight: 500, textAlign: "left",
+            }}
+          >
+            <Plus size={14} strokeWidth={2} /> New collection
+          </button>
+        )}
+      </div>
+
       {/* All Quotes */}
-      <div style={{ padding: "4px 8px" }}>
+      <div style={{ padding: "2px 8px" }}>
         <button
           onClick={() => setActiveCollectionId(null)}
           style={{
@@ -126,16 +251,17 @@ export default function CollectionsSidebar({
         >
           <Library size={15} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>All Quotes</span>
-          <span style={{ fontSize: 11, color: "var(--cp-text-faint)" }}>{totalQuotes}</span>
+          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 16, textAlign: "right" }}>{totalQuotes}</span>
         </button>
       </div>
 
       {/* Collections list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 8px" }}>
+      <div style={{ overflowY: "auto", padding: "0 8px 4px" }}>
         {collections.map(c => {
           const isActive = activeCollectionId === c.id;
           const isEditing = editingId === c.id;
           const count = quoteCounts[c.id] || 0;
+          const Icon = getIcon(c.icon);
 
           if (isEditing) {
             return (
@@ -169,10 +295,24 @@ export default function CollectionsSidebar({
                 padding: "7px 8px", borderRadius: 6, cursor: "pointer",
                 background: isActive ? "var(--cp-bg-hover)" : "transparent",
                 transition: "background .12s",
+                position: "relative",
               }}
               onClick={() => setActiveCollectionId(c.id)}
             >
-              <FolderOpen size={14} strokeWidth={1.5} color={isActive ? CP_ACCENT : "var(--cp-text-muted)"} />
+              <span
+                style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
+                onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
+                title="Change icon"
+              >
+                <Icon size={14} strokeWidth={1.5} color={isActive ? CP_ACCENT : "var(--cp-text-muted)"} />
+              </span>
+              {iconPickerId === c.id && (
+                <IconPicker
+                  current={c.icon || "FolderOpen"}
+                  onSelect={iconName => updateCollectionIcon(c.id, iconName)}
+                  onClose={() => setIconPickerId(null)}
+                />
+              )}
               <span style={{
                 flex: 1, fontSize: 13, color: isActive ? CP_ACCENT : "var(--cp-text-secondary)",
                 fontWeight: isActive ? 600 : 400,
@@ -180,7 +320,7 @@ export default function CollectionsSidebar({
               }}>
                 {c.name}
               </span>
-              <span style={{ fontSize: 11, color: "var(--cp-text-faint)", flexShrink: 0 }}>{count}</span>
+              <span style={{ fontSize: 11, color: "var(--cp-text-faint)", flexShrink: 0, minWidth: 16, textAlign: "right" }}>{count}</span>
               <button
                 onClick={e => { e.stopPropagation(); setEditingId(c.id); setEditName(c.name); }}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-faint)", padding: 2, opacity: 0, transition: "opacity .12s" }}
@@ -209,48 +349,6 @@ export default function CollectionsSidebar({
             </div>
           );
         })}
-      </div>
-
-      {/* Create new */}
-      <div style={{ padding: "8px 8px 12px", borderTop: "1px solid var(--cp-border-light)" }}>
-        {isCreating ? (
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <input
-              ref={inputRef}
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); } }}
-              placeholder="Collection name..."
-              style={{
-                flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                border: `1px solid ${CP_ACCENT}`, borderRadius: 4, background: "var(--cp-bg-card)",
-                color: "var(--cp-text)",
-              }}
-            />
-            <button
-              onClick={handleCreate}
-              style={{
-                background: CP_ACCENT, border: "none", borderRadius: 4,
-                color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit",
-              }}
-            >
-              Add
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsCreating(true)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6, width: "100%",
-              padding: "7px 8px", border: "1px dashed var(--cp-border-dim)", borderRadius: 6,
-              background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
-              fontFamily: "inherit", fontSize: 12, fontWeight: 500, textAlign: "left",
-            }}
-          >
-            <Plus size={14} strokeWidth={2} /> New collection
-          </button>
-        )}
       </div>
     </div>
   );

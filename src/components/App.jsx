@@ -55,7 +55,7 @@ export default function Commonplace() {
     collections,
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
-    addToCollection, removeFromCollection,
+    addToCollection, removeFromCollection, updateCollectionIcon,
   } = useQuotesContext();
 
   const [phase, setPhase]         = useState("input");
@@ -716,6 +716,7 @@ export default function Commonplace() {
                 createCollection={createCollection}
                 deleteCollection={deleteCollection}
                 renameCollection={renameCollection}
+                updateCollectionIcon={updateCollectionIcon}
                 quoteCounts={quoteCounts}
                 totalQuotes={quotes.length}
                 collapsed={sidebarCollapsed}

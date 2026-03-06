@@ -734,7 +734,7 @@ export default function Commonplace() {
                   }
                 }}
             />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, paddingLeft: 16 }}>
 
           {/* TABLE VIEW */}
           {view === "table" && (

@@ -6,7 +6,7 @@ export const CP_ACCENT_TEXT  = "#2D4259";
 export const baseCSS = `
   :root{
     --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-bg-panel:#FAFAFA;--cp-bg-hover:rgba(55,53,47,0.05);
-    --cp-bg-tab:#F0EDE6;--cp-bg-input:#FFFFFF;--cp-bg-selected:#F0F7FF;--cp-bg-attention:#FFFBEB;--cp-bg-fav:#FFFDF5;--cp-fav-accent:#F59E0B;
+    --cp-bg-tab:#F0EDE6;--cp-bg-input:#FFFFFF;--cp-bg-selected:#F0F7FF;--cp-bg-attention:rgba(234,88,12,0.06);--cp-bg-fav:#FFFDF5;--cp-fav-accent:#EAB308;
     --cp-text:#1A1814;--cp-text-secondary:#37352F;--cp-text-muted:#9B9A97;--cp-text-faint:#C8C4BC;
     --cp-border:#E3E2DE;--cp-border-light:#E8E3DA;--cp-border-dim:#D3D3D0;
     --cp-shadow-card:0 2px 16px rgba(26,24,20,0.06);--cp-shadow-md:0 4px 16px rgba(0,0,0,.1);
@@ -15,7 +15,7 @@ export const baseCSS = `
   }
   html.dark{
     --cp-bg:#1A1A1E;--cp-bg-card:#26262A;--cp-bg-panel:#222226;--cp-bg-hover:rgba(255,255,255,0.06);
-    --cp-bg-tab:#2E2E32;--cp-bg-input:#2A2A2E;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(251,191,36,0.07);--cp-bg-fav:rgba(251,191,36,0.06);--cp-fav-accent:rgba(251,191,36,0.45);
+    --cp-bg-tab:#2E2E32;--cp-bg-input:#2A2A2E;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(239,68,68,0.07);--cp-bg-fav:rgba(250,204,21,0.06);--cp-fav-accent:rgba(250,204,21,0.4);
     --cp-text:#E8E6E3;--cp-text-secondary:#CCCAC6;--cp-text-muted:#8A8884;--cp-text-faint:#5A5856;
     --cp-border:#3A3A3E;--cp-border-light:#343438;--cp-border-dim:#4A4A4E;
     --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);

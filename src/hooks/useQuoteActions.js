@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { VIBE_TAGS, QUOTED_CATS } from "../data/constants";
+import { buildValidCats, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
+import { downloadBlob } from "../utils/export";
 
 export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion }) {
   const [deletingId, setDeletingId]             = useState(null);
@@ -71,14 +72,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const shareAsImage = useCallback(async (q) => {
     try {
       const blob = await generateShareImage(q);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "commonplace-quote.png";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 100);
+      downloadBlob(blob, "commonplace-quote.png");
       showToast("Image saved!");
     } catch {
       showToast("Couldn't generate image.");
@@ -130,7 +124,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       if (results.length > 0) {
         const r = results[0];
-        const validCats = new Set([...allCats, ...VIBE_TAGS]);
+        const validCats = buildValidCats(allCats);
         const newSource = r.source || "Unknown";
         const newCategory = validCats.has(r.category) ? r.category : "Unknown";
         const snapshot = { ...q };
@@ -185,7 +179,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       const needsApi = [];
       const snapshot = new Map(qs.map(q => [q.id, { ...q }]));
-      const validCats = new Set([...allCats, ...VIBE_TAGS]);
+      const validCats = buildValidCats(allCats);
       let localCount = 0;
 
       // First pass: try local matches
@@ -372,7 +366,6 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     copiedId,
     reidentifyingIds,
     dragId, dragInsert,
-    undoRef,
     handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
     handleDragStart, handleDragOver, handleDragEnd,
     handleFileImport,

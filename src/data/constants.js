@@ -80,3 +80,11 @@ Winter is coming
 The only thing we have to fear is fear itself`;
 
 export const REORDERABLE_COLS = ["content", "source", "category"];
+
+// Sanitize user-provided names (categories, collections) — strip HTML-unsafe chars
+export const sanitizeName = (name) => name.replace(/[<>"'&]/g, '').trim().slice(0, 50);
+
+// All valid categories including vibe tags — used to validate API responses
+export function buildValidCats(allCats) {
+  return new Set([...allCats, ...VIBE_TAGS]);
+}

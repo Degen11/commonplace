@@ -1,69 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp, UUID_RE } from './_shared.js';
 
-// ── Config ──
-const SUPABASE_URL = 'https://aoyagemikimsycaupych.supabase.co';
-
-const ALLOWED_ORIGINS = [
-  'https://commonplace.pro',
-  'http://localhost:5173',
-  'http://localhost:4173',
-  'http://localhost:3000',
-];
-
-// Rate limiting — durable via Supabase RPC, with in-memory fallback
-const rateMap = new Map();
 const RATE_LIMIT = 60;
-
-function checkRateLimitInMemory(ip) {
-  const now = Date.now();
-  for (const [key, entry] of rateMap) {
-    if (now - entry.start > 120000) rateMap.delete(key);
-  }
-  const entry = rateMap.get(ip);
-  if (!entry || now - entry.start > 60000) {
-    rateMap.set(ip, { start: now, count: 1 });
-    return true;
-  }
-  entry.count++;
-  return entry.count <= RATE_LIMIT;
-}
-
-async function checkRateLimit(ip, supabase) {
-  if (!supabase) return checkRateLimitInMemory(ip);
-  try {
-    const { data, error } = await supabase.rpc('check_rate_limit', {
-      p_ip: ip,
-      p_limit: RATE_LIMIT,
-      p_window_sec: 60,
-    });
-    if (error) throw error;
-    return data;
-  } catch {
-    return checkRateLimitInMemory(ip);
-  }
-}
-
-function setCorsHeaders(req, res) {
-  const origin = req.headers['origin'] || '';
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
-}
-
-// UUID v4 validation
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function getSupabase() {
-  // Try secret key first (server-side only, bypasses RLS), then fall back to anon key
-  const key = process.env.SUPABASE_SECRET_KEY
-    || process.env.VITE_SUPABASE_ANON_KEY_COMMONPLACE;
-  if (!key) return null;
-  return createClient(SUPABASE_URL, key);
-}
 
 // ── Validate a single quote object ──
 function validateQuote(q) {
@@ -88,12 +25,10 @@ function validateQuote(q) {
 function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
   const merged = new Map();
 
-  // Start with cloud quotes
   for (const q of cloudQuotes) {
     if (q && q.id) merged.set(q.id, q);
   }
 
-  // Merge client quotes — keep whichever has a newer updatedAt
   for (const q of clientQuotes) {
     if (!q || !q.id) continue;
     const existing = merged.get(q.id);
@@ -102,7 +37,6 @@ function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
     }
   }
 
-  // Apply deletions
   if (Array.isArray(deletedIds)) {
     for (const entry of deletedIds) {
       if (!entry || typeof entry.id !== 'string') continue;
@@ -118,27 +52,17 @@ function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
 }
 
 export default async function handler(req, res) {
-  setCorsHeaders(req, res);
+  setCorsHeaders(req, res, 'GET, POST, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
+  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
+  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
 
-  // ── Security checks ──
-  const origin = req.headers['origin'] || '';
-  const referer = req.headers['referer'] || '';
-  if (!ALLOWED_ORIGINS.some(o => origin === o || referer === o || referer.startsWith(o + '/'))) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  if (!req.headers['x-requested-with']) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
   const supabase = getSupabase();
-  if (!supabase) {
-    return res.status(500).json({ error: 'Storage not configured' });
-  }
+  if (!supabase) return res.status(500).json({ error: 'Storage not configured' });
 
-  // Rate limit by IP (durable via Supabase, with in-memory fallback)
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  if (!(await checkRateLimit(ip, supabase))) {
+  const ip = getClientIp(req);
+  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
     return res.status(429).json({ error: 'Too many requests' });
   }
 
@@ -152,16 +76,17 @@ export default async function handler(req, res) {
     try {
       const { data, error } = await supabase
         .from('device_data')
-        .select('quotes, custom_categories, updated_at')
+        .select('quotes, custom_categories, collections, updated_at')
         .eq('device_id', deviceId)
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) return res.status(200).json({ quotes: [], customCategories: [], updatedAt: null });
+      if (!data) return res.status(200).json({ quotes: [], customCategories: [], collections: [], updatedAt: null });
 
       return res.status(200).json({
         quotes: data.quotes || [],
         customCategories: data.custom_categories || [],
+        collections: data.collections || [],
         updatedAt: data.updated_at,
       });
     } catch (err) {
@@ -177,7 +102,7 @@ export default async function handler(req, res) {
       return res.status(415).json({ error: 'Content-Type must be application/json' });
     }
 
-    const { device_id, quotes, customCategories, deletedIds } = req.body || {};
+    const { device_id, quotes, customCategories, deletedIds, collections } = req.body || {};
 
     if (!device_id || !UUID_RE.test(device_id)) {
       return res.status(400).json({ error: 'Invalid device_id' });
@@ -189,15 +114,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Too many quotes' });
     }
 
-    // Validate each quote
     const validated = [];
     for (const q of quotes) {
       const v = validateQuote(q);
-      if (!v) continue; // Skip invalid entries silently
-      validated.push(v);
+      if (v) validated.push(v);
     }
 
-    // Validate custom categories
     const cats = Array.isArray(customCategories)
       ? customCategories
           .filter(c => typeof c === 'string' && c.length > 0 && c.length <= 50)
@@ -205,8 +127,11 @@ export default async function handler(req, res) {
           .slice(0, 200)
       : [];
 
+    const validCollections = Array.isArray(collections)
+      ? collections.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string').slice(0, 500)
+      : [];
+
     try {
-      // Fetch current cloud data for merge
       const { data: existing } = await supabase
         .from('device_data')
         .select('quotes')
@@ -214,8 +139,6 @@ export default async function handler(req, res) {
         .maybeSingle();
 
       const cloudQuotes = existing?.quotes || [];
-
-      // Merge client quotes with cloud quotes (union by ID, newer wins)
       const merged = mergeQuotes(validated, cloudQuotes, deletedIds);
 
       if (merged.length > 50000) {
@@ -228,6 +151,7 @@ export default async function handler(req, res) {
           device_id: device_id,
           quotes: merged,
           custom_categories: cats,
+          collections: validCollections,
         }, { onConflict: 'device_id' });
 
       if (error) throw error;

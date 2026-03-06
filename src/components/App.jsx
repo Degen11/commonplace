@@ -10,7 +10,7 @@ import useTheme from "../hooks/useTheme";
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
-import { getCatColor } from "../data/constants";
+import { getCatColor, sanitizeName } from "../data/constants";
 
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
@@ -151,12 +151,6 @@ export default function Commonplace() {
   const catScrollRef        = useRef(null);
   const headerRef           = useRef(null);
 
-  const sanitizeCategoryName = (name) => {
-    return name
-      .replace(/[<>"'&]/g, '')
-      .trim()
-      .slice(0, 50);
-  };
 
   // useLayoutEffect prevents flash of input phase on synchronous loads
   useLayoutEffect(() => {
@@ -355,7 +349,7 @@ export default function Commonplace() {
   };
 
   const addCat = () => {
-    const sanitized = sanitizeCategoryName(newCatName);
+    const sanitized = sanitizeName(newCatName);
     if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
       showToast("Invalid or duplicate category name");
       return;
@@ -373,10 +367,10 @@ export default function Commonplace() {
 
   // Compute per-collection quote counts for sidebar
   const quoteCounts = useMemo(() => {
+    const quoteIdSet = new Set(quotes.map(q => q.id));
     const counts = {};
     for (const c of collections) {
-      const validIds = c.quoteIds.filter(id => quotes.some(q => q.id === id));
-      counts[c.id] = validIds.length;
+      counts[c.id] = c.quoteIds.filter(id => quoteIdSet.has(id)).length;
     }
     return counts;
   }, [collections, quotes]);

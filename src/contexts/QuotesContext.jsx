@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
-  DEFAULT_CATEGORIES, REORDERABLE_COLS,
+  DEFAULT_CATEGORIES, REORDERABLE_COLS, sanitizeName,
 } from "../data/constants";
 import { useToastContext } from "./ToastContext";
 import useSync from "../hooks/useSync";
@@ -214,7 +214,7 @@ export function QuotesProvider({ children }) {
 
   // ── Collection helpers ──
   const createCollection = useCallback((name) => {
-    const sanitized = name.replace(/[<>"'&]/g, '').trim().slice(0, 50);
+    const sanitized = sanitizeName(name);
     if (!sanitized) return null;
     if (collections.some(c => c.name.toLowerCase() === sanitized.toLowerCase())) return null;
     const newCol = { id: crypto.randomUUID(), name: sanitized, quoteIds: [], createdAt: Date.now() };
@@ -228,7 +228,7 @@ export function QuotesProvider({ children }) {
   }, []);
 
   const renameCollection = useCallback((id, name) => {
-    const sanitized = name.replace(/[<>"'&]/g, '').trim().slice(0, 50);
+    const sanitized = sanitizeName(name);
     if (!sanitized) return;
     setCollections(prev => prev.map(c => c.id === id ? { ...c, name: sanitized } : c));
   }, []);

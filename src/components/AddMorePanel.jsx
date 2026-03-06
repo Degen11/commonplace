@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { styles } from "./styles";
-import { Pencil, Bot, FileText, FolderOpen, CheckCircle, Link } from "lucide-react";
+import { Pencil, Bot, FileText, FolderOpen, CheckCircle, Link, Eye } from "lucide-react";
+import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
 export default function AddMorePanel({
   addMoreInput, setAddMoreInput,
@@ -22,7 +23,12 @@ export default function AddMorePanel({
   const [urlInput, setUrlInput] = useState("");
   const [urlLoading, setUrlLoading] = useState(false);
   const [urlError, setUrlError] = useState(null);
+  const [extractMode, setExtractMode] = useState("all");
+  const [urlPreview, setUrlPreview] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showEntryPreview, setShowEntryPreview] = useState(false);
   const fileInputRef = useRef(null);
+  const lastUrlRef = useRef("");
 
   const handleQuickAdd = () => {
     if (!quickText.trim()) return;
@@ -49,26 +55,52 @@ export default function AddMorePanel({
     e.target.value = "";
   };
 
-  const handleUrlFetch = async () => {
-    const trimmed = urlInput.trim();
+  const handleUrlFetch = async (modeOverride) => {
+    const trimmed = urlInput.trim() || lastUrlRef.current;
     if (!trimmed) return;
+    const useMode = modeOverride || extractMode;
     setUrlLoading(true);
     setUrlError(null);
     try {
       const res = await fetch("/api/fetch-url", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-        body: JSON.stringify({ url: trimmed }),
+        body: JSON.stringify({ url: trimmed, extractMode: useMode }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
       if (!data.lines || data.lines.length === 0) throw new Error("No text content found");
-      setAddMoreInput(data.lines.join("\n"));
-      setUrlInput("");
+      lastUrlRef.current = trimmed;
+      setUrlPreview(data);
+      setShowPreviewModal(true);
     } catch (e) {
       setUrlError(e.message);
     } finally {
       setUrlLoading(false);
+    }
+  };
+
+  const handlePreviewConfirm = (selectedLines) => {
+    setAddMoreInput(selectedLines.join("\n"));
+    setShowPreviewModal(false);
+    setUrlInput("");
+  };
+
+  const handlePreviewRefetch = async (newMode) => {
+    const trimmed = lastUrlRef.current;
+    if (!trimmed) return;
+    setExtractMode(newMode);
+    try {
+      const res = await fetch("/api/fetch-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+        body: JSON.stringify({ url: trimmed, extractMode: newMode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
+      setUrlPreview(data);
+    } catch (e) {
+      setUrlError(e.message);
     }
   };
 
@@ -83,6 +115,15 @@ export default function AddMorePanel({
 
   return (
     <>
+      {showPreviewModal && urlPreview && (
+        <UrlPreviewModal
+          preview={urlPreview}
+          currentMode={extractMode}
+          onConfirm={handlePreviewConfirm}
+          onCancel={() => setShowPreviewModal(false)}
+          onRefetch={handlePreviewRefetch}
+        />
+      )}
       <div style={{ display: "flex", gap: 2, marginBottom: 10, background: "var(--cp-bg-tab)", borderRadius: 6, padding: 2 }}>
         <button style={tabStyle(tab === "identify")} onClick={() => setTab("identify")}>
           <Bot size={13} strokeWidth={1.5} /> Paste & identify
@@ -164,25 +205,87 @@ export default function AddMorePanel({
               style={{ flex: 1, padding: "7px 10px", borderRadius: 6, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 12, fontFamily: "inherit", outline: "none" }}
             />
             <button
-              onClick={handleUrlFetch}
+              onClick={() => handleUrlFetch()}
               disabled={urlLoading || !urlInput.trim()}
               style={{ padding: "7px 12px", borderRadius: 6, border: "none", background: urlLoading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 12, fontWeight: 600, cursor: urlLoading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
             >
               {urlLoading ? "..." : "Fetch"}
             </button>
           </div>
+
+          {/* Extraction mode selector */}
+          <div style={{ display: "flex", gap: 3, marginTop: 6, flexWrap: "wrap" }}>
+            {EXTRACT_MODES.map(m => (
+              <button
+                key={m.value}
+                onClick={() => setExtractMode(m.value)}
+                className="ui-tip ui-tip-below"
+                data-tip={m.desc}
+                style={{
+                  padding: "2px 8px",
+                  borderRadius: 50,
+                  border: extractMode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
+                  background: extractMode === m.value ? "rgba(60,87,117,0.10)" : "transparent",
+                  color: extractMode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-faint)",
+                  fontSize: 10,
+                  fontWeight: extractMode === m.value ? 600 : 400,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "all .15s",
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+
           {urlError && <div style={{ marginTop: 6, fontSize: 11, color: "#DC2626" }}>{urlError}</div>}
 
           {addMoreInput.trim() && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-              <span style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
-                {smartSplit(addMoreInput.trim()).length} entries ready to add
-              </span>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
-                <button style={styles.editSave} onClick={onAddMore}>Add & identify</button>
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
+                    {smartSplit(addMoreInput.trim()).length} entries ready to add
+                  </span>
+                  <button
+                    onClick={() => setShowEntryPreview(p => !p)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+                      fontSize: 11, color: "var(--cp-accent, #3C5775)", fontWeight: 500, padding: "2px 6px",
+                      borderRadius: 4, display: "inline-flex", alignItems: "center", gap: 3,
+                      transition: "background .12s",
+                    }}
+                  >
+                    <Eye size={11} strokeWidth={2} />
+                    {showEntryPreview ? "Hide" : "Preview"}
+                  </button>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
+                  <button style={styles.editSave} onClick={onAddMore}>Add & identify</button>
+                </div>
               </div>
-            </div>
+
+              {/* Inline entry preview */}
+              {showEntryPreview && (
+                <div style={{
+                  marginTop: 6, maxHeight: 160, overflow: "auto", padding: "6px 8px",
+                  background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)",
+                  borderRadius: 6, fontSize: 11, lineHeight: 1.5, color: "var(--cp-text-secondary)",
+                  animation: "slideD .15s ease",
+                }}>
+                  {smartSplit(addMoreInput.trim()).slice(0, 25).map((line, i) => (
+                    <div key={i} style={{ padding: "3px 0", borderBottom: "1px solid var(--cp-border-light)" }}>{line}</div>
+                  ))}
+                  {smartSplit(addMoreInput.trim()).length > 25 && (
+                    <div style={{ padding: "3px 0", color: "var(--cp-text-faint)", fontStyle: "italic" }}>
+                      ...and {smartSplit(addMoreInput.trim()).length - 25} more
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </>
       ) : (

@@ -7,6 +7,7 @@ import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown } from "lucide-react";
+import HighlightText from "./HighlightText";
 
 const MemoCardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
@@ -17,6 +18,7 @@ const MemoCardItem = memo(function CardItem({
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   handleDragStart, handleDragOver, handleDragEnd,
   isDeleting,
+  searchTerm,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
@@ -82,12 +84,12 @@ const MemoCardItem = memo(function CardItem({
         ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
         : (
           <>
-            <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>{displayText(q)}</p>
+            <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}><HighlightText text={displayText(q)} term={searchTerm} /></p>
             <div style={cardStyles.srcRow}>
               <span style={{ color: "var(--cp-text-faint)" }}>—</span>
               {isInlineEditing && inlineEditField === "source"
                 ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
-                : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}>{q.source}</span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
+                : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
               }
               <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             </div>
@@ -108,6 +110,7 @@ const MemoCardItem = memo(function CardItem({
   if (prev.isDeleting !== next.isDeleting) return false;
   if (prev.isSavedPulse !== next.isSavedPulse) return false;
   if (prev.savedPulseField !== next.savedPulseField) return false;
+  if (prev.searchTerm !== next.searchTerm) return false;
   if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
   if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;

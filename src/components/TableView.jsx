@@ -7,6 +7,7 @@ import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { styles } from "./styles";
 import { Pencil, ChevronDown, GripVertical } from "lucide-react";
+import HighlightText from "./HighlightText";
 
 // Column configuration — original flex-based layout
 const COL_BASE = {
@@ -31,6 +32,7 @@ const MemoTableRow = memo(function TableRow({
   columnOrder, compact, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
   handleDragStart, handleDragOver, handleDragEnd, setOpenMenuId,
+  searchTerm,
 }) {
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
@@ -47,7 +49,7 @@ const MemoTableRow = memo(function TableRow({
             onClick={() => { if (!isEd) setEditingId(q.id); }}>
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
-              : <p style={compact ? styles.entryTextCompact : styles.entryText}>{displayText(q)}</p>
+              : <p style={compact ? styles.entryTextCompact : styles.entryText}><HighlightText text={displayText(q)} term={searchTerm} /></p>
             }
           </div>
         );
@@ -62,7 +64,7 @@ const MemoTableRow = memo(function TableRow({
                     style={{ ...styles.srcText, ...(compact ? { fontSize: 11 } : {}) }}
                     title={q.source}
                     onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-                  >{q.source}</span>
+                  ><HighlightText text={q.source} term={searchTerm} /></span>
                   <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="var(--cp-text-faint)" />
                 </>
             }
@@ -151,6 +153,7 @@ const MemoTableRow = memo(function TableRow({
   if (prev.savedPulseField !== next.savedPulseField) return false;
   if (prev.isMenuOpen !== next.isMenuOpen) return false;
   if (prev.insertClass !== next.insertClass) return false;
+  if (prev.searchTerm !== next.searchTerm) return false;
   if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
   if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;
@@ -182,6 +185,7 @@ export default function TableView({
   isMobile,
   savedPulse,
   deletingId,
+  searchTerm,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -326,6 +330,7 @@ export default function TableView({
             handleDragOver={handleDragOver}
             handleDragEnd={handleDragEnd}
             setOpenMenuId={setOpenMenuId}
+            searchTerm={searchTerm}
           />
         );
       })}

@@ -20,6 +20,7 @@ function getOrCreateDeviceId() {
 export default function useSync({ onCloudData, onSyncError }) {
   const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
   const [lastSynced, setLastSynced] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const deviceId = useRef(getOrCreateDeviceId());
   const pushTimer = useRef(null);
   const retryTimer = useRef(null);
@@ -38,6 +39,7 @@ export default function useSync({ onCloudData, onSyncError }) {
   // so push is unblocked even when data came from localStorage, not pull().
   const markReady = useCallback(() => {
     initialLoadDone.current = true;
+    setInitialLoading(false);
   }, []);
 
   useEffect(() => {
@@ -62,6 +64,8 @@ export default function useSync({ onCloudData, onSyncError }) {
       initialLoadDone.current = true;
     } catch {
       // Silent fail — localStorage is still the primary store
+    } finally {
+      if (mountedRef.current) setInitialLoading(false);
     }
   }, [onCloudData]);
 
@@ -178,6 +182,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     deviceId: deviceId.current,
     syncStatus,
     lastSynced,
+    initialLoading,
     pull,
     schedulePush,
     markReady,

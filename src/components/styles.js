@@ -206,7 +206,10 @@ export const baseCSS = `
   .hp-feature-card{transition:all .25s ease}
   .hp-feature-card:hover{border-color:rgba(60,87,117,0.2) !important;transform:translateY(-3px);box-shadow:var(--cp-shadow-card)}
   html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
+    .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
+  }
+  @media (max-width: 600px) {
     .hp-features-grid{grid-template-columns:1fr !important}
     .hp-hero-headline{font-size:36px !important;letter-spacing:-1px !important}
     .hp-hero-sub{font-size:16px !important}

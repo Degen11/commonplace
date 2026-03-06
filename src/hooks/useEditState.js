@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
 
-export default function useEditState({ quotes, setQuotes, filtered, showToast, trackDeletion }) {
+export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
   const [selected, setSelected]             = useState(new Set());
@@ -95,13 +95,15 @@ export default function useEditState({ quotes, setQuotes, filtered, showToast, t
     } catch(e) { /* ignore */ }
   }, [setQuotes, showToast]);
 
+  const selScope = visibleFiltered || filtered;
+
   const toggleSel = useCallback((id, shiftKey = false) => {
     if (shiftKey && lastSelectedIndex.current !== null) {
-      const currentIndex = filtered.findIndex(q => q.id === id);
+      const currentIndex = selScope.findIndex(q => q.id === id);
       const lastIndex = lastSelectedIndex.current;
       const start = Math.min(currentIndex, lastIndex);
       const end = Math.max(currentIndex, lastIndex);
-      const rangeIds = filtered.slice(start, end + 1).map(q => q.id);
+      const rangeIds = selScope.slice(start, end + 1).map(q => q.id);
       setSelected(p => {
         const n = new Set(p);
         rangeIds.forEach(rangeId => n.add(rangeId));
@@ -114,21 +116,21 @@ export default function useEditState({ quotes, setQuotes, filtered, showToast, t
         n.has(id) ? n.delete(id) : n.add(id);
         return n;
       });
-      lastSelectedIndex.current = filtered.findIndex(q => q.id === id);
+      lastSelectedIndex.current = selScope.findIndex(q => q.id === id);
     }
-  }, [filtered]);
+  }, [selScope]);
 
   const selAll = useCallback(() => {
-    if (filtered.length === 0) return;
-    const allSelected = filtered.every(q => selected.has(q.id));
+    if (selScope.length === 0) return;
+    const allSelected = selScope.every(q => selected.has(q.id));
     if (allSelected) {
       setSelected(new Set());
       lastSelectedIndex.current = null;
     } else {
-      setSelected(new Set(filtered.map(q => q.id)));
+      setSelected(new Set(selScope.map(q => q.id)));
       lastSelectedIndex.current = null;
     }
-  }, [filtered, selected]);
+  }, [selScope, selected]);
 
   const applyBulk = useCallback(() => {
     const affectedIds = new Set(selected);

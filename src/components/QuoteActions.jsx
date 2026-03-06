@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis } from "lucide-react";
+import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
 import { CONF_COLORS } from "../data/constants";
 
@@ -26,9 +26,16 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
   const btnRef = useRef(null);
   const [copyAnim, setCopyAnim] = useState(false);
   const [shareAnim, setShareAnim] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
 
   const isCopied = actionProps.copiedId === q.id;
   const isReidentifying = actionProps.reidentifying.has(q.id);
+  const collections = actionProps.collections || [];
+
+  // Reset submenu when menu closes
+  useEffect(() => {
+    if (!isOpen) setShowCollections(false);
+  }, [isOpen]);
 
   return (
     <div style={styles.overflowWrap}>
@@ -77,6 +84,41 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
             <Share2 size={14} strokeWidth={1.5} className={shareAnim ? "share-lift" : ""} />
             <span>Share</span>
           </button>
+          {collections.length > 0 && (
+            <>
+              <div style={styles.overflowMenuDivider} />
+              <div style={{ position: "relative" }}>
+                <button
+                  className="overflow-menu-item"
+                  style={{ ...styles.overflowMenuItem, justifyContent: "space-between" }}
+                  onClick={() => setShowCollections(prev => !prev)}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <FolderPlus size={14} strokeWidth={1.5} />
+                    <span>Add to collection</span>
+                  </span>
+                  <ChevronRight size={12} strokeWidth={2} style={{ transform: showCollections ? "rotate(90deg)" : "none", transition: "transform .12s" }} />
+                </button>
+                {showCollections && (
+                  <div style={{ padding: "2px 4px 2px 24px" }}>
+                    {collections.map(c => (
+                      <button
+                        key={c.id}
+                        className="overflow-menu-item"
+                        style={{ ...styles.overflowMenuItem, fontSize: 12, padding: "6px 10px" }}
+                        onClick={() => {
+                          actionProps.onAddToCollection(c.id, [q.id]);
+                          onToggle();
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
           <div style={styles.overflowMenuDivider} />
           <button
             className="overflow-menu-item-destructive"

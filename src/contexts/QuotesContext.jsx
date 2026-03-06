@@ -11,6 +11,7 @@ const LS_QUOTES      = "commonplace_quotes";
 const LS_CATS        = "commonplace_cats";
 const LS_COL_ORDER   = "commonplace_col_order";
 const LS_DELETED_IDS = "commonplace_deleted_ids";
+const LS_COLLECTIONS = "commonplace_collections";
 const TOMBSTONE_TTL  = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // localStorage is now a local cache; Supabase is the durable store.
@@ -92,6 +93,18 @@ export function QuotesProvider({ children }) {
     } catch(e) { /* ignore */ }
     return [...REORDERABLE_COLS];
   });
+
+  const [collections, setCollections] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_COLLECTIONS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
+  const [activeCollectionId, setActiveCollectionId] = useState(null);
 
   const storageLimitWarned = useRef(false);
   const allCats = useMemo(() => [...DEFAULT_CATEGORIES, ...customCats], [customCats]);
@@ -192,6 +205,50 @@ export function QuotesProvider({ children }) {
     try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) { /* ignore */ }
   }, [columnOrder]);
 
+  // Persist collections
+  useEffect(() => {
+    try { localStorage.setItem(LS_COLLECTIONS, JSON.stringify(collections)); } catch(e) { /* ignore */ }
+  }, [collections]);
+
+  // ── Collection helpers ──
+  const createCollection = useCallback((name) => {
+    const sanitized = name.replace(/[<>"'&]/g, '').trim().slice(0, 50);
+    if (!sanitized) return null;
+    if (collections.some(c => c.name.toLowerCase() === sanitized.toLowerCase())) return null;
+    const newCol = { id: crypto.randomUUID(), name: sanitized, quoteIds: [], createdAt: Date.now() };
+    setCollections(prev => [...prev, newCol]);
+    return newCol;
+  }, [collections]);
+
+  const deleteCollection = useCallback((id) => {
+    setCollections(prev => prev.filter(c => c.id !== id));
+    setActiveCollectionId(prev => prev === id ? null : prev);
+  }, []);
+
+  const renameCollection = useCallback((id, name) => {
+    const sanitized = name.replace(/[<>"'&]/g, '').trim().slice(0, 50);
+    if (!sanitized) return;
+    setCollections(prev => prev.map(c => c.id === id ? { ...c, name: sanitized } : c));
+  }, []);
+
+  const addToCollection = useCallback((collectionId, quoteIds) => {
+    setCollections(prev => prev.map(c => {
+      if (c.id !== collectionId) return c;
+      const existing = new Set(c.quoteIds);
+      const newIds = quoteIds.filter(id => !existing.has(id));
+      if (newIds.length === 0) return c;
+      return { ...c, quoteIds: [...c.quoteIds, ...newIds] };
+    }));
+  }, []);
+
+  const removeFromCollection = useCallback((collectionId, quoteIds) => {
+    const toRemove = new Set(quoteIds);
+    setCollections(prev => prev.map(c => {
+      if (c.id !== collectionId) return c;
+      return { ...c, quoteIds: c.quoteIds.filter(id => !toRemove.has(id)) };
+    }));
+  }, []);
+
   // ── Mount: shared link OR mark ready / pull from cloud ──
   useEffect(() => {
     // 1. Check for shared link
@@ -236,7 +293,12 @@ export function QuotesProvider({ children }) {
     syncStatus,
     lastSynced,
     trackDeletion,
-  }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, trackDeletion]);
+    collections,
+    activeCollectionId, setActiveCollectionId,
+    createCollection, deleteCollection, renameCollection,
+    addToCollection, removeFromCollection,
+  }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, trackDeletion,
+       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection]);
 
   return (
     <QuotesContext.Provider value={value}>

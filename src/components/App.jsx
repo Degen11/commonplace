@@ -29,6 +29,8 @@ import StatsOverlay from "./StatsOverlay";
 import AddMorePanel from "./AddMorePanel";
 import ExportDropdown from "./ExportDropdown";
 import EmptyState from "./EmptyState";
+import ShortcutsModal from "./ShortcutsModal";
+import CollectionsSidebar from "./CollectionsSidebar";
 import { styles } from "./styles";
 
 import {
@@ -50,6 +52,10 @@ export default function Commonplace() {
     isSharedView, setIsSharedView,
     syncStatus,
     trackDeletion,
+    collections,
+    activeCollectionId, setActiveCollectionId,
+    createCollection, deleteCollection, renameCollection,
+    addToCollection, removeFromCollection,
   } = useQuotesContext();
 
   const [phase, setPhase]         = useState("input");
@@ -109,7 +115,7 @@ export default function Commonplace() {
     copiedId,
     reidentifyingIds,
     dragId, dragInsert,
-    handleDelete, copyQuote, shareAsImage, reIdentify,
+    handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
     handleDragStart, handleDragOver, handleDragEnd,
     handleFileImport,
   } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion });
@@ -130,6 +136,10 @@ export default function Commonplace() {
   const [isDragOver, setIsDragOver]           = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
   const [dismissedAtCount, setDismissedAtCount] = useState(null);
+  const [showShortcuts, setShowShortcuts]       = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem("commonplace_sidebar_collapsed") === "1"; } catch { return false; }
+  });
 
   const addMoreRef          = useRef(null);
   const exportRef           = useRef(null);
@@ -277,6 +287,11 @@ export default function Commonplace() {
         }
       }
 
+      if (e.key === '?') {
+        setShowShortcuts(prev => !prev);
+        return;
+      }
+
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
         if (s.filtered.length > 0) {
@@ -351,6 +366,38 @@ export default function Commonplace() {
   };
   const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
 
+  // Persist sidebar collapsed state
+  useEffect(() => {
+    try { localStorage.setItem("commonplace_sidebar_collapsed", sidebarCollapsed ? "1" : "0"); } catch { /* ignore */ }
+  }, [sidebarCollapsed]);
+
+  // Compute per-collection quote counts for sidebar
+  const quoteCounts = useMemo(() => {
+    const counts = {};
+    for (const c of collections) {
+      const validIds = c.quoteIds.filter(id => quotes.some(q => q.id === id));
+      counts[c.id] = validIds.length;
+    }
+    return counts;
+  }, [collections, quotes]);
+
+  // Filter by active collection — applied on top of search/sort/category filters
+  const activeCollectionIdSet = useMemo(() => {
+    if (!activeCollectionId) return null;
+    const col = collections.find(c => c.id === activeCollectionId);
+    return col ? new Set(col.quoteIds) : null;
+  }, [activeCollectionId, collections]);
+
+  const collectionFiltered = useMemo(() => {
+    if (!activeCollectionIdSet) return filtered;
+    return filtered.filter(q => activeCollectionIdSet.has(q.id));
+  }, [filtered, activeCollectionIdSet]);
+
+  const collectionVisible = useMemo(() => {
+    if (!activeCollectionIdSet) return visible;
+    return visible.filter(q => activeCollectionIdSet.has(q.id));
+  }, [visible, activeCollectionIdSet]);
+
   const showBulkBar = selected.size > 0;
 
   const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
@@ -363,7 +410,9 @@ export default function Commonplace() {
     onShareImage:  shareAsImage,
     copiedId,
     reidentifying: reidentifyingIds,
-  }), [onFav, handleDelete, copyQuote, reIdentify, shareAsImage, copiedId, reidentifyingIds]);
+    collections,
+    onAddToCollection: addToCollection,
+  }), [onFav, handleDelete, copyQuote, reIdentify, shareAsImage, copiedId, reidentifyingIds, collections, addToCollection]);
 
   const exportDropdownContent = (
     <ExportDropdown
@@ -426,6 +475,8 @@ export default function Commonplace() {
         <div style={styles.wrap} className={fadeClass}>
 
           {toasts.length > 0 && <Toast key={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={() => { if (toasts[0].onAction) toasts[0].onAction(); dismissToast(); }} onDismiss={dismissToast} />}
+
+          {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 
           {confirmClear && (
             <ConfirmModal
@@ -491,6 +542,7 @@ export default function Commonplace() {
               syncStatus={syncStatus}
               dark={dark}
               toggleTheme={toggleTheme}
+              onShowShortcuts={() => setShowShortcuts(true)}
             />
           </SectionErrorBoundary>
 
@@ -595,6 +647,10 @@ export default function Commonplace() {
               allCats={allCats}
               applyBulk={applyBulk}
               onDelete={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}
+              onBatchReIdentify={() => batchReIdentify(selected)}
+              isReidentifying={reidentifyingIds.size > 0}
+              collections={collections}
+              onAddToCollection={addToCollection}
             />
           )}
 
@@ -651,12 +707,30 @@ export default function Commonplace() {
             </div>
           ))}
 
+          {/* Main content area with optional sidebar */}
+          <div style={{ display: "flex", gap: 0 }}>
+            {collections.length > 0 && (
+              <CollectionsSidebar
+                collections={collections}
+                activeCollectionId={activeCollectionId}
+                setActiveCollectionId={setActiveCollectionId}
+                createCollection={createCollection}
+                deleteCollection={deleteCollection}
+                renameCollection={renameCollection}
+                quoteCounts={quoteCounts}
+                totalQuotes={quotes.length}
+                collapsed={sidebarCollapsed}
+                setCollapsed={setSidebarCollapsed}
+              />
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+
           {/* TABLE VIEW */}
           {view === "table" && (
             <SectionErrorBoundary name="Table view">
               <div>
               <TableView
-                filtered={visible}
+                filtered={collectionVisible}
                 selected={selected}
                 toggleSel={toggleSel}
                 selAll={selAll}
@@ -690,7 +764,7 @@ export default function Commonplace() {
           {view === "cards" && (
             <SectionErrorBoundary name="Card view">
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-                {visible.map((q) => {
+                {collectionVisible.map((q) => {
                   const col = getCatColor(q.category, customCats);
                   const isSel = selected.has(q.id);
                   const isEd  = editingId === q.id;
@@ -755,7 +829,7 @@ export default function Commonplace() {
     Load more ({remaining} remaining)
   </button>
 )}
-          {filtered.length === 0 && (
+          {collectionFiltered.length === 0 && (
             <EmptyState
               catFilter={catFilter} setCatFilter={setCatFilter}
               favFilter={favFilter} setFavFilter={setFavFilter}
@@ -768,6 +842,9 @@ export default function Commonplace() {
           {showBulkBar && <div style={{ height: 64 }} />}
 
           <Footer styles={styles} />
+
+            </div>{/* end flex main content */}
+          </div>{/* end flex container with sidebar */}
         </div>
       )}
     </>

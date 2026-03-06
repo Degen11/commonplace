@@ -61,6 +61,9 @@ export const baseCSS = `
   }
   .conf-tooltip:hover::after{opacity:1}
 
+  /* Visually hidden but accessible checkboxes */
+  .sr-checkbox{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
   /* Fix 2 — column header drag handle - COMPLETELY REMOVE SHADOW */
   .col-drag-header{
     cursor:grab;
@@ -76,10 +79,15 @@ export const baseCSS = `
   .col-drag-header:active{cursor:grabbing}
 
   /* Row interactions (optimized) */
-  .qrow{cursor:grab;transition:background 0.18s ease}
-  .qrow:active{cursor:grabbing}
+  .qrow{cursor:default;transition:background 0.18s ease}
   .qrow:hover{background:var(--cp-bg-hover) !important}
-  .qrow:hover .checkbox{opacity:1 !important}
+  .qrow:hover .checkbox-visual{opacity:1 !important}
+
+  /* Drag handle — visible on row hover */
+  .drag-handle{opacity:0;transition:opacity .12s;cursor:grab;color:var(--cp-text-faint);display:flex;align-items:center}
+  .drag-handle:active{cursor:grabbing}
+  .qrow:hover .drag-handle{opacity:0.5}
+  .qrow:hover .drag-handle:hover{opacity:1}
 
   /* Inline edit affordances */
   .inline-src{cursor:text !important;transition:color .12s}
@@ -93,7 +101,7 @@ export const baseCSS = `
   @media(max-width:640px){.edit-hint{opacity:0.35}}
 
   /* Checkbox hover affordance */
-  .checkbox:hover .check{border-color:#3C5775 !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
+  .checkbox-visual:hover{border-color:#3C5775 !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
 
   .dd-opt:hover{background:var(--cp-bg-hover) !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
@@ -171,6 +179,11 @@ export const baseCSS = `
   .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
   .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
 
+  /* Collections sidebar — reveal edit/delete buttons on hover */
+  .coll-edit-btn{opacity:0 !important;transition:opacity .12s !important}
+  div:hover>.coll-edit-btn{opacity:0.6 !important}
+  .coll-edit-btn:hover{opacity:1 !important}
+
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}
 
@@ -216,6 +229,28 @@ export const baseCSS = `
   html.dark .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(0,0,0,.4)}
   html.dark input,html.dark textarea,html.dark select{background-color:var(--cp-bg-input) !important;color:var(--cp-text) !important}
 `;
+
+// ── Shared sync status pill — used by both HeaderBar and MiniHeader ──
+const syncPillBase = {
+  fontWeight: 500,
+  borderRadius: 4,
+  fontFamily: "'DM Sans', sans-serif",
+  letterSpacing: 0.2,
+  whiteSpace: "nowrap",
+  alignSelf: "center",
+};
+export const syncPillStyles = {
+  full: {
+    syncing: { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
+    synced:  { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: "#16A34A", background: "rgba(34,197,94,0.10)" },
+    error:   { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: "#DC2626", background: "rgba(220,38,38,0.10)" },
+  },
+  mini: {
+    syncing: { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
+    synced:  { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: "#16A34A", background: "rgba(34,197,94,0.10)" },
+    error:   { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: "#DC2626", background: "rgba(220,38,38,0.10)" },
+  },
+};
 
 export const styles = {
   // Layout
@@ -411,11 +446,16 @@ export const styles = {
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},
   newCatSv:{padding:"4px 10px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 
+  // Semantic table base
+  semanticTable:{width:"100%",borderCollapse:"collapse",tableLayout:"auto"},
+
+  // Drag handle column
+  dragHandleHeader:{width:20,padding:0},
+  dragHandleCell:{width:20,padding:"0 2px",verticalAlign:"middle"},
+  dragHandle:{display:"inline-flex",alignItems:"center",justifyContent:"center",padding:2},
+
   // Table — #2 unified borders, #3 removed tHead tint, #6 row bg to white
   tHead:{
-    display:"flex",
-    alignItems:"center",
-    padding:"12px 0 8px 0",
     borderBottom:"1px solid var(--cp-border)",
     fontSize:11,
     color:"#3C5775",
@@ -423,13 +463,13 @@ export const styles = {
     textTransform:"uppercase",
     letterSpacing:0.6,
     background:"transparent",
-    marginBottom:0,
     textAlign:"left",
+    verticalAlign:"middle",
   },
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .18s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
-  rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)"},
+  row:{padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .18s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)",verticalAlign:"middle"},
+  rowCompact:{padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)",verticalAlign:"middle"},
   favRow:{boxShadow:"inset 3px 0 0 var(--cp-fav-accent)",background:"var(--cp-bg-fav)"},
-  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
+  chkW:{width:32,textAlign:"center",position:"relative"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid var(--cp-border-dim)",borderColor:"var(--cp-border-dim)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
   entryText:{fontSize:14,lineHeight:1.65,color:"var(--cp-text-secondary)",whiteSpace:"pre-wrap",cursor:"text"},
@@ -439,7 +479,7 @@ export const styles = {
   srcText:{fontSize:12,color:"var(--cp-text-muted)",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap"},
-  rowAct:{flex:"0 0 68px",display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center"},
+  rowAct:{width:68,display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center",verticalAlign:"middle"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"var(--cp-text-faint)",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
   overflowWrap:{position:"relative"},
   overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:8,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},

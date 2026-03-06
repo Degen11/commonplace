@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
 import { styles, CP_ACCENT } from "./styles";
-import { smartSplit } from "../utils/textFormatting";
+import { smartSplit, basicFormat } from "../utils/textFormatting";
 import { EXAMPLE_QUOTES } from "../data/constants";
 import {
   Pencil, Upload, FolderOpen, FileText,
@@ -379,6 +379,61 @@ const reveal = (visible, delay = 0) => ({
   transition: `opacity 0.8s ease ${delay}s, transform 0.8s ease ${delay}s`,
 });
 
+// ── Formatting preview — shows before/after for a sample of entries ──────────
+function FormattingPreview({ rawInput }) {
+  const [expanded, setExpanded] = useState(false);
+  const samples = useMemo(() => {
+    const lines = smartSplit(rawInput.trim()).slice(0, 5);
+    const diffs = [];
+    for (const line of lines) {
+      const formatted = basicFormat(line);
+      if (formatted !== line) diffs.push({ before: line, after: formatted });
+    }
+    return diffs;
+  }, [rawInput]);
+
+  if (samples.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 2 }}>
+      <button
+        onClick={() => setExpanded(p => !p)}
+        style={{
+          background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
+          fontSize: 11, color: CP_ACCENT, fontWeight: 500, padding: 0,
+          display: "inline-flex", alignItems: "center", gap: 4,
+        }}
+      >
+        <ChevronDown
+          size={12}
+          strokeWidth={2}
+          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0)", transition: "transform .15s" }}
+        />
+        Preview changes ({samples.length} {samples.length === 1 ? "fix" : "fixes"})
+      </button>
+      {expanded && (
+        <div style={{
+          marginTop: 6, padding: "8px 10px",
+          background: "var(--cp-bg-panel)", border: "1px solid var(--cp-border-light)",
+          borderRadius: 6, fontSize: 12, display: "flex", flexDirection: "column", gap: 6,
+          animation: "slideD .15s ease",
+        }}>
+          {samples.map((s, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ color: "var(--cp-text-muted)", textDecoration: "line-through", opacity: 0.7, lineHeight: 1.4, wordBreak: "break-word" }}>{s.before}</div>
+              <div style={{ color: "#059669", lineHeight: 1.4, wordBreak: "break-word" }}>{s.after}</div>
+              {i < samples.length - 1 && <div style={{ borderBottom: "1px solid var(--cp-border-light)", margin: "2px 0" }} />}
+            </div>
+          ))}
+          {smartSplit(rawInput.trim()).length > 5 && (
+            <div style={{ fontSize: 11, color: "var(--cp-text-faint)", fontStyle: "italic" }}>Showing first 5 entries...</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 export default function InputPhase({
   fadeClass,
@@ -593,6 +648,7 @@ export default function InputPhase({
                       </div>
                       Clean up formatting
                     </label>
+                    {formattingEnabled && count > 0 && <FormattingPreview rawInput={rawInput} />}
                   </div>
                 );
               })()}

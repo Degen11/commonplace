@@ -1,26 +1,10 @@
 import Logo from "./Logo";
-import { styles } from "./styles";
+import { styles, syncPillStyles } from "./styles";
 import {
-  List, AlignJustify, LayoutGrid, Moon, Sun,
+  List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
 } from "lucide-react";
 
-const syncPill = {
-  fontSize: 11,
-  fontWeight: 500,
-  padding: "2px 8px",
-  borderRadius: 4,
-  fontFamily: "'DM Sans', sans-serif",
-  letterSpacing: 0.2,
-  lineHeight: "16px",
-  whiteSpace: "nowrap",
-  alignSelf: "center",
-};
-
-const syncStyles = {
-  syncing: { ...syncPill, color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
-  synced:  { ...syncPill, color: "#16A34A", background: "rgba(34,197,94,0.10)" },
-  error:   { ...syncPill, color: "#DC2626", background: "rgba(220,38,38,0.10)" },
-};
+const syncStyles = syncPillStyles.full;
 
 export default function HeaderBar({
   quotes, filtered, topCats, customCats,
@@ -39,6 +23,7 @@ export default function HeaderBar({
   syncStatus,
   dark,
   toggleTheme,
+  onShowShortcuts,
 }) {
   return (
     <div ref={headerRef} style={styles.header}>
@@ -59,6 +44,9 @@ export default function HeaderBar({
         {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
         {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
         {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Keyboard shortcuts" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={onShowShortcuts}>
+          <HelpCircle size={16} strokeWidth={1.5} />
+        </button>
         <button className="ui-tip ui-tip-below hdr-btn" data-tip={dark ? "Light mode" : "Dark mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
           {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
         </button>

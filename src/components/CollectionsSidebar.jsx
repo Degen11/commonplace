@@ -94,11 +94,13 @@ function CollectionRow({
   c, isActive, isEditing, editName, setEditName, handleRename, setEditingId,
   confirmDeleteId, setConfirmDeleteId, deleteCollection, setActiveCollectionId,
   iconPickerId, setIconPickerId, updateCollectionIcon, quoteCounts,
+  onDropQuote,
 }) {
   const count = quoteCounts[c.id] || 0;
   const Icon = getIcon(c.icon);
   const iconRef = useRef(null);
   const [hovered, setHovered] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   if (isEditing) {
     return (
@@ -129,13 +131,17 @@ function CollectionRow({
       style={{
         display: "flex", alignItems: "center", gap: 6,
         padding: "7px 8px", borderRadius: 6, cursor: "pointer",
-        background: isActive ? "var(--cp-bg-hover)" : "transparent",
+        background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "transparent",
         transition: "background .12s",
         position: "relative",
+        ...(dragOver ? { outline: `2px solid ${CP_ACCENT}`, outlineOffset: -2 } : {}),
       }}
       onClick={() => setActiveCollectionId(c.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); if (confirmDeleteId === c.id) setConfirmDeleteId(null); }}
+      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={e => { e.preventDefault(); setDragOver(false); if (onDropQuote) onDropQuote(c.id, e); }}
     >
       <span
         ref={iconRef}
@@ -207,6 +213,29 @@ function CollectionRow({
   );
 }
 
+// ── Collapsed icon with drop target ──
+function CollapsedDropTarget({ c, isActive, setActiveCollectionId, onDropQuote, Icon }) {
+  const [dragOver, setDragOver] = useState(false);
+  return (
+    <button
+      onClick={() => setActiveCollectionId(c.id)}
+      style={{
+        background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "none",
+        border: "none", cursor: "pointer",
+        color: isActive ? CP_ACCENT : "var(--cp-text-muted)",
+        padding: 6, borderRadius: 6,
+        ...(dragOver ? { outline: `2px solid ${CP_ACCENT}`, outlineOffset: -2 } : {}),
+      }}
+      title={c.name}
+      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={e => { e.preventDefault(); setDragOver(false); if (onDropQuote) onDropQuote(c.id, e); }}
+    >
+      <Icon size={16} strokeWidth={1.5} />
+    </button>
+  );
+}
+
 export default function CollectionsSidebar({
   collections,
   activeCollectionId,
@@ -219,6 +248,7 @@ export default function CollectionsSidebar({
   totalQuotes,
   collapsed,
   setCollapsed,
+  onDropQuote,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -278,19 +308,7 @@ export default function CollectionsSidebar({
         {collections.map(c => {
           const Icon = getIcon(c.icon);
           return (
-            <button
-              key={c.id}
-              onClick={() => setActiveCollectionId(c.id)}
-              style={{
-                background: activeCollectionId === c.id ? "var(--cp-bg-hover)" : "none",
-                border: "none", cursor: "pointer",
-                color: activeCollectionId === c.id ? CP_ACCENT : "var(--cp-text-muted)",
-                padding: 6, borderRadius: 6,
-              }}
-              title={c.name}
-            >
-              <Icon size={16} strokeWidth={1.5} />
-            </button>
+            <CollapsedDropTarget key={c.id} c={c} isActive={activeCollectionId === c.id} setActiveCollectionId={setActiveCollectionId} onDropQuote={onDropQuote} Icon={Icon} />
           );
         })}
       </div>
@@ -410,6 +428,7 @@ export default function CollectionsSidebar({
             setIconPickerId={setIconPickerId}
             updateCollectionIcon={updateCollectionIcon}
             quoteCounts={quoteCounts}
+            onDropQuote={onDropQuote}
           />
         ))}
       </div>

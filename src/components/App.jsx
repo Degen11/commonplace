@@ -412,7 +412,9 @@ export default function Commonplace() {
     reidentifying: reidentifyingIds,
     collections,
     onAddToCollection: addToCollection,
-  }), [onFav, handleDelete, copyQuote, reIdentify, shareAsImage, copiedId, reidentifyingIds, collections, addToCollection]);
+    onRemoveFromCollection: removeFromCollection,
+    activeCollectionId,
+  }), [onFav, handleDelete, copyQuote, reIdentify, shareAsImage, copiedId, reidentifyingIds, collections, addToCollection, removeFromCollection, activeCollectionId]);
 
   const exportDropdownContent = (
     <ExportDropdown
@@ -651,6 +653,8 @@ export default function Commonplace() {
               isReidentifying={reidentifyingIds.size > 0}
               collections={collections}
               onAddToCollection={addToCollection}
+              onRemoveFromCollection={removeFromCollection}
+              activeCollectionId={activeCollectionId}
             />
           )}
 
@@ -721,6 +725,14 @@ export default function Commonplace() {
                 totalQuotes={quotes.length}
                 collapsed={sidebarCollapsed}
                 setCollapsed={setSidebarCollapsed}
+                onDropQuote={(collectionId, e) => {
+                  const quoteId = e.dataTransfer.getData("text/x-quote-id");
+                  if (quoteId) {
+                    addToCollection(collectionId, [quoteId]);
+                    const col = collections.find(c => c.id === collectionId);
+                    if (col) showToast(`Added to "${col.name}"`);
+                  }
+                }}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 

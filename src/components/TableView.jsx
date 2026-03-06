@@ -20,7 +20,7 @@ function InlineSourceInput({ initial, onSave, onCancel }) {
           if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onSave(val); }
           if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
         }}
-        onBlur={() => onSave(val)}
+        onBlur={() => { if (val !== initial) onSave(val); else onCancel(); }}
         onClick={e => e.stopPropagation()}
         onFocus={e => e.target.select()}
         autoFocus
@@ -36,12 +36,16 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
   const onCancelRef = useRef(onCancel);
   onCancelRef.current = onCancel;
   const [flipUp, setFlipUp] = useState(false);
+  const [flipLeft, setFlipLeft] = useState(false);
 
   useEffect(() => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       if (rect.bottom > window.innerHeight - 8) {
         setFlipUp(true);
+      }
+      if (rect.right > window.innerWidth - 8) {
+        setFlipLeft(true);
       }
     }
   }, []);
@@ -58,7 +62,8 @@ function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }
     <div ref={ref} onClick={e => e.stopPropagation()} style={{
       position: "absolute",
       ...(flipUp ? { bottom: "100%", top: "auto" } : { top: "100%", bottom: "auto" }),
-      left: 0, zIndex: 200,
+      ...(flipLeft ? { right: 0, left: "auto" } : { left: 0 }),
+      zIndex: 100,
       background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
       boxShadow: "var(--cp-shadow-md)", padding: 6,
       display: "flex", flexWrap: "wrap", gap: 4, width: 220,

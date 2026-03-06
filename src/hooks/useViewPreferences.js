@@ -18,7 +18,7 @@ export const SORT_OPTIONS = [
   { key: "category",   label: "By category" },
 ];
 
-export default function useViewPreferences(quotes) {
+export default function useViewPreferences(quotes, { activeCollectionId } = {}) {
   const [view, setView] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_VIEW);
@@ -99,7 +99,7 @@ export default function useViewPreferences(quotes) {
     return result;
   }, [quotes, catFilter, favFilter, debouncedSearch, sortBy]);
 
-  const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${quotes.length}`;
+  const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${quotes.length}-${activeCollectionId || "all"}`;
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
 
   // ── Computed stats ──

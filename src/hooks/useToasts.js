@@ -9,8 +9,12 @@ export default function useToasts() {
     setToasts(prev => [...prev, { id: toastIdRef.current, message, action, onAction }]);
   }, []);
 
-  const dismissToast = useCallback(() => {
-    setToasts(prev => prev.slice(1));
+  const dismissToast = useCallback((id) => {
+    if (id != null) {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    } else {
+      setToasts(prev => prev.slice(1));
+    }
   }, []);
 
   return { toasts, showToast, dismissToast };

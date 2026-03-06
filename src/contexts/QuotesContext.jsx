@@ -140,17 +140,19 @@ export function QuotesProvider({ children }) {
   }, []);
 
   // ── Cloud sync ──
-  const handleCloudData = useCallback((cloudQuotes, cloudCats) => {
+  const handleCloudData = useCallback((cloudQuotes, cloudCats, cloudCollections) => {
     // Only use cloud data if localStorage was empty (cloud = backup)
     if (initialLoadDone.current) return; // Already loaded from localStorage
     initialLoadDone.current = true;
 
     setQuotes(cloudQuotes);
     setCustomCats(cloudCats);
+    if (cloudCollections?.length > 0) setCollections(cloudCollections);
     // Also write to localStorage as cache
     try {
       localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
       localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
+      if (cloudCollections?.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections));
     } catch(e) { /* ignore */ }
   }, []);
 
@@ -197,8 +199,8 @@ export function QuotesProvider({ children }) {
   useEffect(() => {
     if (isSharedView) return;
     if (quotes.length === 0) return;
-    schedulePush(quotes, customCats, deletedIdsRef.current);
-  }, [quotes, customCats, isSharedView, schedulePush]);
+    schedulePush(quotes, customCats, deletedIdsRef.current, collections);
+  }, [quotes, customCats, collections, isSharedView, schedulePush]);
 
   // Persist column order
   useEffect(() => {

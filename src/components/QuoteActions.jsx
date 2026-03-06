@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, ChevronRight } from "lucide-react";
+import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
 import { CONF_COLORS } from "../data/constants";
 
@@ -87,6 +87,19 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
           {collections.length > 0 && (
             <>
               <div style={styles.overflowMenuDivider} />
+              {actionProps.activeCollectionId && (
+                <button
+                  className="overflow-menu-item"
+                  style={styles.overflowMenuItem}
+                  onClick={() => {
+                    actionProps.onRemoveFromCollection(actionProps.activeCollectionId, [q.id]);
+                    onToggle();
+                  }}
+                >
+                  <FolderMinus size={14} strokeWidth={1.5} />
+                  <span>Remove from collection</span>
+                </button>
+              )}
               <div style={{ position: "relative" }}>
                 <button
                   className="overflow-menu-item"

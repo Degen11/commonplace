@@ -1,5 +1,5 @@
 import { styles, CP_ACCENT } from "./styles";
-import { X, RefreshCw, FolderPlus } from "lucide-react";
+import { X, RefreshCw, FolderPlus, FolderMinus } from "lucide-react";
 
 export default function BulkBar({
   selected, setSelected,
@@ -12,6 +12,8 @@ export default function BulkBar({
   isReidentifying,
   collections,
   onAddToCollection,
+  onRemoveFromCollection,
+  activeCollectionId,
 }) {
   return (
     <div style={styles.bulkBar}>
@@ -38,26 +40,45 @@ export default function BulkBar({
           {isReidentifying ? "Re-identifying..." : "Re-identify"}
         </button>
         {collections && collections.length > 0 && (
-          <select
-            className="ui-tip"
-            data-tip="Add selected to collection"
-            style={{
-              padding: "5px 8px", borderRadius: 6,
-              border: `1px solid var(--cp-border)`,
-              background: "var(--cp-bg-card)", color: "var(--cp-text)",
-              fontSize: 12, fontFamily: "inherit", cursor: "pointer",
-            }}
-            value=""
-            onChange={e => {
-              if (e.target.value) {
-                onAddToCollection(e.target.value, [...selected]);
-                e.target.value = "";
-              }
-            }}
-          >
-            <option value="">Add to collection...</option>
-            {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <>
+            {activeCollectionId && (
+              <button
+                className="ui-tip"
+                data-tip="Remove selected from this collection"
+                style={{
+                  padding: "5px 12px", borderRadius: 6,
+                  border: "1px solid var(--cp-border)",
+                  background: "var(--cp-bg-card)", color: "var(--cp-text-secondary)",
+                  fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                }}
+                onClick={() => onRemoveFromCollection(activeCollectionId, [...selected])}
+              >
+                <FolderMinus size={12} strokeWidth={2} />
+                Remove from collection
+              </button>
+            )}
+            <select
+              className="ui-tip"
+              data-tip="Add selected to collection"
+              style={{
+                padding: "5px 8px", borderRadius: 6,
+                border: `1px solid var(--cp-border)`,
+                background: "var(--cp-bg-card)", color: "var(--cp-text)",
+                fontSize: 12, fontFamily: "inherit", cursor: "pointer",
+              }}
+              value=""
+              onChange={e => {
+                if (e.target.value) {
+                  onAddToCollection(e.target.value, [...selected]);
+                  e.target.value = "";
+                }
+              }}
+            >
+              <option value="">Add to collection...</option>
+              {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </>
         )}
         <button className="ui-tip" data-tip="Delete selected entries" style={styles.bulkDelBtn} onClick={onDelete}>Delete</button>
         <button className="ui-tip" data-tip="Clear selection" style={styles.bulkX} onClick={() => setSelected(new Set())}><X size={14} strokeWidth={2} /></button>

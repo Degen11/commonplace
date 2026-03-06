@@ -171,7 +171,7 @@ const MemoTableRow = memo(function TableRow({
     <div className={`qrow ${insertClass}`}
       data-id={q.id}
       draggable={!isEd && !isInlineEditing}
-      onDragStart={() => handleDragStart(q.id)}
+      onDragStart={e => { e.dataTransfer.setData("text/x-quote-id", q.id); handleDragStart(q.id); }}
       onDragOver={e => handleDragOver(e, q.id)}
       onDragEnd={handleDragEnd}
       {...(isMobile ? longPress : {})}

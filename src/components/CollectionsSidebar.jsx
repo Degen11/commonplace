@@ -3,7 +3,7 @@ import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
   FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
-  Quote, Compass, Crown, Gem,
+  Quote, Compass, Crown, Gem, Wand2, Loader2,
 } from "lucide-react";
 import { CP_ACCENT } from "./styles";
 
@@ -249,6 +249,7 @@ export default function CollectionsSidebar({
   collapsed,
   setCollapsed,
   onDropQuote,
+  onAutoGroup,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -257,10 +258,35 @@ export default function CollectionsSidebar({
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [iconPickerId, setIconPickerId] = useState(null);
   const inputRef = useRef(null);
+  const [isSmartGrouping, setIsSmartGrouping] = useState(false);
+  const [smartTheme, setSmartTheme] = useState("");
+  const [smartGroupLoading, setSmartGroupLoading] = useState(false);
+  const [smartGroupError, setSmartGroupError] = useState(null);
+  const smartInputRef = useRef(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) inputRef.current.focus();
   }, [isCreating]);
+
+  useEffect(() => {
+    if (isSmartGrouping && smartInputRef.current) smartInputRef.current.focus();
+  }, [isSmartGrouping]);
+
+  const handleSmartGroup = async () => {
+    const theme = smartTheme.trim();
+    if (!theme || !onAutoGroup) return;
+    setSmartGroupLoading(true);
+    setSmartGroupError(null);
+    try {
+      await onAutoGroup(theme);
+      setSmartTheme("");
+      setIsSmartGrouping(false);
+    } catch (err) {
+      setSmartGroupError(err.message || "Failed to auto-group");
+    } finally {
+      setSmartGroupLoading(false);
+    }
+  };
 
   const handleCreate = () => {
     const result = createCollection(newName);
@@ -383,6 +409,64 @@ export default function CollectionsSidebar({
           </button>
         )}
       </div>
+
+      {/* Smart Group — AI auto-collection */}
+      {onAutoGroup && (
+        <div style={{ padding: "0 8px 6px 0" }}>
+          {isSmartGrouping ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <input
+                  ref={smartInputRef}
+                  value={smartTheme}
+                  onChange={e => { setSmartTheme(e.target.value); setSmartGroupError(null); }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && !smartGroupLoading) handleSmartGroup();
+                    if (e.key === "Escape") { setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null); }
+                  }}
+                  placeholder='Theme, e.g. "love" or "mortality"'
+                  disabled={smartGroupLoading}
+                  style={{
+                    flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
+                    border: `1px solid ${smartGroupError ? "#DC2626" : "var(--cp-accent)"}`, borderRadius: 4,
+                    background: "var(--cp-bg-card)", color: "var(--cp-text)",
+                    opacity: smartGroupLoading ? 0.6 : 1,
+                  }}
+                />
+                <button
+                  onClick={handleSmartGroup}
+                  disabled={smartGroupLoading || !smartTheme.trim()}
+                  style={{
+                    background: CP_ACCENT, border: "none", borderRadius: 4,
+                    color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
+                    cursor: smartGroupLoading ? "wait" : "pointer", fontFamily: "inherit",
+                    opacity: smartGroupLoading || !smartTheme.trim() ? 0.5 : 1,
+                    display: "flex", alignItems: "center", gap: 3,
+                  }}
+                >
+                  {smartGroupLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : null}
+                  Go
+                </button>
+              </div>
+              {smartGroupError && (
+                <span style={{ fontSize: 11, color: "#DC2626", paddingLeft: 2 }}>{smartGroupError}</span>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsSmartGrouping(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, width: "100%",
+                padding: "6px 8px", border: "1px dashed var(--cp-border-dim)", borderRadius: 6,
+                background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
+                fontFamily: "inherit", fontSize: 12, fontWeight: 500, textAlign: "left",
+              }}
+            >
+              <Wand2 size={14} strokeWidth={2} /> Smart group
+            </button>
+          )}
+        </div>
+      )}
 
       {/* All Quotes */}
       <div style={{ padding: "2px 8px 2px 0" }}>

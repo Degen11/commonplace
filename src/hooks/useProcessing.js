@@ -278,6 +278,45 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     pendingContinuationRef.current = null;
   };
 
+  // ── AI auto-group: find quotes matching a theme ──
+  const autoGroup = useCallback(async (theme, quotesList, externalSignal) => {
+    if (!theme || quotesList.length === 0) return [];
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+    if (externalSignal) {
+      if (externalSignal.aborted) { clearTimeout(timeoutId); throw new DOMException("Aborted", "AbortError"); }
+      externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+
+    // Send only text (truncated) to minimize tokens
+    const quoteTexts = quotesList.map(q => q.text);
+
+    try {
+      const r = await fetch("/api/auto-group", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "CommonplaceApp",
+        },
+        body: JSON.stringify({ theme, quotes: quoteTexts }),
+        signal: controller.signal,
+      });
+
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || `API returned ${r.status}`);
+      }
+
+      const { indices } = await r.json();
+      // Map indices back to quote IDs
+      return indices.map(i => quotesList[i]?.id).filter(Boolean);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }, []);
+
   return {
     isProcessing, setIsProcessing,
     processingDone, setProcessingDone,
@@ -288,7 +327,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     stats, setStats,
     pendingDupes, dupeDecisions, setDupeDecisions,
     formattingEnabled, setFormattingEnabled,
-    identifyBatch,
+    identifyBatch, autoGroup,
     processEntries, handleDupesContinue, retryFailed,
     skipToResults, resetProcessingState,
   };

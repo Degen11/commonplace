@@ -5,7 +5,7 @@ import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, 
 import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
 
-export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion }) {
+export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion }) {
   const [deletingId, setDeletingId]             = useState(null);
   const [copiedId, setCopiedId]                 = useState(null);
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
@@ -48,11 +48,12 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         if (undoRef.current) {
           const { quote, index } = undoRef.current;
           setQuotes(p => { const n = [...p]; n.splice(Math.min(index, n.length), 0, quote); return n; });
+          untrackDeletion([id]);
           undoRef.current = null;
         }
       });
     }, 200);
-  }, [setQuotes, showToast, trackDeletion]);
+  }, [setQuotes, showToast, trackDeletion, untrackDeletion]);
 
   // ── Copy single quote ──
   const copyQuote = useCallback((q) => {
@@ -280,7 +281,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const entriesToContent = (entries) =>
     entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
 
-  const handleFileImport = useCallback((file, setRawInput, setImportedFileName) => {
+  const handleFileImport = useCallback((file, setRawInput, setImportedFileName, onImportCollections) => {
     if (!file) return;
     const ext = file.name.split(".").pop().toLowerCase();
     if (!["txt", "csv", "json", "md"].includes(ext)) { showToast("Supported formats: .txt, .csv, .json, .md"); return; }
@@ -291,10 +292,13 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       let skippedCount = 0;
 
       if (ext === "json") {
-        const entries = parseJSONQuotes(content);
+        const { entries, collections } = parseJSONQuotes(content);
         if (entries.length > 0) {
           content = entriesToContent(entries);
           formatLabel = "JSON";
+          if (collections.length > 0 && onImportCollections) {
+            onImportCollections(collections);
+          }
         } else {
           showToast("Couldn't find quotes in JSON file. Expected an array with text/quote/content fields.");
           return;

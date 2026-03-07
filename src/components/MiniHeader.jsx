@@ -13,7 +13,7 @@ export default function MiniHeader({
   addMoreRef, miniExportRef,
   preserveScroll,
   quotes, filtered, selected, hasActiveFilters,
-  showToast,
+  showToast, collections,
   syncStatus,
   dark,
   toggleTheme,
@@ -56,6 +56,7 @@ export default function MiniHeader({
                 hasActiveFilters={hasActiveFilters}
                 showToast={showToast}
                 setShowExport={setShowExport}
+                collections={collections}
               />
             )}
           </div>

@@ -50,8 +50,12 @@ export function exportMD(quotes) {
   download(md, "commonplace-export.md", "text/markdown");
 }
 
-export function exportJSON(quotes) {
-  const data = quotes.map(q => ({ text: q.text || "", source: q.source || "", category: q.category || "", confidence: q.confidence, favorite: q.favorite }));
+export function exportJSON(quotes, collections) {
+  const quoteData = quotes.map(q => ({ id: q.id, text: q.text || "", source: q.source || "", category: q.category || "", confidence: q.confidence, favorite: q.favorite }));
+  const data = { quotes: quoteData };
+  if (collections?.length > 0) {
+    data.collections = collections.map(c => ({ id: c.id, name: c.name, icon: c.icon || null, quoteIds: c.quoteIds }));
+  }
   download(JSON.stringify(data, null, 2), "commonplace-export.json", "application/json");
 }
 

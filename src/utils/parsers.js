@@ -52,9 +52,9 @@ export function parseJSONQuotes(content) {
     const arr = Array.isArray(data)
       ? data
       : (data.quotes || data.highlights || data.entries || data.items || data.data || []);
-    if (!Array.isArray(arr) || arr.length === 0) return [];
+    if (!Array.isArray(arr) || arr.length === 0) return { entries: [], collections: [] };
 
-    return arr.map(item => {
+    const entries = arr.map(item => {
       if (typeof item === "string") return { text: item.trim(), hint: null };
       if (!item || typeof item !== "object") return null;
       const text = (item.text || item.quote || item.content || item.highlight || item.passage || "").trim();
@@ -63,10 +63,20 @@ export function parseJSONQuotes(content) {
       const author = (item.author || item.by || "").trim();
       const title = (item.title || item.book || item.work || "").trim();
       const hint = source || (title && author ? `${title} - ${author}` : title || author) || null;
-      return { text, hint };
+      return { text, hint, id: item.id || null };
     }).filter(Boolean);
+
+    // Extract collections if present (Commonplace export format)
+    let collections = [];
+    if (!Array.isArray(data) && Array.isArray(data.collections)) {
+      collections = data.collections.filter(c =>
+        c && typeof c.id === "string" && typeof c.name === "string" && Array.isArray(c.quoteIds)
+      );
+    }
+
+    return { entries, collections };
   } catch {
-    return [];
+    return { entries: [], collections: [] };
   }
 }
 

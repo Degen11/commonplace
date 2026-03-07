@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
 
-export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion }) {
+export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
   const [selected, setSelected]             = useState(new Set());
@@ -180,8 +180,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
           });
         return restored;
       });
+      untrackDeletion([...deletedIds]);
     });
-  }, [quotes, selected, setQuotes, showToast, trackDeletion]);
+  }, [quotes, selected, setQuotes, showToast, trackDeletion, untrackDeletion]);
 
   const startReviewFlow = useCallback(() => {
     const attentionIds = quotes

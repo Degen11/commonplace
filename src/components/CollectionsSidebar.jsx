@@ -491,7 +491,19 @@ export default function CollectionsSidebar({
         </button>
       </div>
 
+      {/* Empty state when no collections exist */}
+      {collections.length === 0 && (
+        <div style={{
+          padding: "16px 12px", textAlign: "center",
+          color: "var(--cp-text-faint)", fontSize: 12, lineHeight: 1.5,
+        }}>
+          <Bookmark size={20} strokeWidth={1.2} style={{ margin: "0 auto 8px", display: "block", opacity: 0.5 }} />
+          <span>Group quotes into collections to keep things organized</span>
+        </div>
+      )}
+
       {/* Collections list — only scroll vertically when many items */}
+      {collections.length > 0 && (
       <div style={{
         padding: "0 8px 8px 0",
         overflowX: "hidden",
@@ -520,6 +532,7 @@ export default function CollectionsSidebar({
           />
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -53,7 +53,7 @@ export default function Commonplace() {
     isSharedView, setIsSharedView,
     syncStatus,
     initialLoading,
-    trackDeletion,
+    trackDeletion, untrackDeletion,
     collections,
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
@@ -136,7 +136,7 @@ export default function Commonplace() {
     toggleSel, selAll,
     applyBulk, bulkDel,
     startReviewFlow,
-  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion });
+  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion });
 
   const {
     deletingId,
@@ -146,7 +146,7 @@ export default function Commonplace() {
     handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
     handleDragStart, handleDragOver, handleDragEnd,
     handleFileImport,
-  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion });
+  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion });
 
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
@@ -397,6 +397,22 @@ export default function Commonplace() {
   };
   const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
 
+  const importCollections = useCallback((imported) => {
+    const existingNames = new Set(collections.map(c => c.name.toLowerCase()));
+    let added = 0;
+    for (const c of imported) {
+      if (existingNames.has(c.name.toLowerCase())) continue;
+      const col = createCollection(c.name);
+      if (col) {
+        if (c.icon) updateCollectionIcon(col.id, c.icon);
+        if (c.quoteIds?.length > 0) addToCollection(col.id, c.quoteIds);
+        existingNames.add(c.name.toLowerCase());
+        added++;
+      }
+    }
+    if (added > 0) showToast(`Imported ${added} collection${added === 1 ? "" : "s"}`);
+  }, [collections, createCollection, updateCollectionIcon, addToCollection, showToast]);
+
   // Persist sidebar collapsed state
   useEffect(() => {
     try { localStorage.setItem("commonplace_sidebar_collapsed", sidebarCollapsed ? "1" : "0"); } catch { /* ignore */ }
@@ -443,6 +459,7 @@ export default function Commonplace() {
       hasActiveFilters={hasActiveFilters}
       showToast={showToast}
       setShowExport={setShowExport}
+      collections={collections}
     />
   );
 
@@ -471,7 +488,7 @@ export default function Commonplace() {
             isProcessing={isProcessing}
             initialLoading={initialLoading}
             onProcess={handleProcess}
-            onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName)}
+            onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName, importCollections)}
             fileInputRef={fileInputRef}
           />
         </SectionErrorBoundary>
@@ -584,6 +601,7 @@ export default function Commonplace() {
               selected={selected}
               hasActiveFilters={hasActiveFilters}
               showToast={showToast}
+              collections={collections}
               syncStatus={syncStatus}
               dark={dark}
               toggleTheme={toggleTheme}
@@ -633,7 +651,7 @@ export default function Commonplace() {
                   onQuickAdd={handleQuickAdd}
                   onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
                   allCats={allCats}
-                  onFileImport={handleFileImport}
+                  onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
                 />
               </div>
             ) : (
@@ -651,7 +669,7 @@ export default function Commonplace() {
                     addMoreRef={addMoreRef}
                     onAddMore={handleAddMore}
                     onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
-                    onFileImport={handleFileImport}
+                    onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
                   />
                 </div>
               </div>

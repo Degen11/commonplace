@@ -442,16 +442,15 @@ export default function CollectionsSidebar({
                   onClick={handleSmartGroup}
                   disabled={smartGroupLoading || !smartTheme.trim()}
                   style={{
-                    background: CP_ACCENT, border: "none",
-                    color: "#fff", padding: "5px 10px", fontSize: 11, fontWeight: 600,
-                    cursor: smartGroupLoading ? "wait" : "pointer", fontFamily: "inherit",
-                    opacity: smartGroupLoading || !smartTheme.trim() ? 0.5 : 1,
-                    display: "flex", alignItems: "center", gap: 3,
-                    flexShrink: 0,
+                    background: "transparent", border: "none",
+                    color: smartGroupLoading || !smartTheme.trim() ? "var(--cp-text-faint)" : "var(--cp-accent)",
+                    padding: "5px 8px",
+                    cursor: smartGroupLoading ? "wait" : "pointer",
+                    display: "flex", alignItems: "center",
+                    flexShrink: 0, transition: "color .12s",
                   }}
                 >
-                  {smartGroupLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : null}
-                  Go
+                  {smartGroupLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Wand2 size={14} strokeWidth={2} />}
                 </button>
               </div>
               {smartGroupError && (

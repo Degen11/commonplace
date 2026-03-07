@@ -343,18 +343,17 @@ export default function CollectionsSidebar({
 
   return (
     <div style={{
-      width: 220, flexShrink: 0, paddingRight: 16,
+      width: 220, flexShrink: 0, padding: "0 12px 0 4px",
       display: "flex", flexDirection: "column",
       fontFamily: "'DM Sans',-apple-system,sans-serif",
       animation: "slideD .15s ease",
-      overflowX: "hidden",
       overflowY: "hidden",
       position: "sticky", top: 44, alignSelf: "flex-start",
     }}>
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 12px 8px 0",
+        padding: "12px 8px 8px 0",
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
           Collections
@@ -369,7 +368,7 @@ export default function CollectionsSidebar({
       </div>
 
       {/* Create new — at the top */}
-      <div style={{ padding: "0 8px 6px 0" }}>
+      <div style={{ padding: "0 4px 6px 0" }}>
         {isCreating ? (
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <input
@@ -412,7 +411,7 @@ export default function CollectionsSidebar({
 
       {/* Smart Group — AI auto-collection */}
       {onAutoGroup && (
-        <div style={{ padding: "0 8px 6px 0" }}>
+        <div style={{ padding: "0 4px 6px 0" }}>
           {isSmartGrouping ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{

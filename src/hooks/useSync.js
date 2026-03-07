@@ -81,7 +81,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     const deletedIds = latestDeletedIds.current;
     const collections = latestCollections.current;
 
-    if (quotes.length === 0) return;
+    if (quotes.length === 0 && (!deletedIds || deletedIds.length === 0)) return;
 
     setSyncStatus("syncing");
 

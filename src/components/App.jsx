@@ -11,6 +11,7 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
+import { similarity } from "../utils/textFormatting";
 
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
@@ -266,7 +267,7 @@ export default function Commonplace() {
 
   // Keyboard shortcuts — use a ref to avoid re-registering on every state change
   const kbStateRef = useRef({});
-  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, collectionFiltered };
+  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, selAll };
 
   useEffect(() => {
     const h = e => {
@@ -301,9 +302,7 @@ export default function Commonplace() {
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
-        if (s.collectionFiltered.length > 0) {
-          setSelected(new Set(s.collectionFiltered.map(q => q.id)));
-        }
+        s.selAll();
       }
     };
     document.addEventListener('keydown', h);
@@ -330,21 +329,32 @@ export default function Commonplace() {
   };
 
   const handleQuickAdd = useCallback((text, source, category) => {
-    const newQuote = {
-      id: crypto.randomUUID(),
-      text,
-      source: source || "Unknown",
-      category: category || "Unknown",
-      confidence: "high",
-      favorite: false,
-      updatedAt: Date.now(),
+    const addQuote = () => {
+      const newQuote = {
+        id: crypto.randomUUID(),
+        text,
+        source: source || "Unknown",
+        category: category || "Unknown",
+        confidence: "high",
+        favorite: false,
+        updatedAt: Date.now(),
+      };
+      setQuotes(p => [newQuote, ...p]);
+      setShowAddMore(false);
+      showToast("Quote added");
     };
-    setQuotes(p => [newQuote, ...p]);
-    setShowAddMore(false);
-    showToast("Quote added");
-  }, [setQuotes, showToast]);
+
+    const match = quotes.find(q => similarity(q.text, text) > 0.55);
+    if (match) {
+      const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
+      showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote);
+      return;
+    }
+    addQuote();
+  }, [quotes, setQuotes, showToast]);
 
   const handleClear = () => {
+    if (quotes.length > 0) trackDeletion(quotes.map(q => q.id));
     try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} setIsSharedView(false);
     try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch(e) {}
     goPhase("input"); setQuotes([]); setRawInput(""); setSelected(new Set());
@@ -845,6 +855,7 @@ export default function Commonplace() {
               search={search} setSearch={setSearch}
               setSortBy={setSortBy}
               customCats={customCats}
+              activeCollectionName={activeCollectionId ? collections.find(c => c.id === activeCollectionId)?.name : null}
             />
           )}
 

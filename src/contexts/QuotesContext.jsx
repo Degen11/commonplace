@@ -219,7 +219,7 @@ export function QuotesProvider({ children }) {
   // ── Push to Supabase whenever quotes/categories change ──
   useEffect(() => {
     if (isSharedView) return;
-    if (quotes.length === 0) return;
+    if (quotes.length === 0 && deletedIdsRef.current.length === 0) return;
     schedulePush(quotes, customCats, deletedIdsRef.current, collections);
   }, [quotes, customCats, collections, isSharedView, schedulePush]);
 

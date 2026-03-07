@@ -79,8 +79,22 @@ export default function Commonplace() {
     pendingDupes, dupeDecisions, setDupeDecisions,
     formattingEnabled, setFormattingEnabled,
     processEntries, handleDupesContinue, retryFailed,
-    identifyBatch, resetProcessingState,
+    identifyBatch, autoGroup, resetProcessingState,
   } = processing;
+
+  // AI auto-group: create a collection from a theme
+  const handleAutoGroup = useCallback(async (theme) => {
+    if (quotes.length === 0) throw new Error("No quotes to group");
+    const matchedIds = await autoGroup(theme, quotes);
+    if (matchedIds.length === 0) throw new Error("No quotes matched that theme");
+    // Capitalize first letter of theme for collection name
+    const name = theme.charAt(0).toUpperCase() + theme.slice(1);
+    const col = createCollection(name);
+    if (!col) throw new Error(`Collection "${name}" already exists`);
+    addToCollection(col.id, matchedIds);
+    setActiveCollectionId(col.id);
+    showToast(`Created "${col.name}" with ${matchedIds.length} quote${matchedIds.length === 1 ? "" : "s"}`);
+  }, [quotes, autoGroup, createCollection, addToCollection, setActiveCollectionId, showToast]);
 
   const {
     view, setView,
@@ -739,6 +753,7 @@ export default function Commonplace() {
                     if (col) showToast(`Added to "${col.name}"`);
                   }
                 }}
+                onAutoGroup={handleAutoGroup}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 

@@ -379,7 +379,7 @@ export default function CollectionsSidebar({
               onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); } }}
               placeholder="Collection name..."
               style={{
-                flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
+                flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
                 border: "1px solid var(--cp-accent)", borderRadius: 4, background: "var(--cp-bg-card)",
                 color: "var(--cp-text)",
               }}
@@ -387,7 +387,7 @@ export default function CollectionsSidebar({
             <button
               onClick={handleCreate}
               style={{
-                background: CP_ACCENT, border: "none", borderRadius: 4,
+                flexShrink: 0, background: CP_ACCENT, border: "none", borderRadius: 4,
                 color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit",
               }}

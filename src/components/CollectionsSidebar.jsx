@@ -415,7 +415,13 @@ export default function CollectionsSidebar({
         <div style={{ padding: "0 8px 6px 0" }}>
           {isSmartGrouping ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <div style={{
+                display: "flex", gap: 0, alignItems: "center",
+                border: `1.5px solid ${smartGroupError ? "#DC2626" : "var(--cp-accent)"}`,
+                borderRadius: 6, background: "var(--cp-bg-card)",
+                opacity: smartGroupLoading ? 0.6 : 1,
+                overflow: "hidden",
+              }}>
                 <input
                   ref={smartInputRef}
                   value={smartTheme}
@@ -424,24 +430,24 @@ export default function CollectionsSidebar({
                     if (e.key === "Enter" && !smartGroupLoading) handleSmartGroup();
                     if (e.key === "Escape") { setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null); }
                   }}
-                  placeholder='Theme, e.g. "love" or "mortality"'
+                  placeholder='Theme, e.g. "love"'
                   disabled={smartGroupLoading}
                   style={{
                     flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                    border: `1px solid ${smartGroupError ? "#DC2626" : "var(--cp-accent)"}`, borderRadius: 4,
-                    background: "var(--cp-bg-card)", color: "var(--cp-text)",
-                    opacity: smartGroupLoading ? 0.6 : 1,
+                    border: "none", outline: "none", background: "transparent",
+                    color: "var(--cp-text)", minWidth: 0,
                   }}
                 />
                 <button
                   onClick={handleSmartGroup}
                   disabled={smartGroupLoading || !smartTheme.trim()}
                   style={{
-                    background: CP_ACCENT, border: "none", borderRadius: 4,
-                    color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
+                    background: CP_ACCENT, border: "none",
+                    color: "#fff", padding: "5px 10px", fontSize: 11, fontWeight: 600,
                     cursor: smartGroupLoading ? "wait" : "pointer", fontFamily: "inherit",
                     opacity: smartGroupLoading || !smartTheme.trim() ? 0.5 : 1,
                     display: "flex", alignItems: "center", gap: 3,
+                    flexShrink: 0,
                   }}
                 >
                   {smartGroupLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : null}
@@ -457,7 +463,7 @@ export default function CollectionsSidebar({
               onClick={() => setIsSmartGrouping(true)}
               style={{
                 display: "flex", alignItems: "center", gap: 6, width: "100%",
-                padding: "6px 8px", border: "1px dashed var(--cp-border-dim)", borderRadius: 6,
+                padding: "6px 8px", border: "none", borderRadius: 6,
                 background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
                 fontFamily: "inherit", fontSize: 12, fontWeight: 500, textAlign: "left",
               }}

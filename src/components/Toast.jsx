@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { styles } from "./styles";
+import { TOAST_DURATION_MS, TOAST_ACTION_DURATION_MS, TOAST_EXIT_MS } from "../config";
 
 export default function Toast({ id, message, action, onAction, onDismiss }) {
-  const duration = action ? 5000 : 2500;
+  const duration = action ? TOAST_ACTION_DURATION_MS : TOAST_DURATION_MS;
   const [exiting, setExiting] = useState(false);
   const timerRef = useRef(null);
 
   const triggerExit = useCallback(() => {
     if (exiting) return;
     setExiting(true);
-    setTimeout(() => onDismiss(id), 180);
+    setTimeout(() => onDismiss(id), TOAST_EXIT_MS);
   }, [onDismiss, exiting, id]);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function Toast({ id, message, action, onAction, onDismiss }) {
     if (onAction) onAction();
     // Dismiss this specific toast immediately
     setExiting(true);
-    setTimeout(() => onDismiss(id), 180);
+    setTimeout(() => onDismiss(id), TOAST_EXIT_MS);
   }, [onAction, onDismiss, id]);
 
   return (

@@ -71,13 +71,13 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
   <div style={{
     display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
     padding:"6px 10px",
-    background:"#ECFDF5",          // soft green background
+    background:"rgba(5,150,105,0.08)",
     borderRadius:6,
-    border:"1px solid #A7F3D0",    // subtle green border
+    border:"1px solid rgba(5,150,105,0.2)",
     fontSize:12,
   }}>
-    <span style={{ color:"#065F46", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
-    <span style={{ color:"#064E3B", fontStyle:"italic", flex:1 }}>
+    <span style={{ color:"var(--cp-text-muted)", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
+    <span style={{ color:"var(--cp-text-secondary)", fontStyle:"italic", flex:1 }}>
       "{suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1)}" — {suggestion.s}
     </span>
     <button
@@ -87,7 +87,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         borderRadius:5,
         border:"none",
         cursor:"pointer",
-        background:"#059669",      // dark green button
+        background:"#059669",
         color:"#fff",
         fontSize:11,
         fontWeight:600,
@@ -105,7 +105,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         border:"none",
         cursor:"pointer",
         background:"transparent",
-        color:"#065F46",
+        color:"var(--cp-text-muted)",
         fontSize:11,
         fontFamily:"inherit",
       }}

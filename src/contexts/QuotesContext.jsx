@@ -135,6 +135,12 @@ export function QuotesProvider({ children }) {
     try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(deletedIdsRef.current)); } catch { /* ignore */ }
   }, []);
 
+  const untrackDeletion = useCallback((quoteIds) => {
+    const idSet = new Set(quoteIds);
+    deletedIdsRef.current = deletedIdsRef.current.filter(e => !idSet.has(e.id));
+    try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(deletedIdsRef.current)); } catch { /* ignore */ }
+  }, []);
+
   // ── Cloud sync ──
   const handleCloudData = useCallback((cloudQuotes, cloudCats, cloudCollections) => {
     if (!initialLoadDone.current) {
@@ -322,13 +328,13 @@ export function QuotesProvider({ children }) {
     syncStatus,
     lastSynced,
     initialLoading,
-    trackDeletion,
+    trackDeletion, untrackDeletion,
     collections,
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
   }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon]);
+       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion]);
 
   return (
     <QuotesContext.Provider value={value}>

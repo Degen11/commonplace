@@ -10,7 +10,7 @@ import { styles } from "./styles";
 
 export default function ExportDropdown({
   quotes, filtered, selected, hasActiveFilters,
-  showToast, setShowExport,
+  showToast, setShowExport, collections,
 }) {
   const handleShare = () => {
     const encoded = encodeShareData(quotes);
@@ -37,7 +37,7 @@ export default function ExportDropdown({
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Markdown</button>
-      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(quotes); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(quotes, collections); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
       {hasActiveFilters && (<>
         <div style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
         <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>

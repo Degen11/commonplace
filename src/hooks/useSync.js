@@ -1,15 +1,17 @@
 import { useRef, useCallback, useEffect, useState } from "react";
+import { generateId } from "../utils/uuid";
+import {
+  SYNC_DEBOUNCE_MS, SYNC_MAX_RETRIES, SYNC_INITIAL_DELAY_MS,
+  SYNC_ERROR_THROTTLE_MS,
+} from "../config";
 
 const LS_DEVICE_ID = "commonplace_device_id";
-const SYNC_DEBOUNCE = 2000; // 2s after last change before pushing
-const MAX_RETRIES = 2;
-const RETRY_DELAY = 3000; // 3s before retry
 
 function getOrCreateDeviceId() {
   try {
     let id = localStorage.getItem(LS_DEVICE_ID);
     if (id) return id;
-    id = crypto.randomUUID();
+    id = generateId();
     localStorage.setItem(LS_DEVICE_ID, id);
     return id;
   } catch {
@@ -69,9 +71,9 @@ export default function useSync({ onCloudData, onSyncError }) {
     }
   }, [onCloudData]);
 
-  // ── Push: send current state to Supabase (with retry) ──
+  // ── Push: send current state to Supabase (with exponential backoff) ──
   // Reads from refs so retries always push the latest data, not stale closure values.
-  const push = useCallback(async (retriesLeft = MAX_RETRIES) => {
+  const push = useCallback(async (retriesLeft = SYNC_MAX_RETRIES, delay = SYNC_INITIAL_DELAY_MS) => {
     if (!deviceId.current) return;
     if (!initialLoadDone.current) return;
     if (!mountedRef.current) return;
@@ -116,11 +118,11 @@ export default function useSync({ onCloudData, onSyncError }) {
       console.error("[useSync] push error:", err?.message || err);
       if (!mountedRef.current) return;
 
-      // Retry with delay — re-reads latest data from refs on next attempt
+      // Exponential backoff: 2s → 4s → 8s → 16s
       if (retriesLeft > 0) {
         retryTimer.current = setTimeout(() => {
-          if (mountedRef.current) push(retriesLeft - 1);
-        }, RETRY_DELAY);
+          if (mountedRef.current) push(retriesLeft - 1, delay * 2);
+        }, delay);
         return;
       }
 
@@ -128,15 +130,14 @@ export default function useSync({ onCloudData, onSyncError }) {
       setSyncStatus("error");
       consecutiveFailures.current++;
 
-      // Notify user on first failure, then throttle to once per 5 minutes
       const now = Date.now();
-      if (now - lastErrorNotified.current > 5 * 60 * 1000) {
+      if (now - lastErrorNotified.current > SYNC_ERROR_THROTTLE_MS) {
         lastErrorNotified.current = now;
         if (onSyncError) {
           onSyncError(
             consecutiveFailures.current > 1
-              ? "Cloud backup unavailable — your data is saved locally."
-              : "Couldn't back up to cloud — will retry on next change."
+              ? "Cloud backup unavailable \u2014 your data is saved locally."
+              : "Couldn't back up to cloud \u2014 will retry on next change."
           );
         }
       }
@@ -156,7 +157,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     if (retryTimer.current) clearTimeout(retryTimer.current);
     pushTimer.current = setTimeout(() => {
       push();
-    }, SYNC_DEBOUNCE);
+    }, SYNC_DEBOUNCE_MS);
   }, [push]);
 
   // Sync when coming back online after being offline

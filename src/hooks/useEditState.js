@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
+import { SAVED_PULSE_MS } from "../config";
 
-export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion }) {
+export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
   const [selected, setSelected]             = useState(new Set());
@@ -12,7 +13,6 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   const [savedPulse, setSavedPulse]         = useState(null);
 
   const lastSelectedIndex = useRef(null);
-  const undoRef           = useRef(null);
 
   // ── Clean ghost IDs in selection ──
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     }));
     setInlineEdit(null);
     setSavedPulse({ id, field });
-    setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), 600);
+    setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), SAVED_PULSE_MS);
     // First-use inline edit tip
     try {
       if (!localStorage.getItem("commonplace_inline_tip")) {
@@ -145,14 +145,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     }));
     const count = selected.size;
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
-    undoRef.current = { bulkSnapshot: snapshot };
+    const snapMap = new Map(snapshot.map(q => [q.id, q]));
     showToast(`${count} entries updated`, "Undo", () => {
-      if (undoRef.current?.bulkSnapshot) {
-        const snap = undoRef.current.bulkSnapshot;
-        const snapMap = new Map(snap.map(q => [q.id, q]));
-        setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
-        undoRef.current = null;
-      }
+      setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
     });
   }, [quotes, selected, bulkEditCat, bulkEditSource, setQuotes, showToast]);
 
@@ -168,6 +163,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     }));
     setQuotes(p => p.filter(q => !deletedIds.has(q.id)));
     trackDeletion([...deletedIds]);
+    if (cleanCollectionRefs) cleanCollectionRefs([...deletedIds]);
     setSelected(new Set());
     showToast(`${count} ${count === 1 ? "entry" : "entries"} deleted`, "Undo", () => {
       setQuotes(p => {

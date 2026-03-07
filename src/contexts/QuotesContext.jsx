@@ -4,6 +4,11 @@ import {
 } from "../data/constants";
 import { useToastContext } from "./ToastContext";
 import useSync from "../hooks/useSync";
+import { generateId } from "../utils/uuid";
+import {
+  TOMBSTONE_TTL_MS, STORAGE_WARN_BYTES, PERSIST_DEBOUNCE_MS,
+  MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
+} from "../config";
 
 const QuotesContext = createContext(null);
 
@@ -12,23 +17,17 @@ const LS_CATS        = "commonplace_cats";
 const LS_COL_ORDER   = "commonplace_col_order";
 const LS_DELETED_IDS = "commonplace_deleted_ids";
 const LS_COLLECTIONS = "commonplace_collections";
-const TOMBSTONE_TTL  = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-// localStorage is now a local cache; Supabase is the durable store.
-// We still warn at 4 MB but no longer hard-refuse writes — the data
-// is safe in the cloud even if localStorage fills up.
-const STORAGE_WARN_THRESHOLD = 4 * 1024 * 1024;
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
   const [text, source, category, fav] = raw;
   if (typeof text !== "string" || typeof source !== "string" || typeof category !== "string") return null;
-  if (text.length === 0 || text.length > 5000) return null;
-  if (source.length > 500) return null;
-  if (category.length > 100) return null;
+  if (text.length === 0 || text.length > MAX_QUOTE_TEXT_LENGTH) return null;
+  if (source.length > MAX_SOURCE_LENGTH) return null;
+  if (category.length > MAX_CATEGORY_LENGTH) return null;
   const clean = (s) => s.replace(/<[^>]*>/g, "").trim();
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     text: clean(text),
     source: clean(source),
     category: clean(category),
@@ -43,7 +42,7 @@ export function safeDecodeShareData(hash) {
     const bytes = Uint8Array.from(atob(hash), c => c.charCodeAt(0));
     const json = new TextDecoder().decode(bytes);
     const arr = JSON.parse(json);
-    if (!Array.isArray(arr) || arr.length === 0 || arr.length > 10000) return null;
+    if (!Array.isArray(arr) || arr.length === 0 || arr.length > MAX_SHARE_ITEMS) return null;
     const validated = arr.map(validateShareQuote).filter(Boolean);
     return validated.length > 0 ? validated : null;
   } catch {
@@ -120,7 +119,7 @@ export function QuotesProvider({ children }) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           const now = Date.now();
-          return parsed.filter(e => e && now - e.deletedAt < TOMBSTONE_TTL);
+          return parsed.filter(e => e && now - e.deletedAt < TOMBSTONE_TTL_MS);
         }
       }
     } catch { /* ignore */ }
@@ -202,7 +201,7 @@ export function QuotesProvider({ children }) {
       const catsData = JSON.stringify(cats);
       const totalSize = data.length + catsData.length;
 
-      if (!storageLimitWarned.current && totalSize > STORAGE_WARN_THRESHOLD) {
+      if (!storageLimitWarned.current && totalSize > STORAGE_WARN_BYTES) {
         storageLimitWarned.current = true;
         showToast("Large collection \u2014 your data is backed up to the cloud.");
       }
@@ -218,7 +217,7 @@ export function QuotesProvider({ children }) {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       persistQuotes(quotes, customCats, isSharedView);
-    }, 300);
+    }, PERSIST_DEBOUNCE_MS);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [quotes, customCats, isSharedView, persistQuotes]);
 
@@ -244,7 +243,7 @@ export function QuotesProvider({ children }) {
     const sanitized = sanitizeName(name);
     if (!sanitized) return null;
     if (collections.some(c => c.name.toLowerCase() === sanitized.toLowerCase())) return null;
-    const newCol = { id: crypto.randomUUID(), name: sanitized, quoteIds: [], createdAt: Date.now() };
+    const newCol = { id: generateId(), name: sanitized, quoteIds: [], createdAt: Date.now() };
     setCollections(prev => [...prev, newCol]);
     return newCol;
   }, [collections]);
@@ -280,6 +279,45 @@ export function QuotesProvider({ children }) {
 
   const updateCollectionIcon = useCallback((id, icon) => {
     setCollections(prev => prev.map(c => c.id === id ? { ...c, icon } : c));
+  }, []);
+
+  // Remove deleted quote IDs from all collection quoteIds arrays
+  const cleanCollectionRefs = useCallback((deletedQuoteIds) => {
+    const toRemove = new Set(deletedQuoteIds);
+    setCollections(prev => {
+      let changed = false;
+      const next = prev.map(c => {
+        const filtered = c.quoteIds.filter(id => !toRemove.has(id));
+        if (filtered.length !== c.quoteIds.length) { changed = true; return { ...c, quoteIds: filtered }; }
+        return c;
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
+  // ── Cross-tab storage sync ──
+  // When another tab writes to localStorage, pick up the changes.
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === LS_QUOTES && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setQuotes(parsed);
+        } catch { /* ignore corrupt data */ }
+      } else if (e.key === LS_CATS && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setCustomCats(parsed);
+        } catch { /* ignore */ }
+      } else if (e.key === LS_COLLECTIONS && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setCollections(parsed);
+        } catch { /* ignore */ }
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   // ── Mount: shared link OR mark ready / pull from cloud ──
@@ -333,8 +371,9 @@ export function QuotesProvider({ children }) {
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
+    cleanCollectionRefs,
   }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion]);
+       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs]);
 
   return (
     <QuotesContext.Provider value={value}>

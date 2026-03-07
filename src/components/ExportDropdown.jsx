@@ -7,6 +7,7 @@ import {
   copyToClipboard, richCopyToClipboard, encodeShareData,
 } from "../utils/export";
 import { styles } from "./styles";
+import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH } from "../config";
 
 export default function ExportDropdown({
   quotes, filtered, selected, hasActiveFilters,
@@ -15,9 +16,18 @@ export default function ExportDropdown({
   const handleShare = () => {
     const encoded = encodeShareData(quotes);
     const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
-    if (encoded.length > 6000) showToast(`Link may be too long for some browsers (${quotes.length} entries). Consider exporting instead.`);
+
+    if (url.length > SHARE_URL_MAX_LENGTH) {
+      showToast(`Link is too long for most browsers (${url.length} chars, ${quotes.length} entries). Export a file instead.`);
+      return;
+    }
+
+    if (url.length > SHARE_URL_WARN_LENGTH) {
+      showToast(`Link copied but may not work in older browsers (${quotes.length} entries, ${url.length} chars). Consider exporting instead.`);
+    }
+
     navigator.clipboard.writeText(url).then(() => {
-      if (encoded.length <= 6000) showToast("Shareable link copied to clipboard!");
+      if (url.length <= SHARE_URL_WARN_LENGTH) showToast("Shareable link copied to clipboard!");
     }).catch(() => {
       showToast("Couldn't copy \u2014 try manually copying from the address bar.");
       window.location.hash = `s=${encoded}`;

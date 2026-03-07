@@ -4,15 +4,16 @@ import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
+import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } from "../config";
+import { describeApiError } from "../utils/apiErrors";
 
-export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion }) {
+export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
   const [deletingId, setDeletingId]             = useState(null);
   const [copiedId, setCopiedId]                 = useState(null);
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
   const [dragId, setDragId]                     = useState(null);
   const [dragInsert, setDragInsert]             = useState(null);
 
-  const undoRef              = useRef(null);
   const reidentifyAbortRefs  = useRef(new Map());
   const lastDragTarget       = useRef(null);
   const lastDragHalf         = useRef(null);
@@ -34,6 +35,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   }, []);
 
   // ── Delete ──
+  // Undo data is captured directly in the toast callback closure,
+  // so multiple rapid deletes each get their own independent undo.
   const handleDelete = useCallback((id) => {
     const deleted = quotesRef.current.find(q => q.id === id);
     const idx = quotesRef.current.findIndex(q => q.id === id);
@@ -43,17 +46,13 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       setDeletingId(null);
       setQuotes(p => p.filter(q => q.id !== id));
       trackDeletion([id]);
-      undoRef.current = { quote: deleted, index: idx };
+      if (cleanCollectionRefs) cleanCollectionRefs([id]);
       showToast("Entry deleted", "Undo", () => {
-        if (undoRef.current) {
-          const { quote, index } = undoRef.current;
-          setQuotes(p => { const n = [...p]; n.splice(Math.min(index, n.length), 0, quote); return n; });
-          untrackDeletion([id]);
-          undoRef.current = null;
-        }
+        setQuotes(p => { const n = [...p]; n.splice(Math.min(idx, n.length), 0, deleted); return n; });
+        untrackDeletion([id]);
       });
-    }, 200);
-  }, [setQuotes, showToast, trackDeletion, untrackDeletion]);
+    }, DELETE_ANIM_MS);
+  }, [setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs]);
 
   // ── Copy single quote ──
   const copyQuote = useCallback((q) => {
@@ -63,7 +62,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopiedId(q.id);
-        setTimeout(() => { if (mountedRef.current) setCopiedId(prev => prev === q.id ? null : prev); }, 1200);
+        setTimeout(() => { if (mountedRef.current) setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
         showToast("Copied!");
       })
       .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text."));
@@ -142,7 +141,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       }
     } catch (err) {
       if (err.name === "AbortError") return;
-      showToast("Couldn't reach AI. Try again.");
+      showToast(describeApiError(err));
     }
     clearId();
   }, [setQuotes, allCats, showToast, identifyBatch]);
@@ -198,10 +197,9 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       // Second pass: batch API for remaining
       if (needsApi.length > 0 && !controller.signal.aborted) {
-        const BATCH_SIZE = 20;
-        for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
+        for (let i = 0; i < needsApi.length; i += API_BATCH_SIZE) {
           if (controller.signal.aborted) break;
-          const chunk = needsApi.slice(i, i + BATCH_SIZE);
+          const chunk = needsApi.slice(i, i + API_BATCH_SIZE);
           const items = chunk.map(q => ({ text: q.text, hint: null }));
           try {
             const results = await identifyBatch(items, false, controller.signal);
@@ -231,7 +229,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     } catch (err) {
       clearIds();
       if (err.name === "AbortError") return;
-      showToast("Couldn't reach AI. Try again.");
+      showToast(describeApiError(err));
     }
   }, [setQuotes, allCats, showToast, identifyBatch]);
 
@@ -283,6 +281,14 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
   const handleFileImport = useCallback((file, setRawInput, setImportedFileName, onImportCollections) => {
     if (!file) return;
+
+    // Gate: reject files that are too large to process safely in the browser
+    if (file.size > MAX_IMPORT_FILE_BYTES) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      showToast(`File too large (${sizeMB} MB). Maximum is ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB.`);
+      return;
+    }
+
     const ext = file.name.split(".").pop().toLowerCase();
     if (!["txt", "csv", "json", "md"].includes(ext)) { showToast("Supported formats: .txt, .csv, .json, .md"); return; }
     const reader = new FileReader();

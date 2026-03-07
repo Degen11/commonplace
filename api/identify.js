@@ -87,6 +87,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error('Anthropic API error:', response.status);
+      if (response.status === 429) {
+        return res.status(429).json({ error: 'AI rate limit reached. Please wait a moment and try again.' });
+      }
+      if (response.status === 401) {
+        return res.status(502).json({ error: 'AI authentication failed. Please contact support.' });
+      }
+      if (response.status === 529 || response.status === 503) {
+        return res.status(503).json({ error: 'AI service is overloaded. Please try again shortly.' });
+      }
       return res.status(502).json({ error: 'AI service temporarily unavailable. Please try again.' });
     }
 

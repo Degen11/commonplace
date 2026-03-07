@@ -4,6 +4,12 @@ import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
+import { generateId } from "../utils/uuid";
+import { describeApiError } from "../utils/apiErrors";
+import {
+  API_TIMEOUT_MS, AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
+  PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD,
+} from "../config";
 
 export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const [isProcessing, setIsProcessing]       = useState(false);
@@ -45,7 +51,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       return `[${i}] ${it.text}${hintStr}`;
     }).join("\n");
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
     // If an external signal is provided, abort our controller when it fires
     if (externalSignal) {
@@ -105,12 +111,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     safeSetProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need AI...`, phase: "local" });
 
-    const apiResults = new Map(); let apiFailed = false; const failed = []; const BATCH_SIZE = 20;
+    const apiResults = new Map(); let apiFailed = false; const failed = [];
     if (needsApi.length > 0) {
-      for (let i = 0; i < needsApi.length; i += BATCH_SIZE) {
+      for (let i = 0; i < needsApi.length; i += API_BATCH_SIZE) {
         if (!mountedRef.current) return;
-        const chunk = needsApi.slice(i, i + BATCH_SIZE);
-        safeSetProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / BATCH_SIZE)}...`, phase: "api" });
+        const chunk = needsApi.slice(i, i + API_BATCH_SIZE);
+        safeSetProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / API_BATCH_SIZE)}...`, phase: "api" });
         try {
           const results = await identifyBatch(chunk, useFormatting);
           if (!mountedRef.current) return;
@@ -119,9 +125,9 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
             const item = chunk[r.i];
             return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
           })]);
-        } catch {
+        } catch (err) {
           apiFailed = true; chunk.forEach(c => failed.push(c));
-          safeSetApiError(`AI identification failed for ${needsApi.length - i} entries. You can edit them manually or retry.`);
+          safeSetApiError(describeApiError(err) + ` (${needsApi.length - i} entries affected)`);
           break;
         }
       }
@@ -135,15 +141,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       const local = localByIdx.get(i);
       if (local) {
         const text = useFormatting ? basicFormat(p.text) : p.text;
-        return { id: crypto.randomUUID(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, updatedAt: Date.now() };
+        return { id: generateId(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, updatedAt: Date.now() };
       }
       const api = apiResults.get(i);
       if (api) {
         const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
-        return { id: crypto.randomUUID(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false, updatedAt: Date.now() };
+        return { id: generateId(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false, updatedAt: Date.now() };
       }
       const text = useFormatting ? basicFormat(p.text) : p.text;
-      return { id: crypto.randomUUID(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false, updatedAt: Date.now() };
+      return { id: generateId(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false, updatedAt: Date.now() };
     });
 
     if (!mountedRef.current) return;
@@ -152,13 +158,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     safeSetProcessingDone(true);
     safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
     try { localStorage.removeItem("commonplace_draft"); } catch(e) {}
-    // Auto-transition after 3s (user can skip via "View my collection" button)
+    // Auto-transition after processing completes (user can skip via "View my collection" button)
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
     autoTransitionRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
       autoTransitionRef.current = null;
       safeSetProgress(null); safeSetIsProcessing(false); safeSetProcessingDone(false); goPhase("results");
-    }, 3000);
+    }, PROCESSING_DONE_MS);
   };
 
   const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
@@ -177,7 +183,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     parsed.forEach(p => {
       const norm = normalize(p.text);
-      const matchedNorm = [...seen.keys()].find(s => similarity(s, norm) > 0.55);
+      const matchedNorm = [...seen.keys()].find(s => similarity(s, norm) > DUPE_SIMILARITY_THRESHOLD);
 
       if (matchedNorm) {
         const matchedQuote = seen.get(matchedNorm);
@@ -283,7 +289,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (!theme || quotesList.length === 0) return [];
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), AUTO_GROUP_TIMEOUT_MS);
 
     if (externalSignal) {
       if (externalSignal.aborted) { clearTimeout(timeoutId); throw new DOMException("Aborted", "AbortError"); }

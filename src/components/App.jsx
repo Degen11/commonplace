@@ -12,6 +12,8 @@ import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
 import { similarity } from "../utils/textFormatting";
+import { generateId } from "../utils/uuid";
+import { DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS } from "../config";
 
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
@@ -58,6 +60,7 @@ export default function Commonplace() {
     activeCollectionId, setActiveCollectionId,
     createCollection, deleteCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
+    cleanCollectionRefs,
   } = useQuotesContext();
 
   const [phase, setPhase]         = useState("input");
@@ -68,7 +71,7 @@ export default function Commonplace() {
 
   const goPhase = useCallback((next) => {
     setFadeClass("phase-out");
-    setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, 200);
+    setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, PHASE_TRANSITION_MS);
   }, []);
 
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
@@ -136,7 +139,7 @@ export default function Commonplace() {
     toggleSel, selAll,
     applyBulk, bulkDel,
     startReviewFlow,
-  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion });
+  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs });
 
   const {
     deletingId,
@@ -146,7 +149,7 @@ export default function Commonplace() {
     handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
     handleDragStart, handleDragOver, handleDragEnd,
     handleFileImport,
-  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion });
+  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs });
 
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
@@ -195,7 +198,7 @@ export default function Commonplace() {
         if (rawInput.trim()) localStorage.setItem(LS_DRAFT, rawInput);
         else localStorage.removeItem(LS_DRAFT);
       } catch(e) {}
-    }, 500);
+    }, DRAFT_SAVE_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [rawInput]);
 
@@ -345,7 +348,7 @@ export default function Commonplace() {
   const handleQuickAdd = useCallback((text, source, category) => {
     const addQuote = () => {
       const newQuote = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         text,
         source: source || "Unknown",
         category: category || "Unknown",
@@ -358,7 +361,7 @@ export default function Commonplace() {
       showToast("Quote added");
     };
 
-    const match = quotes.find(q => similarity(q.text, text) > 0.55);
+    const match = quotes.find(q => similarity(q.text, text) > DUPE_SIMILARITY_THRESHOLD);
     if (match) {
       const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
       showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote);

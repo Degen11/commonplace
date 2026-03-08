@@ -4,6 +4,7 @@ import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
 import { styles, CP_ACCENT } from "./styles";
 import { smartSplit, basicFormat } from "../utils/textFormatting";
+import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { EXAMPLE_QUOTES } from "../data/constants";
 import {
   Pencil, Upload, FolderOpen, FileText,
@@ -706,6 +707,7 @@ export default function InputPhase({
                 style={styles.bigTextarea}
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
+                onKeyDown={e => handleRichTextShortcut(e, rawInput, setRawInput)}
                 placeholder={
                   "Paste everything here \u2014 one per line, messy is fine:\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
                 }

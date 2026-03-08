@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
+import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { styles } from "./styles";
 import { Pencil, Bot, FileText, FolderOpen, CheckCircle, Link, Eye } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
@@ -139,6 +140,7 @@ export default function AddMorePanel({
       {tab === "identify" ? (
         <>
           <textarea ref={addMoreRef} style={{ ...styles.textarea, minHeight: 80 }} value={addMoreInput} onChange={e => setAddMoreInput(e.target.value)}
+            onKeyDown={e => handleRichTextShortcut(e, addMoreInput, setAddMoreInput)}
             placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
@@ -296,6 +298,7 @@ export default function AddMorePanel({
             onChange={e => setQuickText(e.target.value)}
             placeholder="Type or paste a single quote..."
             onKeyDown={e => {
+              if (handleRichTextShortcut(e, quickText, setQuickText)) return;
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleQuickAdd(); }
             }}
             autoFocus

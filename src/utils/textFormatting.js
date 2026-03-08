@@ -169,6 +169,10 @@ export function similarity(a, b) {
 
 export function smartParse(line) {
   let t = line.trim();
+  // Strip leading bullets, dashes, en/em dashes, list markers, quote marks
+  t = t.replace(/^[\u2022\u00b7\u2013\u2014\-*>#]+\s*/, "")
+       .replace(/^\d{1,4}\s*\.\s*/, "")
+       .trim();
   if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith('\u201C') && t.endsWith('\u201D')) || (t.startsWith("'") && t.endsWith("'")))
     t = t.slice(1, -1).trim();
   const parenMatch = t.match(/^(.+?)\s*\(([^)]{2,50})\)\s*$/);

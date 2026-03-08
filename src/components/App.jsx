@@ -11,12 +11,13 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
-import { similarity } from "../utils/textFormatting";
+import { normalize, similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS } from "../config";
 
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
+import CollectionDupeModal from "./CollectionDupeModal";
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
 import TableView from "./TableView";
@@ -168,6 +169,7 @@ export default function Commonplace() {
   const [importedFileName, setImportedFileName] = useState(null);
   const [dismissedAtCount, setDismissedAtCount] = useState(null);
   const [showShortcuts, setShowShortcuts]       = useState(false);
+  const [collectionDupes, setCollectionDupes]   = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem("commonplace_sidebar_collapsed") === "1"; } catch { return false; }
   });
@@ -388,6 +390,42 @@ export default function Commonplace() {
     startReviewFlow();
   };
 
+  const handleFindDupes = useCallback(() => {
+    const target = activeCollectionId ? collectionFiltered : quotes;
+    if (target.length < 2) {
+      showToast("Need at least 2 entries to scan for duplicates.");
+      return;
+    }
+    const norms = target.map(q => ({ id: q.id, text: q.text, source: q.source, category: q.category, norm: normalize(q.text) }));
+    const pairs = [];
+    const seen = new Set();
+    for (let i = 0; i < norms.length; i++) {
+      for (let j = i + 1; j < norms.length; j++) {
+        const score = similarity(norms[i].norm, norms[j].norm);
+        if (score > DUPE_SIMILARITY_THRESHOLD) {
+          const key = [norms[i].id, norms[j].id].sort().join(":");
+          if (!seen.has(key)) {
+            seen.add(key);
+            pairs.push({ a: norms[i], b: norms[j], score });
+          }
+        }
+      }
+    }
+    if (pairs.length === 0) {
+      showToast("No duplicates found!");
+      return;
+    }
+    pairs.sort((a, b) => b.score - a.score);
+    setCollectionDupes(pairs);
+  }, [quotes, collectionFiltered, activeCollectionId, showToast]);
+
+  const handleDupeDelete = useCallback((quoteId) => {
+    trackDeletion([quoteId]);
+    setQuotes(prev => prev.filter(q => q.id !== quoteId));
+    cleanCollectionRefs([quoteId]);
+    showToast("Duplicate removed");
+  }, [setQuotes, trackDeletion, cleanCollectionRefs, showToast]);
+
   const addCat = () => {
     const sanitized = sanitizeName(newCatName);
     if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
@@ -476,6 +514,12 @@ export default function Commonplace() {
         dupeDecisions={dupeDecisions}
         setDupeDecisions={setDupeDecisions}
         onContinue={handleDupesContinue}
+      />
+
+      <CollectionDupeModal
+        dupePairs={collectionDupes}
+        onClose={() => setCollectionDupes([])}
+        onDeleteQuote={handleDupeDelete}
       />
 
       {/* ── Input phase ── */}
@@ -728,6 +772,7 @@ export default function Commonplace() {
               updateCatFade={updateCatFade}
               catFade={catFade}
               getCatColor={getCatColor}
+              onFindDupes={handleFindDupes}
             />
           </SectionErrorBoundary>
 

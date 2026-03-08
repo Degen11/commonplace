@@ -2,6 +2,17 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
 
+// Fire-and-forget cache correction: overwrites stale/wrong AI identifications
+// so the same quote returns the corrected result for future users.
+function correctCache(text, source, category) {
+  if (!text || (!source && !category)) return;
+  fetch("/api/cache", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+    body: JSON.stringify({ items: [{ text, source, category, confidence: "high" }] }),
+  }).catch(() => {});
+}
+
 export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
@@ -62,6 +73,8 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   const saveEdit = useCallback((id, text, source, category) => {
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high", updatedAt: Date.now() } : q));
     setEditingId(null);
+    // Propagate correction to Supabase cache so other users benefit
+    correctCache(text, source, category);
     if (reviewQueue.length > 0) {
       const remaining = reviewQueue.filter(rid => rid !== id);
       setReviewQueue(remaining);
@@ -78,11 +91,15 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   }, [setQuotes, reviewQueue, showToast]);
 
   const saveInlineField = useCallback((id, field, value) => {
+    let correctedQuote = null;
     setQuotes(p => p.map(q => {
       if (q.id !== id) return q;
       const newVal = field === "source" ? (value.trim() || q.source) : value;
-      return { ...q, [field]: newVal, confidence: "high", updatedAt: Date.now() };
+      const updated = { ...q, [field]: newVal, confidence: "high", updatedAt: Date.now() };
+      correctedQuote = updated;
+      return updated;
     }));
+    if (correctedQuote) correctCache(correctedQuote.text, correctedQuote.source, correctedQuote.category);
     setInlineEdit(null);
     setSavedPulse({ id, field });
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), SAVED_PULSE_MS);
@@ -143,6 +160,23 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       if (bulkEditCat || bulkEditSource.trim()) u.confidence = "high";
       return u;
     }));
+    // Propagate bulk corrections to cache
+    const correctionItems = [];
+    quotes.forEach(q => {
+      if (!selected.has(q.id)) return;
+      const src = bulkEditSource.trim() || q.source;
+      const cat = bulkEditCat || q.category;
+      if (src !== q.source || cat !== q.category) {
+        correctionItems.push({ text: q.text, source: src, category: cat, confidence: "high" });
+      }
+    });
+    if (correctionItems.length > 0) {
+      fetch("/api/cache", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+        body: JSON.stringify({ items: correctionItems.slice(0, 20) }),
+      }).catch(() => {});
+    }
     const count = selected.size;
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
     const snapMap = new Map(snapshot.map(q => [q.id, q]));

@@ -6,7 +6,9 @@ const RATE_LIMIT = 30;
 const SYSTEM_PROMPT = `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
 Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}
 
-CATEGORY DEFINITIONS:
+CATEGORY must always be provided — it classifies the type of quote. Source is the specific attribution and can be "Unknown source" as a last resort.
+
+CATEGORY DEFINITIONS (use when origin is known):
 - Film: movies and screenplays
 - TV: television shows and series
 - Book: novels, non-fiction, poetry, plays
@@ -15,8 +17,14 @@ CATEGORY DEFINITIONS:
 - Person: attributed to a real person (not from a specific work)
 - Phrase: common idiom or expression with no single clear origin
 
-VIBE TAGS (use when source is not identifiable — always pick the best fit, never skip):
+VIBE TAGS (use as category when source is not identifiable — always pick the best fit, never skip):
 Aphorism=short punchy universal truth | Philosophical=abstract ideas about existence/reality | Observation=comment on human behavior or the world | Comedic=humorous or witty | Poetic=lyrical or emotionally vivid | Existential=questions of purpose/being/mortality | Motivational=inspires action or perseverance | Cynical=skeptical or darkly realistic | Identity=relates to self-concept | Reflection=introspective or personal insight
+
+SOURCE vs CATEGORY — important distinctions:
+- The source field is the SPECIFIC attribution (e.g. "The Dark Knight (2008) - The Joker", "Attributed to Mark Twain", "Attributed to various sources (popularized in self-help literature)").
+- The category field is the TYPE/CLASS (e.g. "Film", "Person", "Aphorism").
+- NEVER put the category name in the source field. If category is "Phrase" or "Aphorism", the source should be a real attribution or "Unknown source" — not "Phrase" or "Aphorism".
+- Descriptive attributions are good: "Attributed to various sources (popularized in self-help literature)" is a valid source.
 
 IDENTIFICATION RULES — follow strictly:
 1. Commit to your best guess. If you are 40% or more confident of an origin, provide it with confidence "low" or "medium" rather than defaulting to Unknown source.
@@ -24,7 +32,7 @@ IDENTIFICATION RULES — follow strictly:
 3. Check all domains. Before giving up, mentally check: is this from a film? TV show? Novel? Song? A philosopher, politician, or historical figure? A common saying?
 4. Partial attribution is better than none. "Attributed to Mark Twain (origin disputed)" is more useful than Unknown.
 5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
-6. NEVER use "Unknown" as a category. When the source is unknown, you MUST pick the best-fitting vibe tag (Aphorism, Philosophical, Observation, Comedic, Poetic, Existential, Motivational, Cynical, Identity, or Reflection) as the category instead.
+6. NEVER use "Unknown" as a category. When the source is unknown, you MUST pick the best-fitting vibe tag as the category instead.
 7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
 Return exactly one JSON object per input item.
 
@@ -33,9 +41,11 @@ EXAMPLE INPUT:
 [1] The cosmos is within us. We are made of star stuff
 [2] You miss every shot you don't take
 [3] The wound is the place where the light enters you
+[4] What doesn't kill you makes you stronger
+[5] A bird in the hand is worth two in the bush
 
 EXAMPLE OUTPUT:
-[{"i":0,"source":"Attributed to Aristotle (paraphrased by Will Durant)","category":"Person","confidence":"medium"},{"i":1,"source":"Cosmos (1980) - Carl Sagan","category":"TV","confidence":"high"},{"i":2,"source":"Attributed to Wayne Gretzky","category":"Person","confidence":"high"},{"i":3,"source":"Rumi","category":"Person","confidence":"high"}]`;
+[{"i":0,"source":"Attributed to Aristotle (paraphrased by Will Durant)","category":"Person","confidence":"medium"},{"i":1,"source":"Cosmos (1980) - Carl Sagan","category":"TV","confidence":"high"},{"i":2,"source":"Attributed to Wayne Gretzky","category":"Person","confidence":"high"},{"i":3,"source":"Rumi","category":"Person","confidence":"high"},{"i":4,"source":"Friedrich Nietzsche - Twilight of the Idols (1888)","category":"Book","confidence":"medium"},{"i":5,"source":"Unknown source","category":"Phrase","confidence":"low"}]`;
 
 const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',

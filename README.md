@@ -1,35 +1,89 @@
 # Commonplace
 
-Organize your quote collection. Paste messy quotes, phrases, and fragments — Commonplace identifies sources, categorizes everything, and gives you a clean, browsable collection.
+An AI-powered quote collection organizer that identifies sources, categorizes entries, and gives you a clean, browsable collection.
+
+**Live:** [commonplace.pro](https://commonplace.pro)
+
+## What It Does
+
+Paste messy quotes, fragments, and phrases. Commonplace uses Claude Haiku to identify who said it and what category it belongs to (Film, TV, Book, Music, etc.), then presents everything in a searchable, filterable collection you can edit, organize, and export.
 
 ## Features
 
-- **AI-powered identification** — Claude Haiku identifies sources and categories for film, TV, book, music, speech, and person quotes
+- **AI identification** — Claude Haiku recognizes sources and assigns categories automatically
 - **Local quote database** — 600+ curated quotes matched instantly without an API call
-- **Duplicate detection** — flags near-duplicates before adding, with keep/merge/skip options
+- **Duplicate detection** — flags near-duplicates with keep/merge/skip resolution
+- **Collections** — organize quotes into named collections with icons and AI auto-grouping
 - **Multiple views** — table, compact table, and card layouts with drag-to-reorder
-- **Inline editing** — click any field to edit; "Did you mean?" suggestions from the local database
-- **Bulk operations** — multi-select with Shift+click, bulk category/source reassignment, bulk delete
-- **Search & filter** — full-text search across quotes and sources, category pill filters, favorites
-- **Import** — paste text, drag-and-drop `.txt`/`.csv` files, Kindle highlights, Readwise exports
-- **Export** — plain text, CSV, Markdown, JSON, clipboard (plain + rich text), shareable URL links
-- **Persistence** — auto-saves to localStorage; restore previous sessions on return
-- **Review flow** — step through low-confidence entries one by one for quick correction
-- **Custom categories** — add your own beyond the built-in source categories and vibe tags
+- **Inline editing** — click any field to edit; "Did you mean?" suggestions from the local DB
+- **Bulk operations** — multi-select, bulk category/source reassignment, bulk delete
+- **Search & filter** — full-text search, category pill filters, favorites toggle
+- **Import** — paste text, drag-and-drop files, Kindle highlights, Readwise exports, CSV/JSON/Markdown
+- **Export** — plain text, CSV, Markdown, JSON, clipboard, shareable URL links
+- **Cloud sync** — device-based sync via Supabase (no account required)
+- **Sharing** — public collection links with 30-day expiry, quote image generation
+- **Statistics** — category distribution, confidence breakdown, collection insights
+- **Custom categories** — extend beyond built-in source categories and vibe tags
 - **Formatting cleanup** — optional smart quote normalization, dash cleanup, capitalization fixes
-- **Statistics panel** — collection insights with category distribution and confidence breakdown
-- **Responsive** — card view on mobile, table view on desktop, sticky mini-header on scroll
+- **Responsive** — card view on mobile, table on desktop, keyboard shortcuts throughout
 
 ## Tech Stack
 
-- **Frontend:** React 18, Vite 5, JavaScript (no TypeScript)
-- **Styling:** CSS-in-JS (inline style objects), no CSS framework
-- **Icons:** lucide-react
-- **Backend:** Vercel Serverless Function (`/api/identify`) proxying to Anthropic API
-- **Deployment:** Vercel
-- **Analytics:** @vercel/analytics, @vercel/speed-insights
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite 5, JavaScript |
+| Styling | CSS-in-JS (inline style objects) |
+| Icons | lucide-react |
+| Backend | Vercel Serverless Functions |
+| Database | Supabase (PostgreSQL) |
+| AI | Anthropic Claude Haiku |
+| Deployment | Vercel |
 
-## Setup
+## Project Structure
+
+```
+api/                          Vercel serverless functions
+  _shared.js                  Rate limiting, CORS, Supabase client
+  identify.js                 AI quote identification proxy
+  sync.js                     Device data sync
+  share.js                    Public collection sharing
+  auto-group.js               AI quote grouping
+src/
+  main.jsx                    Entry point
+  config.js                   All tunable constants
+  components/                 React components
+    App.jsx                   Root orchestrator and phase management
+    InputPhase.jsx            Landing page and text input
+    TableView.jsx             Main results table
+    CollectionsSidebar.jsx    Collection management
+    styles.js                 All CSS-in-JS styles
+  contexts/                   React Context providers
+    QuotesContext.jsx          Global state: quotes, collections, sync
+  hooks/                      Custom hooks
+    useProcessing.js           AI identification pipeline
+    useSync.js                 Cloud sync logic
+    useQuoteActions.js         Quote CRUD operations
+    useEditState.js            Edit mode and selection
+    useViewPreferences.js      Filtering, sorting, search
+  data/
+    constants.js               Categories, colors, confidence levels
+    localQuotes.js             600+ curated quote database
+  utils/
+    textFormatting.js          Text normalization and similarity
+    parsers.js                 File format parsers
+    export.js                  Export format generators
+```
+
+For detailed architecture, data flow diagrams, and design decisions, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Setup
 
 ```bash
 git clone <repo-url>
@@ -39,78 +93,47 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_API_KEY=sk-ant-...        # Required — server-side only
+SUPABASE_SECRET_KEY=...              # Required for sync
 ```
 
-The API key is used server-side only (in `api/identify.js`) and is never exposed to the client.
-
-## Development
+### Development
 
 ```bash
-npm run dev        # Start dev server (localhost:5173)
-npm run build      # Production build to dist/
-npm run preview    # Preview production build locally
+npm run dev          # Vite dev server on localhost:5173
+vercel dev           # Test serverless functions locally
 ```
 
-Use `vercel dev` to test the `/api/identify` serverless function locally.
+### Production
 
-## Project Structure
-
-```
-api/
-  identify.js              Vercel serverless function — AI identification proxy
-public/
-  favicon.svg              App icon
-  og-image.svg             Social sharing preview
-src/
-  main.jsx                 React entry point
-  components/
-    App.jsx                Main state management and orchestration
-    InputPhase.jsx         Landing page, text input, file import
-    ProcessingPhase.jsx    Progress display during identification
-    TableView.jsx          Table/compact results view with column reorder
-    CardItem.jsx           Card-based results view
-    EditForm.jsx           Inline editor with suggestion engine
-    DupeModal.jsx          Duplicate detection resolution modal
-    QuoteActions.jsx       Reusable action buttons (fav, copy, delete, re-identify)
-    StatsPanel.jsx         Collection statistics dashboard
-    Toast.jsx              Toast notifications
-    Footer.jsx             Footer attribution
-    Logo.jsx               Custom SVG logo
-    HowItWorksAnimation.jsx  Animated landing page demo
-    styles.js              Centralized style objects and CSS
-  hooks/
-    useInfiniteScroll.js   Paginated rendering (100 items/page)
-    useLongPress.js        Mobile long-press gesture for selection
-    useToasts.js           Toast notification queue
-  data/
-    constants.js           Categories, colors, confidence levels, config
-    localQuotes.js         600+ curated quote database for instant matching
-  utils/
-    helpers.js             Text processing, parsing, export, sharing utilities
+```bash
+npm run build        # Build to dist/
+npm run preview      # Preview production build
 ```
 
-## Deployment
+Push to `main` triggers automatic deployment on Vercel.
 
-Deployed to Vercel. Push to `main` triggers automatic deployment.
+## Key Concepts
 
-Required Vercel environment variable:
-- `ANTHROPIC_API_KEY` — Anthropic API key for Claude Haiku
+- **Phases** — the app moves through three phases: input (paste/import), processing (AI identification), and collection (browse/edit/export)
+- **Source categories vs. vibe tags** — quotes with a known origin get a source category (Film, TV, Book, etc.); quotes with unknown sources get a vibe tag (Philosophical, Comedic, Poetic, etc.)
+- **Device sync** — each browser gets a UUID; sync works without user accounts
+- **Offline-first** — localStorage is primary storage; Supabase syncs in the background
 
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `Esc` | Close modal > close dropdown > clear selection > close edit > clear search |
+| `Esc` | Close modal / clear selection / clear search |
 | `Ctrl/Cmd + A` | Select all visible quotes |
 
 ## Troubleshooting
 
 - **"Service not configured"** — `ANTHROPIC_API_KEY` is missing from environment variables
-- **API fails / 502** — check Anthropic API status; the app falls back to local matching and marks failures for retry
-- **Quotes not persisting** — localStorage may be full or disabled (private browsing); export as a file instead
-- **Table view missing on mobile** — table view auto-switches to cards below 640px viewport width
-- **Import not working** — only `.txt` and `.csv` files are supported; Kindle and Readwise formats are auto-detected
+- **API fails / 502** — check Anthropic API status; the app falls back to local matching
+- **Quotes not persisting** — localStorage may be full or disabled; export as a file
+- **Table view missing on mobile** — auto-switches to cards below 640px
+- **Import not working** — supported formats: .txt, .csv, .json, .md; Kindle and Readwise auto-detected

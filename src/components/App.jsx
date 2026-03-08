@@ -397,33 +397,59 @@ export default function Commonplace() {
       return;
     }
     const norms = target.map(q => ({ id: q.id, text: q.text, source: q.source, category: q.category, norm: normalize(q.text) }));
-    const pairs = [];
-    const seen = new Set();
+
+    // Build adjacency via pairwise similarity, then group into clusters (union-find)
+    const parent = norms.map((_, i) => i);
+    const scores = new Map(); // "i:j" -> score
+    const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+    const union = (a, b) => { parent[find(a)] = find(b); };
+
     for (let i = 0; i < norms.length; i++) {
       for (let j = i + 1; j < norms.length; j++) {
         const score = similarity(norms[i].norm, norms[j].norm);
         if (score > DUPE_SIMILARITY_THRESHOLD) {
-          const key = [norms[i].id, norms[j].id].sort().join(":");
-          if (!seen.has(key)) {
-            seen.add(key);
-            pairs.push({ a: norms[i], b: norms[j], score });
-          }
+          union(i, j);
+          scores.set(`${i}:${j}`, score);
         }
       }
     }
-    if (pairs.length === 0) {
+
+    // Collect clusters (groups with 2+ members)
+    const clusters = new Map();
+    norms.forEach((_, i) => {
+      const root = find(i);
+      if (!clusters.has(root)) clusters.set(root, []);
+      clusters.get(root).push(i);
+    });
+
+    const groups = [];
+    for (const members of clusters.values()) {
+      if (members.length < 2) continue;
+      let minScore = 1, maxScore = 0;
+      for (let i = 0; i < members.length; i++) {
+        for (let j = i + 1; j < members.length; j++) {
+          const key = `${Math.min(members[i], members[j])}:${Math.max(members[i], members[j])}`;
+          const s = scores.get(key);
+          if (s !== undefined) { minScore = Math.min(minScore, s); maxScore = Math.max(maxScore, s); }
+        }
+      }
+      groups.push({ entries: members.map(i => norms[i]), minScore, maxScore });
+    }
+
+    if (groups.length === 0) {
       showToast("No duplicates found!");
       return;
     }
-    pairs.sort((a, b) => b.score - a.score);
-    setCollectionDupes(pairs);
+    groups.sort((a, b) => b.maxScore - a.maxScore);
+    setCollectionDupes(groups);
   }, [quotes, collectionFiltered, activeCollectionId, showToast]);
 
-  const handleDupeDelete = useCallback((quoteId) => {
-    trackDeletion([quoteId]);
-    setQuotes(prev => prev.filter(q => q.id !== quoteId));
-    cleanCollectionRefs([quoteId]);
-    showToast("Duplicate removed");
+  const handleDupeDeleteBatch = useCallback((quoteIds) => {
+    trackDeletion(quoteIds);
+    const idSet = new Set(quoteIds);
+    setQuotes(prev => prev.filter(q => !idSet.has(q.id)));
+    cleanCollectionRefs(quoteIds);
+    showToast(`Removed ${quoteIds.length} duplicate${quoteIds.length === 1 ? "" : "s"}`);
   }, [setQuotes, trackDeletion, cleanCollectionRefs, showToast]);
 
   const addCat = () => {
@@ -517,9 +543,9 @@ export default function Commonplace() {
       />
 
       <CollectionDupeModal
-        dupePairs={collectionDupes}
+        dupeGroups={collectionDupes}
         onClose={() => setCollectionDupes([])}
-        onDeleteQuote={handleDupeDelete}
+        onDeleteQuotes={handleDupeDeleteBatch}
       />
 
       {/* ── Input phase ── */}

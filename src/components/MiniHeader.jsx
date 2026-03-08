@@ -35,13 +35,13 @@ export default function MiniHeader({
           {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
           {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
           <div style={styles.viewTog}>
-            <button style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
+            <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
               <List size={14} strokeWidth={1.5} />
             </button>
-            <button style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
+            <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(true); }}>
               <AlignJustify size={14} strokeWidth={1.5} />
             </button>
-            <button style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
+            <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("cards"); }}>
               <LayoutGrid size={14} strokeWidth={1.5} />
             </button>
           </div>

@@ -186,6 +186,34 @@ export const baseCSS = `
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}
 
+  /* View toggle button hover */
+  .view-btn{transition:background .12s ease,color .12s ease}
+  .view-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
+
+  /* Category pill hover */
+  .cat-pill{transition:all .15s ease}
+  .cat-pill:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+
+  /* Filter chip hover (empty state, attention bar) */
+  .filter-chip{transition:all .12s ease}
+  .filter-chip:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+
+  /* Bulk bar button hover states */
+  .bulk-apply{transition:opacity .12s ease}
+  .bulk-apply:hover:not(:disabled){opacity:.85}
+  .bulk-del{transition:all .12s ease}
+  .bulk-del:hover{background:rgba(235,87,87,0.08) !important;border-color:#EB5757 !important}
+  .bulk-reidentify{transition:all .12s ease}
+  .bulk-reidentify:hover:not(:disabled){border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+
+  /* Attention bar dismiss hover */
+  .attention-dismiss{transition:opacity .12s ease}
+  .attention-dismiss:hover{opacity:1 !important}
+
+  /* Reset/clear filter button hover */
+  .reset-btn{transition:all .12s ease}
+  .reset-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
+
   /* Responsive: stack split layout on small screens */
   @media (max-width: 768px) {
     .split-layout { grid-template-columns: 1fr !important; }

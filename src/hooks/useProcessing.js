@@ -172,29 +172,28 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (!lines.length) return;
 
     const parsed = lines.map(l => smartParse(l));
-    const existingTexts = appendMode ? quotes.map(q => normalize(q.text)) : [];
 
     const unique = [];
-    const seen = new Map(existingTexts.map(t => {
-      const q = quotes.find(q => normalize(q.text) === t);
-      return [t, q];
-    }));
+    // Build seen list from existing quotes (only in append mode).
+    // Store as array for linear scan (similarity is fuzzy, not hashable).
+    const seen = appendMode
+      ? quotes.map(q => ({ norm: normalize(q.text), text: q.text, source: q.source }))
+      : [];
     const nearDupes = [];
 
     parsed.forEach(p => {
       const norm = normalize(p.text);
-      const matchedNorm = [...seen.keys()].find(s => similarity(s, norm) > DUPE_SIMILARITY_THRESHOLD);
+      const match = seen.find(s => similarity(s.norm, norm) > DUPE_SIMILARITY_THRESHOLD);
 
-      if (matchedNorm) {
-        const matchedQuote = seen.get(matchedNorm);
+      if (match) {
         nearDupes.push({
           incoming: p,
-          matchedText: matchedQuote?.text || matchedNorm,
-          matchedSource: matchedQuote?.source || null
+          matchedText: match.text || match.norm,
+          matchedSource: match.source || null
         });
       } else {
         unique.push(p);
-        seen.set(norm, { text: p.text, source: p.hint });
+        seen.push({ norm, text: p.text, source: p.hint });
       }
     });
 

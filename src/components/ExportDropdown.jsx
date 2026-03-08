@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import {
   ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
   AlertTriangle,
@@ -13,6 +14,17 @@ export default function ExportDropdown({
   quotes, filtered, selected, hasActiveFilters,
   showToast, setShowExport, collections,
 }) {
+  const dropRef = useRef(null);
+  const [flipLeft, setFlipLeft] = useState(false);
+
+  // Flip horizontal alignment if dropdown clips the right edge
+  useEffect(() => {
+    const el = dropRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+  }, []);
+
   const handleShare = () => {
     const encoded = encodeShareData(quotes);
     const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
@@ -35,7 +47,7 @@ export default function ExportDropdown({
   };
 
   return (
-    <div style={styles.expDrop}>
+    <div ref={dropRef} style={{ ...styles.expDrop, ...(flipLeft ? { right: "auto", left: 0 } : {}) }}>
       <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
         Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
       </div>

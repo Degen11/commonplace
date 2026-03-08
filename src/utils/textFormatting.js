@@ -115,7 +115,9 @@ export function basicFormat(text) {
     properNouns.forEach(noun => {
       const lower = noun.toLowerCase();
       const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      t = t.replace(new RegExp("\\b" + escaped + "\\b", "g"), noun);
+      // Use Unicode letter boundaries instead of \b to avoid corrupting
+      // words like "johnson" when "Son" is a proper noun.
+      t = t.replace(new RegExp("(?<![\\p{L}])" + escaped + "(?![\\p{L}])", "gu"), noun);
     });
   }
 

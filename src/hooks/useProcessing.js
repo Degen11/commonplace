@@ -214,7 +214,8 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     if (!mountedRef.current) return;
-    appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
+    const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
+    appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
     safeSetStats(prev => ({ ...(prev || {}), local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length }));
     safeSetProcessingDone(true);
     safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });

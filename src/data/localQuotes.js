@@ -774,6 +774,23 @@ if (!exactOnly) {
     if (bestHigh) return { source: bestHigh.s, category: bestHigh.c, confidence: "high", local: true };
     if (bestMed) return { source: bestMed.s, category: bestMed.c, confidence: "medium", local: true };
 
+    // Word-overlap fuzzy match — catches paraphrases and reworded quotes
+    const normWords = new Set(norm.split(" ").filter(w => w.length > 2));
+    if (normWords.size >= 4) {
+      let bestOverlap = null;
+      let bestScore = 0;
+      for (const entry of LOCAL_DB) {
+        const entryWords = new Set(entry.t.split(" ").filter(w => w.length > 2));
+        if (entryWords.size < 4) continue;
+        let overlap = 0;
+        normWords.forEach(w => { if (entryWords.has(w)) overlap++; });
+        const score = (overlap * 2) / (normWords.size + entryWords.size);
+        if (score > bestScore) { bestScore = score; bestOverlap = entry; }
+      }
+      if (bestScore >= 0.7) return { source: bestOverlap.s, category: bestOverlap.c, confidence: "high", local: true };
+      if (bestScore >= 0.55) return { source: bestOverlap.s, category: bestOverlap.c, confidence: "medium", local: true };
+    }
+
     if (hint) {
       const h = hint.trim().toLowerCase();
       const knownAuthors = LOCAL_DB.filter(e => e.s.toLowerCase().includes(h));

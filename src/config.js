@@ -10,7 +10,7 @@ export const SYNC_ERROR_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes between user-f
 // API
 export const API_TIMEOUT_MS         = 30_000;
 export const AUTO_GROUP_TIMEOUT_MS  = 45_000;
-export const API_BATCH_SIZE         = 20;
+export const API_BATCH_SIZE         = 10;
 
 // Toast
 export const TOAST_DURATION_MS      = 2500;

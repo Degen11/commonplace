@@ -79,8 +79,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       const t = d.content.map(x => x.text || "").join("");
       const raw = t.replace(/```json|```/g, "").trim();
       if (!raw) return [];
+      // Prefill sends "[" as assistant turn; response continues from there
+      const jsonStr = raw.startsWith("[") ? raw : "[" + raw;
       let parsed;
-      try { parsed = JSON.parse(raw); } catch { throw new Error("API returned malformed JSON"); }
+      try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
       return Array.isArray(parsed) ? parsed : [];
     } finally {
       clearTimeout(timeoutId);

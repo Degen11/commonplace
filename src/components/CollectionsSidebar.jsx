@@ -354,14 +354,13 @@ export default function CollectionsSidebar({
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "12px 8px 8px 0",
-        borderBottom: "1px solid var(--cp-border)",
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
           Collections
         </span>
         <button
           onClick={() => setCollapsed(true)}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2, borderRadius: 4 }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
           title="Collapse sidebar"
         >
           <ChevronLeft size={14} strokeWidth={2} />

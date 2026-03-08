@@ -375,6 +375,8 @@ export function QuotesProvider({ children }) {
               ? "This shared link has expired."
               : err.message === "not_found"
               ? "Shared collection not found."
+              : err.message === "empty"
+              ? "This shared collection is empty."
               : "Couldn't load this shared collection.";
             showToast(msg);
             try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }

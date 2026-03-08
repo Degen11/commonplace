@@ -1,14 +1,14 @@
 import { useRef, useState, useEffect } from "react";
 import {
-  ClipboardCopy, Sparkles, Link, FileText, Table2, FileDown,
-  AlertTriangle,
+  ClipboardCopy, Sparkles, Link, Globe, FileText, Table2, FileDown,
+  AlertTriangle, Loader,
 } from "lucide-react";
 import {
   exportCSV, exportMD, exportJSON, exportTXT,
   copyToClipboard, richCopyToClipboard, encodeShareData,
 } from "../utils/export";
 import { styles } from "./styles";
-import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH } from "../config";
+import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH, API_TIMEOUT_MS } from "../config";
 
 export default function ExportDropdown({
   quotes, filtered, selected, hasActiveFilters,
@@ -46,6 +46,45 @@ export default function ExportDropdown({
     });
   };
 
+  const [publishing, setPublishing] = useState(false);
+
+  const handlePublicLink = () => {
+    if (publishing) return;
+    setPublishing(true);
+    const minimal = quotes.map(q => [q.text || "", q.source || "", q.category || "", q.favorite ? 1 : 0]);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+    fetch("/api/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Requested-With": "1" },
+      body: JSON.stringify({ quotes: minimal }),
+      signal: controller.signal,
+    })
+      .then(r => {
+        if (!r.ok) return r.json().then(d => { throw new Error(d.error || "Failed"); });
+        return r.json();
+      })
+      .then(data => {
+        const url = `${window.location.origin}${window.location.pathname}#p=${data.id}`;
+        navigator.clipboard.writeText(url)
+          .then(() => showToast(`Public link copied! Expires in 30 days (${data.count} entries).`))
+          .catch(() => showToast(`Public link created: ${url}`));
+        setShowExport(false);
+      })
+      .catch(err => {
+        if (err.name === "AbortError") {
+          showToast("Request timed out \u2014 try again.");
+        } else {
+          showToast(err.message || "Couldn't create public link.");
+        }
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        setPublishing(false);
+      });
+  };
+
   return (
     <div ref={dropRef} style={{ ...styles.expDrop, ...(flipLeft ? { right: "auto", left: 0 } : {}) }}>
       <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
@@ -54,7 +93,10 @@ export default function ExportDropdown({
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied \u2014 paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={14} strokeWidth={1.5} /> Rich copy</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { handleShare(); setShowExport(false); }}><Link size={14} strokeWidth={1.5} /> Shareable link</button>
-      {quotes.length > 80 && <span style={styles.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — export a file instead</span>}
+      {quotes.length > 80 && <span style={styles.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — use public link instead</span>}
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8, opacity: publishing ? 0.5 : 1}} onClick={handlePublicLink} disabled={publishing}>
+        {publishing ? <Loader size={14} strokeWidth={1.5} className="spin" /> : <Globe size={14} strokeWidth={1.5} />} Public link{publishing ? "..." : ""}<span style={{ fontSize: 10, opacity: 0.5 }}>30 days</span>
+      </button>
       <div style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>

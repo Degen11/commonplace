@@ -8,6 +8,7 @@ import { generateId } from "../utils/uuid";
 import {
   TOMBSTONE_TTL_MS, STORAGE_WARN_BYTES, PERSIST_DEBOUNCE_MS,
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
+  API_TIMEOUT_MS,
 } from "../config";
 
 const QuotesContext = createContext(null);
@@ -57,7 +58,7 @@ export function QuotesProvider({ children }) {
   // Shared links skip localStorage (handled in mount effect).
   const [quotes, setQuotes] = useState(() => {
     const hash = window.location.hash.slice(1);
-    if (hash.startsWith("s=")) return [];
+    if (hash.startsWith("s=") || hash.startsWith("p=")) return [];
     try {
       const saved = localStorage.getItem(LS_QUOTES);
       if (saved) {
@@ -69,7 +70,7 @@ export function QuotesProvider({ children }) {
   });
   const [customCats, setCustomCats] = useState(() => {
     const hash = window.location.hash.slice(1);
-    if (hash.startsWith("s=")) return [];
+    if (hash.startsWith("s=") || hash.startsWith("p=")) return [];
     try {
       const saved = localStorage.getItem(LS_CATS);
       if (saved) {
@@ -322,7 +323,7 @@ export function QuotesProvider({ children }) {
 
   // ── Mount: shared link OR mark ready / pull from cloud ──
   useEffect(() => {
-    // 1. Check for shared link
+    // 1a. Check for base64 shared link
     const hash = window.location.hash.slice(1);
     if (hash.startsWith("s=")) {
       const decoded = safeDecodeShareData(hash.slice(2));
@@ -333,6 +334,57 @@ export function QuotesProvider({ children }) {
       }
       showToast("This shared link couldn't be loaded \u2014 it may be corrupted.");
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
+    }
+
+    // 1b. Check for public collection link
+    if (hash.startsWith("p=")) {
+      const shareId = hash.slice(2);
+      if (shareId.length >= 4 && shareId.length <= 20) {
+        const controller = new AbortController();
+        fetch(`/api/share?id=${encodeURIComponent(shareId)}`, {
+          signal: controller.signal,
+        })
+          .then(r => {
+            if (r.status === 410) throw new Error("expired");
+            if (r.status === 404) throw new Error("not_found");
+            if (!r.ok) throw new Error("fetch_failed");
+            return r.json();
+          })
+          .then(data => {
+            if (!Array.isArray(data.quotes) || data.quotes.length === 0) {
+              throw new Error("empty");
+            }
+            // Reconstruct full quote objects from minimal arrays
+            const reconstructed = data.quotes.map(q => {
+              if (Array.isArray(q)) {
+                return validateShareQuote(q);
+              }
+              // Already a full object (future-proofing)
+              return q.id ? q : null;
+            }).filter(Boolean);
+            if (reconstructed.length === 0) throw new Error("empty");
+            setQuotes(reconstructed);
+            setIsSharedView(true);
+            initialLoadDone.current = true;
+            if (data.title) {
+              showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
+            }
+          })
+          .catch(err => {
+            const msg = err.message === "expired"
+              ? "This shared link has expired."
+              : err.message === "not_found"
+              ? "Shared collection not found."
+              : "Couldn't load this shared collection.";
+            showToast(msg);
+            try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
+            // Fall through to normal load
+            markReady();
+            pull();
+          });
+        setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+        return;
+      }
     }
 
     // 2. If quotes were loaded synchronously from localStorage, mark ready

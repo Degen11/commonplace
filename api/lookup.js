@@ -23,13 +23,13 @@ async function searchWikiquote(text) {
     if (!title) return null;
 
     // Only accept titles that look like actual attributable sources.
-    // Wikiquote has tons of concept pages ("Consciousness", "Being"),
-    // date pages ("August 4"), and theme pages that are useless as attributions.
-    // Whitelist approach: must match a known useful pattern.
-    const isPersonName = /^[A-Z][a-z]+(\s+[A-Z][a-z.]+){1,4}$/.test(title.replace(/\([^)]*\)/g, '').trim());
+    // Wikiquote has concept pages ("Consciousness"), date pages ("August 4"),
+    // and theme pages that are useless as attributions.
+    // Person names can't be reliably distinguished from work titles
+    // (e.g. "Basic Instinct" looks like "First Last"), so we only accept
+    // titled works with years and let the AI handle person attributions.
     const hasYear = /\(\d{4}/.test(title);
-    const isKnownWork = /^(The |A |An )?[A-Z]/.test(title) && title.split(/\s+/).length >= 3 && hasYear;
-    if (!isPersonName && !isKnownWork) return null;
+    if (!hasYear) return null;
 
     // Check snippet actually contains meaningful overlap with our quote
     const snippet = (results[0].snippet || '').replace(/<[^>]*>/g, '').toLowerCase();
@@ -37,7 +37,11 @@ async function searchWikiquote(text) {
     const matchCount = words.filter(w => snippet.includes(w)).length;
     if (matchCount < Math.min(3, words.length * 0.3)) return null;
 
-    return { source: title, platform: 'wikiquote' };
+    // Strong overlap = high confidence (most words matched in snippet)
+    const matchRatio = words.length > 0 ? matchCount / words.length : 0;
+    const confidence = matchRatio >= 0.6 ? 'high' : 'medium';
+
+    return { source: title, platform: 'wikiquote', confidence };
   } catch {
     return null;
   }
@@ -59,7 +63,7 @@ async function searchOpenLibrary(hint) {
     const author = book.author_name?.[0] || '';
     const year = book.first_publish_year ? ` (${book.first_publish_year})` : '';
     const source = author ? `${book.title}${year} - ${author}` : `${book.title}${year}`;
-    return { source, category: 'Book', platform: 'openlibrary' };
+    return { source, category: 'Book', platform: 'openlibrary', confidence: author ? 'high' : 'medium' };
   } catch {
     return null;
   }
@@ -99,25 +103,23 @@ async function writeCache(normalizedText, source, category, confidence, supabase
   }
 }
 
-// Infer category from a Wikiquote page title (which has no category metadata)
+// Infer category from a Wikiquote page title (which has no category metadata).
+// Since the Wikiquote whitelist only accepts titles with years, this mostly
+// sees patterns like "Title (YYYY)", "Title (YYYY film)", etc.
 function inferCategory(source) {
   if (!source) return 'Reflection';
   const s = source.toLowerCase();
-  // Film/TV patterns: "Title (YYYY film)", "Title (film)", "Title (YYYY)"
+  // Explicit type annotations from Wikiquote disambiguation
   if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return 'Film';
   if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return 'TV';
+  if (/\(video game\)|\(game\)/.test(s)) return 'Film';
+  if (/\(novel\)|\(book\)|\(play\)|\(poem\)/.test(s)) return 'Book';
+  if (/\(song\)|\(album\)|\(musical\)/.test(s)) return 'Music';
   // Wikiquote pages for shows, tours, specials
   if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return 'TV';
-  // If it has a year in parens and no person-like name, likely Film/TV
-  if (/\(\d{4}\)/.test(s) && /\s/.test(source.replace(/\(\d{4}\)/, '').trim())) return 'Film';
-  // Video game patterns
-  if (/\(video game\)|\(game\)/.test(s)) return 'Film';
-  // Person: must look like a human name (2-4 capitalized words, no special patterns)
-  // e.g. "Mark Twain", "Martin Luther King Jr."
-  const nameOnly = source.replace(/\([^)]*\)/g, '').trim();
-  if (/^[A-Z][a-z]+(\s+[A-Z][a-z.]+){1,3}$/.test(nameOnly)) return 'Person';
-  // Multi-word titles without a name pattern — could be a work title, concept, or game
-  // Don't assume Person; let the AI identify it properly by not returning a confident category
+  // Title with year but no explicit type — likely Film (most common on Wikiquote)
+  if (/\(\d{4}\)/.test(s)) return 'Film';
+  // Anything else that slips through — don't guess
   return 'Reflection';
 }
 
@@ -175,9 +177,9 @@ export default async function handler(req, res) {
       const result = {
         source: best.source,
         category: best.category || inferCategory(best.source),
-        confidence: 'medium',
+        confidence: best.confidence || 'medium',
       };
-      // Only cache high-confidence results (medium lookup results are not cached)
+      // Cache high-confidence results so the same quote doesn't re-hit external APIs
       if (result.confidence === 'high') {
         writeCache(norm, result.source, result.category, result.confidence, supabase);
       }

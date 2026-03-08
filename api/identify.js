@@ -34,7 +34,13 @@ IDENTIFICATION RULES — follow strictly:
 5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
 6. NEVER use "Unknown" as a category. When the source is unknown, you MUST pick the best-fitting vibe tag as the category instead.
 7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
+8. For Film quotes: ALWAYS include the character who said it when known — "Basic Instinct (1992) - Nick Curran", not just "Basic Instinct (1992)".
 Return exactly one JSON object per input item.
+
+CONFIDENCE GUIDE — use "high" generously for well-known quotes:
+- "high": You recognize this quote and know its origin. The attribution is well-documented. This includes famous lines from popular films, bestselling books, well-known speeches, iconic songs, and widely attributed quotes from historical figures.
+- "medium": You're fairly sure but not certain — the quote is a paraphrase, or the attribution is disputed, or you're choosing between multiple possible sources.
+- "low": You're making an educated guess. The quote is obscure or the attribution is uncertain.
 
 EXAMPLE INPUT:
 [0] We are what we repeatedly do. Excellence then is not an act but a habit

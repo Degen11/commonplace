@@ -22,17 +22,14 @@ async function searchWikiquote(text) {
     const title = results[0].title;
     if (!title) return null;
 
-    // Reject generic/concept pages — single common words are not useful attributions
-    if (!/\s/.test(title.trim()) && !/^\d/.test(title)) {
-      // Single word title — only accept if it looks like a proper name (capitalized, not a dictionary word)
-      const GENERIC_WORDS = new Set([
-        'being','love','truth','life','death','time','hope','fear','change','power',
-        'freedom','justice','war','peace','beauty','nature','fate','honor','dream',
-        'silence','wisdom','courage','faith','happiness','knowledge','reality',
-        'friendship','success','failure','anger','pain','soul','mind','heart',
-      ]);
-      if (GENERIC_WORDS.has(title.toLowerCase())) return null;
-    }
+    // Only accept titles that look like actual attributable sources.
+    // Wikiquote has tons of concept pages ("Consciousness", "Being"),
+    // date pages ("August 4"), and theme pages that are useless as attributions.
+    // Whitelist approach: must match a known useful pattern.
+    const isPersonName = /^[A-Z][a-z]+(\s+[A-Z][a-z.]+){1,4}$/.test(title.replace(/\([^)]*\)/g, '').trim());
+    const hasYear = /\(\d{4}/.test(title);
+    const isKnownWork = /^(The |A |An )?[A-Z]/.test(title) && title.split(/\s+/).length >= 3 && hasYear;
+    if (!isPersonName && !isKnownWork) return null;
 
     // Check snippet actually contains meaningful overlap with our quote
     const snippet = (results[0].snippet || '').replace(/<[^>]*>/g, '').toLowerCase();

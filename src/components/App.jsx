@@ -928,6 +928,7 @@ export default function Commonplace() {
                       inlineEditField={inlineEditField}
                       isSavedPulse={isSavedPulse}
                       savedPulseField={savedPulseField}
+                      selectionCount={selected.size}
                       allCats={allCats}
                       actionProps={actionProps}
                       toggleSel={toggleSel}

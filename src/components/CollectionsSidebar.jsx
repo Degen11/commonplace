@@ -188,7 +188,7 @@ function CollectionRow({
               padding: "2px 4px", fontSize: 11, fontWeight: 600, fontFamily: "inherit",
             }}
           >
-            Confirm?
+            Delete? ({count})
           </button>
         ) : (
           <>

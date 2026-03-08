@@ -495,6 +495,18 @@ export default function Commonplace() {
     return counts;
   }, [collections, quotes]);
 
+  const handleDeleteCollection = useCallback((id) => {
+    const col = collections.find(c => c.id === id);
+    const count = quoteCounts[id] || 0;
+    deleteCollection(id);
+    if (col) {
+      showToast(count > 0
+        ? `Deleted "${col.name}" \u2014 ${count} ${count === 1 ? "quote stays" : "quotes stay"} in All Quotes`
+        : `Deleted "${col.name}"`
+      );
+    }
+  }, [collections, quoteCounts, deleteCollection, showToast]);
+
   const collectionVisible = useMemo(() => {
     if (!activeCollectionIdSet) return visible;
     return visible.filter(q => activeCollectionIdSet.has(q.id));
@@ -830,7 +842,7 @@ export default function Commonplace() {
                 activeCollectionId={activeCollectionId}
                 setActiveCollectionId={setActiveCollectionId}
                 createCollection={createCollection}
-                deleteCollection={deleteCollection}
+                deleteCollection={handleDeleteCollection}
                 renameCollection={renameCollection}
                 updateCollectionIcon={updateCollectionIcon}
                 quoteCounts={quoteCounts}

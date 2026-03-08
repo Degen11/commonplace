@@ -144,7 +144,8 @@ const MemoTableRow = memo(function TableRow({
   if (prev.compact !== next.compact) return false;
   if (prev.sortBy !== next.sortBy) return false;
   if (prev.needsAtt !== next.needsAtt) return false;
-  if (prev.columnOrder !== next.columnOrder) return false;
+  if (prev.columnOrder.length !== next.columnOrder.length ||
+      prev.columnOrder.some((c, i) => c !== next.columnOrder[i])) return false;
   if (prev.isInlineEditing !== next.isInlineEditing) return false;
   if (prev.inlineEditField !== next.inlineEditField) return false;
   if (prev.isDragging !== next.isDragging) return false;

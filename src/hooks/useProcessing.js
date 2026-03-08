@@ -179,6 +179,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const seen = appendMode
       ? quotes.map(q => ({ norm: normalize(q.text), text: q.text, source: q.source }))
       : [];
+    // Include unresolved unique items from a pending dupe batch so a second
+    // processEntries call won't produce overlapping duplicates.
+    if (appendMode && pendingContinuationRef.current) {
+      for (const p of pendingContinuationRef.current.unique) {
+        seen.push({ norm: normalize(p.text), text: p.text, source: p.hint });
+      }
+    }
     const nearDupes = [];
 
     parsed.forEach(p => {

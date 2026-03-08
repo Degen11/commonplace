@@ -90,6 +90,20 @@ async function writeCache(normalizedText, source, category, confidence, supabase
   }
 }
 
+// Infer category from a Wikiquote page title (which has no category metadata)
+function inferCategory(source) {
+  if (!source) return 'Person';
+  const s = source.toLowerCase();
+  // Film/TV patterns: "Title (YYYY film)", "Title (film)", "Title (YYYY)"
+  if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return 'Film';
+  if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return 'TV';
+  // Wikiquote pages for shows, tours, specials
+  if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return 'TV';
+  // If it has a year in parens and no person-like name, likely Film/TV
+  if (/\(\d{4}\)/.test(s) && /\s/.test(source.replace(/\(\d{4}\)/, '').trim())) return 'Film';
+  return 'Person';
+}
+
 function normalizeForCache(text) {
   return (text || '')
     .normalize('NFKD')
@@ -143,7 +157,7 @@ export default async function handler(req, res) {
     if (best) {
       const result = {
         source: best.source,
-        category: best.category || 'Person',
+        category: best.category || inferCategory(best.source),
         confidence: 'medium',
       };
       // Cache for next time

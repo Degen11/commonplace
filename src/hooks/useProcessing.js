@@ -113,7 +113,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     safeSetProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" });
 
-    // ── External lookup (Wikiquote, TMDb, Open Library, cache) ──
+    // ── External lookup (Wikiquote, Open Library, cache) ──
     const lookupResults = new Map();
     if (needsApi.length > 0) {
       try {

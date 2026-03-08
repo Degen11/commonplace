@@ -92,3 +92,42 @@ CREATE TABLE IF NOT EXISTS quote_cache (
 ALTER TABLE quote_cache ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_quote_cache_updated_at ON quote_cache(updated_at);
+
+-- ── Quotes-500K reference table ──
+-- Pre-imported from the Quotes-500K dataset (ShivaliGoel/Quotes-500K).
+-- ~500K rows with author + category tags. Used as a lookup layer between
+-- the local DB and external APIs to reduce AI token usage.
+-- Import using: scripts/import-quotes-500k.mjs
+CREATE TABLE IF NOT EXISTS quotes_500k (
+  id         SERIAL PRIMARY KEY,
+  quote      TEXT NOT NULL,
+  normalized TEXT NOT NULL,
+  author     TEXT NOT NULL DEFAULT '',
+  category   TEXT NOT NULL DEFAULT ''
+);
+
+ALTER TABLE quotes_500k ENABLE ROW LEVEL SECURITY;
+
+-- Exact match on normalized text (most common lookup path)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_quotes_500k_normalized ON quotes_500k(normalized);
+
+-- Enable pg_trgm for fuzzy/similarity search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_quotes_500k_trgm ON quotes_500k USING gin (normalized gin_trgm_ops);
+
+-- Fuzzy search RPC: finds closest matching quote by trigram similarity
+CREATE OR REPLACE FUNCTION search_quotes_500k(
+  query_text TEXT,
+  match_threshold FLOAT DEFAULT 0.45,
+  max_results INT DEFAULT 1
+) RETURNS TABLE(quote TEXT, author TEXT, category TEXT, sim FLOAT) AS $$
+BEGIN
+  RETURN QUERY
+    SELECT q.quote, q.author, q.category,
+           similarity(q.normalized, query_text)::FLOAT AS sim
+    FROM quotes_500k q
+    WHERE similarity(q.normalized, query_text) >= match_threshold
+    ORDER BY sim DESC
+    LIMIT max_results;
+END;
+$$ LANGUAGE plpgsql;

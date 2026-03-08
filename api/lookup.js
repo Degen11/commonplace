@@ -34,43 +34,6 @@ async function searchWikiquote(text) {
   }
 }
 
-// ── TMDb search (film/TV) ──
-// Searches TMDb for movie/TV quotes when a hint suggests film/TV content
-async function searchTMDb(hint) {
-  const apiKey = process.env.TMDB_API_KEY;
-  if (!apiKey || !hint) return null;
-
-  try {
-    // Search movies first
-    const movieUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(hint)}&page=1`;
-    const movieR = await fetch(movieUrl, { signal: AbortSignal.timeout(5000) });
-    if (movieR.ok) {
-      const movieData = await movieR.json();
-      if (movieData.results?.length > 0) {
-        const m = movieData.results[0];
-        const year = m.release_date ? ` (${m.release_date.slice(0, 4)})` : '';
-        return { source: `${m.title}${year}`, category: 'Film', platform: 'tmdb' };
-      }
-    }
-
-    // Then TV
-    const tvUrl = `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encodeURIComponent(hint)}&page=1`;
-    const tvR = await fetch(tvUrl, { signal: AbortSignal.timeout(5000) });
-    if (tvR.ok) {
-      const tvData = await tvR.json();
-      if (tvData.results?.length > 0) {
-        const t = tvData.results[0];
-        const year = t.first_air_date ? ` (${t.first_air_date.slice(0, 4)})` : '';
-        return { source: `${t.name}${year}`, category: 'TV', platform: 'tmdb' };
-      }
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 // ── Open Library search (books) ──
 // Searches Open Library for book/author when hint suggests literary content
 async function searchOpenLibrary(hint) {
@@ -91,6 +54,57 @@ async function searchOpenLibrary(hint) {
   } catch {
     return null;
   }
+}
+
+// ── Quotes-500K reference table (Supabase) ──
+// Searches the pre-imported 500K quotes dataset by full-text similarity
+async function searchQuotes500k(text, supabase) {
+  if (!supabase) return null;
+  try {
+    // Use normalized text for exact match first
+    const norm = normalizeForCache(text);
+    const { data, error } = await supabase
+      .from('quotes_500k')
+      .select('quote, author, category')
+      .eq('normalized', norm)
+      .limit(1)
+      .maybeSingle();
+    if (!error && data) {
+      return {
+        source: data.author || 'Unknown source',
+        category: mapQuotes500kCategory(data.category),
+        platform: 'quotes500k',
+      };
+    }
+
+    // Fallback: trigram similarity search using pg_trgm (if available)
+    // Requires the quotes_500k_search RPC function
+    const { data: fuzzy, error: fErr } = await supabase
+      .rpc('search_quotes_500k', { query_text: norm, match_threshold: 0.45, max_results: 1 });
+    if (!fErr && fuzzy?.length > 0) {
+      return {
+        source: fuzzy[0].author || 'Unknown source',
+        category: mapQuotes500kCategory(fuzzy[0].category),
+        platform: 'quotes500k',
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Map Quotes-500K tags (love, life, philosophy, etc.) to our category system
+function mapQuotes500kCategory(tags) {
+  if (!tags) return 'Person';
+  const t = tags.toLowerCase();
+  if (t.includes('philosophy') || t.includes('wisdom')) return 'Philosophical';
+  if (t.includes('humor') || t.includes('funny')) return 'Comedic';
+  if (t.includes('poetry') || t.includes('writing')) return 'Poetic';
+  if (t.includes('inspirational') || t.includes('motivational')) return 'Motivational';
+  if (t.includes('life') || t.includes('love')) return 'Reflection';
+  return 'Person';
 }
 
 // ── Supabase quote cache ──
@@ -169,26 +183,27 @@ export default async function handler(req, res) {
       return { i, found: true, ...cached, platform: 'cache' };
     }
 
-    // 2. Search Wikiquote (good for person/speech/book attributions)
-    const wiki = await searchWikiquote(text);
-
-    // 3. If hint provided, try TMDb and Open Library in parallel
-    let tmdb = null;
-    let openLib = null;
-    if (hint) {
-      [tmdb, openLib] = await Promise.all([
-        searchTMDb(hint),
-        searchOpenLibrary(hint),
-      ]);
+    // 2. Check Quotes-500K reference table
+    const ref = await searchQuotes500k(text, supabase);
+    if (ref) {
+      const result = { source: ref.source, category: ref.category, confidence: 'medium' };
+      writeCache(norm, result.source, result.category, result.confidence, supabase);
+      return { i, found: true, ...result, platform: ref.platform };
     }
 
-    // Pick best result: TMDb/OpenLib (specific) > Wikiquote (general)
-    const best = tmdb || openLib || wiki;
+    // 3. Search Wikiquote and Open Library in parallel
+    const [wiki, openLib] = await Promise.all([
+      searchWikiquote(text),
+      hint ? searchOpenLibrary(hint) : null,
+    ]);
+
+    // Pick best result: OpenLib (specific) > Wikiquote (general)
+    const best = openLib || wiki;
     if (best) {
       const result = {
         source: best.source,
         category: best.category || 'Person',
-        confidence: best.platform === 'tmdb' ? 'high' : 'medium',
+        confidence: 'medium',
       };
       // Cache for next time
       writeCache(norm, result.source, result.category, result.confidence, supabase);

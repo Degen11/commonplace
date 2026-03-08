@@ -26,7 +26,15 @@ IDENTIFICATION RULES — follow strictly:
 5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
 6. Always assign a vibe tag as the category whenever source is Unknown. category="Unknown" with no vibe tag is never acceptable.
 7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
-Return exactly one JSON object per input item.`;
+Return exactly one JSON object per input item.
+
+EXAMPLE INPUT:
+[0] You can't handle the truth
+[1] The only limit to our realization of tomorrow is our doubts of today
+[2] Winter is coming
+
+EXAMPLE OUTPUT:
+[{"i":0,"source":"A Few Good Men (1992) - Col. Jessup","category":"Film","confidence":"high"},{"i":1,"source":"Franklin D. Roosevelt","category":"Person","confidence":"medium"},{"i":2,"source":"Game of Thrones (2011) - House Stark","category":"TV","confidence":"high"}]`;
 
 const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
@@ -70,6 +78,7 @@ export default async function handler(req, res) {
   const safeBody = {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 4000,
+    temperature: 0,
     system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
     messages: [{ role: 'user', content: firstMsg.content }],
   };

@@ -604,7 +604,6 @@ export default function Commonplace() {
             customCats={customCats}
             processingDone={processingDone}
             onCancel={() => { processing.setIsProcessing(false); processing.setProgress(null); processing.setProcessingDone(false); goPhase("input"); }}
-            onViewResults={processing.skipToResults}
           />
         </SectionErrorBoundary>
       )}

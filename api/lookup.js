@@ -22,6 +22,18 @@ async function searchWikiquote(text) {
     const title = results[0].title;
     if (!title) return null;
 
+    // Reject generic/concept pages — single common words are not useful attributions
+    if (!/\s/.test(title.trim()) && !/^\d/.test(title)) {
+      // Single word title — only accept if it looks like a proper name (capitalized, not a dictionary word)
+      const GENERIC_WORDS = new Set([
+        'being','love','truth','life','death','time','hope','fear','change','power',
+        'freedom','justice','war','peace','beauty','nature','fate','honor','dream',
+        'silence','wisdom','courage','faith','happiness','knowledge','reality',
+        'friendship','success','failure','anger','pain','soul','mind','heart',
+      ]);
+      if (GENERIC_WORDS.has(title.toLowerCase())) return null;
+    }
+
     // Check snippet actually contains meaningful overlap with our quote
     const snippet = (results[0].snippet || '').replace(/<[^>]*>/g, '').toLowerCase();
     const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
@@ -92,7 +104,7 @@ async function writeCache(normalizedText, source, category, confidence, supabase
 
 // Infer category from a Wikiquote page title (which has no category metadata)
 function inferCategory(source) {
-  if (!source) return 'Person';
+  if (!source) return 'Reflection';
   const s = source.toLowerCase();
   // Film/TV patterns: "Title (YYYY film)", "Title (film)", "Title (YYYY)"
   if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return 'Film';
@@ -101,7 +113,15 @@ function inferCategory(source) {
   if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return 'TV';
   // If it has a year in parens and no person-like name, likely Film/TV
   if (/\(\d{4}\)/.test(s) && /\s/.test(source.replace(/\(\d{4}\)/, '').trim())) return 'Film';
-  return 'Person';
+  // Video game patterns
+  if (/\(video game\)|\(game\)/.test(s)) return 'Film';
+  // Person: must look like a human name (2-4 capitalized words, no special patterns)
+  // e.g. "Mark Twain", "Martin Luther King Jr."
+  const nameOnly = source.replace(/\([^)]*\)/g, '').trim();
+  if (/^[A-Z][a-z]+(\s+[A-Z][a-z.]+){1,3}$/.test(nameOnly)) return 'Person';
+  // Multi-word titles without a name pattern — could be a work title, concept, or game
+  // Don't assume Person; let the AI identify it properly by not returning a confident category
+  return 'Reflection';
 }
 
 function normalizeForCache(text) {

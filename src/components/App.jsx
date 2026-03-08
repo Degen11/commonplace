@@ -110,7 +110,7 @@ export default function Commonplace() {
     search, setSearch,
     isMobile,
     filtered, visible, hasMore, remaining, loadMore,
-    cc, favCount, unknownCount, topCats,
+    cc, favCount, unknownCount,
     hasActiveFilters, computedStats,
   } = useViewPreferences(quotes, { activeCollectionId });
 
@@ -658,8 +658,6 @@ export default function Commonplace() {
             <HeaderBar
               quotes={quotes}
               filtered={filtered}
-              topCats={topCats}
-              customCats={customCats}
               view={view}
               compact={compact}
               setView={setView}
@@ -677,7 +675,6 @@ export default function Commonplace() {
               headerRef={headerRef}
               headerVisible={headerVisible}
               exportDropdownContent={exportDropdownContent}
-              getCatColor={getCatColor}
               syncStatus={syncStatus}
               dark={dark}
               toggleTheme={toggleTheme}

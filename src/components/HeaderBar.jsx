@@ -7,7 +7,7 @@ import {
 const syncStyles = syncPillStyles.full;
 
 export default function HeaderBar({
-  quotes, filtered, topCats, customCats,
+  quotes, filtered,
   view, compact, setView, setCompact,
   showStats, setShowStats,
   showExport, setShowExport,
@@ -19,7 +19,6 @@ export default function HeaderBar({
   headerRef,
   headerVisible,
   exportDropdownContent,
-  getCatColor,
   syncStatus,
   dark,
   toggleTheme,
@@ -36,8 +35,6 @@ export default function HeaderBar({
             ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
             : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
           }
-          {filtered.length === quotes.length && topCats.length > 0 && <span style={{ color: "var(--cp-text-faint)" }}> · </span>}
-          {filtered.length === quotes.length && topCats.map(([c, n], i) => <span key={c} style={{ color: getCatColor(c, customCats).text }}>{i > 0 && <span style={{ color: "var(--cp-text-faint)" }}>, </span>}{n} {c}</span>)}
         </p>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

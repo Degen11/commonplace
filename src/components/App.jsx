@@ -363,6 +363,7 @@ export default function Commonplace() {
   };
 
   const handleQuickAdd = useCallback((text, source, category) => {
+    if (!text || !text.trim()) return;
     const addQuote = () => {
       const newQuote = {
         id: generateId(),

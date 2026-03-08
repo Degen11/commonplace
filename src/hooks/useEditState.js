@@ -60,6 +60,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   }, []);
 
   const saveEdit = useCallback((id, text, source, category) => {
+    if (!text || !text.trim()) return;
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high", updatedAt: Date.now() } : q));
     setEditingId(null);
     if (reviewQueue.length > 0) {

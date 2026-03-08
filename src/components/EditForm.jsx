@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { styles } from "./styles";
 import { normalize } from "../utils/textFormatting";
+import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { Lightbulb } from "lucide-react";
 
 // Finds the closest local DB match to the current text.
@@ -61,6 +62,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         value={text}
         onChange={e => { setText(e.target.value); setDismissed(false); }}
         onKeyDown={e => {
+          if (handleRichTextShortcut(e, text, setText)) return;
           if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSave(q.id, text, source, category); }
         }}

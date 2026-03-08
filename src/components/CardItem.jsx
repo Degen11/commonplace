@@ -8,13 +8,11 @@ import { CONF_LABELS } from "../data/constants";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown } from "lucide-react";
 import HighlightText from "./HighlightText";
-import { setMultiDragImage, cleanupDragGhost } from "../utils/dragGhost";
 
 const MemoCardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
-  selectionCount,
   allCats, actionProps,
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
@@ -47,11 +45,10 @@ const MemoCardItem = memo(function CardItem({
       draggable={!isEd && !isInlineEditing}
       onDragStart={e => {
         e.dataTransfer.setData("text/x-quote-id", q.id);
-        if (isSel && selectionCount > 1) setMultiDragImage(e, selectionCount);
-        handleDragStart(q.id);
+        handleDragStart(q.id, e);
       }}
       onDragOver={e => handleDragOver(e, q.id)}
-      onDragEnd={() => { cleanupDragGhost(); handleDragEnd(); }}
+      onDragEnd={handleDragEnd}
       {...(isMobile ? longPress : {})}
       style={{
         ...cardStyles.card,

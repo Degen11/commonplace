@@ -103,13 +103,12 @@ export default function useViewPreferences(quotes, { activeCollectionId } = {}) 
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
 
   // ── Computed stats ──
-  const { cc, favCount, unknownCount, topCats } = useMemo(() => {
+  const { cc, favCount, unknownCount } = useMemo(() => {
     const cc = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
     return {
       cc,
       favCount: quotes.filter(q => q.favorite).length,
       unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
-      topCats: Object.entries(cc).filter(([c]) => c !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 4),
     };
   }, [quotes]);
 
@@ -133,7 +132,7 @@ export default function useViewPreferences(quotes, { activeCollectionId } = {}) 
     search, setSearch,
     isMobile,
     filtered, visible, hasMore, remaining, loadMore,
-    cc, favCount, unknownCount, topCats,
+    cc, favCount, unknownCount,
     hasActiveFilters, computedStats,
   };
 }

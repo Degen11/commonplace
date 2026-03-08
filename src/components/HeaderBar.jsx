@@ -25,18 +25,16 @@ export default function HeaderBar({
   onShowShortcuts,
 }) {
   return (
-    <div ref={headerRef} style={styles.header}>
-      <div>
-        <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
-          <Logo size={28} /> Commonplace
-        </h1>
-        <p style={styles.sub}>
+    <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
+      <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
+        <Logo size={28} /> Commonplace
+        <span style={{ fontSize: 13, fontWeight: 400, color: "var(--cp-text-muted)", fontFamily: "'DM Sans',-apple-system,sans-serif", letterSpacing: 0 }}>
           {filtered.length < quotes.length
-            ? <>{filtered.length} of {quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
-            : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"} organized</>
+            ? <>{filtered.length} of {quotes.length}</>
+            : <>{quotes.length} {quotes.length === 1 ? "entry" : "entries"}</>
           }
-        </p>
-      </div>
+        </span>
+      </h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
         {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}

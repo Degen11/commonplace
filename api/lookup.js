@@ -56,57 +56,6 @@ async function searchOpenLibrary(hint) {
   }
 }
 
-// ── Quotes-500K reference table (Supabase) ──
-// Searches the pre-imported 500K quotes dataset by full-text similarity
-async function searchQuotes500k(text, supabase) {
-  if (!supabase) return null;
-  try {
-    // Use normalized text for exact match first
-    const norm = normalizeForCache(text);
-    const { data, error } = await supabase
-      .from('quotes_500k')
-      .select('quote, author, category')
-      .eq('normalized', norm)
-      .limit(1)
-      .maybeSingle();
-    if (!error && data) {
-      return {
-        source: data.author || 'Unknown source',
-        category: mapQuotes500kCategory(data.category),
-        platform: 'quotes500k',
-      };
-    }
-
-    // Fallback: trigram similarity search using pg_trgm (if available)
-    // Requires the quotes_500k_search RPC function
-    const { data: fuzzy, error: fErr } = await supabase
-      .rpc('search_quotes_500k', { query_text: norm, match_threshold: 0.45, max_results: 1 });
-    if (!fErr && fuzzy?.length > 0) {
-      return {
-        source: fuzzy[0].author || 'Unknown source',
-        category: mapQuotes500kCategory(fuzzy[0].category),
-        platform: 'quotes500k',
-      };
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// Map Quotes-500K tags (love, life, philosophy, etc.) to our category system
-function mapQuotes500kCategory(tags) {
-  if (!tags) return 'Person';
-  const t = tags.toLowerCase();
-  if (t.includes('philosophy') || t.includes('wisdom')) return 'Philosophical';
-  if (t.includes('humor') || t.includes('funny')) return 'Comedic';
-  if (t.includes('poetry') || t.includes('writing')) return 'Poetic';
-  if (t.includes('inspirational') || t.includes('motivational')) return 'Motivational';
-  if (t.includes('life') || t.includes('love')) return 'Reflection';
-  return 'Person';
-}
-
 // ── Supabase quote cache ──
 async function checkCache(normalizedText, supabase) {
   if (!supabase) return null;
@@ -183,15 +132,7 @@ export default async function handler(req, res) {
       return { i, found: true, ...cached, platform: 'cache' };
     }
 
-    // 2. Check Quotes-500K reference table
-    const ref = await searchQuotes500k(text, supabase);
-    if (ref) {
-      const result = { source: ref.source, category: ref.category, confidence: 'medium' };
-      writeCache(norm, result.source, result.category, result.confidence, supabase);
-      return { i, found: true, ...result, platform: ref.platform };
-    }
-
-    // 3. Search Wikiquote and Open Library in parallel
+    // 2. Search Wikiquote and Open Library in parallel
     const [wiki, openLib] = await Promise.all([
       searchWikiquote(text),
       hint ? searchOpenLibrary(hint) : null,

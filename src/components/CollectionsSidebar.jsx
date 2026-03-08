@@ -175,8 +175,10 @@ function CollectionRow({
       </span>
       {/* Edit/delete overlay — appears on hover in same position as count */}
       <div style={{
-        position: "absolute", right: 6, top: 0, bottom: 0,
+        position: "absolute", right: 0, top: 0, bottom: 0,
         display: "flex", alignItems: "center", gap: 2,
+        paddingLeft: 12, paddingRight: 6,
+        background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "var(--cp-bg)",
         opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none",
         transition: "opacity .1s",
       }}>

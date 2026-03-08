@@ -354,6 +354,7 @@ export default function CollectionsSidebar({
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "12px 8px 8px 0",
+        borderBottom: "1px solid var(--cp-border)",
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
           Collections

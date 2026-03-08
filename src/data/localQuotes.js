@@ -737,8 +737,11 @@ const LOCAL_DB_RAW = [
   {t:"laissez faire",s:"French Phrase",c:"Phrase"},
 ];
 
-// Build lookup structures
-const LOCAL_DB = LOCAL_DB_RAW;
+// Imported quotes from public datasets (prasertcbs movie quotes, AFI Top 100, JamesFT)
+import IMPORTED_QUOTES from "./importedQuotes";
+
+// Build lookup structures — merge curated + imported, deduplicating by normalized text
+const LOCAL_DB = [...LOCAL_DB_RAW, ...IMPORTED_QUOTES];
 const LOCAL_MAP = new Map();
 LOCAL_DB.forEach(q => LOCAL_MAP.set(q.t, q));
 

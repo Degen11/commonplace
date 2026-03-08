@@ -24,7 +24,7 @@ IDENTIFICATION RULES — follow strictly:
 3. Check all domains. Before giving up, mentally check: is this from a film? TV show? Novel? Song? A philosopher, politician, or historical figure? A common saying?
 4. Partial attribution is better than none. "Attributed to Mark Twain (origin disputed)" is more useful than Unknown.
 5. Unknown source is a last resort — only use it when you genuinely have no plausible attribution after considering all categories.
-6. Always assign a vibe tag as the category whenever source is Unknown. category="Unknown" with no vibe tag is never acceptable.
+6. NEVER use "Unknown" as a category. When the source is unknown, you MUST pick the best-fitting vibe tag (Aphorism, Philosophical, Observation, Comedic, Poetic, Existential, Motivational, Cynical, Identity, or Reflection) as the category instead.
 7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
 Return exactly one JSON object per input item.
 

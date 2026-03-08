@@ -33,7 +33,7 @@ export default function ProcessingPhase({
         ) : (
           <>
             <h2 style={styles.procTitle}>Organizing your collection...</h2>
-            <p style={styles.procSub}>{progress?.phase === "local" ? "Checking local database..." : "AI is identifying remaining entries..."}</p>
+            <p style={styles.procSub}>{progress?.phase === "local" ? "Checking local database..." : progress?.phase === "lookup" ? "Searching online databases..." : "AI is identifying remaining entries..."}</p>
           </>
         )}
         {progress && (

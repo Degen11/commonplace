@@ -77,3 +77,18 @@ BEGIN
   RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ── Quote identification cache ──
+-- Caches AI identification results so the same quote never costs tokens twice.
+-- Key is normalized text (lowercase, no punctuation); stores source attribution.
+CREATE TABLE IF NOT EXISTS quote_cache (
+  normalized_text TEXT PRIMARY KEY,
+  source          TEXT NOT NULL,
+  category        TEXT NOT NULL DEFAULT 'Reflection',
+  confidence      TEXT NOT NULL DEFAULT 'medium',
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE quote_cache ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS idx_quote_cache_updated_at ON quote_cache(updated_at);

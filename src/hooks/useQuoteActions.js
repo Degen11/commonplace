@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { buildValidCats, QUOTED_CATS } from "../data/constants";
+import { buildValidCats, fallbackCategory, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
@@ -125,8 +125,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       if (results.length > 0) {
         const r = results[0];
         const validCats = buildValidCats(allCats);
-        const newSource = r.source || "Unknown";
-        const newCategory = validCats.has(r.category) ? r.category : "Unknown";
+        const newSource = r.source || "Unknown source";
+        const newCategory = fallbackCategory(r.category, allCats);
         const snapshot = { ...q };
         setQuotes(prev => prev.map(x => x.id === q.id ? {
           ...x,
@@ -207,8 +207,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
             results.forEach(r => {
               const q = chunk[r.i];
               if (!q) return;
-              const newSource = r.source || "Unknown";
-              const newCategory = validCats.has(r.category) ? r.category : "Unknown";
+              const newSource = r.source || "Unknown source";
+              const newCategory = fallbackCategory(r.category, allCats);
               setQuotes(prev => prev.map(x => x.id === q.id ? {
                 ...x, source: newSource, category: newCategory,
                 confidence: r.confidence || "low", updatedAt: Date.now(),

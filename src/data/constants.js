@@ -88,3 +88,13 @@ export const sanitizeName = (name) => name.replace(/[<>"'&]/g, '').trim().slice(
 export function buildValidCats(allCats) {
   return new Set([...allCats, ...VIBE_TAGS]);
 }
+
+// Default vibe tag when category can't be determined — "Unknown" should never be assigned
+const VIBE_SET = new Set(VIBE_TAGS);
+export function fallbackCategory(category, allCats) {
+  if (category && category !== "Unknown") {
+    const valid = allCats ? buildValidCats(allCats) : new Set([...SOURCE_CATEGORIES, ...VIBE_TAGS]);
+    if (valid.has(category)) return category;
+  }
+  return "Reflection";
+}

@@ -8,7 +8,7 @@ import { getCatColor, CONF_LABELS } from "../data/constants";
 import { styles } from "./styles";
 import { Pencil, ChevronDown, GripVertical } from "lucide-react";
 import HighlightText from "./HighlightText";
-import { setMultiDragImage, cleanupDragGhost } from "../utils/dragGhost";
+
 
 // Column configuration — original flex-based layout
 const COL_BASE = {
@@ -29,7 +29,7 @@ const MemoTableRow = memo(function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isDragging, isDeleting, isSavedPulse, savedPulseField,
-  isMenuOpen, insertClass, selectionCount,
+  isMenuOpen, insertClass,
   columnOrder, compact, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
   handleDragStart, handleDragOver, handleDragEnd, setOpenMenuId,
@@ -97,11 +97,10 @@ const MemoTableRow = memo(function TableRow({
       draggable={!isEd && !isInlineEditing}
       onDragStart={e => {
         e.dataTransfer.setData("text/x-quote-id", q.id);
-        if (isSel && selectionCount > 1) setMultiDragImage(e, selectionCount);
-        handleDragStart(q.id);
+        handleDragStart(q.id, e);
       }}
       onDragOver={e => handleDragOver(e, q.id)}
-      onDragEnd={() => { cleanupDragGhost(); handleDragEnd(); }}
+      onDragEnd={handleDragEnd}
       {...(isMobile ? longPress : {})}
       style={{
         ...(compact ? styles.rowCompact : styles.row),
@@ -322,7 +321,6 @@ export default function TableView({
             savedPulseField={savedPulseField}
             isMenuOpen={isMenuOpen}
             insertClass={insertClass}
-            selectionCount={selected.size}
             columnOrder={columnOrder}
             compact={compact}
             allCats={allCats}

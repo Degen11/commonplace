@@ -11,6 +11,7 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
+import { setMultiDragImage, cleanupDragGhost } from "../utils/dragGhost";
 import { normalize, similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS } from "../config";
@@ -148,9 +149,23 @@ export default function Commonplace() {
     reidentifyingIds,
     dragId, dragInsert,
     handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
-    handleDragStart, handleDragOver, handleDragEnd,
+    handleDragStart: rawDragStart, handleDragOver, handleDragEnd: rawDragEnd,
     handleFileImport,
   } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs });
+
+  // Wrap drag handlers so the multi-drag ghost uses the always-fresh `selected` set
+  // (memoized rows hold stale selectionCount props, so we handle it here instead)
+  const handleDragStart = useCallback((id, e) => {
+    if (e && selected.has(id) && selected.size > 1) {
+      setMultiDragImage(e, selected.size);
+    }
+    rawDragStart(id);
+  }, [rawDragStart, selected]);
+
+  const handleDragEnd = useCallback(() => {
+    cleanupDragGhost();
+    rawDragEnd();
+  }, [rawDragEnd]);
 
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
@@ -928,7 +943,6 @@ export default function Commonplace() {
                       inlineEditField={inlineEditField}
                       isSavedPulse={isSavedPulse}
                       savedPulseField={savedPulseField}
-                      selectionCount={selected.size}
                       allCats={allCats}
                       actionProps={actionProps}
                       toggleSel={toggleSel}

@@ -160,8 +160,10 @@ export default async function handler(req, res) {
         category: best.category || inferCategory(best.source),
         confidence: 'medium',
       };
-      // Cache for next time
-      writeCache(norm, result.source, result.category, result.confidence, supabase);
+      // Only cache high-confidence results (medium lookup results are not cached)
+      if (result.confidence === 'high') {
+        writeCache(norm, result.source, result.category, result.confidence, supabase);
+      }
       return { i, found: true, ...result, platform: best.platform };
     }
 

@@ -851,11 +851,13 @@ export default function Commonplace() {
                 setCollapsed={setSidebarCollapsed}
                 onDropQuote={(collectionId, e) => {
                   const quoteId = e.dataTransfer.getData("text/x-quote-id");
-                  if (quoteId) {
-                    addToCollection(collectionId, [quoteId]);
-                    const col = collections.find(c => c.id === collectionId);
-                    if (col) showToast(`Added to "${col.name}"`);
-                  }
+                  if (!quoteId) return;
+                  const ids = selected.has(quoteId) && selected.size > 1
+                    ? [...selected]
+                    : [quoteId];
+                  addToCollection(collectionId, ids);
+                  const col = collections.find(c => c.id === collectionId);
+                  if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`);
                 }}
                 onAutoGroup={handleAutoGroup}
             />

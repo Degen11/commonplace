@@ -167,11 +167,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
             const item = chunk[r.i];
             return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
           })]);
-          // Cache AI results for future lookups (fire-and-forget)
-          const cacheItems = results.filter(r => r.source && chunk[r.i]).map(r => ({
-            text: chunk[r.i].text, hint: null,
-            source: r.source, category: r.category, confidence: r.confidence,
-          }));
+          // Cache only high-confidence AI results (fire-and-forget)
+          const cacheItems = results
+            .filter(r => r.source && chunk[r.i] && r.confidence === "high")
+            .map(r => ({
+              text: chunk[r.i].text, hint: null,
+              source: r.source, category: r.category, confidence: r.confidence,
+            }));
           if (cacheItems.length > 0) {
             fetch("/api/cache", {
               method: "POST",

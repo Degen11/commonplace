@@ -6,19 +6,31 @@ import { Lightbulb } from "lucide-react";
 
 // Finds the closest local DB match to the current text.
 // db is null until the dynamic import resolves (gracefully returns null then).
+// Common words that inflate similarity scores without meaningful overlap
+const STOP_WORDS = new Set([
+  "the","and","but","for","are","not","you","all","can","had","her","was","one",
+  "our","out","has","have","been","will","more","when","who","how","its","may",
+  "did","get","him","his","let","say","she","too","use","with","just","like",
+  "that","this","what","from","they","been","than","into","them","then","some",
+  "could","would","should","there","their","about","which","being","where","does",
+  "dont","your","were","come","make","been","know","take","want","over","such",
+  "only","also","back","after","very","most","much","every","never","still",
+]);
+
 function findSuggestion(text, db) {
   if (!db || !text || text.length < 8) return null;
   const norm = normalize(text);
 
-  // Score every entry by word overlap
+  // Score every entry by word overlap, ignoring stop words
   let best = null; let bestScore = 0;
   for (const entry of db) {
     if (entry.t === norm) return null; // exact match — no suggestion needed
-    const wa = new Set(norm.split(" ").filter(w => w.length > 2));
-    const wb = new Set(entry.t.split(" ").filter(w => w.length > 2));
-    if (!wa.size || !wb.size) continue;
+    const wa = new Set(norm.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
+    const wb = new Set(entry.t.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
+    if (wa.size < 2 || wb.size < 2) continue;
     let overlap = 0;
     wa.forEach(w => { if (wb.has(w)) overlap++; });
+    if (overlap < 2) continue;
     const score = (overlap * 2) / (wa.size + wb.size);
     if (score > bestScore) { bestScore = score; best = entry; }
   }

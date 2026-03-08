@@ -72,7 +72,8 @@ export function basicFormat(text) {
   let t = text.trim();
   if (!t) return t;
 
-  t = t.replace(/^[\s\u2022\u00b7\u2013\u2014\-*>#]+/, "")
+  t = t.replace(/^[\s\u2022\u00b7\u2013\u2014\->#]+/, "")
+       .replace(/^\*(?!\*?\w)/, "")
        .replace(/^\d{1,4}\s*\.\s*/, "")
        .replace(/^\d{1,4}\s+(?=[A-Z])/, "")
        .trim();
@@ -115,9 +116,9 @@ export function basicFormat(text) {
     properNouns.forEach(noun => {
       const lower = noun.toLowerCase();
       const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      // Use Unicode letter boundaries instead of \b to avoid corrupting
-      // words like "johnson" when "Son" is a proper noun.
-      t = t.replace(new RegExp("(?<![\\p{L}])" + escaped + "(?![\\p{L}])", "gu"), noun);
+      // Only capitalize proper nouns at the start of a sentence (after . ! ? or start of string).
+      // Mid-sentence lowercase words are left as-is to respect the author's intent.
+      t = t.replace(new RegExp("(?:^|(?<=[.!?]\\s))" + escaped + "(?![\\p{L}])", "gu"), noun);
     });
   }
 
@@ -169,8 +170,10 @@ export function similarity(a, b) {
 
 export function smartParse(line) {
   let t = line.trim();
-  // Strip leading bullets, dashes, en/em dashes, list markers, quote marks
-  t = t.replace(/^[\u2022\u00b7\u2013\u2014\-*>#]+\s*/, "")
+  // Strip leading bullets, dashes, en/em dashes, list markers
+  // but preserve * when it's part of markdown bold/italic (e.g. **bold** or *italic*)
+  t = t.replace(/^[\u2022\u00b7\u2013\u2014\->#]+\s*/, "")
+       .replace(/^\*(?!\*?\w)/, "")
        .replace(/^\d{1,4}\s*\.\s*/, "")
        .trim();
   if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith('\u201C') && t.endsWith('\u201D')) || (t.startsWith("'") && t.endsWith("'")))

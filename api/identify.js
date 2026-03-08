@@ -29,12 +29,13 @@ IDENTIFICATION RULES — follow strictly:
 Return exactly one JSON object per input item.
 
 EXAMPLE INPUT:
-[0] You can't handle the truth
-[1] The only limit to our realization of tomorrow is our doubts of today
-[2] Winter is coming
+[0] We are what we repeatedly do. Excellence then is not an act but a habit
+[1] The cosmos is within us. We are made of star stuff
+[2] You miss every shot you don't take
+[3] The wound is the place where the light enters you
 
 EXAMPLE OUTPUT:
-[{"i":0,"source":"A Few Good Men (1992) - Col. Jessup","category":"Film","confidence":"high"},{"i":1,"source":"Franklin D. Roosevelt","category":"Person","confidence":"medium"},{"i":2,"source":"Game of Thrones (2011) - House Stark","category":"TV","confidence":"high"}]`;
+[{"i":0,"source":"Attributed to Aristotle (paraphrased by Will Durant)","category":"Person","confidence":"medium"},{"i":1,"source":"Cosmos (1980) - Carl Sagan","category":"TV","confidence":"high"},{"i":2,"source":"Attributed to Wayne Gretzky","category":"Person","confidence":"high"},{"i":3,"source":"Rumi","category":"Person","confidence":"high"}]`;
 
 const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
@@ -80,7 +81,10 @@ export default async function handler(req, res) {
     max_tokens: 4000,
     temperature: 0,
     system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: firstMsg.content }],
+    messages: [
+      { role: 'user', content: firstMsg.content },
+      { role: 'assistant', content: '[' },
+    ],
   };
 
   try {

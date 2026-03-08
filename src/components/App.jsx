@@ -39,7 +39,7 @@ import CollectionsSidebar from "./CollectionsSidebar";
 import { styles } from "./styles";
 
 import {
-  AlertTriangle, Zap, Bot, XCircle, RefreshCw, Eye, Trash2, X,
+  AlertTriangle, Zap, Bot, Globe, XCircle, RefreshCw, Eye, Trash2, X,
 } from "lucide-react";
 
 const LS_QUOTES     = "commonplace_quotes";
@@ -367,8 +367,8 @@ export default function Commonplace() {
       const newQuote = {
         id: generateId(),
         text,
-        source: source || "Unknown",
-        category: category || "Unknown",
+        source: source || "Unknown source",
+        category: category || "Reflection",
         confidence: "high",
         favorite: false,
         updatedAt: Date.now(),
@@ -477,7 +477,7 @@ export default function Commonplace() {
     setNewCatName("");
     setShowNewCat(false);
   };
-  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Unknown", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
+  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Reflection", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
 
   const importCollections = useCallback((imported) => {
     const existingNames = new Set(collections.map(c => c.name.toLowerCase()));
@@ -731,7 +731,9 @@ export default function Commonplace() {
 
           {stats && (
             <div style={styles.statsBar}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} strokeWidth={2} /> <strong>{stats.local}</strong> matched locally</span><span style={styles.statDot} />
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} strokeWidth={2} /> <strong>{stats.local}</strong> matched locally</span>
+              {stats.lookup > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={13} strokeWidth={2} /> <strong>{stats.lookup}</strong> found online</span></>}
+              <span style={styles.statDot} />
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
               {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
               {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}

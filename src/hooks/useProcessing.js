@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { buildValidCats } from "../data/constants";
+import { buildValidCats, fallbackCategory } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
@@ -111,25 +111,77 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       })));
     }
 
-    safeSetProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need AI...`, phase: "local" });
+    safeSetProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" });
 
-    const apiResults = new Map(); let apiFailed = false; const failed = [];
+    // ── External lookup (Wikiquote, TMDb, Open Library, cache) ──
+    const lookupResults = new Map();
     if (needsApi.length > 0) {
-      for (let i = 0; i < needsApi.length; i += API_BATCH_SIZE) {
+      try {
+        safeSetProgress({ total: unique.length, done: localMatches.length, current: "Checking online databases...", phase: "lookup" });
+        const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
+        const lr = await fetch("/api/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+          body: JSON.stringify({ quotes: lookupBody }),
+        });
+        if (lr.ok) {
+          const { results: lResults } = await lr.json();
+          if (Array.isArray(lResults)) {
+            lResults.forEach(r => {
+              if (r.found) {
+                const item = needsApi[r.i];
+                if (item) lookupResults.set(item.idx, r);
+              }
+            });
+          }
+        }
+      } catch {
+        // Lookup failure is non-critical — fall through to AI
+      }
+    }
+
+    if (!mountedRef.current) return;
+
+    // Move lookup hits out of the AI queue
+    const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
+    if (lookupResults.size > 0) {
+      safeSetIdentifiedFeed(prev => [...prev, ...[...lookupResults.values()].map(r => {
+        const item = needsApi[r.i];
+        return { text: item?.text || "", source: r.source, category: r.category };
+      })]);
+      safeSetProgress({ total: unique.length, done: localMatches.length + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" });
+    }
+
+    const preAiDone = localMatches.length + lookupResults.size;
+    const apiResults = new Map(); let apiFailed = false; const failed = [];
+    if (stillNeedsApi.length > 0) {
+      for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
         if (!mountedRef.current) return;
-        const chunk = needsApi.slice(i, i + API_BATCH_SIZE);
-        safeSetProgress({ total: unique.length, done: localMatches.length + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(needsApi.length / API_BATCH_SIZE)}...`, phase: "api" });
+        const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
+        safeSetProgress({ total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" });
         try {
           const results = await identifyBatch(chunk, useFormatting);
           if (!mountedRef.current) return;
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
           safeSetIdentifiedFeed(prev => [...prev, ...results.map(r => {
             const item = chunk[r.i];
-            return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown", category: r.category || "Unknown" };
+            return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
           })]);
+          // Cache AI results for future lookups (fire-and-forget)
+          const cacheItems = results.filter(r => r.source && chunk[r.i]).map(r => ({
+            text: chunk[r.i].text, hint: null,
+            source: r.source, category: r.category, confidence: r.confidence,
+          }));
+          if (cacheItems.length > 0) {
+            fetch("/api/cache", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+              body: JSON.stringify({ items: cacheItems }),
+            }).catch(() => {});
+          }
         } catch (err) {
           apiFailed = true; chunk.forEach(c => failed.push(c));
-          safeSetApiError(describeApiError(err) + ` (${needsApi.length - i} entries affected)`);
+          safeSetApiError(describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)`);
           break;
         }
       }
@@ -145,18 +197,23 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         const text = useFormatting ? basicFormat(p.text) : p.text;
         return { id: generateId(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, updatedAt: Date.now() };
       }
+      const lookup = lookupResults.get(i);
+      if (lookup) {
+        const text = useFormatting ? basicFormat(p.text) : p.text;
+        return { id: generateId(), text, source: lookup.source, category: fallbackCategory(lookup.category, allCats), confidence: lookup.confidence || "medium", favorite: false, updatedAt: Date.now() };
+      }
       const api = apiResults.get(i);
       if (api) {
         const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
-        return { id: generateId(), text, source: api.source || p.hint || "Unknown", category: validCats.has(api.category) ? api.category : "Unknown", confidence: api.confidence || "low", favorite: false, updatedAt: Date.now() };
+        return { id: generateId(), text, source: api.source || p.hint || "Unknown source", category: fallbackCategory(api.category, allCats), confidence: api.confidence || "low", favorite: false, updatedAt: Date.now() };
       }
       const text = useFormatting ? basicFormat(p.text) : p.text;
-      return { id: generateId(), text, source: p.hint || "Unknown", category: "Unknown", confidence: "low", favorite: false, updatedAt: Date.now() };
+      return { id: generateId(), text, source: p.hint || "Unknown source", category: "Reflection", confidence: "low", favorite: false, updatedAt: Date.now() };
     });
 
     if (!mountedRef.current) return;
     appendMode ? setQuotes(prev => [...prev, ...newQuotes]) : setQuotes(newQuotes);
-    safeSetStats(prev => ({ ...(prev || {}), local: localMatches.length, api: apiResults.size, failed: apiFailed ? needsApi.length - apiResults.size : 0, total: unique.length }));
+    safeSetStats(prev => ({ ...(prev || {}), local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length }));
     safeSetProcessingDone(true);
     safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
     try { localStorage.removeItem("commonplace_draft"); } catch(e) {}

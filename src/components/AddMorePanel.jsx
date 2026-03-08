@@ -17,7 +17,7 @@ export default function AddMorePanel({
   const [tab, setTab] = useState("identify");
   const [quickText, setQuickText] = useState("");
   const [quickSource, setQuickSource] = useState("");
-  const [quickCategory, setQuickCategory] = useState("Unknown");
+  const [quickCategory, setQuickCategory] = useState("Reflection");
   const [isDragOver, setIsDragOver] = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
   const [urlInput, setUrlInput] = useState("");
@@ -35,7 +35,7 @@ export default function AddMorePanel({
     onQuickAdd(quickText.trim(), quickSource.trim(), quickCategory);
     setQuickText("");
     setQuickSource("");
-    setQuickCategory("Unknown");
+    setQuickCategory("Reflection");
   };
 
   const handleDrop = (e) => {

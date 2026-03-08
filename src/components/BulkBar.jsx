@@ -21,9 +21,9 @@ export default function BulkBar({
       <div style={styles.bulkF}>
         <select style={styles.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}><option value="">Category...</option>{allCats.map(c => <option key={c} value={c}>{c}</option>)}</select>
         <input style={styles.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
-        <button className="ui-tip" data-tip="Apply to selected" style={{ ...styles.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
+        <button className="ui-tip bulk-apply" data-tip="Apply to selected" style={{ ...styles.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }} onClick={applyBulk} disabled={!bulkEditCat && !bulkEditSource.trim()}>Apply</button>
         <button
-          className="ui-tip"
+          className="ui-tip bulk-reidentify"
           data-tip="Re-identify selected with AI"
           style={{
             padding: "5px 12px", borderRadius: 6,
@@ -80,7 +80,7 @@ export default function BulkBar({
             </select>
           </>
         )}
-        <button className="ui-tip" data-tip="Delete selected entries" style={styles.bulkDelBtn} onClick={onDelete}>Delete</button>
+        <button className="ui-tip bulk-del" data-tip="Delete selected entries" style={styles.bulkDelBtn} onClick={onDelete}>Delete</button>
         <button className="ui-tip" data-tip="Clear selection" style={styles.bulkX} onClick={() => setSelected(new Set())}><X size={14} strokeWidth={2} /></button>
       </div>
     </div>

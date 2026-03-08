@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import { styles } from "./styles";
 import { Search, X, ChevronDown } from "lucide-react";
 
@@ -23,6 +24,18 @@ export default function ToolbarSection({
   catScrollRef, updateCatFade, catFade,
   getCatColor,
 }) {
+  const sortDropRef = useRef(null);
+  const [sortFlipLeft, setSortFlipLeft] = useState(false);
+
+  // Flip sort dropdown alignment if it clips the right viewport edge
+  useEffect(() => {
+    if (!showSort) { setSortFlipLeft(false); return; }
+    const el = sortDropRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) setSortFlipLeft(true);
+  }, [showSort]);
+
   return (
     <>
       <div ref={toolbarRef} style={styles.toolbar}>
@@ -34,8 +47,9 @@ export default function ToolbarSection({
           <button style={{ ...styles.sortBtn, ...(sortBy !== "default" ? { borderColor: "#3C5775", color: "#3C5775" } : {}) }} onClick={() => setShowSort(!showSort)}>
             Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<ChevronDown size={12} style={{ marginLeft: 2, opacity: .5 }} />
           </button>
-          <div style={{
+          <div ref={sortDropRef} style={{
             ...styles.sortDrop,
+            ...(sortFlipLeft ? { right: "auto", left: 0 } : {}),
             opacity: showSort ? 1 : 0,
             transform: showSort ? "translateY(0)" : "translateY(-4px)",
             pointerEvents: showSort ? "auto" : "none",
@@ -48,9 +62,9 @@ export default function ToolbarSection({
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
         <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
           style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-          <button onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+          <button className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
           {favCount > 0 && (
-            <button onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
+            <button className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
               ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}>{favCount}</span>
             </button>
           )}
@@ -58,7 +72,7 @@ export default function ToolbarSection({
             const col = getCatColor(c, customCats); const on = catFilter === c;
             const count = cc[c];
             const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-            return <button key={c} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+            return <button key={c} className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
               {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
               {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}

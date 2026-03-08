@@ -747,7 +747,7 @@ export default function Commonplace() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
-                <button className="ui-tip" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
+                <button className="ui-tip attention-dismiss" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
               </div>
             </div>
           ))}

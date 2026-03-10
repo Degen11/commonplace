@@ -18,7 +18,7 @@ export const SORT_OPTIONS = [
   { key: "category",   label: "By category" },
 ];
 
-export default function useViewPreferences(quotes, { activeCollectionId } = {}) {
+export default function useViewPreferences(quotes, { activeCollectionId, collections } = {}) {
   const [view, setView] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_VIEW);
@@ -99,8 +99,17 @@ export default function useViewPreferences(quotes, { activeCollectionId } = {}) 
     return result;
   }, [quotes, catFilter, favFilter, debouncedSearch, sortBy]);
 
+  // Apply collection scoping before pagination so hasMore/remaining counts are accurate
+  const collectionFiltered = useMemo(() => {
+    if (!activeCollectionId || !collections) return filtered;
+    const col = collections.find(c => c.id === activeCollectionId);
+    if (!col) return filtered;
+    const idSet = new Set(col.quoteIds);
+    return filtered.filter(q => idSet.has(q.id));
+  }, [filtered, activeCollectionId, collections]);
+
   const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${quotes.length}-${activeCollectionId || "all"}`;
-  const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(filtered, paginationKey);
+  const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(collectionFiltered, paginationKey);
 
   // ── Computed stats ──
   const { cc, favCount, unknownCount } = useMemo(() => {
@@ -131,7 +140,7 @@ export default function useViewPreferences(quotes, { activeCollectionId } = {}) 
     favFilter, setFavFilter,
     search, setSearch,
     isMobile,
-    filtered, visible, hasMore, remaining, loadMore,
+    filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
     cc, favCount, unknownCount,
     hasActiveFilters, computedStats,
   };

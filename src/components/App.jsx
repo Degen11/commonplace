@@ -111,22 +111,10 @@ export default function Commonplace() {
     favFilter, setFavFilter,
     search, setSearch,
     isMobile,
-    filtered, visible, hasMore, remaining, loadMore,
+    filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
     cc, favCount, unknownCount,
     hasActiveFilters, computedStats,
-  } = useViewPreferences(quotes, { activeCollectionId });
-
-  // Collection scoping — computed before useEditState so selection respects active collection
-  const activeCollectionIdSet = useMemo(() => {
-    if (!activeCollectionId) return null;
-    const col = collections.find(c => c.id === activeCollectionId);
-    return col ? new Set(col.quoteIds) : null;
-  }, [activeCollectionId, collections]);
-
-  const collectionFiltered = useMemo(() => {
-    if (!activeCollectionIdSet) return filtered;
-    return filtered.filter(q => activeCollectionIdSet.has(q.id));
-  }, [filtered, activeCollectionIdSet]);
+  } = useViewPreferences(quotes, { activeCollectionId, collections });
 
   const {
     editingId, setEditingId,
@@ -512,11 +500,6 @@ export default function Commonplace() {
     }
   }, [collections, quoteCounts, deleteCollection, showToast]);
 
-  const collectionVisible = useMemo(() => {
-    if (!activeCollectionIdSet) return visible;
-    return visible.filter(q => activeCollectionIdSet.has(q.id));
-  }, [visible, activeCollectionIdSet]);
-
   const showBulkBar = selected.size > 0;
 
   const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
@@ -875,7 +858,7 @@ export default function Commonplace() {
             <SectionErrorBoundary name="Table view">
               <div>
               <TableView
-                filtered={collectionVisible}
+                filtered={visible}
                 selected={selected}
                 toggleSel={toggleSel}
                 selAll={selAll}
@@ -910,7 +893,7 @@ export default function Commonplace() {
           {view === "cards" && (
             <SectionErrorBoundary name="Card view">
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-                {collectionVisible.map((q) => {
+                {visible.map((q) => {
                   const col = getCatColor(q.category, customCats);
                   const isSel = selected.has(q.id);
                   const isEd  = editingId === q.id;

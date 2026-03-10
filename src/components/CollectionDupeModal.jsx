@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { styles } from "./styles";
 import useScrollLock from "../hooks/useScrollLock";
 import { Search, Trash2 } from "lucide-react";
@@ -12,6 +12,8 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
   const boxRef = useRef(null);
   // Track which group index the user has resolved (and which entry ID they kept)
   const [resolved, setResolved] = useState(new Map());
+  const resolvedRef = useRef(resolved);
+  resolvedRef.current = resolved;
   useScrollLock();
 
   useEffect(() => {
@@ -21,12 +23,19 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
 
-  const pending = dupeGroups.filter((_, i) => !resolved.has(i));
+  const pending = dupeGroups.reduce((acc, group, i) => {
+    if (!resolved.has(i)) acc.push({ group, groupIndex: i });
+    return acc;
+  }, []);
 
-  if (pending.length === 0) {
-    setTimeout(onClose, 300);
-    return null;
-  }
+  const allResolved = pending.length === 0;
+
+  // Close after a short delay when all groups are resolved (side-effect in useEffect, not render)
+  useEffect(() => {
+    if (!allResolved) return;
+    const t = setTimeout(onClose, 300);
+    return () => clearTimeout(t);
+  }, [allResolved, onClose]);
 
   const keepOne = (groupIndex, keepId) => {
     const group = dupeGroups[groupIndex];
@@ -39,19 +48,21 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     setResolved(p => new Map([...p, [groupIndex, null]]));
   };
 
-  const removeAllDupes = () => {
+  const removeAllDupes = useCallback(() => {
     const allToDelete = [];
     dupeGroups.forEach((group, i) => {
-      if (resolved.has(i)) return;
+      if (resolvedRef.current.has(i)) return;
       // Keep the first entry, delete the rest
       const toDelete = group.entries.slice(1).map(e => e.id);
       allToDelete.push(...toDelete);
     });
     if (allToDelete.length > 0) onDeleteQuotes(allToDelete);
     onClose();
-  };
+  }, [dupeGroups, onDeleteQuotes, onClose]);
 
-  const totalDupeEntries = pending.reduce((sum, g) => sum + g.entries.length - 1, 0);
+  if (allResolved) return null;
+
+  const totalDupeEntries = pending.reduce((sum, { group }) => sum + group.entries.length - 1, 0);
 
   return (
     <div style={styles.dupeModalOverlay} role="dialog" aria-modal="true" aria-label="Duplicate scan results" onClick={onClose}>
@@ -68,9 +79,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
         </div>
 
         <div style={{ padding: "16px 24px", overflowY: "auto", flex: 1, minHeight: 0 }}>
-          {pending.map((group) => {
-            const groupIndex = dupeGroups.indexOf(group);
-            return (
+          {pending.map(({ group, groupIndex }) => (
               <div key={groupIndex} style={{
                 border: "1px solid var(--cp-border)",
                 borderRadius: 14,
@@ -167,8 +176,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
                   </button>
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
 
         <div style={{

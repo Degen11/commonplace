@@ -45,7 +45,7 @@ export default function ToolbarSection({
           {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={styles.clrBtn} onClick={() => setSearch("")}><X size={12} strokeWidth={2} /></button>}
         </div>
         <div ref={sortRef} style={{ position: "relative" }}>
-          <button style={{ ...styles.sortBtn, ...(sortBy !== "default" ? { borderColor: "#3C5775", color: "#3C5775" } : {}) }} onClick={() => setShowSort(!showSort)}>
+          <button style={{ ...styles.sortBtn, ...(sortBy !== "default" ? { borderColor: "#3C5775", color: "#3C5775", background: "rgba(60,87,117,0.08)", fontWeight: 600 } : {}) }} onClick={() => setShowSort(!showSort)}>
             Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<ChevronDown size={12} style={{ marginLeft: 2, opacity: .5 }} />
           </button>
           <div ref={sortDropRef} style={{

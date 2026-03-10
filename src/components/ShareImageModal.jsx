@@ -22,10 +22,10 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
     try {
       const blob = await generateShareImage(quote, styleKey);
       downloadBlob(blob, `commonplace-quote-${styleKey}.png`);
-      showToast("Image saved!");
+      showToast("Image saved!", null, null, "success");
       onClose();
     } catch {
-      showToast("Couldn't generate image.");
+      showToast("Couldn't generate image.", null, null, "error");
     } finally {
       setGenerating(null);
     }

@@ -77,7 +77,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
           }
         }, 150);
       } else {
-        showToast("Review complete \u2014 all entries updated!");
+        showToast("Review complete \u2014 all entries updated!", null, null, "success");
       }
     }
   }, [setQuotes, reviewQueue, showToast]);

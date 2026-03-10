@@ -1,5 +1,7 @@
 // Proper noun set — lazy-initialized via initProperNouns() on first processing run.
 let properNouns = null;
+// Pre-compiled RegExp patterns for properNouns, built once in initProperNouns()
+let properNounPatterns = null;
 
 const SKIP_WORDS = new Set([
   "the","a","an","of","in","on","at","to","for","and","or","but","with",
@@ -57,16 +59,22 @@ export function initProperNouns(db) {
     if (sources.size >= 2) nouns.add(word);
   });
   properNouns = nouns;
+  // Pre-compile RegExp for each proper noun once
+  properNounPatterns = [];
+  for (const noun of nouns) {
+    const escaped = noun.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    properNounPatterns.push({ noun, re: new RegExp("(?:^|(?<=[.!?]\\s))" + escaped + "(?![\\p{L}])", "gu") });
+  }
 }
 
-// Conservative list — only clear-cut misspellings
-const MISSPELLINGS = {
+// Conservative list — only clear-cut misspellings (pre-compiled RegExps)
+const MISSPELLING_PATTERNS = Object.entries({
   "recieve": "receive", "beleive": "believe", "freind": "friend",
   "occured": "occurred", "begining": "beginning", "seperate": "separate",
   "definately": "definitely", "untill": "until",
   "alot": "a lot", "noone": "no one",
   "everytime": "every time", "nevermind": "never mind",
-};
+}).map(([wrong, right]) => ({ re: new RegExp("\\b" + wrong + "\\b", "gi"), right }));
 
 export function basicFormat(text) {
   let t = text.trim();
@@ -104,22 +112,20 @@ export function basicFormat(text) {
        .replace(/\bwhats\b/g, "what's")
        .replace(/\bwhos\b/g, "who's");
 
-  Object.entries(MISSPELLINGS).forEach(([wrong, right]) => {
-    t = t.replace(new RegExp("\\b" + wrong + "\\b", "gi"), (match) =>
+  for (const { re, right } of MISSPELLING_PATTERNS) {
+    re.lastIndex = 0;
+    t = t.replace(re, (match) =>
       match[0] === match[0].toUpperCase()
         ? right.charAt(0).toUpperCase() + right.slice(1)
         : right
     );
-  });
+  }
 
-  if (properNouns) {
-    properNouns.forEach(noun => {
-      const lower = noun.toLowerCase();
-      const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      // Only capitalize proper nouns at the start of a sentence (after . ! ? or start of string).
-      // Mid-sentence lowercase words are left as-is to respect the author's intent.
-      t = t.replace(new RegExp("(?:^|(?<=[.!?]\\s))" + escaped + "(?![\\p{L}])", "gu"), noun);
-    });
+  if (properNounPatterns) {
+    for (const { noun, re } of properNounPatterns) {
+      re.lastIndex = 0;
+      t = t.replace(re, noun);
+    }
   }
 
   t = t.charAt(0).toUpperCase() + t.slice(1);

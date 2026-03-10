@@ -130,7 +130,7 @@ export const baseCSS = `
   @keyframes toastCountdown{from{width:100%}to{width:0%}}
   .toast-bar{
     position:absolute;bottom:0;left:0;height:2px;
-    background:#2383E2;border-radius:0 0 8px 8px;
+    background:var(--toast-bar-color,#2383E2);border-radius:0 0 8px 8px;
     animation:toastCountdown var(--toast-duration,2.5s) linear forwards;
   }
 

@@ -63,9 +63,9 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       .then(() => {
         setCopiedId(q.id);
         setTimeout(() => { if (mountedRef.current) setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
-        showToast("Copied!");
+        showToast("Copied!", null, null, "success");
       })
-      .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text."));
+      .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text.", null, null, "error"));
   }, [showToast]);
 
   // ── Share as image ──
@@ -73,9 +73,9 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     try {
       const blob = await generateShareImage(q);
       downloadBlob(blob, "commonplace-quote.png");
-      showToast("Image saved!");
+      showToast("Image saved!", null, null, "success");
     } catch {
-      showToast("Couldn't generate image.");
+      showToast("Couldn't generate image.", null, null, "error");
     }
   }, [showToast]);
 
@@ -141,7 +141,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       }
     } catch (err) {
       if (err.name === "AbortError") return;
-      showToast(describeApiError(err));
+      showToast(describeApiError(err), null, null, "error");
     }
     clearId();
   }, [setQuotes, allCats, showToast, identifyBatch]);
@@ -225,11 +225,11 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       const total = qs.length;
       showToast(`Re-identified ${total} ${total === 1 ? "entry" : "entries"}`, "Undo", () => {
         setQuotes(prev => prev.map(q => snapshot.has(q.id) ? snapshot.get(q.id) : q));
-      });
+      }, "success");
     } catch (err) {
       clearIds();
       if (err.name === "AbortError") return;
-      showToast(describeApiError(err));
+      showToast(describeApiError(err), null, null, "error");
     }
   }, [setQuotes, allCats, showToast, identifyBatch]);
 
@@ -285,12 +285,12 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     // Gate: reject files that are too large to process safely in the browser
     if (file.size > MAX_IMPORT_FILE_BYTES) {
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      showToast(`File too large (${sizeMB} MB). Maximum is ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB.`);
+      showToast(`File too large (${sizeMB} MB). Maximum is ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB.`, null, null, "error");
       return;
     }
 
     const ext = file.name.split(".").pop().toLowerCase();
-    if (!["txt", "csv", "json", "md"].includes(ext)) { showToast("Supported formats: .txt, .csv, .json, .md"); return; }
+    if (!["txt", "csv", "json", "md"].includes(ext)) { showToast("Supported formats: .txt, .csv, .json, .md", null, null, "error"); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       let content = e.target.result;
@@ -306,7 +306,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
             onImportCollections(collections);
           }
         } else {
-          showToast("Couldn't find quotes in JSON file. Expected an array with text/quote/content fields.");
+          showToast("Couldn't find quotes in JSON file. Expected an array with text/quote/content fields.", null, null, "error");
           return;
         }
       } else if (ext === "md") {
@@ -365,9 +365,9 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         ? `Loaded ${count} entries from ${file.name} (${formatLabel})`
         : `Loaded ${count} entries from ${file.name}`;
       if (skippedCount > 0) msg += ` \u00b7 ${skippedCount} skipped`;
-      showToast(msg);
+      showToast(msg, null, null, "success");
     };
-    reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.");
+    reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.", null, null, "error");
     reader.readAsText(file);
   }, [showToast]);
 

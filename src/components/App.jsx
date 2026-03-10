@@ -80,12 +80,13 @@ export default function Commonplace() {
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
   const {
     isProcessing, processingDone, progress, identifiedFeed,
-    apiError, setApiError, failedEntries,
-    stats, setStats,
-    pendingDupes, dupeDecisions, setDupeDecisions,
+    apiError, failedEntries,
+    stats,
+    pendingDupes, dupeDecisions, setDupeDecision,
     formattingEnabled, setFormattingEnabled,
     processEntries, handleDupesContinue, retryFailed,
-    identifyBatch, autoGroup, resetProcessingState,
+    identifyBatch, autoGroup, cancelProcessing, resetProcessingState,
+    dismissApiError, dismissStats,
   } = processing;
 
   // AI auto-group: create a collection from a theme
@@ -99,7 +100,7 @@ export default function Commonplace() {
     if (!col || col.error) throw new Error(`Collection "${name}" already exists`);
     addToCollection(col.id, matchedIds);
     setActiveCollectionId(col.id);
-    showToast(`Created "${col.name}" with ${matchedIds.length} quote${matchedIds.length === 1 ? "" : "s"}`);
+    showToast(`Created "${col.name}" with ${matchedIds.length} quote${matchedIds.length === 1 ? "" : "s"}`, null, null, "success");
   }, [quotes, autoGroup, createCollection, addToCollection, setActiveCollectionId, showToast]);
 
   const {
@@ -409,13 +410,13 @@ export default function Commonplace() {
       };
       setQuotes(p => [newQuote, ...p]);
       setShowAddMore(false);
-      showToast("Quote added");
+      showToast("Quote added", null, null, "success");
     };
 
     const match = quotes.find(q => similarity(q.text, text) > DUPE_SIMILARITY_THRESHOLD);
     if (match) {
       const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
-      showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote);
+      showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
       return;
     }
     addQuote();
@@ -442,7 +443,7 @@ export default function Commonplace() {
   const handleFindDupes = useCallback(() => {
     const target = activeCollectionId ? collectionFiltered : quotes;
     if (target.length < 2) {
-      showToast("Need at least 2 entries to scan for duplicates.");
+      showToast("Need at least 2 entries to scan for duplicates.", null, null, "error");
       return;
     }
     const norms = target.map(q => ({ id: q.id, text: q.text, source: q.source, category: q.category, norm: normalize(q.text) }));
@@ -486,7 +487,7 @@ export default function Commonplace() {
     }
 
     if (groups.length === 0) {
-      showToast("No duplicates found!");
+      showToast("No duplicates found!", null, null, "success");
       return;
     }
     groups.sort((a, b) => b.maxScore - a.maxScore);
@@ -498,13 +499,13 @@ export default function Commonplace() {
     const idSet = new Set(quoteIds);
     setQuotes(prev => prev.filter(q => !idSet.has(q.id)));
     cleanCollectionRefs(quoteIds);
-    showToast(`Removed ${quoteIds.length} duplicate${quoteIds.length === 1 ? "" : "s"}`);
+    showToast(`Removed ${quoteIds.length} duplicate${quoteIds.length === 1 ? "" : "s"}`, null, null, "success");
   }, [setQuotes, trackDeletion, cleanCollectionRefs, showToast]);
 
   const addCat = () => {
     const sanitized = sanitizeName(newCatName);
     if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
-      showToast("Invalid or duplicate category name");
+      showToast("Invalid or duplicate category name", null, null, "error");
       return;
     }
     setCustomCats(p => [...p, sanitized]);
@@ -526,7 +527,7 @@ export default function Commonplace() {
         added++;
       }
     }
-    if (added > 0) showToast(`Imported ${added} collection${added === 1 ? "" : "s"}`);
+    if (added > 0) showToast(`Imported ${added} collection${added === 1 ? "" : "s"}`, null, null, "success");
   }, [collections, createCollection, updateCollectionIcon, addToCollection, showToast]);
 
   // Persist sidebar collapsed state
@@ -592,7 +593,7 @@ export default function Commonplace() {
       <DupeModal
         pendingDupes={pendingDupes}
         dupeDecisions={dupeDecisions}
-        setDupeDecisions={setDupeDecisions}
+        setDupeDecision={setDupeDecision}
         onContinue={handleDupesContinue}
       />
 
@@ -630,7 +631,7 @@ export default function Commonplace() {
             identifiedFeed={identifiedFeed}
             customCats={customCats}
             processingDone={processingDone}
-            onCancel={() => { processing.setIsProcessing(false); processing.setProgress(null); processing.setProcessingDone(false); goPhase("input"); }}
+            onCancel={cancelProcessing}
           />
         </SectionErrorBoundary>
       )}
@@ -639,7 +640,7 @@ export default function Commonplace() {
       {phase === "results" && (
         <div style={styles.wrap} className={fadeClass}>
 
-          {toasts.length > 0 && <Toast key={toasts[0].id} id={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={toasts[0].onAction} onDismiss={dismissToast} />}
+          {toasts.length > 0 && <Toast key={toasts[0].id} id={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={toasts[0].onAction} onDismiss={dismissToast} variant={toasts[0].variant} />}
 
           {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 
@@ -760,7 +761,7 @@ export default function Commonplace() {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} strokeWidth={2} /> {apiError}</span>
               <div style={{ display: "flex", gap: 8 }}>
                 {failedEntries.length > 0 && <button style={styles.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
-                <button className="dismiss-link" style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={() => setApiError(null)}>Dismiss</button>
+                <button className="dismiss-link" style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={dismissApiError}>Dismiss</button>
               </div>
             </div>
           )}
@@ -773,7 +774,7 @@ export default function Commonplace() {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
               {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
               {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-              <button style={styles.statsDismiss} onClick={() => setStats(null)}><X size={14} strokeWidth={2} /></button>
+              <button style={styles.statsDismiss} onClick={dismissStats}><X size={14} strokeWidth={2} /></button>
             </div>
           )}
 
@@ -909,7 +910,7 @@ export default function Commonplace() {
                     : [quoteId];
                   addToCollection(collectionId, ids);
                   const col = collections.find(c => c.id === collectionId);
-                  if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`);
+                  if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, null, null, "success");
                 }}
                 onAutoGroup={handleAutoGroup}
             />

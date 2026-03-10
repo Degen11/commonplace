@@ -716,6 +716,14 @@ export default function Commonplace() {
               dark={dark}
               toggleTheme={toggleTheme}
               onShowShortcuts={() => setShowShortcuts(true)}
+              search={search}
+              setSearch={setSearch}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showSort={showSort}
+              setShowSort={setShowSort}
+              sortRef={sortRef}
+              onFindDupes={handleFindDupes}
             />
           </SectionErrorBoundary>
 
@@ -836,12 +844,7 @@ export default function Commonplace() {
 
           <SectionErrorBoundary name="Toolbar">
             <ToolbarSection
-              search={search}
-              setSearch={setSearch}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              showSort={showSort}
-              setShowSort={setShowSort}
+              toolbarRef={toolbarRef}
               catFilter={catFilter}
               setCatFilter={setCatFilter}
               favFilter={favFilter}
@@ -857,13 +860,10 @@ export default function Commonplace() {
               setNewCatName={setNewCatName}
               addCat={addCat}
               remCat={remCat}
-              toolbarRef={toolbarRef}
-              sortRef={sortRef}
               catScrollRef={catScrollRef}
               updateCatFade={updateCatFade}
               catFade={catFade}
               getCatColor={getCatColor}
-              onFindDupes={handleFindDupes}
             />
           </SectionErrorBoundary>
 

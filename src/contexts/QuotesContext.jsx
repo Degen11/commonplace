@@ -9,15 +9,10 @@ import {
   TOMBSTONE_TTL_MS, STORAGE_WARN_BYTES, PERSIST_DEBOUNCE_MS,
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
   API_TIMEOUT_MS,
+  LS_QUOTES, LS_CATS, LS_COL_ORDER, LS_DELETED_IDS, LS_COLLECTIONS,
 } from "../config";
 
 const QuotesContext = createContext(null);
-
-const LS_QUOTES      = "commonplace_quotes";
-const LS_CATS        = "commonplace_cats";
-const LS_COL_ORDER   = "commonplace_col_order";
-const LS_DELETED_IDS = "commonplace_deleted_ids";
-const LS_COLLECTIONS = "commonplace_collections";
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;

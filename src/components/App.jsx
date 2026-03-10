@@ -14,7 +14,10 @@ import { getCatColor, sanitizeName } from "../data/constants";
 import { setMultiDragImage, cleanupDragGhost } from "../utils/dragGhost";
 import { normalize, similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
-import { DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS } from "../config";
+import {
+  DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS,
+  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT,
+} from "../config";
 
 import Toast from "./Toast";
 import DupeModal from "./DupeModal";
@@ -42,11 +45,6 @@ import { styles } from "./styles";
 import {
   AlertTriangle, Zap, Bot, Globe, XCircle, RefreshCw, Eye, Trash2, X,
 } from "lucide-react";
-
-const LS_QUOTES     = "commonplace_quotes";
-const LS_CATS       = "commonplace_cats";
-const LS_FILTERS    = "commonplace_filters";
-const LS_DRAFT      = "commonplace_draft";
 
 export default function Commonplace() {
   const { toasts, showToast, dismissToast } = useToastContext();

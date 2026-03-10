@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 import {
   ClipboardCopy, Sparkles, Link, Globe, FileText, Table2, FileDown,
   AlertTriangle, Loader,
@@ -17,12 +17,12 @@ export default function ExportDropdown({
   const dropRef = useRef(null);
   const [flipLeft, setFlipLeft] = useState(false);
 
-  // Flip horizontal alignment if dropdown clips the right edge
-  useEffect(() => {
+  // Flip horizontal alignment if dropdown clips the right edge (layout effect to avoid flash)
+  useLayoutEffect(() => {
     const el = dropRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    if (rect.right > window.innerWidth - 8) setFlipLeft(true);
+    setFlipLeft(rect.right > window.innerWidth - 8);
   }, []);
 
   const handleShare = () => {

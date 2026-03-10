@@ -138,7 +138,10 @@ export function copyToClipboard(quotes, collections) {
   return navigator.clipboard.writeText(text.trim());
 }
 
-export function encodeShareData(quotes) {
+export function encodeShareData(quotes, maxItems = 10_000) {
+  if (quotes.length > maxItems) {
+    throw new Error(`Too many items to share (${quotes.length}, max ${maxItems})`);
+  }
   const minimal = quotes.map(q => [q.text || "", q.source || "", q.category || "", q.favorite ? 1 : 0]);
   const bytes = new TextEncoder().encode(JSON.stringify(minimal));
   let binary = "";

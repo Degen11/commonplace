@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { styles } from "./styles";
 import { getCatColor } from "../data/constants";
 import { CheckCircle } from "lucide-react";
@@ -12,6 +13,7 @@ export default function ProcessingPhase({
 }) {
   const doneCount = progress?.done || 0;
   const isComplete = processingDone || progress?.phase === "complete";
+  const reversedFeed = useMemo(() => [...identifiedFeed].reverse(), [identifiedFeed]);
 
   return (
     <div style={styles.wrap} className={fadeClass}>
@@ -60,10 +62,10 @@ export default function ProcessingPhase({
         )}
         {identifiedFeed.length > 0 && !isComplete && (
           <div style={styles.feedWrap}>
-            {[...identifiedFeed].reverse().map((item, i, arr) => {
+            {reversedFeed.map((item, i) => {
               const col = getCatColor(item.category, customCats);
               return (
-                <div key={`${arr.length - 1 - i}`} style={styles.feedItem}>
+                <div key={`${reversedFeed.length - 1 - i}`} style={styles.feedItem}>
                   <span style={{ ...styles.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
                   <span style={styles.feedItemText}>{item.text}</span>
                   <span style={styles.feedItemSrc}>{item.source}</span>

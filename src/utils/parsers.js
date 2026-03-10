@@ -152,8 +152,11 @@ export function parseReadwiseCSV(content) {
   const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
 
   const highlightIdx = headers.indexOf("highlight");
-  const titleIdx = Math.max(headers.indexOf("book title"), headers.indexOf("title"));
-  const authorIdx = Math.max(headers.indexOf("book author"), headers.indexOf("author"));
+  // Prefer "book title" over generic "title", same for author
+  const titleCols = ["book title", "title"];
+  const titleIdx = titleCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  const authorCols = ["book author", "author"];
+  const authorIdx = authorCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
 
   if (highlightIdx < 0) return [];
 

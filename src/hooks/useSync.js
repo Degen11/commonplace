@@ -179,6 +179,14 @@ export default function useSync({ onCloudData, onSyncError }) {
     };
   }, []);
 
+  // Manual sync — clears pending timers and pushes immediately with fresh retries
+  const manualPush = useCallback(() => {
+    if (pushTimer.current) clearTimeout(pushTimer.current);
+    if (retryTimer.current) clearTimeout(retryTimer.current);
+    consecutiveFailures.current = 0;
+    push();
+  }, [push]);
+
   return {
     deviceId: deviceId.current,
     syncStatus,
@@ -186,6 +194,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     initialLoading,
     pull,
     schedulePush,
+    manualPush,
     markReady,
   };
 }

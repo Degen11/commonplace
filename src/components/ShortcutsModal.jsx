@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import useScrollLock from "../hooks/useScrollLock";
 import { styles } from "./styles";
 
 const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -15,6 +16,8 @@ const SHORTCUTS = [
 ];
 
 export default function ShortcutsModal({ onClose }) {
+  useScrollLock();
+
   useEffect(() => {
     const h = e => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);

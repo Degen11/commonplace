@@ -1,10 +1,12 @@
 import StatsPanel from "./StatsPanel";
+import useScrollLock from "../hooks/useScrollLock";
 
 export default function StatsOverlay({
   quotes, computedStats, cc, customCats,
   headerVisible, preserveScroll,
   onClose,
 }) {
+  useScrollLock();
   const handleClose = () => {
     if (!headerVisible) preserveScroll();
     onClose();

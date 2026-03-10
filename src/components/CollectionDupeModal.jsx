@@ -1,21 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { styles } from "./styles";
+import useScrollLock from "../hooks/useScrollLock";
 import { Search, Trash2 } from "lucide-react";
 
-export default function CollectionDupeModal({ dupeGroups, onClose, onDeleteQuotes }) {
+export default function CollectionDupeModal(props) {
+  if (props.dupeGroups.length === 0) return null;
+  return <CollectionDupeModalInner {...props} />;
+}
+
+function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
   const boxRef = useRef(null);
   // Track which group index the user has resolved (and which entry ID they kept)
   const [resolved, setResolved] = useState(new Map());
+  useScrollLock();
 
   useEffect(() => {
-    if (dupeGroups.length === 0) return;
     const h = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     boxRef.current?.focus();
     return () => document.removeEventListener("keydown", h);
-  }, [dupeGroups.length, onClose]);
-
-  if (dupeGroups.length === 0) return null;
+  }, [onClose]);
 
   const pending = dupeGroups.filter((_, i) => !resolved.has(i));
 

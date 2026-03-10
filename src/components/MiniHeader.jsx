@@ -1,9 +1,10 @@
 import { List, AlignJustify, LayoutGrid, Moon, Sun } from "lucide-react";
 import Logo from "./Logo";
+import SyncPill from "./SyncPill";
 import ExportDropdown from "./ExportDropdown";
 import { styles, syncPillStyles } from "./styles";
 
-const syncStyles = syncPillStyles.mini;
+const pillStyles = syncPillStyles.mini;
 
 export default function MiniHeader({
   view, setView, compact, setCompact,
@@ -15,6 +16,8 @@ export default function MiniHeader({
   quotes, filtered, selected, hasActiveFilters,
   showToast, collections,
   syncStatus,
+  lastSynced,
+  onManualSync,
   dark,
   toggleTheme,
 }) {
@@ -31,9 +34,7 @@ export default function MiniHeader({
           <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "var(--cp-text-secondary)" }}>Commonplace</span>
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
-          {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
-          {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
+          <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
           <div style={styles.viewTog}>
             <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
               <List size={14} strokeWidth={1.5} />

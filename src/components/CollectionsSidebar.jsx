@@ -255,6 +255,7 @@ export default function CollectionsSidebar({
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -292,9 +293,16 @@ export default function CollectionsSidebar({
 
   const handleCreate = () => {
     const result = createCollection(newName);
+    if (result?.error) {
+      setCreateError(result.error === "duplicate"
+        ? `"${result.name}" already exists`
+        : "Invalid collection name");
+      return;
+    }
     if (result) {
       setNewName("");
       setIsCreating(false);
+      setCreateError(null);
     }
   };
 
@@ -372,29 +380,34 @@ export default function CollectionsSidebar({
       {/* Create new — at the top */}
       <div style={{ padding: "0 4px 6px 0" }}>
         {isCreating ? (
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <input
-              ref={inputRef}
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); } }}
-              placeholder="Collection name..."
-              style={{
-                flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                border: "1px solid var(--cp-accent)", borderRadius: 4, background: "var(--cp-bg-card)",
-                color: "var(--cp-text)",
-              }}
-            />
-            <button
-              onClick={handleCreate}
-              style={{
-                flexShrink: 0, background: CP_ACCENT, border: "none", borderRadius: 4,
-                color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit",
-              }}
-            >
-              Add
-            </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <input
+                ref={inputRef}
+                value={newName}
+                onChange={e => { setNewName(e.target.value); setCreateError(null); }}
+                onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); setCreateError(null); } }}
+                placeholder="Collection name..."
+                style={{
+                  flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
+                  border: `1px solid ${createError ? "#DC2626" : "var(--cp-accent)"}`, borderRadius: 4, background: "var(--cp-bg-card)",
+                  color: "var(--cp-text)",
+                }}
+              />
+              <button
+                onClick={handleCreate}
+                style={{
+                  flexShrink: 0, background: CP_ACCENT, border: "none", borderRadius: 4,
+                  color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                Add
+              </button>
+            </div>
+            {createError && (
+              <span style={{ fontSize: 11, color: "#DC2626", paddingLeft: 2 }}>{createError}</span>
+            )}
           </div>
         ) : (
           <button

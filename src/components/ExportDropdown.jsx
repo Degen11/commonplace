@@ -90,37 +90,37 @@ export default function ExportDropdown({
       <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
         Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
       </div>
-      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(quotes).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard</button>
-      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { richCopyToClipboard(quotes).then(() => showToast("Rich text copied \u2014 paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={14} strokeWidth={1.5} /> Rich copy</button>
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(quotes, collections).then(() => showToast("Copied to clipboard!")); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard</button>
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { richCopyToClipboard(quotes, collections).then(() => showToast("Rich text copied \u2014 paste into Notion, Notes, etc.")); setShowExport(false); }}><Sparkles size={14} strokeWidth={1.5} /> Rich copy</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { handleShare(); setShowExport(false); }}><Link size={14} strokeWidth={1.5} /> Shareable link</button>
       {quotes.length > 80 && <span style={styles.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — use public link instead</span>}
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8, opacity: publishing ? 0.5 : 1}} onClick={handlePublicLink} disabled={publishing}>
         {publishing ? <Loader size={14} strokeWidth={1.5} className="spin" /> : <Globe size={14} strokeWidth={1.5} />} Public link{publishing ? "..." : ""}<span style={{ fontSize: 10, opacity: 0.5 }}>30 days</span>
       </button>
       <div style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
-      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
-      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>
-      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(quotes); showToast("Exported as Markdown"); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Markdown</button>
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(quotes, collections); showToast("Exported as TXT"); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Plain text</button>
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(quotes, collections); showToast("Exported as CSV"); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> CSV</button>
+      <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(quotes, collections); showToast("Exported as Markdown"); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Markdown</button>
       <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportJSON(quotes, collections); showToast("Exported as JSON"); setShowExport(false); }}>{"{ }"} JSON</button>
       {hasActiveFilters && (<>
         <div style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
         <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
           Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
         </div>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(filtered).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered</button>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(filtered); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Filtered TXT</button>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(filtered); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Filtered CSV</button>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(filtered); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Filtered MD</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { copyToClipboard(filtered, collections).then(() => showToast(`Copied ${filtered.length} filtered entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportTXT(filtered, collections); showToast(`Exported ${filtered.length} as TXT`); setShowExport(false); }}><FileText size={14} strokeWidth={1.5} /> Filtered TXT</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportCSV(filtered, collections); showToast(`Exported ${filtered.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Filtered CSV</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { exportMD(filtered, collections); showToast(`Exported ${filtered.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Filtered MD</button>
       </>)}
       {selected.size > 0 && (<>
         <div style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
         <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#059669", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
           Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
         </div>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel).then(() => showToast(`Copied ${sel.length} selected entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected</button>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel); showToast(`Exported ${sel.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Selected CSV</button>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel); showToast(`Exported ${sel.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Selected MD</button>
-        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel); showToast(`Exported ${sel.length} as JSON`); setShowExport(false); }}>{"{ }"} Selected JSON</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel, collections).then(() => showToast(`Copied ${sel.length} selected entries`)); setShowExport(false); }}><ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel, collections); showToast(`Exported ${sel.length} as CSV`); setShowExport(false); }}><Table2 size={14} strokeWidth={1.5} /> Selected CSV</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel, collections); showToast(`Exported ${sel.length} as Markdown`); setShowExport(false); }}><FileDown size={14} strokeWidth={1.5} /> Selected MD</button>
+        <button className="dd-opt" style={{...styles.expOpt, display:"flex", alignItems:"center", gap:8}} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel, collections); showToast(`Exported ${sel.length} as JSON`); setShowExport(false); }}>{"{ }"} Selected JSON</button>
       </>)}
     </div>
   );

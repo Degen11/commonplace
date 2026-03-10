@@ -41,7 +41,7 @@ export default function ToolbarSection({
     <>
       <div ref={toolbarRef} style={styles.toolbar}>
         <div style={styles.srchW}><span style={styles.srchI}><Search size={13} strokeWidth={2} /></span>
-          <input style={styles.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input data-search-input style={styles.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
           {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={styles.clrBtn} onClick={() => setSearch("")}><X size={12} strokeWidth={2} /></button>}
         </div>
         <div ref={sortRef} style={{ position: "relative" }}>

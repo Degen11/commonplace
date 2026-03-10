@@ -1,7 +1,39 @@
-export async function generateShareImage(q) {
+export const IMAGE_STYLES = {
+  classic: {
+    label: "Classic",
+    bg: "#FAF8F4",
+    accent: "#3C5775",
+    text: "#1A1814",
+    attr: "#9A9590",
+    border: "#E8E3DA",
+    quoteMark: "rgba(60,87,117,0.07)",
+    brandColor: "#3C5775",
+  },
+  dark: {
+    label: "Dark",
+    bg: "#1A1D23",
+    accent: "#C9A87C",
+    text: "#E8E3DA",
+    attr: "#8A8580",
+    border: "#2E3238",
+    quoteMark: "rgba(201,168,124,0.08)",
+    brandColor: "#C9A87C",
+  },
+  minimal: {
+    label: "Minimal",
+    bg: "#FFFFFF",
+    accent: "#222222",
+    text: "#222222",
+    attr: "#888888",
+    border: "#E5E5E5",
+    quoteMark: "rgba(0,0,0,0.03)",
+    brandColor: "#222222",
+  },
+};
+
+export async function generateShareImage(q, styleName = "classic") {
+  const theme = IMAGE_STYLES[styleName] || IMAGE_STYLES.classic;
   const W = 1080, H = 1080, PAD = 72;
-  const ACCENT = "#3C5775";
-  const SAND = "#FAF8F4";
 
   await document.fonts.ready;
 
@@ -10,18 +42,18 @@ export async function generateShareImage(q) {
   canvas.height = H;
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = SAND;
+  ctx.fillStyle = theme.bg;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = ACCENT;
+  ctx.fillStyle = theme.accent;
   ctx.fillRect(0, 0, W, 6);
 
-  ctx.strokeStyle = "#E8E3DA";
+  ctx.strokeStyle = theme.border;
   ctx.lineWidth = 1.5;
   const bi = 32;
   ctx.strokeRect(bi, bi, W - bi * 2, H - bi * 2);
 
-  ctx.fillStyle = "rgba(60,87,117,0.07)";
+  ctx.fillStyle = theme.quoteMark;
   ctx.font = `bold 280px 'Playfair Display', Georgia, serif`;
   ctx.textAlign = "left";
   ctx.fillText("\u201C", PAD - 10, PAD + 220);
@@ -58,7 +90,7 @@ export async function generateShareImage(q) {
   const totalH = blockH + 40 + attrH;
   const textStartY = Math.round(Math.max(PAD + 180, (H - totalH) * 0.46 + lineH));
 
-  ctx.fillStyle = "#1A1814";
+  ctx.fillStyle = theme.text;
   ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
   ctx.textAlign = "left";
   lines.forEach((line, i) => {
@@ -66,15 +98,15 @@ export async function generateShareImage(q) {
   });
 
   const attrY = textStartY + blockH + 40;
-  ctx.fillStyle = ACCENT;
+  ctx.fillStyle = theme.accent;
   ctx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
   const dash = "\u2014 ";
   const dashW = ctx.measureText(dash).width;
   ctx.fillText(dash, textX, attrY);
-  ctx.fillStyle = "#9A9590";
+  ctx.fillStyle = theme.attr;
   ctx.fillText(q.source || "", textX + dashW, attrY);
 
-  drawBranding(ctx, W, H, PAD, ACCENT);
+  drawBranding(ctx, W, H, PAD, theme.brandColor);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(b => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/png");

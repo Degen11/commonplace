@@ -35,6 +35,7 @@ import AddMorePanel from "./AddMorePanel";
 import ExportDropdown from "./ExportDropdown";
 import EmptyState from "./EmptyState";
 import ShortcutsModal from "./ShortcutsModal";
+import ShareImageModal from "./ShareImageModal";
 import CollectionsSidebar from "./CollectionsSidebar";
 import { styles } from "./styles";
 
@@ -175,6 +176,7 @@ export default function Commonplace() {
   const [dismissedAtCount, setDismissedAtCount] = useState(null);
   const [showShortcuts, setShowShortcuts]       = useState(false);
   const [collectionDupes, setCollectionDupes]   = useState([]);
+  const [shareImageQuote, setShareImageQuote]   = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem("commonplace_sidebar_collapsed") === "1"; } catch { return false; }
   });
@@ -278,12 +280,19 @@ export default function Commonplace() {
 
   // Keyboard shortcuts — use a ref to avoid re-registering on every state change
   const kbStateRef = useRef({});
-  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, selAll };
+  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, selAll, visible, onFav, handleDelete, bulkDel, phase, showShortcuts, showStats, showAddMore, inlineEdit };
 
   useEffect(() => {
     const h = e => {
       if (e.target.matches('input, textarea, select')) return;
       const s = kbStateRef.current;
+
+      // Block all shortcuts except Escape when not in results phase
+      if (s.phase !== 'results' && e.key !== 'Escape') return;
+
+      // Block navigation/action shortcuts when modals or inline edits are active
+      const modalOpen = s.showShortcuts || s.showStats || s.showAddMore || s.confirmClear || s.confirmBulkDel;
+      const isEditing = s.editingId || s.inlineEdit;
 
       if (e.key === 'Escape') {
         if (s.confirmClear) { setConfirmClear(false); return; }
@@ -314,6 +323,53 @@ export default function Commonplace() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault();
         s.selAll();
+        return;
+      }
+
+      // Skip action/navigation shortcuts when modals or editing are active
+      if (modalOpen || isEditing) return;
+
+      if (e.key === '/') {
+        e.preventDefault();
+        const searchInput = document.querySelector('[data-search-input]');
+        if (searchInput) searchInput.focus();
+        return;
+      }
+
+      if (e.key === 'j' || e.key === 'k') {
+        const list = s.visible;
+        if (!list || list.length === 0) return;
+        // Find current position based on last selected item
+        let curIdx = -1;
+        if (s.selected.size > 0) {
+          const lastId = [...s.selected].pop();
+          curIdx = list.findIndex(q => q.id === lastId);
+        }
+        const nextIdx = e.key === 'j'
+          ? Math.min(curIdx + 1, list.length - 1)
+          : Math.max(curIdx - 1, 0);
+        setSelected(new Set([list[nextIdx].id]));
+        // Scroll the row into view
+        const el = document.querySelector(`[data-id="${list[nextIdx].id}"]`);
+        if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        return;
+      }
+
+      if (e.key === 'f') {
+        if (s.selected.size === 0) return;
+        for (const id of s.selected) s.onFav(id);
+        return;
+      }
+
+      if (e.key === 'd' || e.key === 'Delete' || e.key === 'Backspace') {
+        if (s.selected.size === 0) return;
+        e.preventDefault();
+        if (s.selected.size === 1) {
+          s.handleDelete([...s.selected][0]);
+        } else {
+          s.bulkDel();
+        }
+        return;
       }
     };
     document.addEventListener('keydown', h);
@@ -509,14 +565,14 @@ export default function Commonplace() {
     onDelete:      handleDelete,
     onCopy:        copyQuote,
     onReidentify:  reIdentify,
-    onShareImage:  shareAsImage,
+    onShareImage:  setShareImageQuote,
     copiedId,
     reidentifying: reidentifyingIds,
     collections,
     onAddToCollection: addToCollection,
     onRemoveFromCollection: removeFromCollection,
     activeCollectionId,
-  }), [onFav, handleDelete, copyQuote, reIdentify, shareAsImage, copiedId, reidentifyingIds, collections, addToCollection, removeFromCollection, activeCollectionId]);
+  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, addToCollection, removeFromCollection, activeCollectionId]);
 
   const exportDropdownContent = (
     <ExportDropdown
@@ -588,6 +644,14 @@ export default function Commonplace() {
           {toasts.length > 0 && <Toast key={toasts[0].id} id={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={toasts[0].onAction} onDismiss={dismissToast} />}
 
           {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+
+          {shareImageQuote && (
+            <ShareImageModal
+              quote={shareImageQuote}
+              onClose={() => setShareImageQuote(null)}
+              showToast={showToast}
+            />
+          )}
 
           {confirmClear && (
             <ConfirmModal

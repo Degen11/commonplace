@@ -7,11 +7,19 @@ const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(naviga
 const MOD = IS_MAC ? "\u2318" : "Ctrl";
 
 const SHORTCUTS = [
-  { keys: ["Esc"], desc: "Close modal / clear selection / clear search (cascading)" },
+  { section: "Navigation" },
+  { keys: ["J"], desc: "Select next quote" },
+  { keys: ["K"], desc: "Select previous quote" },
+  { keys: ["/"], desc: "Focus search" },
+  { keys: ["?"], desc: "Toggle this panel" },
+  { section: "Actions" },
+  { keys: ["F"], desc: "Toggle favorite on selected" },
+  { keys: ["D"], desc: "Delete selected" },
   { keys: [`${MOD}+A`], desc: "Select all visible quotes" },
   { keys: ["Shift+Click"], desc: "Range select in table view" },
+  { section: "Editing" },
   { keys: ["Enter"], desc: "Save inline edit" },
-  { keys: ["Esc"], desc: "Cancel inline edit" },
+  { keys: ["Esc"], desc: "Close / clear selection / clear search" },
   { keys: ["Long press"], desc: "Select quote on mobile" },
 ];
 
@@ -52,11 +60,18 @@ export default function ShortcutsModal({ onClose }) {
           </button>
         </div>
         <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 0 }}>
-          {SHORTCUTS.map((s, i) => (
+          {SHORTCUTS.map((s, i) => s.section ? (
+            <div key={i} style={{
+              fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em",
+              color: "var(--cp-text-muted)", padding: i === 0 ? "0 0 6px" : "12px 0 6px",
+            }}>
+              {s.section}
+            </div>
+          ) : (
             <div key={i} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "10px 0",
-              borderBottom: i < SHORTCUTS.length - 1 ? "1px solid var(--cp-border-light)" : "none",
+              padding: "7px 0",
+              borderBottom: i < SHORTCUTS.length - 1 && !SHORTCUTS[i + 1].section ? "1px solid var(--cp-border-light)" : "none",
             }}>
               <span style={{ fontSize: 13, color: "var(--cp-text-secondary)" }}>{s.desc}</span>
               <div style={{ display: "flex", gap: 4 }}>

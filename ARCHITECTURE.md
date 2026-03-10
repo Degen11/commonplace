@@ -8,7 +8,7 @@ This document describes how the codebase is structured, how data flows, and the 
 
 ## High-Level Overview
 
-Commonplace is a single-page React app with Vercel serverless functions as the backend. Users paste messy quotes, the app identifies sources/categories via Claude Haiku AI (with a 600+ local quote database as a fast fallback), and presents a clean, browsable, exportable collection.
+Commonplace is a single-page React app with Vercel serverless functions as the backend. Users paste messy quotes, the app identifies sources/categories via Claude Haiku AI (with a 3,700+ local quote database as a fast fallback), and presents a clean, browsable, exportable collection.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -20,7 +20,7 @@ Commonplace is a single-page React app with Vercel serverless functions as the b
 │       │          ┌───┴───┐       (global state)         │
 │       │          │       │           │                   │
 │       │     localQuotes  API    localStorage             │
-│       │     (600+ DB)    │       (primary store)         │
+│       │     (3,700+ DB)    │       (primary store)         │
 │       │                  │           │                   │
 └───────┼──────────────────┼───────────┼──────────────────┘
         │                  │           │
@@ -101,7 +101,7 @@ commonplace/
 │   │
 │   ├── data/
 │   │   ├── constants.js        # Categories, colors, confidence levels
-│   │   └── localQuotes.js      # 600+ curated quotes (lazy-loaded)
+│   │   └── localQuotes.js      # 3,700+ curated quotes (lazy-loaded)
 │   │
 │   └── utils/
 │       ├── textFormatting.js   # Text normalization, similarity, proper nouns
@@ -148,7 +148,7 @@ User Input (pasted text or imported file)
    Deduplication                 Remove exact duplicates from input
         │
         ▼
-   localLookup()                 Match against 600+ local quote database
+   localLookup()                 Match against 3,700+ local quote database
    (lazy-loaded)                 ← No API call needed for matches
         │
         ├── Matched quotes → added immediately
@@ -175,7 +175,7 @@ User Input (pasted text or imported file)
 ```
 
 Key details:
-- **Local DB is checked first** — 600+ quotes in `localQuotes.js`, lazy-loaded on first use to avoid bloating the initial bundle
+- **Local DB is checked first** — 3,700+ quotes in `localQuotes.js`, lazy-loaded on first use to avoid bloating the initial bundle
 - **Batches of 20** to stay within Claude Haiku's context limits (`API_BATCH_SIZE` in config.js)
 - **Similarity algorithm**: `(overlap * 2) / (wordSetA.size + wordSetB.size)` on normalized, stopword-removed text
 - **Threshold**: 0.55 (55% match triggers duplicate modal)
@@ -335,7 +335,7 @@ Sync uses a device-generated UUID. No accounts, no passwords, no OAuth. Privacy-
 The app works fully offline. Supabase sync is debounced and retried in the background. If sync fails, the user never notices — their data is safe in localStorage.
 
 ### Lazy-loaded local quote database
-The 600+ quote local DB (`localQuotes.js`, ~62 KB) is dynamically imported only when `useProcessing` runs. This keeps the initial page load fast.
+The 3,700+ quote local DB (`localQuotes.js`, ~477 KB) is dynamically imported only when `useProcessing` runs. This keeps the initial page load fast.
 
 ### Refs over context for async operations
 Hooks like `useSync` and `useQuoteActions` use `useRef` to track latest state values. This prevents stale closures in retry logic and debounced callbacks — a pattern used consistently throughout.

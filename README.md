@@ -1,37 +1,55 @@
 # Commonplace
 
-An AI-powered quote collection organizer that identifies sources, categorizes entries, and gives you a clean, browsable collection.
+Your personal library of ideas — paste messy quotes, and get an organized, searchable collection with sources identified automatically.
 
-**Live:** [commonplace.pro](https://commonplace.pro)
+**Try it now:** [commonplace.pro](https://commonplace.pro)
 
 ## What It Does
 
-Paste messy quotes, fragments, and phrases. Commonplace uses Claude Haiku to identify who said it and what category it belongs to (Film, TV, Book, Music, etc.), then presents everything in a searchable, filterable collection you can edit, organize, and export.
+Drop in your collection of quotes, phrases, and fragments. Commonplace identifies who said each one, assigns a category (Film, TV, Book, Music, Speech, etc.), and gives you a clean library you can search, filter, edit, and export.
+
+No signup. No account. Free to use.
 
 ## Features
 
-- **AI identification** — Claude Haiku recognizes sources and assigns categories automatically
-- **Local quote database** — 600+ curated quotes matched instantly without an API call
-- **Duplicate detection** — flags near-duplicates with keep/merge/skip resolution
-- **Collections** — organize quotes into named collections with icons and AI auto-grouping
+- **Instant AI identification** — recognizes thousands of quotes and attributes them to the right source
+- **3,700+ built-in quotes** — common quotes are matched instantly without waiting for AI
+- **Duplicate detection** — flags near-duplicates so you can keep, merge, or skip
+- **Collections** — group quotes into named collections with icons, or let AI auto-group them by theme
 - **Multiple views** — table, compact table, and card layouts with drag-to-reorder
-- **Inline editing** — click any field to edit; "Did you mean?" suggestions from the local DB
-- **Bulk operations** — multi-select, bulk category/source reassignment, bulk delete
-- **Search & filter** — full-text search, category pill filters, favorites toggle
-- **Import** — paste text, drag-and-drop files, Kindle highlights, Readwise exports, CSV/JSON/Markdown
-- **Export** — plain text, CSV, Markdown, JSON, clipboard, shareable URL links
-- **Cloud sync** — device-based sync via Supabase (no account required)
-- **Sharing** — public collection links with 30-day expiry, quote image generation
-- **Statistics** — category distribution, confidence breakdown, collection insights
-- **Custom categories** — extend beyond built-in source categories and vibe tags
-- **Formatting cleanup** — optional smart quote normalization, dash cleanup, capitalization fixes
-- **Responsive** — card view on mobile, table on desktop, keyboard shortcuts throughout
+- **Inline editing** — click any field to edit; smart suggestions from the built-in database
+- **Bulk operations** — multi-select, bulk reassign categories/sources, bulk delete
+- **Search & filter** — full-text search, category filters, favorites
+- **Import anything** — paste text, drag-and-drop files (.txt, .csv, .json, .md), Kindle highlights, Readwise exports, or fetch from a URL
+- **Export anywhere** — plain text, CSV, Markdown, JSON, clipboard, or shareable link
+- **Cloud sync** — your collection syncs across devices automatically (no account needed)
+- **Sharing** — generate public links or quote images to share
+- **Dark mode** — light and dark themes
+- **Works on mobile** — responsive card view on small screens, full table on desktop
 
-## Tech Stack
+## How It Works
+
+1. **Paste** — drop your quotes into the input area, one per line (messy is fine)
+2. **Process** — Commonplace checks its built-in database first, then uses Claude AI for the rest
+3. **Browse** — your organized collection appears with sources, categories, and confidence levels
+4. **Refine** — edit, reorder, filter, group into collections, and export however you like
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Esc` | Close modal / clear selection / clear search |
+| `Ctrl/Cmd + A` | Select all visible quotes |
+
+---
+
+## Technical Details
+
+### Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite 5, JavaScript |
+| Frontend | React 18, Vite, JavaScript |
 | Styling | CSS-in-JS (inline style objects) |
 | Icons | lucide-react |
 | Backend | Vercel Serverless Functions |
@@ -39,7 +57,7 @@ Paste messy quotes, fragments, and phrases. Commonplace uses Claude Haiku to ide
 | AI | Anthropic Claude Haiku |
 | Deployment | Vercel |
 
-## Project Structure
+### Project Structure
 
 ```
 api/                          Vercel serverless functions
@@ -48,6 +66,7 @@ api/                          Vercel serverless functions
   sync.js                     Device data sync
   share.js                    Public collection sharing
   auto-group.js               AI quote grouping
+  fetch-url.js                URL content extraction
 src/
   main.jsx                    Entry point
   config.js                   All tunable constants
@@ -67,7 +86,7 @@ src/
     useViewPreferences.js      Filtering, sorting, search
   data/
     constants.js               Categories, colors, confidence levels
-    localQuotes.js             600+ curated quote database
+    localQuotes.js             3,700+ curated quote database
   utils/
     textFormatting.js          Text normalization and similarity
     parsers.js                 File format parsers
@@ -76,14 +95,14 @@ src/
 
 For detailed architecture, data flow diagrams, and design decisions, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## Getting Started
+### Getting Started
 
-### Prerequisites
+#### Prerequisites
 
 - Node.js 18+
 - npm
 
-### Setup
+#### Setup
 
 ```bash
 git clone <repo-url>
@@ -91,7 +110,7 @@ cd commonplace
 npm install
 ```
 
-### Environment Variables
+#### Environment Variables
 
 Create a `.env` file:
 
@@ -100,14 +119,14 @@ ANTHROPIC_API_KEY=sk-ant-...        # Required — server-side only
 SUPABASE_SECRET_KEY=...              # Required for sync
 ```
 
-### Development
+#### Development
 
 ```bash
 npm run dev          # Vite dev server on localhost:5173
 vercel dev           # Test serverless functions locally
 ```
 
-### Production
+#### Production
 
 ```bash
 npm run build        # Build to dist/
@@ -116,21 +135,14 @@ npm run preview      # Preview production build
 
 Push to `main` triggers automatic deployment on Vercel.
 
-## Key Concepts
+### Key Concepts
 
 - **Phases** — the app moves through three phases: input (paste/import), processing (AI identification), and collection (browse/edit/export)
 - **Source categories vs. vibe tags** — quotes with a known origin get a source category (Film, TV, Book, etc.); quotes with unknown sources get a vibe tag (Philosophical, Comedic, Poetic, etc.)
 - **Device sync** — each browser gets a UUID; sync works without user accounts
 - **Offline-first** — localStorage is primary storage; Supabase syncs in the background
 
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Esc` | Close modal / clear selection / clear search |
-| `Ctrl/Cmd + A` | Select all visible quotes |
-
-## Troubleshooting
+### Troubleshooting
 
 - **"Service not configured"** — `ANTHROPIC_API_KEY` is missing from environment variables
 - **API fails / 502** — check Anthropic API status; the app falls back to local matching

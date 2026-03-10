@@ -278,6 +278,8 @@ export default function Commonplace() {
     return () => document.removeEventListener("mousedown", h);
   }, [editingId, setEditingId]);
 
+  const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
+
   // Keyboard shortcuts — use a ref to avoid re-registering on every state change
   const kbStateRef = useRef({});
   kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, selAll, visible, onFav, handleDelete, bulkDel, phase, showShortcuts, showStats, showAddMore, inlineEdit };
@@ -557,8 +559,6 @@ export default function Commonplace() {
   }, [collections, quoteCounts, deleteCollection, showToast]);
 
   const showBulkBar = selected.size > 0;
-
-  const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
 
   const actionProps = useMemo(() => ({
     onFav,

@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
+import { LS_FILTERS, SEARCH_DEBOUNCE_MS } from "../config";
 
 const LS_VIEW    = "commonplace_view";
 const LS_SORT    = "commonplace_sort";
-const LS_FILTERS = "commonplace_filters";
 
 const _initFilters = (() => {
   try { const s = localStorage.getItem(LS_FILTERS); if (s) return JSON.parse(s); } catch(e) {}
@@ -70,7 +70,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
 
   // ── Search debounce ──
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 150);
+    const t = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [search]);
 

@@ -237,22 +237,31 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     const unique = [];
     // Build seen list from existing quotes (only in append mode).
-    // Store as array for linear scan (similarity is fuzzy, not hashable).
-    const seen = appendMode
-      ? quotes.map(q => ({ norm: normalize(q.text), text: q.text, source: q.source }))
-      : [];
+    // Exact normalized matches use a Map for O(1) lookup; fuzzy similarity
+    // falls back to a linear scan only when no exact match is found.
+    const seen = [];
+    const seenExact = new Map();
+    const addSeen = (entry) => { seen.push(entry); seenExact.set(entry.norm, entry); };
+    if (appendMode) {
+      for (const q of quotes) addSeen({ norm: normalize(q.text), text: q.text, source: q.source });
+    }
     // Include unresolved unique items from a pending dupe batch so a second
     // processEntries call won't produce overlapping duplicates.
     if (appendMode && pendingContinuationRef.current) {
       for (const p of pendingContinuationRef.current.unique) {
-        seen.push({ norm: normalize(p.text), text: p.text, source: p.hint });
+        addSeen({ norm: normalize(p.text), text: p.text, source: p.hint });
       }
     }
     const nearDupes = [];
 
     parsed.forEach(p => {
       const norm = normalize(p.text);
-      const match = seen.find(s => similarity(s.norm, norm) > DUPE_SIMILARITY_THRESHOLD);
+      // Fast path: exact normalized match (O(1))
+      let match = seenExact.get(norm);
+      // Slow path: fuzzy similarity scan (only when no exact match)
+      if (!match) {
+        match = seen.find(s => similarity(s.norm, norm) > DUPE_SIMILARITY_THRESHOLD);
+      }
 
       if (match) {
         nearDupes.push({
@@ -262,7 +271,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         });
       } else {
         unique.push(p);
-        seen.push({ norm, text: p.text, source: p.hint });
+        addSeen({ norm, text: p.text, source: p.hint });
       }
     });
 

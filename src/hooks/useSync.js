@@ -50,11 +50,16 @@ export default function useSync({ onCloudData, onSyncError }) {
   }, []);
 
   // ── Pull: fetch from Supabase on mount ──
+  const pullControllerRef = useRef(null);
   const pull = useCallback(async () => {
     if (!deviceId.current) return;
+    if (pullControllerRef.current) pullControllerRef.current.abort();
+    const controller = new AbortController();
+    pullControllerRef.current = controller;
     try {
       const r = await fetch(`/api/sync?device_id=${deviceId.current}`, {
         headers: { "X-Requested-With": "CommonplaceApp" },
+        signal: controller.signal,
       });
       if (!r.ok) return;
       const data = await r.json();
@@ -64,7 +69,8 @@ export default function useSync({ onCloudData, onSyncError }) {
         onCloudData(data.quotes, data.customCategories || [], data.collections || []);
       }
       initialLoadDone.current = true;
-    } catch {
+    } catch (err) {
+      if (err.name === "AbortError") return;
       // Silent fail — localStorage is still the primary store
     } finally {
       if (mountedRef.current) setInitialLoading(false);
@@ -171,11 +177,12 @@ export default function useSync({ onCloudData, onSyncError }) {
     return () => window.removeEventListener("online", handleOnline);
   }, [push]);
 
-  // Cleanup all timers on unmount
+  // Cleanup all timers and abort in-flight pull on unmount
   useEffect(() => {
     return () => {
       if (pushTimer.current) clearTimeout(pushTimer.current);
       if (retryTimer.current) clearTimeout(retryTimer.current);
+      if (pullControllerRef.current) pullControllerRef.current.abort();
     };
   }, []);
 

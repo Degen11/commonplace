@@ -70,7 +70,11 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
         setTimeout(() => {
           setEditingId(remaining[0]);
           const el = document.querySelector(`[data-id="${remaining[0]}"]`);
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else {
+            showToast(`${remaining.length} left to review — clear filters to continue`);
+          }
         }, 150);
       } else {
         showToast("Review complete \u2014 all entries updated!");

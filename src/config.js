@@ -47,3 +47,12 @@ export const SHARE_URL_MAX_LENGTH   = 8000;
 
 // Duplicate detection
 export const DUPE_SIMILARITY_THRESHOLD = 0.55;
+
+// localStorage keys (single source of truth)
+export const LS_QUOTES      = "commonplace_quotes";
+export const LS_CATS        = "commonplace_cats";
+export const LS_FILTERS     = "commonplace_filters";
+export const LS_DRAFT       = "commonplace_draft";
+export const LS_COL_ORDER   = "commonplace_col_order";
+export const LS_DELETED_IDS = "commonplace_deleted_ids";
+export const LS_COLLECTIONS = "commonplace_collections";

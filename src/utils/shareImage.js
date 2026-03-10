@@ -144,7 +144,7 @@ export async function generateShareImage(q, styleName = "classic") {
     // Draw attribution text lines
     ctx.fillStyle = theme.attr;
     attrLines.forEach((line, i) => {
-      const x = i === 0 ? textX + dashW : textX + dashW;
+      const x = i === 0 ? textX + dashW : textX;
       ctx.fillText(line, x, attrStartY + i * attrLineH);
     });
   }

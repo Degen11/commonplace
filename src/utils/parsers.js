@@ -2,9 +2,12 @@ export function parseCSVLine(line) {
   const fields = [];
   let cur = "", inQuote = false;
   for (let i = 0; i < line.length; i++) {
-    if (line[i] === '"') { inQuote = !inQuote; }
-    else if (line[i] === "," && !inQuote) { fields.push(cur.trim()); cur = ""; }
-    else { cur += line[i]; }
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+      else { inQuote = !inQuote; }
+    } else if (ch === "," && !inQuote) { fields.push(cur.trim()); cur = ""; }
+    else { cur += ch; }
   }
   fields.push(cur.trim());
   return fields;

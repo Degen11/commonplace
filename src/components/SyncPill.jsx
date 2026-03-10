@@ -1,0 +1,59 @@
+import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+
+function formatRelativeTime(date) {
+  if (!date) return null;
+  const seconds = Math.round((Date.now() - date.getTime()) / 1000);
+  if (seconds < 10) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
+export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillStyles }) {
+  const [hovered, setHovered] = useState(false);
+
+  if (syncStatus === "idle") return null;
+
+  const isError = syncStatus === "error";
+  const isSyncing = syncStatus === "syncing";
+  const isSynced = syncStatus === "synced";
+
+  const baseStyle = isSyncing ? pillStyles.syncing
+    : isSynced ? pillStyles.synced
+    : pillStyles.error;
+
+  const style = {
+    ...baseStyle,
+    ...(isError ? { cursor: "pointer" } : {}),
+    position: "relative",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+  };
+
+  const label = isSyncing ? "Saving..."
+    : isError ? "Sync error"
+    : "Saved";
+
+  const tooltip = isError
+    ? "Click to retry sync"
+    : lastSynced
+    ? `Last saved ${formatRelativeTime(lastSynced)}`
+    : null;
+
+  return (
+    <span
+      style={style}
+      title={tooltip}
+      onClick={isError ? onManualSync : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {isError && <RefreshCw size={10} strokeWidth={2} />}
+      {label}
+    </span>
+  );
+}

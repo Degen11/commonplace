@@ -1,3 +1,4 @@
+import useScrollLock from "../hooks/useScrollLock";
 import { styles } from "./styles";
 
 export default function ConfirmModal({
@@ -11,6 +12,8 @@ export default function ConfirmModal({
   onCancel,
   onConfirm,
 }) {
+  useScrollLock();
+
   return (
     <div style={styles.modalOverlay} role="dialog" aria-modal="true" aria-label={title} onClick={onCancel}>
       <div style={{ ...styles.confirmBox, borderTop: `3px solid ${borderColor}` }} onClick={e => e.stopPropagation()}>

@@ -56,6 +56,7 @@ export default function Commonplace() {
     allCats,
     isSharedView, setIsSharedView,
     syncStatus,
+    lastSynced,
     initialLoading,
     trackDeletion, untrackDeletion,
     collections,
@@ -63,6 +64,7 @@ export default function Commonplace() {
     createCollection, deleteCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
     cleanCollectionRefs,
+    manualPush,
   } = useQuotesContext();
 
   const [phase, setPhase]         = useState("input");
@@ -95,7 +97,7 @@ export default function Commonplace() {
     // Capitalize first letter of theme for collection name
     const name = theme.charAt(0).toUpperCase() + theme.slice(1);
     const col = createCollection(name);
-    if (!col) throw new Error(`Collection "${name}" already exists`);
+    if (!col || col.error) throw new Error(`Collection "${name}" already exists`);
     addToCollection(col.id, matchedIds);
     setActiveCollectionId(col.id);
     showToast(`Created "${col.name}" with ${matchedIds.length} quote${matchedIds.length === 1 ? "" : "s"}`);
@@ -233,19 +235,6 @@ export default function Commonplace() {
     setShowExport(false);
     setShowSort(false);
   }, [headerVisible]);
-
-  // Lock body scroll when stats overlay is open
-  useEffect(() => {
-    if (showStats) {
-      const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarW}px`;
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }
-    return () => { document.body.style.overflow = ''; document.body.style.paddingRight = ''; };
-  }, [showStats]);
 
   // Preserve scroll position when toggling panels via mini-header
   const preserveScroll = useCallback(() => {
@@ -486,7 +475,7 @@ export default function Commonplace() {
     for (const c of imported) {
       if (existingNames.has(c.name.toLowerCase())) continue;
       const col = createCollection(c.name);
-      if (col) {
+      if (col && !col.error) {
         if (c.icon) updateCollectionIcon(col.id, c.icon);
         if (c.quoteIds?.length > 0) addToCollection(col.id, c.quoteIds);
         existingNames.add(c.name.toLowerCase());
@@ -676,6 +665,8 @@ export default function Commonplace() {
               headerVisible={headerVisible}
               exportDropdownContent={exportDropdownContent}
               syncStatus={syncStatus}
+              lastSynced={lastSynced}
+              onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
               onShowShortcuts={() => setShowShortcuts(true)}
@@ -700,6 +691,8 @@ export default function Commonplace() {
               showToast={showToast}
               collections={collections}
               syncStatus={syncStatus}
+              lastSynced={lastSynced}
+              onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
             />

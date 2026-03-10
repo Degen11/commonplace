@@ -1,10 +1,11 @@
 import Logo from "./Logo";
+import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import {
   List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
 } from "lucide-react";
 
-const syncStyles = syncPillStyles.full;
+const pillStyles = syncPillStyles.full;
 
 export default function HeaderBar({
   quotes, filtered,
@@ -20,6 +21,8 @@ export default function HeaderBar({
   headerVisible,
   exportDropdownContent,
   syncStatus,
+  lastSynced,
+  onManualSync,
   dark,
   toggleTheme,
   onShowShortcuts,
@@ -39,9 +42,7 @@ export default function HeaderBar({
         </span>
       </h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-        {syncStatus === "syncing" && <span style={syncStyles.syncing}>Saving...</span>}
-        {syncStatus === "synced" && <span style={syncStyles.synced}>Saved</span>}
-        {syncStatus === "error" && <span style={syncStyles.error}>Sync error</span>}
+        <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
         <button className="ui-tip ui-tip-below hdr-btn" data-tip="Keyboard shortcuts" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={onShowShortcuts}>
           <HelpCircle size={16} strokeWidth={1.5} />
         </button>

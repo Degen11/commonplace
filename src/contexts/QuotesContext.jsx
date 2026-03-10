@@ -157,14 +157,27 @@ export function QuotesProvider({ children }) {
       return;
     }
 
-    // Returning user — append any cloud quotes missing locally.
-    // Uses ID set check + appends to preserve local order (avoids triggering
-    // a state update and re-push when nothing is new).
+    // Returning user — merge cloud quotes into local state.
+    // Adds missing quotes AND updates existing ones when the cloud version is newer.
     if (cloudQuotes?.length > 0) {
       setQuotes(prev => {
-        const localIds = new Set(prev.map(q => q.id));
-        const missing = cloudQuotes.filter(q => !localIds.has(q.id));
-        return missing.length > 0 ? [...prev, ...missing] : prev;
+        const localMap = new Map(prev.map(q => [q.id, q]));
+        let changed = false;
+        const missing = [];
+        for (const cq of cloudQuotes) {
+          const local = localMap.get(cq.id);
+          if (!local) {
+            missing.push(cq);
+            changed = true;
+          } else if ((cq.updatedAt || 0) > (local.updatedAt || 0)) {
+            localMap.set(cq.id, cq);
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        // Rebuild array: update in place + append missing
+        const updated = prev.map(q => localMap.get(q.id));
+        return missing.length > 0 ? [...updated, ...missing] : updated;
       });
     }
     if (cloudCats?.length > 0) {
@@ -176,9 +189,22 @@ export function QuotesProvider({ children }) {
     }
     if (cloudCollections?.length > 0) {
       setCollections(prev => {
-        const existingIds = new Set(prev.map(c => c.id));
-        const newCols = cloudCollections.filter(c => !existingIds.has(c.id));
-        return newCols.length > 0 ? [...prev, ...newCols] : prev;
+        const localMap = new Map(prev.map(c => [c.id, c]));
+        let changed = false;
+        const missing = [];
+        for (const cc of cloudCollections) {
+          const local = localMap.get(cc.id);
+          if (!local) {
+            missing.push(cc);
+            changed = true;
+          } else if ((cc.createdAt || 0) > (local.createdAt || 0)) {
+            localMap.set(cc.id, cc);
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        const updated = prev.map(c => localMap.get(c.id));
+        return missing.length > 0 ? [...updated, ...missing] : updated;
       });
     }
   }, []);
@@ -187,7 +213,7 @@ export function QuotesProvider({ children }) {
     showToast(message);
   }, [showToast]);
 
-  const { syncStatus, lastSynced, initialLoading, pull, schedulePush, markReady } = useSync({
+  const { syncStatus, lastSynced, initialLoading, pull, schedulePush, manualPush, markReady } = useSync({
     onCloudData: handleCloudData,
     onSyncError: handleSyncError,
   });
@@ -242,12 +268,21 @@ export function QuotesProvider({ children }) {
   // ── Collection helpers ──
   const createCollection = useCallback((name) => {
     const sanitized = sanitizeName(name);
-    if (!sanitized) return null;
-    if (collections.some(c => c.name.toLowerCase() === sanitized.toLowerCase())) return null;
-    const newCol = { id: generateId(), name: sanitized, quoteIds: [], createdAt: Date.now() };
-    setCollections(prev => [...prev, newCol]);
+    if (!sanitized) return { error: "invalid" };
+    // Check inside the state setter to avoid race conditions with rapid calls
+    let newCol = null;
+    let duplicate = false;
+    setCollections(prev => {
+      if (prev.some(c => c.name.toLowerCase() === sanitized.toLowerCase())) {
+        duplicate = true;
+        return prev;
+      }
+      newCol = { id: generateId(), name: sanitized, quoteIds: [], createdAt: Date.now() };
+      return [...prev, newCol];
+    });
+    if (duplicate) return { error: "duplicate", name: sanitized };
     return newCol;
-  }, [collections]);
+  }, []);
 
   const deleteCollection = useCallback((id) => {
     setCollections(prev => prev.filter(c => c.id !== id));
@@ -426,8 +461,9 @@ export function QuotesProvider({ children }) {
     createCollection, deleteCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
     cleanCollectionRefs,
+    manualPush,
   }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs]);
+       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs, manualPush]);
 
   return (
     <QuotesContext.Provider value={value}>

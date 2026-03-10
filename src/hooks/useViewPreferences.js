@@ -94,8 +94,11 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
       return true;
     });
     if (sortBy === "confidence") result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
-    else if (sortBy === "alpha")    result.sort((a, b) => a.text.localeCompare(b.text));
-    else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category));
+    else if (sortBy === "alpha") {
+      const strip = s => s.replace(/^[^\p{L}\p{N}]+/u, "");
+      result.sort((a, b) => strip(a.text).localeCompare(strip(b.text), undefined, { sensitivity: "base" }));
+    }
+    else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category, undefined, { sensitivity: "base" }));
     return result;
   }, [quotes, catFilter, favFilter, debouncedSearch, sortBy]);
 

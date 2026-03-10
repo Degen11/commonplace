@@ -362,7 +362,7 @@ export function QuotesProvider({ children }) {
         initialLoadDone.current = true;
         return;
       }
-      showToast("This shared link couldn't be loaded \u2014 it may be corrupted.");
+      showToast("This shared link couldn't be loaded \u2014 it may be corrupted.", null, null, "error");
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
     }
 
@@ -408,7 +408,7 @@ export function QuotesProvider({ children }) {
               : err.message === "empty"
               ? "This shared collection is empty."
               : "Couldn't load this shared collection.";
-            showToast(msg);
+            showToast(msg, null, null, "error");
             try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
             // Fall through to normal load
             markReady();
@@ -433,7 +433,7 @@ export function QuotesProvider({ children }) {
         }
       }
     } catch(e) {
-      showToast("Saved session couldn't be loaded. Starting fresh.");
+      showToast("Saved session couldn't be loaded. Starting fresh.", null, null, "error");
       try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e2) { /* ignore */ }
     }
 

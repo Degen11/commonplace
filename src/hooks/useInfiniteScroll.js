@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 const PAGE_SIZE = 100;
 
@@ -14,8 +14,10 @@ export default function useInfiniteScroll(filtered, resetKey) {
     setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filtered.length));
   }, [filtered.length]);
 
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
   return {
-    visible: filtered.slice(0, visibleCount),
+    visible,
     hasMore: visibleCount < filtered.length,
     remaining: filtered.length - Math.min(visibleCount, filtered.length),
     loadMore,

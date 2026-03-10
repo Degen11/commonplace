@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useReducer, useRef, useCallback, useEffect, useMemo } from "react";
 import { buildValidCats, fallbackCategory } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
@@ -11,19 +11,80 @@ import {
   PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD,
 } from "../config";
 
-export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
-  const [isProcessing, setIsProcessing]       = useState(false);
-  const [processingDone, setProcessingDone]   = useState(false);
-  const autoTransitionRef = useRef(null);
-  const [progress, setProgress]               = useState(null);
-  const [identifiedFeed, setIdentifiedFeed]   = useState([]);
-  const [apiError, setApiError]               = useState(null);
-  const [failedEntries, setFailedEntries]     = useState([]);
-  const [pendingDupes, setPendingDupes]       = useState([]);
-  const [dupeDecisions, setDupeDecisions]     = useState({});
-  const [formattingEnabled, setFormattingEnabled] = useState(false);
-  const [stats, setStats]                     = useState(null);
+// ── State machine ──
+// idle → dupes → processing → done → idle
+//                    ↓
+//                  error (partial)
 
+const INITIAL_STATE = {
+  isProcessing: false,
+  processingDone: false,
+  progress: null,
+  identifiedFeed: [],
+  apiError: null,
+  failedEntries: [],
+  pendingDupes: [],
+  dupeDecisions: {},
+  formattingEnabled: false,
+  stats: null,
+};
+
+function processingReducer(state, action) {
+  switch (action.type) {
+    case "START":
+      return {
+        ...state,
+        isProcessing: true,
+        processingDone: false,
+        progress: null,
+        identifiedFeed: [],
+        apiError: null,
+        failedEntries: [],
+        stats: { dupes: action.dupes ?? 0, total: action.total ?? 0 },
+      };
+    case "PROGRESS":
+      return { ...state, progress: action.progress };
+    case "FEED":
+      return { ...state, identifiedFeed: action.feed };
+    case "FEED_APPEND":
+      return { ...state, identifiedFeed: [...state.identifiedFeed, ...action.items] };
+    case "API_ERROR":
+      return { ...state, apiError: action.error };
+    case "FAILED_ENTRIES":
+      return { ...state, failedEntries: action.entries };
+    case "DONE":
+      return {
+        ...state,
+        processingDone: true,
+        progress: { total: action.total, done: action.total, current: "Done!", phase: "complete" },
+        stats: { ...(state.stats || {}), ...action.stats },
+      };
+    case "FINISH":
+      return { ...state, isProcessing: false, processingDone: false, progress: null };
+    case "CANCEL":
+      return { ...state, isProcessing: false, processingDone: false, progress: null };
+    case "SHOW_DUPES":
+      return { ...state, pendingDupes: action.dupes, dupeDecisions: action.decisions };
+    case "SET_DUPE_DECISION":
+      return { ...state, dupeDecisions: { ...state.dupeDecisions, [action.index]: action.decision } };
+    case "CLEAR_DUPES":
+      return { ...state, pendingDupes: [], dupeDecisions: {} };
+    case "DISMISS_ERROR":
+      return { ...state, apiError: null };
+    case "DISMISS_STATS":
+      return { ...state, stats: null };
+    case "SET_FORMATTING":
+      return { ...state, formattingEnabled: action.enabled };
+    case "RESET":
+      return { ...INITIAL_STATE, formattingEnabled: state.formattingEnabled };
+    default:
+      return state;
+  }
+}
+
+export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
+  const [state, dispatch] = useReducer(processingReducer, INITIAL_STATE);
+  const autoTransitionRef = useRef(null);
   const pendingContinuationRef = useRef(null);
 
   // Guard state updates after unmount
@@ -33,17 +94,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Safe state setters — no-op if unmounted
-  const safeSetIsProcessing   = useCallback((v) => { if (mountedRef.current) setIsProcessing(v); }, []);
-  const safeSetProcessingDone = useCallback((v) => { if (mountedRef.current) setProcessingDone(v); }, []);
-  const safeSetProgress       = useCallback((v) => { if (mountedRef.current) setProgress(v); }, []);
-  const safeSetIdentifiedFeed = useCallback((v) => { if (mountedRef.current) setIdentifiedFeed(v); }, []);
-  const safeSetApiError       = useCallback((v) => { if (mountedRef.current) setApiError(v); }, []);
-  const safeSetFailedEntries  = useCallback((v) => { if (mountedRef.current) setFailedEntries(v); }, []);
-  const safeSetStats          = useCallback((v) => { if (mountedRef.current) setStats(v); }, []);
+  // Single safe dispatch — replaces 7 safeSet* wrappers
+  const safeDispatch = useCallback((action) => {
+    if (mountedRef.current) dispatch(action);
+  }, []);
 
   // ── API: batch identification ──
-  // Accepts an optional external AbortSignal for cancellation by callers (e.g. reIdentify)
   const identifyBatch = useCallback(async (items, withFormatting = false, externalSignal) => {
     if (items.length === 0) return [];
     const quotesBlock = items.map((it, i) => {
@@ -53,7 +109,6 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-    // If an external signal is provided, abort our controller when it fires
     if (externalSignal) {
       if (externalSignal.aborted) { clearTimeout(timeoutId); throw new DOMException("Aborted", "AbortError"); }
       externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
@@ -79,7 +134,6 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       const t = d.content.map(x => x.text || "").join("");
       const raw = t.replace(/```json|```/g, "").trim();
       if (!raw) return [];
-      // Prefill sends "[" as assistant turn; response continues from there
       const jsonStr = raw.startsWith("[") ? raw : "[" + raw;
       let parsed;
       try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
@@ -91,7 +145,6 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   // ── Processing pipeline ──
   const runProcessing = async (unique, appendMode, useFormatting = false) => {
-    // Lazy-load the local DB only when processing actually starts
     const { default: localDb, localLookup } = await import("../data/localQuotes");
     initProperNouns(localDb);
 
@@ -105,19 +158,19 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (!mountedRef.current) return;
 
     if (localMatches.length > 0) {
-      safeSetIdentifiedFeed(localMatches.map(m => ({
+      safeDispatch({ type: "FEED", feed: localMatches.map(m => ({
         text: useFormatting ? basicFormat(m.text) : m.text,
         source: m.result.source, category: m.result.category,
-      })));
+      })) });
     }
 
-    safeSetProgress({ total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" });
+    safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" } });
 
     // ── External lookup (Wikiquote, Open Library, cache) ──
     const lookupResults = new Map();
     if (needsApi.length > 0) {
       try {
-        safeSetProgress({ total: unique.length, done: localMatches.length, current: "Checking online databases...", phase: "lookup" });
+        safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: "Checking online databases...", phase: "lookup" } });
         const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
         const lr = await fetch("/api/lookup", {
           method: "POST",
@@ -142,14 +195,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     if (!mountedRef.current) return;
 
-    // Move lookup hits out of the AI queue
     const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
     if (lookupResults.size > 0) {
-      safeSetIdentifiedFeed(prev => [...prev, ...[...lookupResults.values()].map(r => {
+      safeDispatch({ type: "FEED_APPEND", items: [...lookupResults.values()].map(r => {
         const item = needsApi[r.i];
         return { text: item?.text || "", source: r.source, category: r.category };
-      })]);
-      safeSetProgress({ total: unique.length, done: localMatches.length + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" });
+      }) });
+      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
     }
 
     const preAiDone = localMatches.length + lookupResults.size;
@@ -158,15 +210,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
         if (!mountedRef.current) return;
         const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
-        safeSetProgress({ total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" });
+        safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
         try {
           const results = await identifyBatch(chunk, useFormatting);
           if (!mountedRef.current) return;
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-          safeSetIdentifiedFeed(prev => [...prev, ...results.map(r => {
+          safeDispatch({ type: "FEED_APPEND", items: results.map(r => {
             const item = chunk[r.i];
             return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
-          })]);
+          }) });
           // Cache only high-confidence AI results (fire-and-forget)
           const cacheItems = results
             .filter(r => r.source && chunk[r.i] && r.confidence === "high")
@@ -183,15 +235,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
           }
         } catch (err) {
           apiFailed = true; chunk.forEach(c => failed.push(c));
-          safeSetApiError(describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)`);
+          safeDispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
           break;
         }
       }
     }
     if (!mountedRef.current) return;
-    if (failed.length > 0) safeSetFailedEntries(failed);
+    if (failed.length > 0) safeDispatch({ type: "FAILED_ENTRIES", entries: failed });
 
-    const validCats = buildValidCats(allCats);
     const localByIdx = new Map(localMatches.map(m => [m.idx, m]));
     const newQuotes = unique.map((p, i) => {
       const local = localByIdx.get(i);
@@ -216,16 +267,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (!mountedRef.current) return;
     const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
     appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
-    safeSetStats(prev => ({ ...(prev || {}), local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length }));
-    safeSetProcessingDone(true);
-    safeSetProgress({ total: unique.length, done: unique.length, current: "Done!", phase: "complete" });
+    safeDispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
     try { localStorage.removeItem("commonplace_draft"); } catch(e) {}
-    // Auto-transition after processing completes (user can skip via "View my collection" button)
+    // Auto-transition after processing completes
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
     autoTransitionRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
       autoTransitionRef.current = null;
-      safeSetProgress(null); safeSetIsProcessing(false); safeSetProcessingDone(false); goPhase("results");
+      safeDispatch({ type: "FINISH" });
+      goPhase("results");
     }, PROCESSING_DONE_MS);
   };
 
@@ -236,17 +286,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const parsed = lines.map(l => smartParse(l));
 
     const unique = [];
-    // Build seen list from existing quotes (only in append mode).
-    // Exact normalized matches use a Map for O(1) lookup; fuzzy similarity
-    // falls back to a linear scan only when no exact match is found.
     const seen = [];
     const seenExact = new Map();
     const addSeen = (entry) => { seen.push(entry); seenExact.set(entry.norm, entry); };
     if (appendMode) {
       for (const q of quotes) addSeen({ norm: normalize(q.text), text: q.text, source: q.source });
     }
-    // Include unresolved unique items from a pending dupe batch so a second
-    // processEntries call won't produce overlapping duplicates.
     if (appendMode && pendingContinuationRef.current) {
       for (const p of pendingContinuationRef.current.unique) {
         addSeen({ norm: normalize(p.text), text: p.text, source: p.hint });
@@ -256,9 +301,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     parsed.forEach(p => {
       const norm = normalize(p.text);
-      // Fast path: exact normalized match (O(1))
       let match = seenExact.get(norm);
-      // Slow path: fuzzy similarity scan (only when no exact match)
       if (!match) {
         match = seen.find(s => similarity(s.norm, norm) > DUPE_SIMILARITY_THRESHOLD);
       }
@@ -276,26 +319,24 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     if (nearDupes.length > 0) {
-      setPendingDupes(nearDupes);
-      setDupeDecisions(Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])));
+      dispatch({ type: "SHOW_DUPES", dupes: nearDupes, decisions: Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])) });
       pendingContinuationRef.current = { unique, seen, appendMode, totalParsed: parsed.length, useFormatting };
       return;
     }
 
-    safeSetIsProcessing(true); safeSetFailedEntries([]); safeSetIdentifiedFeed([]); goPhase("processing"); safeSetApiError(null);
-    safeSetStats({ dupes: 0, total: unique.length });
+    safeDispatch({ type: "START", dupes: 0, total: unique.length });
+    goPhase("processing");
     await runProcessing(unique, appendMode, useFormatting);
   };
 
   const handleDupesContinue = async () => {
     if (!pendingContinuationRef.current) return;
     const { unique, appendMode, useFormatting } = pendingContinuationRef.current;
-    // Clone unique to avoid mutating the ref's array
     const finalUnique = [...unique];
     let keptCount = 0;
 
-    pendingDupes.forEach((dupe, i) => {
-      const decision = dupeDecisions[i];
+    state.pendingDupes.forEach((dupe, i) => {
+      const decision = state.dupeDecisions[i];
 
       if (decision === "keep") {
         finalUnique.push(dupe.incoming);
@@ -309,32 +350,27 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       }
     });
 
-    const dupes = pendingDupes.length - keptCount;
-    setPendingDupes([]);
-    setDupeDecisions({});
+    const dupes = state.pendingDupes.length - keptCount;
+    dispatch({ type: "CLEAR_DUPES" });
     pendingContinuationRef.current = null;
 
-    safeSetIsProcessing(true);
-    safeSetFailedEntries([]);
-    safeSetIdentifiedFeed([]);
+    safeDispatch({ type: "START", dupes, total: finalUnique.length });
     goPhase("processing");
-    safeSetApiError(null);
-    safeSetStats({ dupes, total: finalUnique.length });
     await runProcessing(finalUnique, appendMode, useFormatting);
   };
 
   const retryFailed = async () => {
-    if (!failedEntries.length) return;
-    safeSetApiError(null);
+    if (!state.failedEntries.length) return;
+    safeDispatch({ type: "API_ERROR", error: null });
 
-    const entriesToRetry = [...failedEntries];
+    const entriesToRetry = [...state.failedEntries];
     const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` \u2014 ${e.hint}` : ""}`).join("\n");
 
     try {
-      await processEntries(text, true, formattingEnabled);
-      safeSetFailedEntries([]);
+      await processEntries(text, true, state.formattingEnabled);
+      safeDispatch({ type: "FAILED_ENTRIES", entries: [] });
     } catch (error) {
-      safeSetApiError(`Retry failed. You can try again or edit manually.`);
+      safeDispatch({ type: "API_ERROR", error: "Retry failed. You can try again or edit manually." });
     }
   };
 
@@ -344,22 +380,22 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       clearTimeout(autoTransitionRef.current);
       autoTransitionRef.current = null;
     }
-    safeSetProgress(null);
-    safeSetIsProcessing(false);
-    safeSetProcessingDone(false);
+    safeDispatch({ type: "FINISH" });
     goPhase("results");
-  }, [goPhase, safeSetProgress, safeSetIsProcessing, safeSetProcessingDone]);
+  }, [goPhase, safeDispatch]);
+
+  // Cancel processing and return to input
+  const cancelProcessing = useCallback(() => {
+    safeDispatch({ type: "CANCEL" });
+    goPhase("input");
+  }, [goPhase, safeDispatch]);
 
   // Reset processing-specific state (called by handleClear in App)
-  const resetProcessingState = () => {
+  const resetProcessingState = useCallback(() => {
     if (autoTransitionRef.current) { clearTimeout(autoTransitionRef.current); autoTransitionRef.current = null; }
-    setStats(null);
-    setApiError(null);
-    setFailedEntries([]);
-    setPendingDupes([]);
-    setDupeDecisions({});
+    dispatch({ type: "RESET" });
     pendingContinuationRef.current = null;
-  };
+  }, []);
 
   // ── AI auto-group: find quotes matching a theme ──
   const autoGroup = useCallback(async (theme, quotesList, externalSignal) => {
@@ -373,7 +409,6 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
     }
 
-    // Send only text (truncated) to minimize tokens
     const quoteTexts = quotesList.map(q => q.text);
 
     try {
@@ -393,25 +428,37 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       }
 
       const { indices } = await r.json();
-      // Map indices back to quote IDs
       return indices.map(i => quotesList[i]?.id).filter(Boolean);
     } finally {
       clearTimeout(timeoutId);
     }
   }, []);
 
-  return {
-    isProcessing, setIsProcessing,
-    processingDone, setProcessingDone,
-    progress, setProgress,
-    identifiedFeed,
-    apiError, setApiError,
-    failedEntries,
-    stats, setStats,
-    pendingDupes, dupeDecisions, setDupeDecisions,
-    formattingEnabled, setFormattingEnabled,
+  // Expose setters for individual fields still needed by App.jsx
+  const setDupeDecision = useCallback((index, decision) => {
+    dispatch({ type: "SET_DUPE_DECISION", index, decision });
+  }, []);
+
+  const setFormattingEnabled = useCallback((enabled) => {
+    dispatch({ type: "SET_FORMATTING", enabled });
+  }, []);
+
+  const dismissApiError = useCallback(() => {
+    dispatch({ type: "DISMISS_ERROR" });
+  }, []);
+
+  const dismissStats = useCallback(() => {
+    dispatch({ type: "DISMISS_STATS" });
+  }, []);
+
+  // Memoize return to prevent unnecessary re-renders in consumers
+  const actions = useMemo(() => ({
     identifyBatch, autoGroup,
     processEntries, handleDupesContinue, retryFailed,
-    skipToResults, resetProcessingState,
-  };
+    skipToResults, cancelProcessing, resetProcessingState,
+    setDupeDecision, setFormattingEnabled,
+    dismissApiError, dismissStats,
+  }), [identifyBatch, autoGroup, skipToResults, cancelProcessing, resetProcessingState, setDupeDecision, setFormattingEnabled, dismissApiError, dismissStats]);
+
+  return { ...state, ...actions };
 }

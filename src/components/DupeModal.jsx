@@ -8,7 +8,7 @@ export default function DupeModal(props) {
   return <DupeModalInner {...props} />;
 }
 
-function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecisions, onContinue }) {
+function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContinue }) {
   const boxRef = useRef(null);
   useScrollLock();
 
@@ -118,7 +118,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecisions, onConti
                   justifyContent: "flex-end",
                 }}>
                   <button
-                    onClick={() => setDupeDecisions(p => ({ ...p, [i]: "keep" }))}
+                    onClick={() => setDupeDecision(i, "keep")}
                     style={{
                       padding: "6px 16px",
                       borderRadius: "20px 0 0 20px",
@@ -138,7 +138,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecisions, onConti
                   </button>
                   {dupe.matchedSource && dupe.incoming.hint && dupe.matchedSource !== dupe.incoming.hint && (
                     <button
-                      onClick={() => setDupeDecisions(p => ({ ...p, [i]: "merge" }))}
+                      onClick={() => setDupeDecision(i, "merge")}
                       style={{
                         padding: "6px 16px",
                         borderRadius: 0,
@@ -160,7 +160,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecisions, onConti
                     </button>
                   )}
                   <button
-                    onClick={() => setDupeDecisions(p => ({ ...p, [i]: "skip" }))}
+                    onClick={() => setDupeDecision(i, "skip")}
                     style={{
                       padding: "6px 16px",
                       borderRadius: "0 20px 20px 0",

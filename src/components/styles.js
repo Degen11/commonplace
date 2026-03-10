@@ -150,13 +150,6 @@ export const baseCSS = `
   /* Save pulse for inline edits */
   .save-pulse{animation:savePulse .5s ease}
 
-  /* Control strip button hover */
-  .ctrl-btn-hover:hover{background:var(--cp-bg-hover) !important}
-
-  /* Header overflow item hover */
-  .hdr-overflow-item{transition:background .1s ease}
-  .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
-
   /* Header button hover states */
   .hdr-btn{transition:all .15s ease}
   .hdr-btn:hover{background:var(--cp-bg-hover)}
@@ -464,23 +457,12 @@ export const styles = {
   bulkDelBtn:{padding:"5px 12px",borderRadius:6,border:"1px solid #EB5757",background:"var(--cp-bg-card)",color:"#EB5757",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   bulkX:{background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14},
 
-  // ── Unified control strip (center of header) ──
-  controlStrip:{display:"flex",alignItems:"center",gap:4,background:"var(--cp-bg-tab)",borderRadius:10,padding:4},
-  controlBtn:{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",border:"none",borderRadius:7,background:"transparent",color:"var(--cp-text-muted)",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",transition:"all .15s"},
-  controlBtnActive:{background:"var(--cp-bg-card)",boxShadow:"0 1px 3px rgba(0,0,0,0.08)",color:"var(--cp-text-secondary)"},
-  controlLabel:{fontSize:11,fontWeight:600},
-  controlSep:{width:1,height:18,background:"var(--cp-border)",margin:"0 2px",flexShrink:0},
-  controlSearchOpen:{background:"var(--cp-bg-card)",borderRadius:7,boxShadow:"0 1px 3px rgba(0,0,0,0.08)"},
-  controlSearchInput:{width:160,padding:"6px 4px 6px 2px",border:"none",background:"transparent",fontSize:12,fontFamily:"inherit",color:"var(--cp-text-secondary)",outline:"none"},
-  controlSearchClear:{display:"flex",alignItems:"center",justifyContent:"center",background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",padding:"2px 6px 2px 0"},
-
-  // ── Header overflow menu ──
-  headerOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 6px)",background:"var(--cp-bg-card)",borderRadius:10,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:190,zIndex:100,padding:6,animation:"menuIn .14s ease",transformOrigin:"top right"},
-  headerOverflowItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:12.5,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:6,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
-  headerOverflowItemDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:12.5,color:"#EB5757",cursor:"pointer",borderRadius:6,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
-
-  // Toolbar — category pills only now
+  // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)"},
+  srchW:{position:"relative",flex:1},
+  srchI:{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,opacity:.5,display:"flex",alignItems:"center"},
+  srchIn:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"var(--cp-text-secondary)",background:"var(--cp-bg-card)"},
+  clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:12},
   sortBtn:{padding:"7px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"},
   sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:8,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:220,zIndex:100,padding:4,transition:"opacity .15s ease, transform .15s ease"},
   sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},

@@ -39,7 +39,7 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
     : "Saved";
 
   const tooltip = isError
-    ? "Click to retry sync"
+    ? "Click to retry"
     : lastSynced
     ? `Last saved ${formatRelativeTime(lastSynced)}`
     : null;
@@ -47,13 +47,32 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
   return (
     <span
       style={style}
-      title={tooltip}
       onClick={isError ? onManualSync : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {isError && <RefreshCw size={10} strokeWidth={2} />}
       {label}
+      {hovered && tooltip && (
+        <span style={{
+          position: "absolute",
+          top: "calc(100% + 6px)",
+          left: "50%",
+          transform: "translateX(-50%)",
+          whiteSpace: "nowrap",
+          fontSize: 11,
+          fontWeight: 500,
+          color: "#fff",
+          background: "var(--cp-toast-bg)",
+          padding: "4px 10px",
+          borderRadius: 6,
+          zIndex: 200,
+          pointerEvents: "none",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+        }}>
+          {tooltip}
+        </span>
+      )}
     </span>
   );
 }

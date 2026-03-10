@@ -31,42 +31,13 @@ export const IMAGE_STYLES = {
   },
 };
 
-export async function generateShareImage(q, styleName = "classic") {
-  const theme = IMAGE_STYLES[styleName] || IMAGE_STYLES.classic;
-  const W = 1080, H = 1080, PAD = 72;
-
-  await document.fonts.ready;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d");
-
-  ctx.fillStyle = theme.bg;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = theme.accent;
-  ctx.fillRect(0, 0, W, 6);
-
-  ctx.strokeStyle = theme.border;
-  ctx.lineWidth = 1.5;
-  const bi = 32;
-  ctx.strokeRect(bi, bi, W - bi * 2, H - bi * 2);
-
-  ctx.fillStyle = theme.quoteMark;
-  ctx.font = `bold 280px 'Playfair Display', Georgia, serif`;
-  ctx.textAlign = "left";
-  ctx.fillText("\u201C", PAD - 10, PAD + 220);
-
-  const textX = PAD + 8;
-  const textMaxW = W - PAD * 2 - 16;
-  ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
-  const words = (q.text || "").split(" ");
+function wrapText(ctx, text, maxW) {
+  const words = (text || "").split(" ");
   const lines = [];
   let cur = "";
   for (const word of words) {
     const test = cur ? `${cur} ${word}` : word;
-    if (ctx.measureText(test).width > textMaxW && cur) {
+    if (ctx.measureText(test).width > maxW && cur) {
       lines.push(cur);
       cur = word;
     } else {
@@ -74,22 +45,84 @@ export async function generateShareImage(q, styleName = "classic") {
     }
   }
   if (cur) lines.push(cur);
+  return lines;
+}
 
-  // Cap at 8 lines with ellipsis
-  if (lines.length > 8) {
-    lines.splice(8);
-    let last = lines[7];
-    while (ctx.measureText(last + "\u2026").width > textMaxW && last.length > 1)
-      last = last.slice(0, -1).trimEnd();
-    lines[7] = last + "\u2026";
-  }
+export async function generateShareImage(q, styleName = "classic") {
+  const theme = IMAGE_STYLES[styleName] || IMAGE_STYLES.classic;
+  const W = 1080, PAD = 72;
+  const MIN_H = 1080;
+
+  await document.fonts.ready;
+
+  // Use an offscreen canvas to measure text before deciding final height
+  const measure = document.createElement("canvas");
+  measure.width = W;
+  measure.height = 1;
+  const mCtx = measure.getContext("2d");
+
+  const textX = PAD + 8;
+  const textMaxW = W - PAD * 2 - 16;
+
+  // Measure quote lines
+  mCtx.font = `italic 42px 'Playfair Display', Georgia, serif`;
+  const lines = wrapText(mCtx, q.text, textMaxW);
 
   const lineH = 62;
   const blockH = lines.length * lineH;
-  const attrH = 28;
-  const totalH = blockH + 40 + attrH;
-  const textStartY = Math.round(Math.max(PAD + 180, (H - totalH) * 0.46 + lineH));
 
+  // Measure attribution lines
+  const attrLineH = 38;
+  let attrLines = [];
+  if (q.source) {
+    mCtx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
+    const dash = "\u2014 ";
+    const dashW = mCtx.measureText(dash).width;
+    const attrMaxW = textMaxW - dashW;
+    attrLines = wrapText(mCtx, q.source, attrMaxW);
+  }
+  const attrBlockH = Math.max(attrLines.length, 1) * attrLineH;
+
+  // Calculate required height: top padding + quote mark area + quote + gap + attribution + gap + branding + bottom padding
+  const quoteMarkSpace = 180;
+  const gapAfterQuote = 40;
+  const brandingH = 50;
+  const bottomPad = PAD + 12;
+  const contentH = quoteMarkSpace + blockH + gapAfterQuote + attrBlockH + brandingH + bottomPad;
+  const H = Math.max(MIN_H, PAD + contentH + PAD);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  ctx.fillStyle = theme.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Top accent bar
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(0, 0, W, 6);
+
+  // Border
+  ctx.strokeStyle = theme.border;
+  ctx.lineWidth = 1.5;
+  const bi = 32;
+  ctx.strokeRect(bi, bi, W - bi * 2, H - bi * 2);
+
+  // Opening quote mark
+  ctx.fillStyle = theme.quoteMark;
+  ctx.font = `bold 280px 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = "left";
+  ctx.fillText("\u201C", PAD - 10, PAD + 220);
+
+  // Vertically center content within available space, with a minimum top offset
+  const totalContentH = blockH + gapAfterQuote + attrBlockH;
+  const availableH = H - PAD - quoteMarkSpace - brandingH - bottomPad - PAD;
+  const verticalOffset = Math.max(0, (availableH - totalContentH) / 2);
+  const textStartY = Math.round(PAD + quoteMarkSpace + verticalOffset + lineH);
+
+  // Draw quote text
   ctx.fillStyle = theme.text;
   ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
   ctx.textAlign = "left";
@@ -97,14 +130,24 @@ export async function generateShareImage(q, styleName = "classic") {
     ctx.fillText(line, textX, textStartY + i * lineH);
   });
 
-  const attrY = textStartY + blockH + 40;
-  ctx.fillStyle = theme.accent;
-  ctx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
-  const dash = "\u2014 ";
-  const dashW = ctx.measureText(dash).width;
-  ctx.fillText(dash, textX, attrY);
-  ctx.fillStyle = theme.attr;
-  ctx.fillText(q.source || "", textX + dashW, attrY);
+  // Draw attribution (wrapped)
+  const attrStartY = textStartY + blockH + gapAfterQuote;
+  if (attrLines.length > 0) {
+    ctx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
+    const dash = "\u2014 ";
+    const dashW = ctx.measureText(dash).width;
+
+    // Draw dash on first line
+    ctx.fillStyle = theme.accent;
+    ctx.fillText(dash, textX, attrStartY);
+
+    // Draw attribution text lines
+    ctx.fillStyle = theme.attr;
+    attrLines.forEach((line, i) => {
+      const x = i === 0 ? textX + dashW : textX + dashW;
+      ctx.fillText(line, x, attrStartY + i * attrLineH);
+    });
+  }
 
   drawBranding(ctx, W, H, PAD, theme.brandColor);
 

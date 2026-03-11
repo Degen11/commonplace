@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect, memo } from "react";
 import useLongPress from "../hooks/useLongPress";
+import useSwipe from "../hooks/useSwipe";
 import EditForm from "./EditForm";
 import { InlineSourceInput } from "./InlineEditors";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { styles, cardStyles } from "./styles";
-import { Pencil, ChevronDown } from "lucide-react";
+import { Pencil, ChevronDown, Trash2, Heart } from "lucide-react";
 import HighlightText from "./HighlightText";
 
 const MemoCardItem = memo(function CardItem({
@@ -25,6 +26,13 @@ const MemoCardItem = memo(function CardItem({
     400
   );
 
+  const swipeEnabled = isMobile && !isEd && !isInlineEditing;
+  const { offsetX, swipeHandlers } = useSwipe({
+    onSwipeLeft: useCallback(() => actionProps.handleDelete(q.id), [actionProps.handleDelete, q.id]),
+    onSwipeRight: useCallback(() => actionProps.onFav(q.id), [actionProps.onFav, q.id]),
+    enabled: swipeEnabled,
+  });
+
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -38,7 +46,29 @@ const MemoCardItem = memo(function CardItem({
     return () => document.removeEventListener("mousedown", handleDown);
   }, [menuOpen]);
 
+  // Swipe visual hints
+  const isSwipingLeft = offsetX < -20;
+  const isSwipingRight = offsetX > 20;
+  const swipeProgress = Math.min(Math.abs(offsetX) / 80, 1);
+
   return (
+    <div style={{ position: "relative", overflow: "hidden", borderRadius: 8 }}>
+      {/* Swipe hint background — only rendered during active swipe */}
+      {(isSwipingLeft || isSwipingRight) && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: isSwipingLeft
+            ? `rgba(220,38,38,${0.08 + swipeProgress * 0.10})`
+            : `rgba(245,158,11,${0.08 + swipeProgress * 0.10})`,
+          display: "flex", alignItems: "center",
+          justifyContent: isSwipingLeft ? "flex-end" : "flex-start",
+          padding: "0 20px",
+          color: isSwipingLeft ? "#DC2626" : "#F59E0B",
+          fontSize: 12, fontWeight: 600, gap: 6, opacity: swipeProgress,
+        }}>
+          {isSwipingLeft ? <><Trash2 size={15} /> Delete</> : <><Heart size={15} /> Favorite</>}
+        </div>
+      )}
     <div
       className="qcard"
       data-id={q.id}
@@ -49,7 +79,7 @@ const MemoCardItem = memo(function CardItem({
       }}
       onDragOver={e => handleDragOver(e, q.id)}
       onDragEnd={handleDragEnd}
-      {...(isMobile ? longPress : {})}
+      {...(isMobile ? { ...longPress, ...swipeHandlers } : {})}
       style={{
         ...cardStyles.card,
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
@@ -57,6 +87,7 @@ const MemoCardItem = memo(function CardItem({
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(dragId === q.id ? { opacity: .4 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
+        ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
       onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
@@ -99,6 +130,7 @@ const MemoCardItem = memo(function CardItem({
           </>
         )
       }
+    </div>
     </div>
   );
 }, (prev, next) => {

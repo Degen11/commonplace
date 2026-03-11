@@ -94,6 +94,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     return () => { mountedRef.current = false; };
   }, []);
 
+  // Refs for latest values — so callbacks never read stale closures
+  const quotesRef = useRef(quotes);
+  quotesRef.current = quotes;
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   // Single safe dispatch — replaces 7 safeSet* wrappers
   const safeDispatch = useCallback((action) => {
     if (mountedRef.current) dispatch(action);
@@ -144,7 +150,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   }, []);
 
   // ── Processing pipeline ──
-  const runProcessing = async (unique, appendMode, useFormatting = false) => {
+  const runProcessing = useCallback(async (unique, appendMode, useFormatting = false) => {
     const { default: localDb, localLookup } = await import("../data/localQuotes");
     initProperNouns(localDb);
 
@@ -277,9 +283,9 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       safeDispatch({ type: "FINISH" });
       goPhase("results");
     }, PROCESSING_DONE_MS);
-  };
+  }, [safeDispatch, identifyBatch, allCats, setQuotes, goPhase]);
 
-  const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
+  const processEntries = useCallback(async (inputText, appendMode = false, useFormatting = false) => {
     const lines = smartSplit(inputText.trim());
     if (!lines.length) return;
 
@@ -290,7 +296,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const seenExact = new Map();
     const addSeen = (entry) => { seen.push(entry); seenExact.set(entry.norm, entry); };
     if (appendMode) {
-      for (const q of quotes) addSeen({ norm: normalize(q.text), text: q.text, source: q.source });
+      for (const q of quotesRef.current) addSeen({ norm: normalize(q.text), text: q.text, source: q.source });
     }
     if (appendMode && pendingContinuationRef.current) {
       for (const p of pendingContinuationRef.current.unique) {
@@ -327,16 +333,17 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     safeDispatch({ type: "START", dupes: 0, total: unique.length });
     goPhase("processing");
     await runProcessing(unique, appendMode, useFormatting);
-  };
+  }, [safeDispatch, goPhase, runProcessing]);
 
-  const handleDupesContinue = async () => {
+  const handleDupesContinue = useCallback(async () => {
     if (!pendingContinuationRef.current) return;
     const { unique, appendMode, useFormatting } = pendingContinuationRef.current;
     const finalUnique = [...unique];
     let keptCount = 0;
 
-    state.pendingDupes.forEach((dupe, i) => {
-      const decision = state.dupeDecisions[i];
+    const currentState = stateRef.current;
+    currentState.pendingDupes.forEach((dupe, i) => {
+      const decision = currentState.dupeDecisions[i];
 
       if (decision === "keep") {
         finalUnique.push(dupe.incoming);
@@ -350,29 +357,30 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       }
     });
 
-    const dupes = state.pendingDupes.length - keptCount;
+    const dupes = currentState.pendingDupes.length - keptCount;
     dispatch({ type: "CLEAR_DUPES" });
     pendingContinuationRef.current = null;
 
     safeDispatch({ type: "START", dupes, total: finalUnique.length });
     goPhase("processing");
     await runProcessing(finalUnique, appendMode, useFormatting);
-  };
+  }, [safeDispatch, goPhase, runProcessing]);
 
-  const retryFailed = async () => {
-    if (!state.failedEntries.length) return;
+  const retryFailed = useCallback(async () => {
+    const currentState = stateRef.current;
+    if (!currentState.failedEntries.length) return;
     safeDispatch({ type: "API_ERROR", error: null });
 
-    const entriesToRetry = [...state.failedEntries];
+    const entriesToRetry = [...currentState.failedEntries];
     const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` \u2014 ${e.hint}` : ""}`).join("\n");
 
     try {
-      await processEntries(text, true, state.formattingEnabled);
+      await processEntries(text, true, currentState.formattingEnabled);
       safeDispatch({ type: "FAILED_ENTRIES", entries: [] });
     } catch (error) {
       safeDispatch({ type: "API_ERROR", error: "Retry failed. You can try again or edit manually." });
     }
-  };
+  }, [safeDispatch, processEntries]);
 
   // Skip the auto-transition timer and go directly to results
   const skipToResults = useCallback(() => {
@@ -458,7 +466,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     skipToResults, cancelProcessing, resetProcessingState,
     setDupeDecision, setFormattingEnabled,
     dismissApiError, dismissStats,
-  }), [identifyBatch, autoGroup, skipToResults, cancelProcessing, resetProcessingState, setDupeDecision, setFormattingEnabled, dismissApiError, dismissStats]);
+  }), [identifyBatch, autoGroup, processEntries, handleDupesContinue, retryFailed, skipToResults, cancelProcessing, resetProcessingState, setDupeDecision, setFormattingEnabled, dismissApiError, dismissStats]);
 
   return { ...state, ...actions };
 }

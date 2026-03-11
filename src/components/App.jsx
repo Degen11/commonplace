@@ -6,14 +6,16 @@ import useViewPreferences from "../hooks/useViewPreferences";
 import useQuoteActions from "../hooks/useQuoteActions";
 import useEditState from "../hooks/useEditState";
 import useTheme from "../hooks/useTheme";
+import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
 import { setMultiDragImage, cleanupDragGhost } from "../utils/dragGhost";
-import { normalize, similarity } from "../utils/textFormatting";
+import { similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
+import { findDuplicateGroups } from "../utils/quotes";
 import {
   DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS,
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT,
@@ -279,103 +281,24 @@ export default function Commonplace() {
 
   const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
 
-  // Keyboard shortcuts — use a ref to avoid re-registering on every state change
-  const kbStateRef = useRef({});
-  kbStateRef.current = { search, editingId, selected, confirmClear, confirmBulkDel, showExport, showSort, reviewQueue, selAll, visible, onFav, handleDelete, bulkDel, phase, showShortcuts, showStats, showAddMore, inlineEdit };
-
-  useEffect(() => {
-    const h = e => {
-      if (e.target.matches('input, textarea, select')) return;
-      const s = kbStateRef.current;
-
-      // Block all shortcuts except Escape when not in results phase
-      if (s.phase !== 'results' && e.key !== 'Escape') return;
-
-      // Block navigation/action shortcuts when modals or inline edits are active
-      const modalOpen = s.showShortcuts || s.showStats || s.showAddMore || s.confirmClear || s.confirmBulkDel;
-      const isEditing = s.editingId || s.inlineEdit;
-
-      if (e.key === 'Escape') {
-        if (s.confirmClear) { setConfirmClear(false); return; }
-        if (s.confirmBulkDel) { setConfirmBulkDel(false); return; }
-        if (s.showExport) { setShowExport(false); return; }
-        if (s.showSort) { setShowSort(false); return; }
-        if (s.selected.size > 0) {
-          setSelected(new Set());
-          lastSelectedIndex.current = null;
-          return;
-        }
-        if (s.editingId) {
-          setEditingId(null);
-          if (s.reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
-          return;
-        }
-        if (s.search) {
-          setSearch('');
-          return;
-        }
-      }
-
-      if (e.key === '?') {
-        setShowShortcuts(prev => !prev);
-        return;
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-        e.preventDefault();
-        s.selAll();
-        return;
-      }
-
-      // Skip action/navigation shortcuts when modals or editing are active
-      if (modalOpen || isEditing) return;
-
-      if (e.key === '/') {
-        e.preventDefault();
-        const searchInput = document.querySelector('[data-search-input]');
-        if (searchInput) searchInput.focus();
-        return;
-      }
-
-      if (e.key === 'j' || e.key === 'k') {
-        const list = s.visible;
-        if (!list || list.length === 0) return;
-        // Find current position based on last selected item
-        let curIdx = -1;
-        if (s.selected.size > 0) {
-          const lastId = [...s.selected].pop();
-          curIdx = list.findIndex(q => q.id === lastId);
-        }
-        const nextIdx = e.key === 'j'
-          ? Math.min(curIdx + 1, list.length - 1)
-          : Math.max(curIdx - 1, 0);
-        setSelected(new Set([list[nextIdx].id]));
-        // Scroll the row into view
-        const el = document.querySelector(`[data-id="${list[nextIdx].id}"]`);
-        if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        return;
-      }
-
-      if (e.key === 'f') {
-        if (s.selected.size === 0) return;
-        for (const id of s.selected) s.onFav(id);
-        return;
-      }
-
-      if (e.key === 'd' || e.key === 'Delete' || e.key === 'Backspace') {
-        if (s.selected.size === 0) return;
-        e.preventDefault();
-        if (s.selected.size === 1) {
-          s.handleDelete([...s.selected][0]);
-        } else {
-          s.bulkDel();
-        }
-        return;
-      }
-    };
-    document.addEventListener('keydown', h);
-    return () => document.removeEventListener('keydown', h);
-  }, [showToast, setEditingId, setSelected, setReviewQueue, setSearch, setConfirmBulkDel, lastSelectedIndex]);
+  useKeyboardShortcuts({
+    phase,
+    search, editingId, inlineEdit,
+    selected, setSelected,
+    confirmClear, setConfirmClear,
+    confirmBulkDel, setConfirmBulkDel,
+    showExport, setShowExport,
+    showSort, setShowSort,
+    showShortcuts, setShowShortcuts,
+    showStats, showAddMore,
+    reviewQueue, setReviewQueue,
+    selAll,
+    visible,
+    onFav, handleDelete, bulkDel,
+    setEditingId, setSearch,
+    lastSelectedIndex,
+    showToast,
+  });
 
   useEffect(() => {
     const baseTitle = "Commonplace";
@@ -446,51 +369,11 @@ export default function Commonplace() {
       showToast("Need at least 2 entries to scan for duplicates.", null, null, "error");
       return;
     }
-    const norms = target.map(q => ({ id: q.id, text: q.text, source: q.source, category: q.category, norm: normalize(q.text) }));
-
-    // Build adjacency via pairwise similarity, then group into clusters (union-find)
-    const parent = norms.map((_, i) => i);
-    const scores = new Map(); // "i:j" -> score
-    const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
-    const union = (a, b) => { parent[find(a)] = find(b); };
-
-    for (let i = 0; i < norms.length; i++) {
-      for (let j = i + 1; j < norms.length; j++) {
-        const score = similarity(norms[i].norm, norms[j].norm);
-        if (score > DUPE_SIMILARITY_THRESHOLD) {
-          union(i, j);
-          scores.set(`${i}:${j}`, score);
-        }
-      }
-    }
-
-    // Collect clusters (groups with 2+ members)
-    const clusters = new Map();
-    norms.forEach((_, i) => {
-      const root = find(i);
-      if (!clusters.has(root)) clusters.set(root, []);
-      clusters.get(root).push(i);
-    });
-
-    const groups = [];
-    for (const members of clusters.values()) {
-      if (members.length < 2) continue;
-      let minScore = 1, maxScore = 0;
-      for (let i = 0; i < members.length; i++) {
-        for (let j = i + 1; j < members.length; j++) {
-          const key = `${Math.min(members[i], members[j])}:${Math.max(members[i], members[j])}`;
-          const s = scores.get(key);
-          if (s !== undefined) { minScore = Math.min(minScore, s); maxScore = Math.max(maxScore, s); }
-        }
-      }
-      groups.push({ entries: members.map(i => norms[i]), minScore, maxScore });
-    }
-
+    const groups = findDuplicateGroups(target, DUPE_SIMILARITY_THRESHOLD);
     if (groups.length === 0) {
       showToast("No duplicates found!", null, null, "success");
       return;
     }
-    groups.sort((a, b) => b.maxScore - a.maxScore);
     setCollectionDupes(groups);
   }, [quotes, collectionFiltered, activeCollectionId, showToast]);
 

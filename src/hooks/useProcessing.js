@@ -4,7 +4,8 @@ import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
-import { generateId } from "../utils/uuid";
+import { makeQuote } from "../utils/quotes";
+import { fetchWithTimeout, API_HEADERS } from "../utils/api";
 import { describeApiError } from "../utils/apiErrors";
 import {
   API_TIMEOUT_MS, AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
@@ -112,41 +113,27 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
       return `[${i}] ${it.text}${hintStr}`;
     }).join("\n");
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-    if (externalSignal) {
-      if (externalSignal.aborted) { clearTimeout(timeoutId); throw new DOMException("Aborted", "AbortError"); }
-      externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
-    }
+    const r = await fetchWithTimeout("/api/identify", {
+      method: "POST",
+      headers: API_HEADERS,
+      body: JSON.stringify({
+        formatting: withFormatting,
+        messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
+      }),
+    }, API_TIMEOUT_MS, externalSignal);
 
-    try {
-      const r = await fetch("/api/identify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "CommonplaceApp",
-        },
-        body: JSON.stringify({
-          formatting: withFormatting,
-          messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
-        }),
-        signal: controller.signal,
-      });
-      if (!r.ok) throw new Error(`API returned ${r.status}`);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message || "API error");
-      if (!d.content || !Array.isArray(d.content)) throw new Error("Invalid API response structure");
-      const t = d.content.map(x => x.text || "").join("");
-      const raw = t.replace(/```json|```/g, "").trim();
-      if (!raw) return [];
-      const jsonStr = raw.startsWith("[") ? raw : "[" + raw;
-      let parsed;
-      try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
-      return Array.isArray(parsed) ? parsed : [];
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    if (!r.ok) throw new Error(`API returned ${r.status}`);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || "API error");
+    if (!d.content || !Array.isArray(d.content)) throw new Error("Invalid API response structure");
+    const t = d.content.map(x => x.text || "").join("");
+    const raw = t.replace(/```json|```/g, "").trim();
+    if (!raw) return [];
+    const jsonStr = raw.startsWith("[") ? raw : "[" + raw;
+    let parsed;
+    try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
+    return Array.isArray(parsed) ? parsed : [];
   }, []);
 
   // ── Processing pipeline ──
@@ -180,7 +167,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
         const lr = await fetch("/api/lookup", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+          headers: API_HEADERS,
           body: JSON.stringify({ quotes: lookupBody }),
         });
         if (lr.ok) {
@@ -235,7 +222,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
           if (cacheItems.length > 0) {
             fetch("/api/cache", {
               method: "POST",
-              headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
+              headers: API_HEADERS,
               body: JSON.stringify({ items: cacheItems }),
             }).catch(() => {});
           }
@@ -250,24 +237,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (failed.length > 0) safeDispatch({ type: "FAILED_ENTRIES", entries: failed });
 
     const localByIdx = new Map(localMatches.map(m => [m.idx, m]));
+    const fmt = (t) => useFormatting ? basicFormat(t) : t;
     const newQuotes = unique.map((p, i) => {
       const local = localByIdx.get(i);
-      if (local) {
-        const text = useFormatting ? basicFormat(p.text) : p.text;
-        return { id: generateId(), text, source: local.result.source, category: local.result.category, confidence: local.result.confidence, favorite: false, updatedAt: Date.now() };
-      }
+      if (local) return makeQuote(fmt(p.text), local.result.source, local.result.category, local.result.confidence);
       const lookup = lookupResults.get(i);
-      if (lookup) {
-        const text = useFormatting ? basicFormat(p.text) : p.text;
-        return { id: generateId(), text, source: lookup.source, category: fallbackCategory(lookup.category, allCats), confidence: lookup.confidence || "medium", favorite: false, updatedAt: Date.now() };
-      }
+      if (lookup) return makeQuote(fmt(p.text), lookup.source, fallbackCategory(lookup.category, allCats), lookup.confidence || "medium");
       const api = apiResults.get(i);
-      if (api) {
-        const text = (useFormatting && api.cleanText) ? api.cleanText : p.text;
-        return { id: generateId(), text, source: api.source || p.hint || "Unknown source", category: fallbackCategory(api.category, allCats), confidence: api.confidence || "low", favorite: false, updatedAt: Date.now() };
-      }
-      const text = useFormatting ? basicFormat(p.text) : p.text;
-      return { id: generateId(), text, source: p.hint || "Unknown source", category: "Reflection", confidence: "low", favorite: false, updatedAt: Date.now() };
+      if (api) return makeQuote((useFormatting && api.cleanText) ? api.cleanText : p.text, api.source || p.hint, fallbackCategory(api.category, allCats), api.confidence);
+      return makeQuote(fmt(p.text), p.hint);
     });
 
     if (!mountedRef.current) return;
@@ -409,37 +387,20 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const autoGroup = useCallback(async (theme, quotesList, externalSignal) => {
     if (!theme || quotesList.length === 0) return [];
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), AUTO_GROUP_TIMEOUT_MS);
-
-    if (externalSignal) {
-      if (externalSignal.aborted) { clearTimeout(timeoutId); throw new DOMException("Aborted", "AbortError"); }
-      externalSignal.addEventListener("abort", () => controller.abort(), { once: true });
-    }
-
     const quoteTexts = quotesList.map(q => q.text);
+    const r = await fetchWithTimeout("/api/auto-group", {
+      method: "POST",
+      headers: API_HEADERS,
+      body: JSON.stringify({ theme, quotes: quoteTexts }),
+    }, AUTO_GROUP_TIMEOUT_MS, externalSignal);
 
-    try {
-      const r = await fetch("/api/auto-group", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "CommonplaceApp",
-        },
-        body: JSON.stringify({ theme, quotes: quoteTexts }),
-        signal: controller.signal,
-      });
-
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err.error || `API returned ${r.status}`);
-      }
-
-      const { indices } = await r.json();
-      return indices.map(i => quotesList[i]?.id).filter(Boolean);
-    } finally {
-      clearTimeout(timeoutId);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || `API returned ${r.status}`);
     }
+
+    const { indices } = await r.json();
+    return indices.map(i => quotesList[i]?.id).filter(Boolean);
   }, []);
 
   // Expose setters for individual fields still needed by App.jsx

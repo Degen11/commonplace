@@ -156,7 +156,6 @@ export const baseCSS = `
   .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
   .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
   html.dark .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important}
-  .sidebar-overview-link:hover{text-decoration:underline !important}
   .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
   .load-more-btn{transition:all .15s ease}
   .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}
@@ -469,12 +468,13 @@ export const styles = {
   hdrOverflowDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#DC2626",cursor:"pointer",borderRadius:5,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
 
   // Sidebar overview card
-  sidebarOverview:{padding:"10px 8px 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
-  sidebarOverviewLabel:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:0.6,color:"var(--cp-accent)",marginBottom:8},
+  sidebarOverview:{padding:"12px 8px 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
+  sidebarOverviewLabel:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:0.6,color:"var(--cp-accent)"},
   sidebarOverviewRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",fontSize:12},
   sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
   sidebarOverviewMuted:{color:"var(--cp-text-muted)"},
   sidebarOverviewLink:{background:"none",border:"none",padding:0,color:"var(--cp-accent)",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:500,textDecoration:"none"},
+  sidebarDupesBtn:{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 10px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:11,fontWeight:500,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",width:"100%",justifyContent:"center"},
 
   // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)"},

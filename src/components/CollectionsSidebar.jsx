@@ -111,7 +111,7 @@ function CollectionRow({
           onKeyDown={e => { if (e.key === "Enter") handleRename(c.id); if (e.key === "Escape") setEditingId(null); }}
           style={{
             flex: 1, padding: "4px 6px", fontSize: 12, fontFamily: "inherit",
-            border: "1px solid var(--cp-accent)", borderRadius: 4, background: "var(--cp-bg-card)",
+            border: "1px solid var(--cp-accent)", borderRadius: 6, background: "var(--cp-bg-card)",
             color: "var(--cp-text)",
           }}
           autoFocus
@@ -401,9 +401,9 @@ export default function CollectionsSidebar({
           </div>
         )}
         {onFindDupes && (
-          <div style={{ marginTop: 8 }}>
-            <button className="hdr-btn" style={styles.sidebarDupesBtn} onClick={onFindDupes}>
-              <Copy size={12} strokeWidth={2} />
+          <div style={{ marginTop: 6 }}>
+            <button className="hdr-btn" style={styles.sidebarActionBtn} onClick={onFindDupes}>
+              <Copy size={13} strokeWidth={2} />
               Find duplicates
             </button>
           </div>
@@ -421,10 +421,14 @@ export default function CollectionsSidebar({
       </div>
 
       {/* Create new — at the top */}
-      <div style={{ padding: "0 4px 6px 0" }}>
+      <div style={{ padding: "0 0 6px 0" }}>
         {isCreating ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <div style={{
+              display: "flex", gap: 0, alignItems: "center",
+              border: `1px solid ${createError ? "#DC2626" : "var(--cp-accent)"}`, borderRadius: 6,
+              background: "var(--cp-bg-card)", overflow: "hidden",
+            }}>
               <input
                 ref={inputRef}
                 value={newName}
@@ -433,16 +437,17 @@ export default function CollectionsSidebar({
                 placeholder="Collection name..."
                 style={{
                   flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                  border: `1px solid ${createError ? "#DC2626" : "var(--cp-accent)"}`, borderRadius: 4, background: "var(--cp-bg-card)",
+                  border: "none", outline: "none", background: "transparent",
                   color: "var(--cp-text)",
                 }}
+                autoFocus
               />
               <button
                 onClick={handleCreate}
                 style={{
                   flexShrink: 0, background: CP_ACCENT, border: "none", borderRadius: 4,
                   color: "#fff", padding: "4px 8px", fontSize: 11, fontWeight: 600,
-                  cursor: "pointer", fontFamily: "inherit",
+                  cursor: "pointer", fontFamily: "inherit", margin: 2,
                 }}
               >
                 Add
@@ -454,27 +459,23 @@ export default function CollectionsSidebar({
           </div>
         ) : (
           <button
+            className="hdr-btn"
             onClick={() => setIsCreating(true)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6, width: "100%",
-              padding: "6px 8px", border: "1px dashed var(--cp-border-dim)", borderRadius: 6,
-              background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
-              fontFamily: "inherit", fontSize: 12, fontWeight: 500, textAlign: "left",
-            }}
+            style={styles.sidebarActionBtn}
           >
-            <Plus size={14} strokeWidth={2} /> New collection
+            <Plus size={13} strokeWidth={2} /> New collection
           </button>
         )}
       </div>
 
       {/* Smart Group — AI auto-collection */}
       {onAutoGroup && (
-        <div style={{ padding: "0 4px 6px 0" }}>
+        <div style={{ padding: "0 0 6px 0" }}>
           {isSmartGrouping ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <div style={{
                 display: "flex", gap: 0, alignItems: "center",
-                border: `1.5px solid ${smartGroupError ? "#DC2626" : "var(--cp-accent)"}`,
+                border: `1px solid ${smartGroupError ? "#DC2626" : "var(--cp-accent)"}`,
                 borderRadius: 6, background: "var(--cp-bg-card)",
                 opacity: smartGroupLoading ? 0.6 : 1,
                 overflow: "hidden",
@@ -516,15 +517,11 @@ export default function CollectionsSidebar({
             </div>
           ) : (
             <button
+              className="hdr-btn"
               onClick={() => setIsSmartGrouping(true)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, width: "100%",
-                padding: "6px 8px", border: "none", borderRadius: 6,
-                background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
-                fontFamily: "inherit", fontSize: 12, fontWeight: 500, textAlign: "left",
-              }}
+              style={styles.sidebarActionBtn}
             >
-              <Wand2 size={14} strokeWidth={2} /> Smart group
+              <Wand2 size={13} strokeWidth={2} /> Smart group
             </button>
           )}
         </div>

@@ -473,8 +473,7 @@ export const styles = {
   sidebarOverviewRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",fontSize:12},
   sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
   sidebarOverviewMuted:{color:"var(--cp-text-muted)"},
-  sidebarOverviewLink:{background:"none",border:"none",padding:0,color:"var(--cp-accent)",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:500,textDecoration:"none"},
-  sidebarDupesBtn:{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 10px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:11,fontWeight:500,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",width:"100%",justifyContent:"center"},
+  sidebarActionBtn:{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"6px 10px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:500,color:"var(--cp-text-muted)",cursor:"pointer",fontFamily:"inherit",textAlign:"left"},
 
   // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)"},

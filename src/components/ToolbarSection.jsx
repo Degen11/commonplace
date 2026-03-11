@@ -1,18 +1,7 @@
-import { useRef, useState, useEffect } from "react";
 import { styles } from "./styles";
-import { Search, X, ChevronDown } from "lucide-react";
-
-const SORT_OPTIONS = [
-  { key: "default",    label: "Default order" },
-  { key: "confidence", label: "Needs attention first" },
-  { key: "alpha",      label: "Alphabetical" },
-  { key: "category",   label: "By category" },
-];
+import { X } from "lucide-react";
 
 export default function ToolbarSection({
-  search, setSearch,
-  sortBy, setSortBy,
-  showSort, setShowSort,
   catFilter, setCatFilter,
   favFilter, setFavFilter,
   favCount,
@@ -20,46 +9,13 @@ export default function ToolbarSection({
   showNewCat, setShowNewCat,
   newCatName, setNewCatName,
   addCat, remCat,
-  toolbarRef, sortRef,
+  toolbarRef,
   catScrollRef, updateCatFade, catFade,
   getCatColor,
 }) {
-  const sortDropRef = useRef(null);
-  const [sortFlipLeft, setSortFlipLeft] = useState(false);
-
-  // Flip sort dropdown alignment if it clips the right viewport edge
-  useEffect(() => {
-    if (!showSort) { setSortFlipLeft(false); return; }
-    const el = sortDropRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.right > window.innerWidth - 8) setSortFlipLeft(true);
-  }, [showSort]);
-
   return (
     <>
-      <div ref={toolbarRef} style={styles.toolbar}>
-        <div style={styles.srchW}><span style={styles.srchI}><Search size={13} strokeWidth={2} /></span>
-          <input data-search-input style={styles.srchIn} placeholder="Search quotes or sources..." value={search} onChange={e => setSearch(e.target.value)} />
-          {search && <button className="ui-tip ui-tip-below" data-tip="Clear search" style={styles.clrBtn} onClick={() => setSearch("")}><X size={12} strokeWidth={2} /></button>}
-        </div>
-        <div ref={sortRef} style={{ position: "relative" }}>
-          <button style={{ ...styles.sortBtn, ...(sortBy !== "default" ? { borderColor: "rgba(59,130,246,0.4)", color: "#2563EB", background: "rgba(59,130,246,0.06)", fontWeight: 600 } : {}) }} onClick={() => setShowSort(!showSort)}>
-            Sort by{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}<ChevronDown size={12} style={{ marginLeft: 2, opacity: .5 }} />
-          </button>
-          <div ref={sortDropRef} style={{
-            ...styles.sortDrop,
-            ...(sortFlipLeft ? { right: "auto", left: 0 } : {}),
-            opacity: showSort ? 1 : 0,
-            transform: showSort ? "translateY(0)" : "translateY(-4px)",
-            pointerEvents: showSort ? "auto" : "none",
-          }}>
-            {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
+      <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
         <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
           style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
           <button className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>

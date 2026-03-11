@@ -838,12 +838,6 @@ export default function Commonplace() {
 
           <SectionErrorBoundary name="Toolbar">
             <ToolbarSection
-              search={search}
-              setSearch={setSearch}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              showSort={showSort}
-              setShowSort={setShowSort}
               catFilter={catFilter}
               setCatFilter={setCatFilter}
               favFilter={favFilter}
@@ -860,7 +854,6 @@ export default function Commonplace() {
               addCat={addCat}
               remCat={remCat}
               toolbarRef={toolbarRef}
-              sortRef={sortRef}
               catScrollRef={catScrollRef}
               updateCatFade={updateCatFade}
               catFade={catFade}
@@ -917,6 +910,13 @@ export default function Commonplace() {
                 onFindDupes={handleFindDupes}
                 uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
                 favCount={favCount}
+                search={search}
+                setSearch={setSearch}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                showSort={showSort}
+                setShowSort={setShowSort}
+                sortRef={sortRef}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 

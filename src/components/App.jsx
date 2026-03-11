@@ -60,7 +60,7 @@ export default function Commonplace() {
     trackDeletion, untrackDeletion,
     collections,
     activeCollectionId, setActiveCollectionId,
-    createCollection, deleteCollection, renameCollection,
+    createCollection, deleteCollection, restoreCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
     cleanCollectionRefs,
     manualPush,
@@ -495,12 +495,27 @@ export default function Commonplace() {
   }, [quotes, collectionFiltered, activeCollectionId, showToast]);
 
   const handleDupeDeleteBatch = useCallback((quoteIds) => {
+    const snapshot = quotes.filter(q => quoteIds.includes(q.id));
+    const indices = snapshot.map(q => ({ quote: q, idx: quotes.findIndex(x => x.id === q.id) }));
     trackDeletion(quoteIds);
     const idSet = new Set(quoteIds);
     setQuotes(prev => prev.filter(q => !idSet.has(q.id)));
     cleanCollectionRefs(quoteIds);
-    showToast(`Removed ${quoteIds.length} duplicate${quoteIds.length === 1 ? "" : "s"}`, null, null, "success");
-  }, [setQuotes, trackDeletion, cleanCollectionRefs, showToast]);
+    showToast(
+      `Removed ${quoteIds.length} duplicate${quoteIds.length === 1 ? "" : "s"}`,
+      "Undo",
+      () => {
+        setQuotes(prev => {
+          const restored = [...prev];
+          indices
+            .sort((a, b) => a.idx - b.idx)
+            .forEach(({ quote, idx }) => restored.splice(Math.min(idx, restored.length), 0, quote));
+          return restored;
+        });
+        untrackDeletion(quoteIds);
+      },
+    );
+  }, [quotes, setQuotes, trackDeletion, untrackDeletion, cleanCollectionRefs, showToast]);
 
   const addCat = () => {
     const sanitized = sanitizeName(newCatName);
@@ -548,14 +563,35 @@ export default function Commonplace() {
   const handleDeleteCollection = useCallback((id) => {
     const col = collections.find(c => c.id === id);
     const count = quoteCounts[id] || 0;
+    const snapshot = col ? { ...col, quoteIds: [...col.quoteIds] } : null;
+    const wasActive = activeCollectionId === id;
     deleteCollection(id);
     if (col) {
-      showToast(count > 0
-        ? `Deleted "${col.name}" \u2014 ${count} ${count === 1 ? "quote stays" : "quotes stay"} in All Quotes`
-        : `Deleted "${col.name}"`
+      showToast(
+        count > 0
+          ? `Deleted "${col.name}" \u2014 ${count} ${count === 1 ? "quote stays" : "quotes stay"} in All Quotes`
+          : `Deleted "${col.name}"`,
+        "Undo",
+        () => {
+          if (snapshot) {
+            restoreCollection(snapshot);
+            if (wasActive) setActiveCollectionId(snapshot.id);
+          }
+        },
       );
     }
-  }, [collections, quoteCounts, deleteCollection, showToast]);
+  }, [collections, quoteCounts, activeCollectionId, deleteCollection, restoreCollection, setActiveCollectionId, showToast]);
+
+  const handleRemoveFromCollection = useCallback((collectionId, quoteIds) => {
+    removeFromCollection(collectionId, quoteIds);
+    const col = collections.find(c => c.id === collectionId);
+    const count = quoteIds.length;
+    showToast(
+      `Removed ${count} ${count === 1 ? "quote" : "quotes"} from "${col?.name || "collection"}"`,
+      "Undo",
+      () => addToCollection(collectionId, quoteIds),
+    );
+  }, [collections, removeFromCollection, addToCollection, showToast]);
 
   const showBulkBar = selected.size > 0;
 
@@ -569,9 +605,9 @@ export default function Commonplace() {
     reidentifying: reidentifyingIds,
     collections,
     onAddToCollection: addToCollection,
-    onRemoveFromCollection: removeFromCollection,
+    onRemoveFromCollection: handleRemoveFromCollection,
     activeCollectionId,
-  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, addToCollection, removeFromCollection, activeCollectionId]);
+  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, addToCollection, handleRemoveFromCollection, activeCollectionId]);
 
   const exportDropdownContent = (
     <ExportDropdown
@@ -831,7 +867,7 @@ export default function Commonplace() {
               isReidentifying={reidentifyingIds.size > 0}
               collections={collections}
               onAddToCollection={addToCollection}
-              onRemoveFromCollection={removeFromCollection}
+              onRemoveFromCollection={handleRemoveFromCollection}
               activeCollectionId={activeCollectionId}
             />
           )}
@@ -858,6 +894,13 @@ export default function Commonplace() {
               updateCatFade={updateCatFade}
               catFade={catFade}
               getCatColor={getCatColor}
+              search={search}
+              setSearch={setSearch}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showSort={showSort}
+              setShowSort={setShowSort}
+              sortRef={sortRef}
             />
           </SectionErrorBoundary>
 
@@ -910,13 +953,6 @@ export default function Commonplace() {
                 onFindDupes={handleFindDupes}
                 uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
                 favCount={favCount}
-                search={search}
-                setSearch={setSearch}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                showSort={showSort}
-                setShowSort={setShowSort}
-                sortRef={sortRef}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -1034,6 +1070,7 @@ export default function Commonplace() {
               setSortBy={setSortBy}
               customCats={customCats}
               activeCollectionName={activeCollectionId ? collections.find(c => c.id === activeCollectionId)?.name : null}
+              onBrowseAll={activeCollectionId ? () => setActiveCollectionId(null) : null}
             />
           )}
 

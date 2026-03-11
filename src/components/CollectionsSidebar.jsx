@@ -3,15 +3,8 @@ import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
   FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
-  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy, Search, ChevronDown,
+  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
 } from "lucide-react";
-
-const SORT_OPTIONS = [
-  { key: "default",    label: "Default order" },
-  { key: "confidence", label: "Needs attention first" },
-  { key: "alpha",      label: "Alphabetical" },
-  { key: "category",   label: "By category" },
-];
 import { CP_ACCENT, styles } from "./styles";
 
 // Icon set for the picker
@@ -262,10 +255,6 @@ export default function CollectionsSidebar({
   onFindDupes,
   uniqueSources,
   favCount,
-  search, setSearch,
-  sortBy, setSortBy,
-  showSort, setShowSort,
-  sortRef,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -280,11 +269,8 @@ export default function CollectionsSidebar({
   const [smartGroupLoading, setSmartGroupLoading] = useState(false);
   const [smartGroupError, setSmartGroupError] = useState(null);
   const smartInputRef = useRef(null);
-  const searchInputRef = useRef(null);
   const createWrapRef = useRef(null);
   const smartWrapRef = useRef(null);
-  const searchWrapRef = useRef(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     if (isCreating && inputRef.current) inputRef.current.focus();
@@ -293,15 +279,6 @@ export default function CollectionsSidebar({
   useEffect(() => {
     if (isSmartGrouping && smartInputRef.current) smartInputRef.current.focus();
   }, [isSmartGrouping]);
-
-  useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) searchInputRef.current.focus();
-  }, [isSearchOpen]);
-
-  // Keep search open if there's a search term
-  useEffect(() => {
-    if (search) setIsSearchOpen(true);
-  }, [search]);
 
   // Close input fields on outside click
   useEffect(() => {
@@ -312,13 +289,10 @@ export default function CollectionsSidebar({
       if (isSmartGrouping && !smartGroupLoading && smartWrapRef.current && !smartWrapRef.current.contains(e.target)) {
         setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null);
       }
-      if (isSearchOpen && !search && searchWrapRef.current && !searchWrapRef.current.contains(e.target)) {
-        setIsSearchOpen(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [isCreating, isSmartGrouping, smartGroupLoading, isSearchOpen, search]);
+  }, [isCreating, isSmartGrouping, smartGroupLoading]);
 
   // Reset input fields when sidebar collapses
   useEffect(() => {
@@ -381,16 +355,6 @@ export default function CollectionsSidebar({
           title="Expand sidebar"
         >
           <ChevronRight size={16} strokeWidth={2} />
-        </button>
-        <button
-          onClick={() => { setCollapsed(false); setIsSearchOpen(true); }}
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: search ? "var(--cp-accent)" : "var(--cp-text-muted)", padding: 4, borderRadius: 4,
-          }}
-          title="Search"
-        >
-          <Search size={15} strokeWidth={2} />
         </button>
         {/* Collapsed entry count badge */}
         <div
@@ -644,88 +608,6 @@ export default function CollectionsSidebar({
       </div>
       )}
 
-      {/* Filters header */}
-      <div style={{ borderTop: "1px solid var(--cp-border)", marginTop: 4, marginRight: 8 }} />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 8px 0" }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)" }}>Filters</span>
-      </div>
-
-      {/* Search */}
-      <div ref={searchWrapRef} style={{ padding: "0 0 2px 0" }}>
-        {isSearchOpen ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <div style={{
-              display: "flex", gap: 0, alignItems: "center",
-              border: "1px solid var(--cp-accent)",
-              borderRadius: 6, background: "var(--cp-bg-card)", overflow: "hidden",
-            }}>
-              <input
-                ref={searchInputRef}
-                data-search-input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === "Escape") { if (!search) { setIsSearchOpen(false); } else { setSearch(""); } }
-                }}
-                placeholder="Search quotes or sources..."
-                style={{
-                  flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                  border: "none", outline: "none", background: "transparent",
-                  color: "var(--cp-text)", minWidth: 0,
-                }}
-              />
-              {search ? (
-                <button
-                  onClick={() => setSearch("")}
-                  style={{
-                    background: "transparent", border: "none",
-                    color: "var(--cp-text-muted)", padding: "5px 8px",
-                    cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0,
-                  }}
-                >
-                  <X size={12} strokeWidth={2} />
-                </button>
-              ) : (
-                <span style={{ padding: "5px 8px", display: "flex", alignItems: "center", opacity: 0.35, flexShrink: 0 }}>
-                  <Search size={13} strokeWidth={2} />
-                </span>
-              )}
-            </div>
-          </div>
-        ) : (
-          <button
-            className="hdr-btn"
-            onClick={() => setIsSearchOpen(true)}
-            style={{ ...styles.sidebarActionBtn, ...(search ? { color: "var(--cp-accent)", fontWeight: 600 } : {}) }}
-          >
-            <Search size={13} strokeWidth={2} /> Search{search ? `: "${search}"` : ""}
-          </button>
-        )}
-      </div>
-
-      {/* Sort */}
-      <div ref={sortRef} style={{ position: "relative", padding: "0 0 6px 0" }}>
-        <button
-          className="hdr-btn"
-          onClick={() => setShowSort(!showSort)}
-          style={{ ...styles.sidebarActionBtn, ...(sortBy !== "default" ? { color: "#2563EB", fontWeight: 600 } : {}) }}
-        >
-          <ChevronDown size={13} strokeWidth={2} /> Sort{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}
-        </button>
-        <div style={{
-          ...styles.sortDrop, left: 0, right: 0, minWidth: 0,
-          opacity: showSort ? 1 : 0,
-          transform: showSort ? "translateY(0)" : "translateY(-4px)",
-          pointerEvents: showSort ? "auto" : "none",
-        }}>
-          {SORT_OPTIONS.map(o => (
-            <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
-              onClick={() => { setSortBy(o.key); setShowSort(false); }}>
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

@@ -284,6 +284,13 @@ export function QuotesProvider({ children }) {
     setActiveCollectionId(prev => prev === id ? null : prev);
   }, []);
 
+  const restoreCollection = useCallback((col) => {
+    setCollections(prev => {
+      if (prev.some(c => c.id === col.id)) return prev;
+      return [...prev, col];
+    });
+  }, []);
+
   const renameCollection = useCallback((id, name) => {
     const sanitized = sanitizeName(name);
     if (!sanitized) return;
@@ -453,12 +460,12 @@ export function QuotesProvider({ children }) {
     trackDeletion, untrackDeletion,
     collections,
     activeCollectionId, setActiveCollectionId,
-    createCollection, deleteCollection, renameCollection,
+    createCollection, deleteCollection, restoreCollection, renameCollection,
     addToCollection, removeFromCollection, updateCollectionIcon,
     cleanCollectionRefs,
     manualPush,
   }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs, manualPush]);
+       collections, activeCollectionId, createCollection, deleteCollection, restoreCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs, manualPush]);
 
   return (
     <QuotesContext.Provider value={value}>

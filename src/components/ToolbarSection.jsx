@@ -1,10 +1,10 @@
 import { useRef, useEffect, useState } from "react";
 import { styles } from "./styles";
-import { X, Search, ArrowUpDown } from "lucide-react";
+import { X, Search, ArrowUpDown, AlertTriangle } from "lucide-react";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order",        badge: null },
-  { key: "confidence", label: "Needs attention first", badge: "!" },
+  { key: "confidence", label: "Needs attention first", badge: "alert" },
   { key: "alpha",      label: "Alphabetical",         badge: "A-Z" },
   { key: "category",   label: "By category",          badge: "Cat" },
 ];
@@ -142,8 +142,10 @@ export default function ToolbarSection({
               >
                 <ArrowUpDown size={14} strokeWidth={2} />
                 {sortBy !== "default" && (
-                  <span style={{ letterSpacing: sortBy === "alpha" ? 0.5 : 0 }}>
-                    {SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
+                  <span style={{ letterSpacing: sortBy === "alpha" ? 0.5 : 0, display: "inline-flex", alignItems: "center" }}>
+                    {SORT_OPTIONS.find(o => o.key === sortBy)?.badge === "alert"
+                      ? <AlertTriangle size={12} strokeWidth={2} />
+                      : SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
                   </span>
                 )}
               </button>

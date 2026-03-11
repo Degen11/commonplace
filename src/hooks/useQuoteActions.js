@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { buildValidCats, fallbackCategory, QUOTED_CATS } from "../data/constants";
+import { fallbackCategory, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
@@ -124,7 +124,6 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       if (results.length > 0) {
         const r = results[0];
-        const validCats = buildValidCats(allCats);
         const newSource = r.source || "Unknown source";
         const newCategory = fallbackCategory(r.category, allCats);
         const snapshot = { ...q };
@@ -179,7 +178,6 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       const needsApi = [];
       const snapshot = new Map(qs.map(q => [q.id, { ...q }]));
-      const validCats = buildValidCats(allCats);
       let localCount = 0;
 
       // First pass: try local matches

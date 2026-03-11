@@ -5,6 +5,9 @@ import {
 import { useToastContext } from "./ToastContext";
 import useSync from "../hooks/useSync";
 import { generateId } from "../utils/uuid";
+import { loadFromStorage } from "../utils/storage";
+import { mergeByTimestamp } from "../utils/sync";
+import { fetchWithTimeout } from "../utils/api";
 import {
   TOMBSTONE_TTL_MS, STORAGE_WARN_BYTES, PERSIST_DEBOUNCE_MS,
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
@@ -13,6 +16,11 @@ import {
 } from "../config";
 
 const QuotesContext = createContext(null);
+
+function isShareHash() {
+  const hash = window.location.hash.slice(1);
+  return hash.startsWith("s=") || hash.startsWith("p=");
+}
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -52,53 +60,22 @@ export function QuotesProvider({ children }) {
   // Synchronously initialize from localStorage to avoid flash of input phase.
   // Shared links skip localStorage (handled in mount effect).
   const [quotes, setQuotes] = useState(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash.startsWith("s=") || hash.startsWith("p=")) return [];
-    try {
-      const saved = localStorage.getItem(LS_QUOTES);
-      if (saved) {
-        const q = JSON.parse(saved);
-        if (Array.isArray(q) && q.length > 0) return q;
-      }
-    } catch(e) { /* mount effect handles errors */ }
-    return [];
+    if (isShareHash()) return [];
+    return loadFromStorage(LS_QUOTES, a => Array.isArray(a) && a.length > 0);
   });
   const [customCats, setCustomCats] = useState(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash.startsWith("s=") || hash.startsWith("p=")) return [];
-    try {
-      const saved = localStorage.getItem(LS_CATS);
-      if (saved) {
-        const cats = JSON.parse(saved);
-        if (Array.isArray(cats)) return cats;
-      }
-    } catch(e) { /* ignore */ }
-    return [];
+    if (isShareHash()) return [];
+    return loadFromStorage(LS_CATS);
   });
   const [isSharedView, setIsSharedView] = useState(false);
 
-  const [columnOrder, setColumnOrder] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_COL_ORDER);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length === REORDERABLE_COLS.length &&
-            REORDERABLE_COLS.every(c => parsed.includes(c))) return parsed;
-      }
-    } catch(e) { /* ignore */ }
-    return [...REORDERABLE_COLS];
-  });
+  const [columnOrder, setColumnOrder] = useState(() =>
+    loadFromStorage(LS_COL_ORDER,
+      p => Array.isArray(p) && p.length === REORDERABLE_COLS.length && REORDERABLE_COLS.every(c => p.includes(c)),
+      () => [...REORDERABLE_COLS])
+  );
 
-  const [collections, setCollections] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_COLLECTIONS);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch { /* ignore */ }
-    return [];
-  });
+  const [collections, setCollections] = useState(() => loadFromStorage(LS_COLLECTIONS));
   const [activeCollectionId, setActiveCollectionId] = useState(null);
 
   const storageLimitWarned = useRef(false);
@@ -109,17 +86,10 @@ export function QuotesProvider({ children }) {
 
   // Track deleted quote IDs as tombstones for sync merge
   const [initDeletedIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_DELETED_IDS);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const now = Date.now();
-          return parsed.filter(e => e && now - e.deletedAt < TOMBSTONE_TTL_MS);
-        }
-      }
-    } catch { /* ignore */ }
-    return [];
+    const now = Date.now();
+    return loadFromStorage(LS_DELETED_IDS,
+      p => Array.isArray(p),
+    ).filter(e => e && now - e.deletedAt < TOMBSTONE_TTL_MS);
   });
   const deletedIdsRef = useRef(initDeletedIds);
 
@@ -152,28 +122,9 @@ export function QuotesProvider({ children }) {
       return;
     }
 
-    // Returning user — merge cloud quotes into local state.
-    // Adds missing quotes AND updates existing ones when the cloud version is newer.
+    // Returning user — merge cloud into local, keeping newer versions
     if (cloudQuotes?.length > 0) {
-      setQuotes(prev => {
-        const localMap = new Map(prev.map(q => [q.id, q]));
-        let changed = false;
-        const missing = [];
-        for (const cq of cloudQuotes) {
-          const local = localMap.get(cq.id);
-          if (!local) {
-            missing.push(cq);
-            changed = true;
-          } else if ((cq.updatedAt || 0) > (local.updatedAt || 0)) {
-            localMap.set(cq.id, cq);
-            changed = true;
-          }
-        }
-        if (!changed) return prev;
-        // Rebuild array: update in place + append missing
-        const updated = prev.map(q => localMap.get(q.id));
-        return missing.length > 0 ? [...updated, ...missing] : updated;
-      });
+      setQuotes(prev => mergeByTimestamp(prev, cloudQuotes, "updatedAt"));
     }
     if (cloudCats?.length > 0) {
       setCustomCats(prev => {
@@ -183,24 +134,7 @@ export function QuotesProvider({ children }) {
       });
     }
     if (cloudCollections?.length > 0) {
-      setCollections(prev => {
-        const localMap = new Map(prev.map(c => [c.id, c]));
-        let changed = false;
-        const missing = [];
-        for (const cc of cloudCollections) {
-          const local = localMap.get(cc.id);
-          if (!local) {
-            missing.push(cc);
-            changed = true;
-          } else if ((cc.createdAt || 0) > (local.createdAt || 0)) {
-            localMap.set(cc.id, cc);
-            changed = true;
-          }
-        }
-        if (!changed) return prev;
-        const updated = prev.map(c => localMap.get(c.id));
-        return missing.length > 0 ? [...updated, ...missing] : updated;
-      });
+      setCollections(prev => mergeByTimestamp(prev, cloudCollections, "createdAt"));
     }
   }, []);
 
@@ -373,41 +307,39 @@ export function QuotesProvider({ children }) {
       try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
     }
 
-    // 1b. Check for public collection link
+    // 1b. Check for public collection link (async/await instead of .then() chain)
     if (hash.startsWith("p=")) {
       const shareId = hash.slice(2);
       if (shareId.length >= 4 && shareId.length <= 20) {
-        const controller = new AbortController();
-        fetch(`/api/share?id=${encodeURIComponent(shareId)}`, {
-          signal: controller.signal,
-        })
-          .then(r => {
+        (async () => {
+          try {
+            const r = await fetchWithTimeout(
+              `/api/share?id=${encodeURIComponent(shareId)}`,
+              {},
+              API_TIMEOUT_MS,
+            );
             if (r.status === 410) throw new Error("expired");
             if (r.status === 404) throw new Error("not_found");
             if (!r.ok) throw new Error("fetch_failed");
-            return r.json();
-          })
-          .then(data => {
+
+            const data = await r.json();
             if (!Array.isArray(data.quotes) || data.quotes.length === 0) {
               throw new Error("empty");
             }
-            // Reconstruct full quote objects from minimal arrays
-            const reconstructed = data.quotes.map(q => {
-              if (Array.isArray(q)) {
-                return validateShareQuote(q);
-              }
-              // Already a full object (future-proofing)
-              return q.id ? q : null;
-            }).filter(Boolean);
+
+            const reconstructed = data.quotes.map(q =>
+              Array.isArray(q) ? validateShareQuote(q) : (q.id ? q : null)
+            ).filter(Boolean);
             if (reconstructed.length === 0) throw new Error("empty");
+
             setQuotes(reconstructed);
             setIsSharedView(true);
             initialLoadDone.current = true;
             if (data.title) {
               showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
             }
-          })
-          .catch(err => {
+          } catch (err) {
+            if (err.name === "AbortError") return;
             const msg = err.message === "expired"
               ? "This shared link has expired."
               : err.message === "not_found"
@@ -420,8 +352,8 @@ export function QuotesProvider({ children }) {
             // Fall through to normal load
             markReady();
             pull();
-          });
-        setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+          }
+        })();
         return;
       }
     }

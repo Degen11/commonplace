@@ -2,14 +2,13 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
 import { LS_FILTERS, SEARCH_DEBOUNCE_MS } from "../config";
+import { loadFromStorage } from "../utils/storage";
 
 const LS_VIEW    = "commonplace_view";
 const LS_SORT    = "commonplace_sort";
 
-const _initFilters = (() => {
-  try { const s = localStorage.getItem(LS_FILTERS); if (s) return JSON.parse(s); } catch(e) {}
-  return {};
-})();
+const _savedView = loadFromStorage(LS_VIEW, v => v && typeof v === "object", {});
+const _initFilters = loadFromStorage(LS_FILTERS, v => v && typeof v === "object", {});
 
 export const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
@@ -20,37 +19,24 @@ export const SORT_OPTIONS = [
 
 export default function useViewPreferences(quotes, { activeCollectionId, collections } = {}) {
   const [view, setView] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_VIEW);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.view) {
-          if (window.innerWidth < 640 && parsed.view === "table") return "cards";
-          return parsed.view;
-        }
-      }
-    } catch(e) {}
+    if (_savedView.view) {
+      if (window.innerWidth < 640 && _savedView.view === "table") return "cards";
+      return _savedView.view;
+    }
     return window.innerWidth < 640 ? "cards" : "table";
   });
-  const [compact, setCompact] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_VIEW);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed.compact === "boolean") return parsed.compact;
-      }
-    } catch(e) {}
-    return false;
-  });
+  const [compact, setCompact] = useState(() =>
+    typeof _savedView.compact === "boolean" ? _savedView.compact : false
+  );
   const [catFilter, setCatFilter]             = useState(_initFilters.cat || "All");
   const [favFilter, setFavFilter]             = useState(!!_initFilters.fav);
   const [search, setSearch]                   = useState(_initFilters.search || "");
   const [debouncedSearch, setDebouncedSearch] = useState(_initFilters.search || "");
-  const [sortBy, setSortBy]                   = useState(() => {
+  const [sortBy, setSortBy] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_SORT);
       if (saved && SORT_OPTIONS.some(o => o.key === saved)) return saved;
-    } catch(e) {}
+    } catch { /* ignore */ }
     return "default";
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);

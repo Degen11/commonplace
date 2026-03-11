@@ -2,7 +2,8 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
-import { styles, CP_ACCENT } from "./styles";
+import { styles, CP_ACCENT, FONT_SANS, FONT_SERIF } from "./styles";
+import { API_HEADERS } from "../utils/api";
 import { smartSplit, basicFormat } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { EXAMPLE_QUOTES } from "../data/constants";
@@ -108,7 +109,7 @@ const HP = {
     gap: 10,
   },
   navName: {
-    fontFamily: "'Playfair Display',Georgia,serif",
+    fontFamily: FONT_SERIF,
     fontSize: 18,
     fontWeight: 700,
     letterSpacing: -0.5,
@@ -121,7 +122,7 @@ const HP = {
     zIndex: 1,
   },
   heroHeadline: {
-    fontFamily: "'Playfair Display',Georgia,serif",
+    fontFamily: FONT_SERIF,
     fontSize: 56,
     fontWeight: 700,
     letterSpacing: -2,
@@ -130,7 +131,7 @@ const HP = {
     marginBottom: 20,
   },
   heroSub: {
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
     fontSize: 18,
     fontWeight: 300,
     lineHeight: 1.7,
@@ -157,7 +158,7 @@ const HP = {
     fontSize: 16,
     fontWeight: 600,
     cursor: "pointer",
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
     letterSpacing: -0.2,
   },
   heroGhost: {
@@ -171,7 +172,7 @@ const HP = {
     fontSize: 16,
     fontWeight: 500,
     cursor: "pointer",
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
   heroTrust: {
     fontSize: 13,
@@ -208,10 +209,10 @@ const HP = {
     letterSpacing: 1.5,
     color: CP_ACCENT,
     marginBottom: 12,
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
   sectionHeadline: {
-    fontFamily: "'Playfair Display',Georgia,serif",
+    fontFamily: FONT_SERIF,
     fontSize: 32,
     fontWeight: 700,
     letterSpacing: -1,
@@ -226,7 +227,7 @@ const HP = {
     color: "var(--cp-text-muted)",
     maxWidth: 520,
     margin: "0 auto",
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
 
   // Animation wrap
@@ -282,10 +283,10 @@ const HP = {
     letterSpacing: 1,
     color: CP_ACCENT,
     marginBottom: 2,
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
   timelineCount: {
-    fontFamily: "'Playfair Display',Georgia,serif",
+    fontFamily: FONT_SERIF,
     fontSize: 20,
     fontWeight: 700,
     color: "var(--cp-text)",
@@ -325,14 +326,14 @@ const HP = {
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
   timelineQuoteSrc: {
     color: "var(--cp-text-muted)",
     fontSize: 11,
     whiteSpace: "nowrap",
     flexShrink: 0,
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
 
   // Features
@@ -359,7 +360,7 @@ const HP = {
     marginBottom: 16,
   },
   featureTitle: {
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
     fontSize: 16,
     fontWeight: 600,
     color: "var(--cp-text)",
@@ -370,7 +371,7 @@ const HP = {
     fontWeight: 300,
     lineHeight: 1.6,
     color: "var(--cp-text-muted)",
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
   },
 };
 
@@ -446,47 +447,36 @@ function UrlImportPanel({ onLoad }) {
   const [showModal, setShowModal] = useState(false);
   const lastUrlRef = useRef("");
 
-  const handleFetch = async (modeOverride) => {
-    const trimmed = url.trim() || lastUrlRef.current;
+  const fetchUrl = async (trimmed, mode, { showLoading = false, openModal = false } = {}) => {
     if (!trimmed) return;
-    const useMode = modeOverride || extractMode;
-    setLoading(true);
-    setError(null);
+    if (showLoading) { setLoading(true); setError(null); }
     try {
       const res = await fetch("/api/fetch-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-        body: JSON.stringify({ url: trimmed, extractMode: useMode }),
+        headers: API_HEADERS,
+        body: JSON.stringify({ url: trimmed, extractMode: mode }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
-      if (!data.lines || data.lines.length === 0) throw new Error("No text content found on that page");
+      if (openModal && (!data.lines || data.lines.length === 0)) throw new Error("No text content found on that page");
       lastUrlRef.current = trimmed;
       setPreview(data);
-      setShowModal(true);
+      if (openModal) setShowModal(true);
     } catch (e) {
       setError(e.message);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
-  const handleRefetch = async (newMode) => {
-    const trimmed = lastUrlRef.current;
-    if (!trimmed) return;
+  const handleFetch = (modeOverride) => {
+    const trimmed = url.trim() || lastUrlRef.current;
+    fetchUrl(trimmed, modeOverride || extractMode, { showLoading: true, openModal: true });
+  };
+
+  const handleRefetch = (newMode) => {
     setExtractMode(newMode);
-    try {
-      const res = await fetch("/api/fetch-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-        body: JSON.stringify({ url: trimmed, extractMode: newMode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
-      setPreview(data);
-    } catch (e) {
-      setError(e.message);
-    }
+    fetchUrl(lastUrlRef.current, newMode);
   };
 
   return (
@@ -596,7 +586,7 @@ export default function InputPhase({
   };
 
   return (
-    <div className={fadeClass} style={{ background: "var(--cp-bg)", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
+    <div className={fadeClass} style={{ background: "var(--cp-bg)", minHeight: "100vh", fontFamily: FONT_SANS }}>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           FIXED NAV
@@ -884,7 +874,7 @@ export default function InputPhase({
               <div style={HP.timelineContent}>
                 <div style={HP.timelinePeriod}>Your library</div>
                 <div style={{ ...HP.timelineCount, fontSize: 28, color: CP_ACCENT }}>200+ quotes</div>
-                <div style={{ fontSize: 13, color: "var(--cp-text-muted)", marginTop: 4, fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
+                <div style={{ fontSize: 13, color: "var(--cp-text-muted)", marginTop: 4, fontFamily: FONT_SANS }}>
                   Searchable, organized, always accessible
                 </div>
               </div>

@@ -439,7 +439,7 @@ export default function CollectionsSidebar({
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "8px 8px 8px 0",
       }}>
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)" }}>
           Collections
         </span>
       </div>

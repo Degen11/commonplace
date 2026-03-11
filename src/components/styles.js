@@ -471,7 +471,7 @@ export const styles = {
 
   // Sidebar overview card
   sidebarOverview:{padding:"12px 8px 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
-  sidebarOverviewLabel:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:0.6,color:"var(--cp-accent)"},
+  sidebarOverviewLabel:{fontSize:13,fontWeight:600,color:"var(--cp-accent)"},
   sidebarOverviewRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",fontSize:12},
   sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
   sidebarOverviewMuted:{color:"var(--cp-text-muted)"},
@@ -503,11 +503,9 @@ export const styles = {
     alignItems:"center",
     padding:"12px 0 8px 0",
     borderBottom:"1px solid var(--cp-border)",
-    fontSize:11,
+    fontSize:13,
     color:"#3C5775",
-    fontWeight:700,
-    textTransform:"uppercase",
-    letterSpacing:0.6,
+    fontWeight:600,
     background:"var(--cp-bg)",
     marginBottom:0,
     textAlign:"left",

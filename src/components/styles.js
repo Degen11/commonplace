@@ -474,6 +474,7 @@ export const styles = {
   sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
   sidebarOverviewMuted:{color:"var(--cp-text-muted)"},
   sidebarActionBtn:{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"6px 10px",border:"none",borderRadius:6,background:"transparent",fontSize:12,fontWeight:500,color:"var(--cp-text-muted)",cursor:"pointer",fontFamily:"inherit",textAlign:"left"},
+  sidebarDupesBtn:{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"6px 10px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:500,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",textAlign:"left",justifyContent:"center"},
 
   // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)"},

@@ -387,22 +387,22 @@ export default function CollectionsSidebar({
           </button>
         </div>
         <div style={styles.sidebarOverviewRow}>
-          <span style={styles.sidebarOverviewMuted}>Entries</span>
+          <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Entries</span>
           <span style={styles.sidebarOverviewValue}>{totalQuotes}</span>
         </div>
         <div style={styles.sidebarOverviewRow}>
-          <span style={styles.sidebarOverviewMuted}>Sources</span>
+          <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Globe size={13} strokeWidth={1.5} /> Sources</span>
           <span style={styles.sidebarOverviewValue}>{uniqueSources || 0}</span>
         </div>
         {favCount > 0 && (
           <div style={styles.sidebarOverviewRow}>
-            <span style={styles.sidebarOverviewMuted}>Favorites</span>
+            <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Star size={13} strokeWidth={1.5} /> Favorites</span>
             <span style={{ ...styles.sidebarOverviewValue, color: "#D97706" }}>{favCount}</span>
           </div>
         )}
         {onFindDupes && (
           <div style={{ marginTop: 6 }}>
-            <button className="hdr-btn" style={styles.sidebarActionBtn} onClick={onFindDupes}>
+            <button className="hdr-btn" style={styles.sidebarDupesBtn} onClick={onFindDupes}>
               <Copy size={13} strokeWidth={2} />
               Find duplicates
             </button>

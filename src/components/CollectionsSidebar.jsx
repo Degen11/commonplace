@@ -431,7 +431,7 @@ export default function CollectionsSidebar({
       display: "flex", flexDirection: "column",
       fontFamily: "'DM Sans',-apple-system,sans-serif",
       animation: "slideD .15s ease",
-      overflowY: "hidden",
+      overflow: "visible",
       position: "sticky", top: 44, alignSelf: "flex-start",
     }}>
       {/* Overview card */}
@@ -582,13 +582,80 @@ export default function CollectionsSidebar({
         </div>
       )}
 
+      {/* All Quotes */}
+      <div style={{ padding: "2px 8px 2px 0" }}>
+        <button
+          onClick={() => setActiveCollectionId(null)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, width: "100%",
+            padding: "8px 8px", border: "none", borderRadius: 6,
+            background: activeCollectionId === null ? "var(--cp-bg-hover)" : "transparent",
+            color: activeCollectionId === null ? "var(--cp-accent)" : "var(--cp-text-secondary)",
+            cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: activeCollectionId === null ? 600 : 400,
+            textAlign: "left", transition: "background .12s",
+          }}
+        >
+          <Library size={15} strokeWidth={1.5} />
+          <span style={{ flex: 1 }}>All Quotes</span>
+          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 20, textAlign: "right" }}>{totalQuotes}</span>
+        </button>
+      </div>
+
+      {/* Empty state when no collections exist */}
+      {collections.length === 0 && (
+        <div style={{
+          padding: "16px 12px", textAlign: "center",
+          color: "var(--cp-text-faint)", fontSize: 12, lineHeight: 1.5,
+        }}>
+          <Bookmark size={20} strokeWidth={1.2} style={{ margin: "0 auto 8px", display: "block", opacity: 0.5 }} />
+          <span>Group quotes into collections to keep things organized</span>
+        </div>
+      )}
+
+      {/* Collections list — only scroll vertically when many items */}
+      {collections.length > 0 && (
+      <div style={{
+        padding: "0 8px 8px 0",
+        overflowX: "hidden",
+        overflowY: collections.length > 12 ? "auto" : "hidden",
+        maxHeight: collections.length > 12 ? 420 : "none",
+      }}>
+        {collections.map(c => (
+          <CollectionRow
+            key={c.id}
+            c={c}
+            isActive={activeCollectionId === c.id}
+            isEditing={editingId === c.id}
+            editName={editName}
+            setEditName={setEditName}
+            handleRename={handleRename}
+            setEditingId={setEditingId}
+            confirmDeleteId={confirmDeleteId}
+            setConfirmDeleteId={setConfirmDeleteId}
+            deleteCollection={deleteCollection}
+            setActiveCollectionId={setActiveCollectionId}
+            iconPickerId={iconPickerId}
+            setIconPickerId={setIconPickerId}
+            updateCollectionIcon={updateCollectionIcon}
+            quoteCounts={quoteCounts}
+            onDropQuote={onDropQuote}
+          />
+        ))}
+      </div>
+      )}
+
+      {/* Filters header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 8px 0" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)" }}>Filters</span>
+      </div>
+
       {/* Search */}
       <div ref={searchWrapRef} style={{ padding: "0 0 2px 0" }}>
         {isSearchOpen ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{
               display: "flex", gap: 0, alignItems: "center",
-              border: `1px solid ${search ? "var(--cp-accent)" : "var(--cp-accent)"}`,
+              border: "1px solid var(--cp-accent)",
               borderRadius: 6, background: "var(--cp-bg-card)", overflow: "hidden",
             }}>
               <input
@@ -658,68 +725,6 @@ export default function CollectionsSidebar({
           ))}
         </div>
       </div>
-
-      {/* All Quotes */}
-      <div style={{ padding: "2px 8px 2px 0" }}>
-        <button
-          onClick={() => setActiveCollectionId(null)}
-          style={{
-            display: "flex", alignItems: "center", gap: 8, width: "100%",
-            padding: "8px 8px", border: "none", borderRadius: 6,
-            background: activeCollectionId === null ? "var(--cp-bg-hover)" : "transparent",
-            color: activeCollectionId === null ? "var(--cp-accent)" : "var(--cp-text-secondary)",
-            cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: activeCollectionId === null ? 600 : 400,
-            textAlign: "left", transition: "background .12s",
-          }}
-        >
-          <Library size={15} strokeWidth={1.5} />
-          <span style={{ flex: 1 }}>All Quotes</span>
-          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 20, textAlign: "right" }}>{totalQuotes}</span>
-        </button>
-      </div>
-
-      {/* Empty state when no collections exist */}
-      {collections.length === 0 && (
-        <div style={{
-          padding: "16px 12px", textAlign: "center",
-          color: "var(--cp-text-faint)", fontSize: 12, lineHeight: 1.5,
-        }}>
-          <Bookmark size={20} strokeWidth={1.2} style={{ margin: "0 auto 8px", display: "block", opacity: 0.5 }} />
-          <span>Group quotes into collections to keep things organized</span>
-        </div>
-      )}
-
-      {/* Collections list — only scroll vertically when many items */}
-      {collections.length > 0 && (
-      <div style={{
-        padding: "0 8px 8px 0",
-        overflowX: "hidden",
-        overflowY: collections.length > 12 ? "auto" : "hidden",
-        maxHeight: collections.length > 12 ? 420 : "none",
-      }}>
-        {collections.map(c => (
-          <CollectionRow
-            key={c.id}
-            c={c}
-            isActive={activeCollectionId === c.id}
-            isEditing={editingId === c.id}
-            editName={editName}
-            setEditName={setEditName}
-            handleRename={handleRename}
-            setEditingId={setEditingId}
-            confirmDeleteId={confirmDeleteId}
-            setConfirmDeleteId={setConfirmDeleteId}
-            deleteCollection={deleteCollection}
-            setActiveCollectionId={setActiveCollectionId}
-            iconPickerId={iconPickerId}
-            setIconPickerId={setIconPickerId}
-            updateCollectionIcon={updateCollectionIcon}
-            quoteCounts={quoteCounts}
-            onDropQuote={onDropQuote}
-          />
-        ))}
-      </div>
-      )}
     </div>
   );
 }

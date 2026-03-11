@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { styles } from "./styles";
-import { Search, X, ChevronDown, Copy } from "lucide-react";
+import { Search, X, ChevronDown } from "lucide-react";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
@@ -23,7 +23,6 @@ export default function ToolbarSection({
   toolbarRef, sortRef,
   catScrollRef, updateCatFade, catFade,
   getCatColor,
-  onFindDupes,
 }) {
   const sortDropRef = useRef(null);
   const [sortFlipLeft, setSortFlipLeft] = useState(false);
@@ -58,11 +57,6 @@ export default function ToolbarSection({
             {SORT_OPTIONS.map(o => <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }} onClick={() => { setSortBy(o.key); setShowSort(false); }}>{o.label}</button>)}
           </div>
         </div>
-        {onFindDupes && (
-          <button className="ui-tip ui-tip-below hdr-btn" data-tip="Scan for duplicate entries" style={styles.sortBtn} onClick={onFindDupes}>
-            <Copy size={13} strokeWidth={2} style={{ marginRight: 4 }} />Duplicates
-          </button>
-        )}
       </div>
 
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>

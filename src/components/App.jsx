@@ -741,6 +741,8 @@ export default function Commonplace() {
               onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
+              setConfirmClear={setConfirmClear}
+              onShowShortcuts={() => setShowShortcuts(true)}
             />
           )}
 
@@ -863,7 +865,6 @@ export default function Commonplace() {
               updateCatFade={updateCatFade}
               catFade={catFade}
               getCatColor={getCatColor}
-              onFindDupes={handleFindDupes}
             />
           </SectionErrorBoundary>
 
@@ -913,6 +914,9 @@ export default function Commonplace() {
                   if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, null, null, "success");
                 }}
                 onAutoGroup={handleAutoGroup}
+                onFindDupes={handleFindDupes}
+                uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
+                favCount={favCount}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 

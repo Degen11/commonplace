@@ -1,12 +1,12 @@
 import { useRef, useEffect, useState } from "react";
 import { styles } from "./styles";
-import { X, Search, ChevronDown } from "lucide-react";
+import { X, Search, ArrowUpDown } from "lucide-react";
 
 const SORT_OPTIONS = [
-  { key: "default",    label: "Default order" },
-  { key: "confidence", label: "Needs attention first" },
-  { key: "alpha",      label: "Alphabetical" },
-  { key: "category",   label: "By category" },
+  { key: "default",    label: "Default order",        badge: null },
+  { key: "confidence", label: "Needs attention first", badge: "!" },
+  { key: "alpha",      label: "Alphabetical",         badge: "A-Z" },
+  { key: "category",   label: "By category",          badge: "Cat" },
 ];
 
 export default function ToolbarSection({
@@ -135,11 +135,17 @@ export default function ToolbarSection({
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   color: sortBy !== "default" ? "#2563EB" : "var(--cp-text-muted)",
-                  padding: "6px", display: "flex", alignItems: "center", borderRadius: 6,
+                  padding: "4px 6px", display: "flex", alignItems: "center", gap: 3, borderRadius: 6,
                   fontWeight: sortBy !== "default" ? 600 : 400,
+                  fontSize: 11,
                 }}
               >
-                <ChevronDown size={15} strokeWidth={2} />
+                <ArrowUpDown size={14} strokeWidth={2} />
+                {sortBy !== "default" && (
+                  <span style={{ letterSpacing: sortBy === "alpha" ? 0.5 : 0 }}>
+                    {SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
+                  </span>
+                )}
               </button>
               <div style={{
                 ...styles.sortDrop, right: 0, left: "auto", minWidth: 200,

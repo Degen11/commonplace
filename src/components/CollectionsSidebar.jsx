@@ -3,8 +3,15 @@ import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
   FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
-  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
+  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy, Search, ChevronDown,
 } from "lucide-react";
+
+const SORT_OPTIONS = [
+  { key: "default",    label: "Default order" },
+  { key: "confidence", label: "Needs attention first" },
+  { key: "alpha",      label: "Alphabetical" },
+  { key: "category",   label: "By category" },
+];
 import { CP_ACCENT, styles } from "./styles";
 
 // Icon set for the picker
@@ -255,6 +262,10 @@ export default function CollectionsSidebar({
   onFindDupes,
   uniqueSources,
   favCount,
+  search, setSearch,
+  sortBy, setSortBy,
+  showSort, setShowSort,
+  sortRef,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -356,6 +367,16 @@ export default function CollectionsSidebar({
         >
           <ChevronRight size={16} strokeWidth={2} />
         </button>
+        <button
+          onClick={() => setCollapsed(false)}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: search ? "var(--cp-accent)" : "var(--cp-text-muted)", padding: 4, borderRadius: 4,
+          }}
+          title="Search"
+        >
+          <Search size={15} strokeWidth={2} />
+        </button>
         {/* Collapsed entry count badge */}
         <div
           title={`${totalQuotes} entries`}
@@ -398,17 +419,75 @@ export default function CollectionsSidebar({
       overflowY: "hidden",
       position: "sticky", top: 44, alignSelf: "flex-start",
     }}>
+      {/* Collapse toggle */}
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 0 4px" }}>
+        <button
+          onClick={() => setCollapsed(true)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
+          title="Collapse sidebar"
+        >
+          <ChevronLeft size={14} strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* Search */}
+      <div style={{ position: "relative", marginBottom: 6 }}>
+        <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", opacity: 0.45 }}>
+          <Search size={13} strokeWidth={2} />
+        </span>
+        <input
+          data-search-input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search..."
+          style={{
+            width: "100%", border: "1px solid var(--cp-border)", borderRadius: 6,
+            padding: "6px 26px 6px 28px", fontSize: 12, fontFamily: "inherit",
+            color: "var(--cp-text-secondary)", background: "var(--cp-bg-card)",
+          }}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--cp-text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
+          >
+            <X size={12} strokeWidth={2} />
+          </button>
+        )}
+      </div>
+
+      {/* Sort */}
+      <div ref={sortRef} style={{ position: "relative", marginBottom: 8 }}>
+        <button
+          style={{
+            ...styles.sortBtn,
+            width: "100%", minWidth: 0,
+            ...(sortBy !== "default" ? { borderColor: "rgba(59,130,246,0.4)", color: "#2563EB", background: "rgba(59,130,246,0.06)", fontWeight: 600 } : {}),
+          }}
+          onClick={() => setShowSort(!showSort)}
+        >
+          Sort{sortBy !== "default" ? `: ${SORT_OPTIONS.find(o => o.key === sortBy)?.label}` : ""}
+          <ChevronDown size={12} style={{ marginLeft: "auto", opacity: 0.5 }} />
+        </button>
+        <div style={{
+          ...styles.sortDrop, left: 0, right: 0, minWidth: 0,
+          opacity: showSort ? 1 : 0,
+          transform: showSort ? "translateY(0)" : "translateY(-4px)",
+          pointerEvents: showSort ? "auto" : "none",
+        }}>
+          {SORT_OPTIONS.map(o => (
+            <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
+              onClick={() => { setSortBy(o.key); setShowSort(false); }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Overview card */}
       <div style={styles.sidebarOverview}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={styles.sidebarOverviewLabel}>Overview</span>
-          <button
-            onClick={() => setCollapsed(true)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
-            title="Collapse sidebar"
-          >
-            <ChevronLeft size={14} strokeWidth={2} />
-          </button>
         </div>
         <div style={styles.sidebarOverviewRow}>
           <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Entries</span>

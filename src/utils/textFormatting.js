@@ -38,16 +38,33 @@ const SKIP_WORDS = new Set([
 
 export function initProperNouns(db) {
   if (properNouns) return;
+
+  // Build a set of words that appear in quote text (lowercase) — these are common words, not proper nouns
+  const textWords = new Set();
+  db.forEach(entry => {
+    entry.t.split(/\s+/).forEach(w => {
+      if (w.length > 2) textWords.add(w);
+    });
+  });
+
+  // Extract candidate proper nouns only from the person/character part of sources.
+  // Sources follow "Title - Person Name" format; if no separator, use whole source.
   const wordSources = new Map();
   db.forEach(entry => {
-    const words = entry.s.split(/[\s\-\u2013\u2014,()[\]/&]+/);
+    const dashIdx = entry.s.indexOf(" - ");
+    const namePart = dashIdx >= 0 ? entry.s.slice(dashIdx + 3) : entry.s;
+    // Strip parenthetical years/notes like "(2008)" from the name part
+    const cleaned = namePart.replace(/\([^)]*\)/g, "").trim();
+    const words = cleaned.split(/[\s\-\u2013\u2014,()[\]/&]+/);
     words.forEach(w => {
       const clean = w.replace(/[^a-zA-Z']/g, "");
       if (
         clean.length > 2 &&
         /^[A-Z]/.test(clean) &&
         !SKIP_WORDS.has(clean.toLowerCase()) &&
-        !/^\d/.test(clean)
+        !/^\d/.test(clean) &&
+        // Skip words that commonly appear in quote text — they're regular words, not names
+        !textWords.has(clean.toLowerCase())
       ) {
         if (!wordSources.has(clean)) wordSources.set(clean, new Set());
         wordSources.get(clean).add(entry.s);
@@ -59,11 +76,12 @@ export function initProperNouns(db) {
     if (sources.size >= 2) nouns.add(word);
   });
   properNouns = nouns;
-  // Pre-compile RegExp for each proper noun once
+  // Pre-compile RegExp for each proper noun once — use Unicode word boundaries
+  // so proper nouns are corrected anywhere in a sentence, not just at sentence starts
   properNounPatterns = [];
   for (const noun of nouns) {
     const escaped = noun.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    properNounPatterns.push({ noun, re: new RegExp("(?:^|(?<=[.!?]\\s))" + escaped + "(?![\\p{L}])", "gu") });
+    properNounPatterns.push({ noun, re: new RegExp("(?<![\\p{L}])" + escaped + "(?![\\p{L}])", "gu") });
   }
 }
 

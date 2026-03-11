@@ -645,6 +645,7 @@ export default function CollectionsSidebar({
       )}
 
       {/* Filters header */}
+      <div style={{ borderTop: "1px solid var(--cp-border)", marginTop: 4, marginRight: 8 }} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 8px 0" }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)" }}>Filters</span>
       </div>

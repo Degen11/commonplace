@@ -470,8 +470,8 @@ export const styles = {
   hdrOverflowDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#DC2626",cursor:"pointer",borderRadius:5,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
 
   // Sidebar overview card
-  sidebarOverview:{padding:"0 0 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
-  sidebarOverviewLabel:{fontSize:13,fontWeight:600,color:"var(--cp-accent)",background:"var(--cp-bg-hover)",padding:"12px 8px 8px",borderRadius:5,display:"block"},
+  sidebarOverview:{padding:"12px 8px 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
+  sidebarOverviewLabel:{fontSize:13,fontWeight:600,color:"var(--cp-accent)"},
   sidebarOverviewRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",fontSize:12},
   sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
   sidebarOverviewMuted:{color:"var(--cp-text-muted)"},

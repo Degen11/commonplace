@@ -504,7 +504,7 @@ export const styles = {
     padding:"12px 0 8px 0",
     borderBottom:"1px solid var(--cp-border)",
     fontSize:13,
-    color:"#3C5775",
+    color:"var(--cp-accent)",
     fontWeight:600,
     background:"var(--cp-bg)",
     marginBottom:0,

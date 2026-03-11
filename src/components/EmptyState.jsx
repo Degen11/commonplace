@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, Library } from "lucide-react";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
 
@@ -60,6 +60,7 @@ export default function EmptyState({
   setSortBy,
   customCats,
   activeCollectionName,
+  onBrowseAll,
 }) {
   const hasFilters = catFilter !== "All" || search || favFilter;
   const isCollectionEmpty = activeCollectionName && !hasFilters;
@@ -75,6 +76,22 @@ export default function EmptyState({
           <p style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 16 }}>
             Drag quotes here or select entries and add them via the bulk bar
           </p>
+          {onBrowseAll && (
+            <button
+              className="hdr-btn"
+              onClick={onBrowseAll}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 20px", borderRadius: 100,
+                border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
+                color: "var(--cp-accent)", fontSize: 13, fontWeight: 500,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <Library size={14} strokeWidth={1.5} />
+              Browse all quotes
+            </button>
+          )}
         </>
       ) : (
         <>

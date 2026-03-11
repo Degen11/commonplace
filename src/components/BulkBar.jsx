@@ -1,4 +1,4 @@
-import { styles, CP_ACCENT } from "./styles";
+import { styles } from "./styles";
 import { X, RefreshCw, FolderPlus, FolderMinus } from "lucide-react";
 
 export default function BulkBar({
@@ -27,8 +27,8 @@ export default function BulkBar({
           data-tip="Re-identify selected with AI"
           style={{
             padding: "5px 12px", borderRadius: 6,
-            border: `1px solid ${CP_ACCENT}`,
-            background: "var(--cp-bg-card)", color: CP_ACCENT,
+            border: "1px solid var(--cp-accent)",
+            background: "var(--cp-bg-card)", color: "var(--cp-accent)",
             fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
             display: "inline-flex", alignItems: "center", gap: 4,
             opacity: isReidentifying ? 0.5 : 1,

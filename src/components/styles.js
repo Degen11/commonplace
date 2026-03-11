@@ -468,7 +468,7 @@ export const styles = {
   dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
   // Bulk edit — #10 removed backdropFilter
   bulkBar:{position:"fixed",bottom:0,left:0,right:0,display:"flex",alignItems:"center",gap:12,padding:"12px 24px",background:"var(--cp-mini-bg)",borderTop:"1px solid var(--cp-border)",boxShadow:"0 -4px 20px rgba(0,0,0,0.08)",flexWrap:"wrap",zIndex:500,animation:"bulkSlideUp .2s ease"},
-  bulkN:{fontSize:13,fontWeight:600,color:CP_ACCENT,whiteSpace:"nowrap"},
+  bulkN:{fontSize:13,fontWeight:600,color:"var(--cp-accent)",whiteSpace:"nowrap"},
   bulkF:{display:"flex",gap:6,alignItems:"center",flex:1,flexWrap:"wrap"},
   bulkSel:{border:"1px solid var(--cp-border-dim)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bg-card)"},
   bulkIn:{border:"1px solid var(--cp-border-dim)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:140},

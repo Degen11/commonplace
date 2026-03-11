@@ -269,6 +269,8 @@ export default function CollectionsSidebar({
   const [smartGroupLoading, setSmartGroupLoading] = useState(false);
   const [smartGroupError, setSmartGroupError] = useState(null);
   const smartInputRef = useRef(null);
+  const createWrapRef = useRef(null);
+  const smartWrapRef = useRef(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) inputRef.current.focus();
@@ -277,6 +279,28 @@ export default function CollectionsSidebar({
   useEffect(() => {
     if (isSmartGrouping && smartInputRef.current) smartInputRef.current.focus();
   }, [isSmartGrouping]);
+
+  // Close input fields on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (isCreating && createWrapRef.current && !createWrapRef.current.contains(e.target)) {
+        setIsCreating(false); setNewName(""); setCreateError(null);
+      }
+      if (isSmartGrouping && !smartGroupLoading && smartWrapRef.current && !smartWrapRef.current.contains(e.target)) {
+        setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isCreating, isSmartGrouping, smartGroupLoading]);
+
+  // Reset input fields when sidebar collapses
+  useEffect(() => {
+    if (collapsed) {
+      setIsCreating(false); setNewName(""); setCreateError(null);
+      setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null);
+    }
+  }, [collapsed]);
 
   const handleSmartGroup = async () => {
     const theme = smartTheme.trim();
@@ -402,7 +426,7 @@ export default function CollectionsSidebar({
         )}
         {onFindDupes && (
           <div style={{ marginTop: 6 }}>
-            <button className="hdr-btn" style={styles.sidebarDupesBtn} onClick={onFindDupes}>
+            <button className="sidebar-dupes-btn" style={styles.sidebarDupesBtn} onClick={onFindDupes}>
               <Copy size={13} strokeWidth={2} />
               Find duplicates
             </button>
@@ -421,7 +445,7 @@ export default function CollectionsSidebar({
       </div>
 
       {/* Create new — at the top */}
-      <div style={{ padding: "0 0 6px 0" }}>
+      <div ref={createWrapRef} style={{ padding: "0 0 6px 0" }}>
         {isCreating ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{
@@ -470,7 +494,7 @@ export default function CollectionsSidebar({
 
       {/* Smart Group — AI auto-collection */}
       {onAutoGroup && (
-        <div style={{ padding: "0 0 6px 0" }}>
+        <div ref={smartWrapRef} style={{ padding: "0 0 6px 0" }}>
           {isSmartGrouping ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <div style={{

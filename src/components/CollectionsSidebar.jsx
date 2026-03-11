@@ -5,7 +5,7 @@ import {
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
   Quote, Compass, Crown, Gem, Wand2, Loader2,
 } from "lucide-react";
-import { CP_ACCENT } from "./styles";
+import { CP_ACCENT, styles } from "./styles";
 
 // Icon set for the picker
 const ICON_OPTIONS = [
@@ -252,6 +252,9 @@ export default function CollectionsSidebar({
   setCollapsed,
   onDropQuote,
   onAutoGroup,
+  onFindDupes,
+  uniqueSources,
+  favCount,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -329,6 +332,17 @@ export default function CollectionsSidebar({
         >
           <ChevronRight size={16} strokeWidth={2} />
         </button>
+        {/* Collapsed entry count badge */}
+        <div
+          title={`${totalQuotes} entries`}
+          style={{
+            fontSize: 10, fontWeight: 700, color: "var(--cp-text-muted)",
+            background: "var(--cp-bg-tab)", borderRadius: 4, padding: "2px 5px",
+            lineHeight: 1.2, textAlign: "center", cursor: "default",
+          }}
+        >
+          {totalQuotes}
+        </div>
         <button
           onClick={() => setActiveCollectionId(null)}
           style={{
@@ -360,21 +374,49 @@ export default function CollectionsSidebar({
       overflowY: "hidden",
       position: "sticky", top: 44, alignSelf: "flex-start",
     }}>
+      {/* Overview card */}
+      <div style={styles.sidebarOverview}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={styles.sidebarOverviewLabel}>Overview</span>
+          <button
+            onClick={() => setCollapsed(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
+            title="Collapse sidebar"
+          >
+            <ChevronLeft size={14} strokeWidth={2} />
+          </button>
+        </div>
+        <div style={styles.sidebarOverviewRow}>
+          <span style={styles.sidebarOverviewMuted}>Entries</span>
+          <span style={styles.sidebarOverviewValue}>{totalQuotes}</span>
+        </div>
+        <div style={styles.sidebarOverviewRow}>
+          <span style={styles.sidebarOverviewMuted}>Sources</span>
+          <span style={styles.sidebarOverviewValue}>{uniqueSources || 0}</span>
+        </div>
+        {favCount > 0 && (
+          <div style={styles.sidebarOverviewRow}>
+            <span style={styles.sidebarOverviewMuted}>Favorites</span>
+            <span style={{ ...styles.sidebarOverviewValue, color: "#D97706" }}>{favCount}</span>
+          </div>
+        )}
+        {onFindDupes && (
+          <div style={{ ...styles.sidebarOverviewRow, marginTop: 4 }}>
+            <button className="sidebar-overview-link" style={styles.sidebarOverviewLink} onClick={onFindDupes}>
+              Find duplicates
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 8px 8px 0",
+        padding: "8px 8px 8px 0",
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--cp-accent)" }}>
           Collections
         </span>
-        <button
-          onClick={() => setCollapsed(true)}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
-          title="Collapse sidebar"
-        >
-          <ChevronLeft size={14} strokeWidth={2} />
-        </button>
       </div>
 
       {/* Create new — at the top */}

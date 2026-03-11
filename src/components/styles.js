@@ -153,6 +153,10 @@ export const baseCSS = `
   /* Header button hover states */
   .hdr-btn{transition:all .15s ease}
   .hdr-btn:hover{background:var(--cp-bg-hover)}
+  .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
+  .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
+  html.dark .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important}
+  .sidebar-overview-link:hover{text-decoration:underline !important}
   .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
   .load-more-btn{transition:all .15s ease}
   .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}
@@ -457,13 +461,28 @@ export const styles = {
   bulkDelBtn:{padding:"5px 12px",borderRadius:6,border:"1px solid #EB5757",background:"var(--cp-bg-card)",color:"#EB5757",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   bulkX:{background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14},
 
+  // Header overflow menu
+  hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:8,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  hdrOverflowItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:5,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
+  hdrOverflowDivider:{height:1,background:"var(--cp-border)",margin:"4px 0"},
+  hdrOverflowSectionLabel:{padding:"6px 12px 2px",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5,color:"var(--cp-text-faint)"},
+  hdrOverflowDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#DC2626",cursor:"pointer",borderRadius:5,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
+
+  // Sidebar overview card
+  sidebarOverview:{padding:"10px 8px 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
+  sidebarOverviewLabel:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:0.6,color:"var(--cp-accent)",marginBottom:8},
+  sidebarOverviewRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",fontSize:12},
+  sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
+  sidebarOverviewMuted:{color:"var(--cp-text-muted)"},
+  sidebarOverviewLink:{background:"none",border:"none",padding:0,color:"var(--cp-accent)",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:500,textDecoration:"none"},
+
   // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)"},
   srchW:{position:"relative",flex:1},
   srchI:{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,opacity:.5,display:"flex",alignItems:"center"},
   srchIn:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"var(--cp-text-secondary)",background:"var(--cp-bg-card)"},
   clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:12},
-  sortBtn:{padding:"7px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"},
+  sortBtn:{padding:"7px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",minWidth:180},
   sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:8,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:220,zIndex:100,padding:4,transition:"opacity .15s ease, transform .15s ease"},
   sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   sortOptOn:{background:"var(--cp-bg-hover)",fontWeight:600},

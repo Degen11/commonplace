@@ -1,4 +1,5 @@
-import { List, AlignJustify, LayoutGrid, Moon, Sun } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { List, AlignJustify, LayoutGrid, Moon, Sun, MoreHorizontal, BarChart3, HelpCircle, Trash2 } from "lucide-react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import ExportDropdown from "./ExportDropdown";
@@ -20,7 +21,19 @@ export default function MiniHeader({
   onManualSync,
   dark,
   toggleTheme,
+  setConfirmClear,
+  onShowShortcuts,
 }) {
+  const [showOverflow, setShowOverflow] = useState(false);
+  const overflowRef = useRef(null);
+
+  useEffect(() => {
+    if (!showOverflow) return;
+    const h = e => { if (overflowRef.current && !overflowRef.current.contains(e.target)) setShowOverflow(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [showOverflow]);
+
   return (
     <div style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 60,
@@ -35,6 +48,9 @@ export default function MiniHeader({
         </span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
+          <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={toggleTheme}>
+            {dark ? <Sun size={14} strokeWidth={1.5} /> : <Moon size={14} strokeWidth={1.5} />}
+          </button>
           <div style={styles.viewTog}>
             <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { preserveScroll(); setView("table"); setCompact(false); }}>
               <List size={14} strokeWidth={1.5} />
@@ -46,7 +62,6 @@ export default function MiniHeader({
               <LayoutGrid size={14} strokeWidth={1.5} />
             </button>
           </div>
-          <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 10px", ...(showStats ? styles.statsBtnActive : {}) }} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>Stats</button>
           <div ref={miniExportRef} style={{ position: "relative" }}>
             <button className="hdr-btn" style={{ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export &darr;</button>
             {showExport && (
@@ -61,10 +76,38 @@ export default function MiniHeader({
               />
             )}
           </div>
-          <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={toggleTheme}>
-            {dark ? <Sun size={14} strokeWidth={1.5} /> : <Moon size={14} strokeWidth={1.5} />}
-          </button>
           <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
+          {/* Overflow menu */}
+          <div ref={overflowRef} style={{ position: "relative" }}>
+            <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
+              <MoreHorizontal size={14} strokeWidth={1.5} />
+            </button>
+            {showOverflow && (
+              <div style={{ ...styles.hdrOverflowMenu, right: 0 }}>
+                <div style={styles.hdrOverflowSectionLabel}>View</div>
+                <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { preserveScroll(); setShowStats(s => !s); setShowOverflow(false); }}>
+                  <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                  {showStats ? "Hide full stats" : "Full stats"}
+                </button>
+                <div style={styles.hdrOverflowDivider} />
+                <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
+                <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { onShowShortcuts(); setShowOverflow(false); }}>
+                  <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                  Keyboard shortcuts
+                </button>
+                {setConfirmClear && (
+                  <>
+                    <div style={styles.hdrOverflowDivider} />
+                    <div style={styles.hdrOverflowSectionLabel}>Data</div>
+                    <button className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => { setConfirmClear(true); setShowOverflow(false); }}>
+                      <Trash2 size={15} strokeWidth={1.5} />
+                      New batch
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

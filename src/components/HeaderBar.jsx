@@ -1,8 +1,10 @@
+import { useState, useRef, useEffect } from "react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import {
   List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
+  MoreHorizontal, BarChart3, Trash2,
 } from "lucide-react";
 
 const pillStyles = syncPillStyles.full;
@@ -27,6 +29,17 @@ export default function HeaderBar({
   toggleTheme,
   onShowShortcuts,
 }) {
+  const [showOverflow, setShowOverflow] = useState(false);
+  const overflowRef = useRef(null);
+
+  // Close overflow on outside click
+  useEffect(() => {
+    if (!showOverflow) return;
+    const h = e => { if (overflowRef.current && !overflowRef.current.contains(e.target)) setShowOverflow(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [showOverflow]);
+
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
       <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
@@ -43,9 +56,6 @@ export default function HeaderBar({
       </h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
-        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Keyboard shortcuts" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={onShowShortcuts}>
-          <HelpCircle size={16} strokeWidth={1.5} />
-        </button>
         <button className="ui-tip ui-tip-below hdr-btn" data-tip={dark ? "Light mode" : "Dark mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
           {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
         </button>
@@ -62,15 +72,38 @@ export default function HeaderBar({
             </button>
           </div>
         )}
-        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Collection insights" style={{ ...styles.statsBtn, ...(showStats ? styles.statsBtnActive : {}) }} onClick={() => setShowStats(s => !s)}>
-          {showStats ? "Hide stats" : "Stats"}
-        </button>
         <div ref={exportRef} style={{ position: "relative" }}>
           <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={styles.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
           {showExport && headerVisible && exportDropdownContent}
         </div>
         <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
-        <button className="ui-tip ui-tip-below hdr-btn new-batch-btn" data-tip="Clear all and start over" style={styles.startOverBtn} onClick={() => setConfirmClear(true)}>New batch</button>
+        {/* Overflow menu */}
+        <div ref={overflowRef} style={{ position: "relative" }}>
+          <button className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
+            <MoreHorizontal size={16} strokeWidth={1.5} />
+          </button>
+          {showOverflow && (
+            <div style={styles.hdrOverflowMenu}>
+              <div style={styles.hdrOverflowSectionLabel}>View</div>
+              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowStats(s => !s); setShowOverflow(false); }}>
+                <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                {showStats ? "Hide full stats" : "Full stats"}
+              </button>
+              <div style={styles.hdrOverflowDivider} />
+              <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
+              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { onShowShortcuts(); setShowOverflow(false); }}>
+                <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                Keyboard shortcuts
+              </button>
+              <div style={styles.hdrOverflowDivider} />
+              <div style={styles.hdrOverflowSectionLabel}>Data</div>
+              <button className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => { setConfirmClear(true); setShowOverflow(false); }}>
+                <Trash2 size={15} strokeWidth={1.5} />
+                New batch
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

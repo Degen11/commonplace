@@ -156,6 +156,8 @@ export const baseCSS = `
   .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
   .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
   html.dark .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important}
+  .sidebar-dupes-btn:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
+  .sidebar-dupes-btn:active{background:var(--cp-bg-tab) !important;transform:scale(0.97)}
   .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
   .load-more-btn{transition:all .15s ease}
   .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}

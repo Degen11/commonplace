@@ -3,7 +3,7 @@ import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
   FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
-  Quote, Compass, Crown, Gem, Wand2, Loader2,
+  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
 } from "lucide-react";
 import { CP_ACCENT, styles } from "./styles";
 
@@ -376,7 +376,7 @@ export default function CollectionsSidebar({
     }}>
       {/* Overview card */}
       <div style={styles.sidebarOverview}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={styles.sidebarOverviewLabel}>Overview</span>
           <button
             onClick={() => setCollapsed(true)}
@@ -401,8 +401,9 @@ export default function CollectionsSidebar({
           </div>
         )}
         {onFindDupes && (
-          <div style={{ ...styles.sidebarOverviewRow, marginTop: 4 }}>
-            <button className="sidebar-overview-link" style={styles.sidebarOverviewLink} onClick={onFindDupes}>
+          <div style={{ marginTop: 8 }}>
+            <button className="hdr-btn" style={styles.sidebarDupesBtn} onClick={onFindDupes}>
+              <Copy size={12} strokeWidth={2} />
               Find duplicates
             </button>
           </div>

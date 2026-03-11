@@ -400,8 +400,8 @@ export default function CollectionsSidebar({
     }}>
       {/* Overview card */}
       <div style={styles.sidebarOverview}>
-        <div style={{ ...styles.sidebarOverviewLabel, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <span>Overview</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={styles.sidebarOverviewLabel}>Overview</span>
           <button
             onClick={() => setCollapsed(true)}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
@@ -435,8 +435,8 @@ export default function CollectionsSidebar({
       </div>
 
       {/* Header */}
-      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)", background: "var(--cp-bg-hover)", padding: "8px 8px", borderRadius: 5, marginTop: 4 }}>
-        Collections
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 8px 0" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)" }}>Collections</span>
       </div>
 
       {/* Create new — at the top */}

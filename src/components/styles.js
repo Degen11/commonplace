@@ -516,7 +516,7 @@ export const styles = {
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .18s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)"},
   favRow:{boxShadow:"inset 3px 0 0 var(--cp-fav-accent)",background:"var(--cp-bg-fav)"},
-  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
+  chkW:{width:38,display:"flex",alignItems:"center",justifyContent:"center",opacity:0.35,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid var(--cp-border-dim)",borderColor:"var(--cp-border-dim)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
   entryText:{fontSize:14,lineHeight:1.65,color:"var(--cp-text-secondary)",whiteSpace:"pre-wrap",cursor:"text"},

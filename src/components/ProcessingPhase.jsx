@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { styles } from "./styles";
 import { getCatColor } from "../data/constants";
 import { CheckCircle } from "lucide-react";
+import Logo from "./Logo";
 
 export default function ProcessingPhase({
   fadeClass,
@@ -18,7 +19,7 @@ export default function ProcessingPhase({
   return (
     <div style={styles.wrap} className={fadeClass}>
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>Commonplace</span>
+        <span style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }}><Logo size={22} />Commonplace</span>
         <div style={styles.navRight}>
           <span style={{ color: "var(--cp-text-muted)", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
         </div>

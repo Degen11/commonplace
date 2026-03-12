@@ -7,6 +7,7 @@ export default function useToasts() {
     const opts = {};
     if (action && onAction) {
       opts.action = { label: action, onClick: onAction };
+      opts.duration = 3500; // longer window for undo / action toasts
     }
 
     if (variant === "success") return toast.success(message, opts);

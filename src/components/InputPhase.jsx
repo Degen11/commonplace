@@ -327,37 +327,36 @@ const HP = {
     fontFamily: FONT_SANS,
   },
 
-  // Features — compact horizontal: icon left, text right, 4 across
+  // Features — single row of 4 cards
   featuresGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
-    gap: 20,
+    gap: 16,
     marginTop: 40,
     textAlign: "left",
   },
   featureCard: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 12,
-    padding: 0,
-    background: "transparent",
-    border: "none",
+    background: "var(--cp-bg-card)",
+    border: "1px solid var(--cp-border-light)",
+    borderRadius: 12,
+    padding: "20px 18px",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
   },
   featureIconWrap: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 9,
-    flexShrink: 0,
+    borderRadius: 10,
+    marginBottom: 14,
   },
   featureTitle: {
     fontFamily: FONT_SANS,
     fontSize: 14,
     fontWeight: 600,
     color: "var(--cp-text)",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   featureDesc: {
     fontSize: 13,
@@ -898,12 +897,10 @@ export default function InputPhase({
                   }}
                 >
                   <div style={{ ...HP.featureIconWrap, background: `${f.color}12` }}>
-                    <Icon size={18} color={f.color} strokeWidth={1.5} />
+                    <Icon size={20} color={f.color} strokeWidth={1.5} />
                   </div>
-                  <div>
-                    <h3 style={HP.featureTitle}>{f.title}</h3>
-                    <p style={HP.featureDesc}>{f.desc}</p>
-                  </div>
+                  <h3 style={HP.featureTitle}>{f.title}</h3>
+                  <p style={HP.featureDesc}>{f.desc}</p>
                 </div>
               );
             })}

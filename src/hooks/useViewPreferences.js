@@ -1,8 +1,16 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
 import { LS_FILTERS, SEARCH_DEBOUNCE_MS } from "../config";
 import { loadFromStorage } from "../utils/storage";
+
+const FUSE_OPTIONS = {
+  keys: ["text", "source"],
+  threshold: 0.35,
+  ignoreLocation: true,
+  minMatchCharLength: 2,
+};
 
 const LS_VIEW    = "commonplace_view";
 const LS_SORT    = "commonplace_sort";
@@ -71,12 +79,21 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     return () => window.removeEventListener("resize", h);
   }, [view]);
 
+  // ── Fuse.js index for fuzzy search ──
+  const fuseIndex = useMemo(() => new Fuse(quotes, FUSE_OPTIONS), [quotes]);
+
   // ── Filtering & sorting ──
   const filtered = useMemo(() => {
+    // When searching, use Fuse.js for fuzzy matching
+    let searchMatchIds = null;
+    if (debouncedSearch) {
+      searchMatchIds = new Set(fuseIndex.search(debouncedSearch).map(r => r.item.id));
+    }
+
     const result = quotes.filter(q => {
       if (catFilter !== "All" && q.category !== catFilter) return false;
       if (favFilter && !q.favorite) return false;
-      if (debouncedSearch && !q.text.toLowerCase().includes(debouncedSearch.toLowerCase()) && !q.source.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
+      if (searchMatchIds && !searchMatchIds.has(q.id)) return false;
       return true;
     });
     if (sortBy === "confidence") result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
@@ -86,7 +103,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     }
     else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category, undefined, { sensitivity: "base" }));
     return result;
-  }, [quotes, catFilter, favFilter, debouncedSearch, sortBy]);
+  }, [quotes, catFilter, favFilter, debouncedSearch, sortBy, fuseIndex]);
 
   // Apply collection scoping before pagination so hasMore/remaining counts are accurate
   const collectionFiltered = useMemo(() => {

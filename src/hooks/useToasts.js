@@ -1,22 +1,13 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 
-const BAR_COLORS = { info: "#2383E2", success: "#059669", error: "#DC2626" };
-
 export default function useToasts() {
   // variant: "info" (default) | "success" | "error"
   const showToast = useCallback((message, action, onAction, variant = "info") => {
-    const hasAction = action && onAction;
-    const duration = hasAction ? 3500 : 2500;
-    const opts = {
-      duration,
-      style: {
-        "--toast-duration": `${duration}ms`,
-        "--toast-bar-color": BAR_COLORS[variant] || BAR_COLORS.info,
-      },
-    };
-    if (hasAction) {
+    const opts = {};
+    if (action && onAction) {
       opts.action = { label: action, onClick: onAction };
+      opts.duration = 3500; // longer window for undo / action toasts
     }
 
     if (variant === "success") return toast.success(message, opts);

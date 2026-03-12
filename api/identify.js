@@ -1,4 +1,5 @@
 import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
+import { identifySchema, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 30;
 
@@ -77,20 +78,10 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
   }
 
-  const body = req.body;
-  if (!body || !body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
-    return res.status(400).json({ error: 'Invalid request format' });
-  }
+  const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
+  if (!ok) return res.status(400).json({ error: validationError });
 
   const firstMsg = body.messages[0];
-  if (!firstMsg || firstMsg.role !== 'user' || typeof firstMsg.content !== 'string') {
-    return res.status(400).json({ error: 'Invalid message format' });
-  }
-
-  if (firstMsg.content.length > 10000) {
-    return res.status(400).json({ error: 'Input too large. Send fewer quotes per batch.' });
-  }
-
   const wantsFormatting = body.formatting === true;
 
   const safeBody = {

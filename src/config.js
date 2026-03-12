@@ -12,11 +12,6 @@ export const API_TIMEOUT_MS         = 30_000;
 export const AUTO_GROUP_TIMEOUT_MS  = 45_000;
 export const API_BATCH_SIZE         = 10;
 
-// Toast
-export const TOAST_DURATION_MS      = 2500;
-export const TOAST_ACTION_DURATION_MS = 3500;  // longer for undo / action toasts
-export const TOAST_EXIT_MS          = 180;
-
 // UI animations
 export const DELETE_ANIM_MS         = 200;
 export const COPY_PULSE_MS          = 1200;

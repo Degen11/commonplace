@@ -1,4 +1,5 @@
 import { setCorsHeaders, validateOrigin, getClientIp, checkRateLimit, getSupabase } from './_shared.js';
+import { cacheSchema, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 60;
 
@@ -28,13 +29,10 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests' });
   }
 
-  const { items } = req.body || {};
-  if (!Array.isArray(items) || items.length === 0 || items.length > 20) {
-    return res.status(400).json({ error: 'Invalid items array (1-20)' });
-  }
+  const { ok, data: parsed, error: validationError } = parseBody(cacheSchema, req.body);
+  if (!ok) return res.status(400).json({ error: validationError });
 
-  const rows = items
-    .filter(it => it.text && it.source)
+  const rows = parsed.items
     .map(it => ({
       normalized_text: normalizeForCache(it.text),
       source: String(it.source).slice(0, 500),

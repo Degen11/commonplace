@@ -1,4 +1,5 @@
 import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
+import { autoGroupSchema, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 15; // stricter than identify — AI grouping is heavier use
 
@@ -26,14 +27,10 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
   }
 
-  const { theme, quotes } = req.body || {};
+  const { ok, data: body, error: validationError } = parseBody(autoGroupSchema, req.body);
+  if (!ok) return res.status(400).json({ error: validationError });
 
-  if (!theme || typeof theme !== 'string' || theme.length > 200) {
-    return res.status(400).json({ error: 'Invalid theme (string, max 200 chars)' });
-  }
-  if (!Array.isArray(quotes) || quotes.length === 0 || quotes.length > 500) {
-    return res.status(400).json({ error: 'Invalid quotes array (1-500 items)' });
-  }
+  const { theme, quotes } = body;
 
   // Build compact quote list — index + truncated text to minimize tokens
   const quotesBlock = quotes

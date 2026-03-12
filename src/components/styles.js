@@ -61,8 +61,6 @@ export const baseCSS = `
   @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  @keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(16px)}}
   @keyframes savePulse{0%{background-color:rgba(5,150,105,0.12);border-radius:4px}100%{background-color:transparent}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
@@ -153,14 +151,6 @@ export const baseCSS = `
   .ui-tip:active::after{opacity:0;transition:none}
   .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
   .ui-tip-left::after{left:auto;right:0;transform:none}
-
-  /* Undo toast countdown bar */
-  @keyframes toastCountdown{from{width:100%}to{width:0%}}
-  .toast-bar{
-    position:absolute;bottom:0;left:0;height:2px;
-    background:var(--toast-bar-color,#2383E2);border-radius:0 0 8px 8px;
-    animation:toastCountdown var(--toast-duration,2.5s) linear forwards;
-  }
 
   /* Drag insertion indicator */
   .drag-insert-above{box-shadow:inset 0 2px 0 #3C5775 !important}
@@ -592,9 +582,6 @@ export const styles = {
   empty:{textAlign:"center",padding:"60px 24px"},
   footer:{textAlign:"center",padding:"40px 0 20px",fontSize:12,color:"var(--cp-text-faint)",borderTop:"1px solid var(--cp-border-light)",marginTop:40},
   footerLink:{color:"var(--cp-text-muted)",textDecoration:"none"},
-  toast:{position:"fixed",bottom:24,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:2000,animation:"toastIn .2s ease",fontFamily:FONT_SANS},
-  toastContent:{position:"relative",overflow:"hidden",background:"var(--cp-toast-bg)",color:"#fff",padding:"10px 20px",borderRadius:8,fontSize:13,fontWeight:500,display:"flex",alignItems:"center",gap:12,boxShadow:"0 4px 16px rgba(0,0,0,.2)",pointerEvents:"auto"},
-  toastAction:{background:"none",border:"1px solid rgba(255,255,255,.3)",borderRadius:4,color:"#fff",padding:"3px 10px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
 };
 
 export const cardStyles = {

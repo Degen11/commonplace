@@ -1,25 +1,7 @@
 import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp, UUID_RE } from './_shared.js';
+import { syncPostSchema, uuidV4, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 60;
-
-// ── Validate a single quote object ──
-function validateQuote(q) {
-  if (!q || typeof q !== 'object') return null;
-  if (typeof q.id !== 'string' || typeof q.text !== 'string') return null;
-  if (q.text.length === 0 || q.text.length > 10000) return null;
-  const validated = {
-    id: q.id,
-    text: q.text,
-    source: typeof q.source === 'string' ? q.source.slice(0, 500) : 'Unknown',
-    category: typeof q.category === 'string' ? q.category.slice(0, 100) : 'Unknown',
-    confidence: ['high', 'medium', 'low'].includes(q.confidence) ? q.confidence : 'low',
-    favorite: !!q.favorite,
-  };
-  if (typeof q.updatedAt === 'number' && q.updatedAt > 0) {
-    validated.updatedAt = q.updatedAt;
-  }
-  return validated;
-}
 
 // ── Merge quotes by ID: union both sets, keep newer for conflicts ──
 function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
@@ -68,10 +50,9 @@ export default async function handler(req, res) {
 
   // ── GET: Fetch quotes for a device ──
   if (req.method === 'GET') {
+    const { ok, error: idError } = parseBody(uuidV4, req.query.device_id);
+    if (!ok) return res.status(400).json({ error: 'Invalid device_id' });
     const deviceId = req.query.device_id;
-    if (!deviceId || !UUID_RE.test(deviceId)) {
-      return res.status(400).json({ error: 'Invalid device_id' });
-    }
 
     try {
       let { data, error } = await supabase
@@ -114,34 +95,10 @@ export default async function handler(req, res) {
       return res.status(415).json({ error: 'Content-Type must be application/json' });
     }
 
-    const { device_id, quotes, customCategories, deletedIds, collections } = req.body || {};
+    const { ok, data: parsed, error: validationError } = parseBody(syncPostSchema, req.body);
+    if (!ok) return res.status(400).json({ error: validationError });
 
-    if (!device_id || !UUID_RE.test(device_id)) {
-      return res.status(400).json({ error: 'Invalid device_id' });
-    }
-    if (!Array.isArray(quotes)) {
-      return res.status(400).json({ error: 'quotes must be an array' });
-    }
-    if (quotes.length > 50000) {
-      return res.status(400).json({ error: 'Too many quotes' });
-    }
-
-    const validated = [];
-    for (const q of quotes) {
-      const v = validateQuote(q);
-      if (v) validated.push(v);
-    }
-
-    const cats = Array.isArray(customCategories)
-      ? customCategories
-          .filter(c => typeof c === 'string' && c.length > 0 && c.length <= 50)
-          .map(c => c.replace(/<[^>]*>/g, '').trim())
-          .slice(0, 200)
-      : [];
-
-    const validCollections = Array.isArray(collections)
-      ? collections.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string').slice(0, 500)
-      : [];
+    const { device_id, quotes: validated, customCategories: cats, deletedIds, collections: validCollections } = parsed;
 
     try {
       const { data: existing } = await supabase

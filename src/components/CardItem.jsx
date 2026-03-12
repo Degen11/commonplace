@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, memo } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
 import EditForm from "./EditForm";
@@ -11,16 +13,29 @@ import { Pencil, ChevronDown, Trash2, Heart } from "lucide-react";
 import HighlightText from "./HighlightText";
 
 const MemoCardItem = memo(function CardItem({
-  q, col, isSel, isEd, needsAtt, sortBy, dragId, isMobile,
+  q, col, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
   allCats, actionProps,
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
-  handleDragStart, handleDragOver, handleDragEnd,
   isDeleting,
   searchTerm,
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: q.id });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
@@ -51,8 +66,13 @@ const MemoCardItem = memo(function CardItem({
   const isSwipingRight = offsetX > 20;
   const swipeProgress = Math.min(Math.abs(offsetX) / 80, 1);
 
+  // On desktop, use dnd-kit listeners on the card; on mobile, use long-press + swipe
+  const interactionProps = isMobile
+    ? { ...longPress, ...swipeHandlers }
+    : { ...(isEd || isInlineEditing ? {} : listeners) };
+
   return (
-    <div style={{ position: "relative", overflow: "hidden", borderRadius: 8 }}>
+    <div ref={setNodeRef} style={{ ...sortableStyle, position: "relative", overflow: "hidden", borderRadius: 8 }}>
       {/* Swipe hint background — only rendered during active swipe */}
       {(isSwipingLeft || isSwipingRight) && (
         <div style={{
@@ -72,22 +92,17 @@ const MemoCardItem = memo(function CardItem({
     <div
       className="qcard"
       data-id={q.id}
-      draggable={!isEd && !isInlineEditing}
-      onDragStart={e => {
-        e.dataTransfer.setData("text/x-quote-id", q.id);
-        handleDragStart(q.id, e);
-      }}
-      onDragOver={e => handleDragOver(e, q.id)}
-      onDragEnd={handleDragEnd}
-      {...(isMobile ? { ...longPress, ...swipeHandlers } : {})}
+      {...interactionProps}
+      {...attributes}
       style={{
         ...cardStyles.card,
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
         ...(q.favorite ? cardStyles.favCard : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
-        ...(dragId === q.id ? { opacity: .4 } : {}),
+        ...(isDragging ? { opacity: .4 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
+        ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
       onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
@@ -139,7 +154,6 @@ const MemoCardItem = memo(function CardItem({
   if (prev.isEd !== next.isEd) return false;
   if (prev.needsAtt !== next.needsAtt) return false;
   if (prev.sortBy !== next.sortBy) return false;
-  if (prev.dragId !== next.dragId) return false;
   if (prev.isInlineEditing !== next.isInlineEditing) return false;
   if (prev.inlineEditField !== next.inlineEditField) return false;
   if (prev.isDeleting !== next.isDeleting) return false;

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useDroppable } from "@dnd-kit/core";
 import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
   FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
@@ -94,13 +95,12 @@ function CollectionRow({
   c, isActive, isEditing, editName, setEditName, handleRename, setEditingId,
   confirmDeleteId, setConfirmDeleteId, deleteCollection, setActiveCollectionId,
   iconPickerId, setIconPickerId, updateCollectionIcon, quoteCounts,
-  onDropQuote,
 }) {
   const count = quoteCounts[c.id] || 0;
   const Icon = getIcon(c.icon);
   const iconRef = useRef(null);
   const [hovered, setHovered] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
+  const { setNodeRef, isOver: dragOver } = useDroppable({ id: `collection:${c.id}` });
 
   if (isEditing) {
     return (
@@ -128,6 +128,7 @@ function CollectionRow({
 
   return (
     <div
+      ref={setNodeRef}
       style={{
         display: "flex", alignItems: "center", gap: 6,
         padding: "7px 8px", borderRadius: 6, cursor: "pointer",
@@ -139,9 +140,6 @@ function CollectionRow({
       onClick={() => setActiveCollectionId(c.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); if (confirmDeleteId === c.id) setConfirmDeleteId(null); }}
-      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={e => { e.preventDefault(); setDragOver(false); if (onDropQuote) onDropQuote(c.id, e); }}
     >
       <span
         ref={iconRef}
@@ -216,10 +214,11 @@ function CollectionRow({
 }
 
 // ── Collapsed icon with drop target ──
-function CollapsedDropTarget({ c, isActive, setActiveCollectionId, onDropQuote, Icon }) {
-  const [dragOver, setDragOver] = useState(false);
+function CollapsedDropTarget({ c, isActive, setActiveCollectionId, Icon }) {
+  const { setNodeRef, isOver: dragOver } = useDroppable({ id: `collection:${c.id}` });
   return (
     <button
+      ref={setNodeRef}
       onClick={() => setActiveCollectionId(c.id)}
       style={{
         background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "none",
@@ -229,9 +228,6 @@ function CollapsedDropTarget({ c, isActive, setActiveCollectionId, onDropQuote, 
         ...(dragOver ? { outline: "2px solid var(--cp-accent)", outlineOffset: -2 } : {}),
       }}
       title={c.name}
-      onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={e => { e.preventDefault(); setDragOver(false); if (onDropQuote) onDropQuote(c.id, e); }}
     >
       <Icon size={16} strokeWidth={1.5} />
     </button>
@@ -250,7 +246,6 @@ export default function CollectionsSidebar({
   totalQuotes,
   collapsed,
   setCollapsed,
-  onDropQuote,
   onAutoGroup,
   onFindDupes,
   uniqueSources,
@@ -382,7 +377,7 @@ export default function CollectionsSidebar({
         {collections.map(c => {
           const Icon = getIcon(c.icon);
           return (
-            <CollapsedDropTarget key={c.id} c={c} isActive={activeCollectionId === c.id} setActiveCollectionId={setActiveCollectionId} onDropQuote={onDropQuote} Icon={Icon} />
+            <CollapsedDropTarget key={c.id} c={c} isActive={activeCollectionId === c.id} setActiveCollectionId={setActiveCollectionId} Icon={Icon} />
           );
         })}
       </div>
@@ -602,7 +597,6 @@ export default function CollectionsSidebar({
             setIconPickerId={setIconPickerId}
             updateCollectionIcon={updateCollectionIcon}
             quoteCounts={quoteCounts}
-            onDropQuote={onDropQuote}
           />
         ))}
       </div>

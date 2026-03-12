@@ -11,12 +11,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const [deletingId, setDeletingId]             = useState(null);
   const [copiedId, setCopiedId]                 = useState(null);
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
-  const [dragId, setDragId]                     = useState(null);
-  const [dragInsert, setDragInsert]             = useState(null);
 
   const reidentifyAbortRefs  = useRef(new Map());
-  const lastDragTarget       = useRef(null);
-  const lastDragHalf         = useRef(null);
   const mountedRef           = useRef(true);
   const quotesRef            = useRef(quotes);
   quotesRef.current = quotes;
@@ -231,48 +227,6 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     }
   }, [setQuotes, allCats, showToast, identifyBatch]);
 
-  // ── Drag reorder ──
-  // Use a ref for dragId so handleDragOver always reads the latest value
-  // even when called from memoized row components with stale closures.
-  const dragIdRef = useRef(null);
-
-  const handleDragStart = useCallback((id) => {
-    setDragId(id);
-    dragIdRef.current = id;
-    lastDragTarget.current = null;
-    lastDragHalf.current = null;
-  }, []);
-
-  const handleDragOver = useCallback((e, targetId) => {
-    e.preventDefault();
-    const currentDragId = dragIdRef.current;
-    if (!currentDragId || currentDragId === targetId) { setDragInsert(null); return; }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const half = (e.clientY - rect.top) < rect.height / 2 ? "above" : "below";
-    if (lastDragTarget.current === targetId && lastDragHalf.current === half) return;
-    lastDragHalf.current = half;
-    setDragInsert({ id: targetId, pos: half });
-    if (lastDragTarget.current === targetId) return;
-    lastDragTarget.current = targetId;
-    setQuotes(prev => {
-      const arr = [...prev];
-      const fromIdx = arr.findIndex(q => q.id === currentDragId);
-      const toIdx   = arr.findIndex(q => q.id === targetId);
-      if (fromIdx < 0 || toIdx < 0) return prev;
-      const [moved] = arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, moved);
-      return arr;
-    });
-  }, [setQuotes]);
-
-  const handleDragEnd = useCallback(() => {
-    setDragId(null);
-    dragIdRef.current = null;
-    setDragInsert(null);
-    lastDragTarget.current = null;
-    lastDragHalf.current = null;
-  }, []);
-
   // ── File import ──
   const entriesToContent = (entries) =>
     entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
@@ -373,9 +327,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     deletingId,
     copiedId,
     reidentifyingIds,
-    dragId, dragInsert,
     handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
-    handleDragStart, handleDragOver, handleDragEnd,
     handleFileImport,
   };
 }

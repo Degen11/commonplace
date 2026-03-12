@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter, DragOverlay } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, rectSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useProcessing from "../hooks/useProcessing";
@@ -12,7 +14,6 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
-import { setMultiDragImage, cleanupDragGhost } from "../utils/dragGhost";
 import { similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
@@ -139,25 +140,44 @@ export default function Commonplace() {
     deletingId,
     copiedId,
     reidentifyingIds,
-    dragId, dragInsert,
     handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
-    handleDragStart: rawDragStart, handleDragOver, handleDragEnd: rawDragEnd,
     handleFileImport,
   } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs });
 
-  // Wrap drag handlers so the multi-drag ghost uses the always-fresh `selected` set
-  // (memoized rows hold stale selectionCount props, so we handle it here instead)
-  const handleDragStart = useCallback((id, e) => {
-    if (e && selected.has(id) && selected.size > 1) {
-      setMultiDragImage(e, selected.size);
-    }
-    rawDragStart(id);
-  }, [rawDragStart, selected]);
+  // ── dnd-kit sensors ──
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
+  const keyboardSensor = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
+  const sensors = useSensors(pointerSensor, keyboardSensor);
+  const [activeDragId, setActiveDragId] = useState(null);
 
-  const handleDragEnd = useCallback(() => {
-    cleanupDragGhost();
-    rawDragEnd();
-  }, [rawDragEnd]);
+  const handleDndStart = useCallback(({ active }) => {
+    setActiveDragId(active.id);
+  }, []);
+
+  const handleDndEnd = useCallback(({ active, over }) => {
+    setActiveDragId(null);
+    if (!over || active.id === over.id) return;
+
+    // Drop onto a collection
+    if (typeof over.id === "string" && over.id.startsWith("collection:")) {
+      const collectionId = over.id.replace("collection:", "");
+      const ids = selected.has(active.id) && selected.size > 1
+        ? [...selected]
+        : [active.id];
+      addToCollection(collectionId, ids);
+      const col = collections.find(c => c.id === collectionId);
+      if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, null, null, "success");
+      return;
+    }
+
+    // Sortable reorder
+    setQuotes(prev => {
+      const oldIndex = prev.findIndex(q => q.id === active.id);
+      const newIndex = prev.findIndex(q => q.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }, [selected, collections, addToCollection, showToast, setQuotes]);
 
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);
@@ -818,6 +838,7 @@ export default function Commonplace() {
           ))}
 
           {/* Main content area with optional sidebar */}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
           <div style={{ display: "flex", gap: 0 }}>
             <CollectionsSidebar
                 collections={collections}
@@ -831,16 +852,6 @@ export default function Commonplace() {
                 totalQuotes={quotes.length}
                 collapsed={sidebarCollapsed}
                 setCollapsed={setSidebarCollapsed}
-                onDropQuote={(collectionId, e) => {
-                  const quoteId = e.dataTransfer.getData("text/x-quote-id");
-                  if (!quoteId) return;
-                  const ids = selected.has(quoteId) && selected.size > 1
-                    ? [...selected]
-                    : [quoteId];
-                  addToCollection(collectionId, ids);
-                  const col = collections.find(c => c.id === collectionId);
-                  if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, null, null, "success");
-                }}
                 onAutoGroup={handleAutoGroup}
                 onFindDupes={handleFindDupes}
                 uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
@@ -851,7 +862,7 @@ export default function Commonplace() {
           {/* TABLE VIEW */}
           {view === "table" && (
             <SectionErrorBoundary name="Table view">
-              <div>
+              <SortableContext items={visible.map(q => q.id)} strategy={verticalListSortingStrategy}>
               <TableView
                 filtered={visible}
                 selected={selected}
@@ -867,11 +878,6 @@ export default function Commonplace() {
                 customCats={customCats}
                 actionProps={actionProps}
                 compact={compact}
-                dragId={dragId}
-                dragInsert={dragInsert}
-                handleDragStart={handleDragStart}
-                handleDragOver={handleDragOver}
-                handleDragEnd={handleDragEnd}
                 columnOrder={columnOrder}
                 setColumnOrder={setColumnOrder}
                 sortBy={sortBy}
@@ -880,13 +886,14 @@ export default function Commonplace() {
                 deletingId={deletingId}
                 searchTerm={search}
               />
-              </div>
+              </SortableContext>
             </SectionErrorBoundary>
           )}
 
           {/* CARD VIEW */}
           {view === "cards" && (
             <SectionErrorBoundary name="Card view">
+              <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
                 {visible.map((q) => {
                   const col = getCatColor(q.category, customCats);
@@ -907,7 +914,6 @@ export default function Commonplace() {
                       isEd={isEd}
                       needsAtt={needsAtt}
                       sortBy={sortBy}
-                      dragId={dragId}
                       isMobile={isMobile}
                       isInlineEditing={isInlineEditing}
                       inlineEditField={inlineEditField}
@@ -922,15 +928,13 @@ export default function Commonplace() {
                       saveInlineField={saveInlineField}
                       setInlineEdit={setInlineEdit}
                       setEditingId={setEditingId}
-                      handleDragStart={handleDragStart}
-                      handleDragOver={handleDragOver}
-                      handleDragEnd={handleDragEnd}
                       isDeleting={isDeleting}
                       searchTerm={search}
                     />
                   );
                 })}
               </div>
+              </SortableContext>
             </SectionErrorBoundary>
           )}
 {hasMore && (
@@ -972,6 +976,26 @@ export default function Commonplace() {
 
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
+          <DragOverlay dropAnimation={null}>
+            {activeDragId ? (() => {
+              const q = quotes.find(x => x.id === activeDragId);
+              if (!q) return null;
+              const count = selected.has(activeDragId) && selected.size > 1 ? selected.size : 1;
+              const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
+              return (
+                <div style={{
+                  background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
+                  borderRadius: 8, padding: "8px 14px", fontSize: 13,
+                  boxShadow: "var(--cp-shadow-md)", maxWidth: 320, opacity: 0.92,
+                  color: "var(--cp-text)",
+                }}>
+                  {preview}
+                  {count > 1 && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--cp-text-muted)", fontWeight: 600 }}>+{count - 1} more</span>}
+                </div>
+              );
+            })() : null}
+          </DragOverlay>
+          </DndContext>
         </div>
       )}
     </>

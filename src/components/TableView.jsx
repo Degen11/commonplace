@@ -1,4 +1,6 @@
-import { useState, useCallback, useEffect, useRef, memo } from "react";
+import { useState, useCallback, useEffect, memo } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
@@ -28,13 +30,27 @@ const COL_CONFIG = {
 const MemoTableRow = memo(function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
-  isDragging, isDeleting, isSavedPulse, savedPulseField,
-  isMenuOpen, insertClass,
+  isDeleting, isSavedPulse, savedPulseField,
+  isMenuOpen,
   columnOrder, compact, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
-  handleDragStart, handleDragOver, handleDragEnd, setOpenMenuId,
+  setOpenMenuId,
   searchTerm,
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: q.id });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
@@ -92,26 +108,27 @@ const MemoTableRow = memo(function TableRow({
   };
 
   return (
-    <div className={`qrow ${insertClass}`}
+    <div
+      ref={setNodeRef}
+      className="qrow"
       data-id={q.id}
-      draggable={!isEd && !isInlineEditing}
-      onDragStart={e => {
-        e.dataTransfer.setData("text/x-quote-id", q.id);
-        handleDragStart(q.id, e);
-      }}
-      onDragOver={e => handleDragOver(e, q.id)}
-      onDragEnd={handleDragEnd}
       {...(isMobile ? longPress : {})}
       style={{
+        ...sortableStyle,
         ...(compact ? styles.rowCompact : styles.row),
         ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
         ...(q.favorite ? styles.favRow : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
-        ...(isDragging ? { opacity: .4 } : {}),
+        ...(isDragging ? { opacity: .4, zIndex: 1 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
       }}
     >
-      <div className="drag-handle" style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div
+        className="drag-handle"
+        style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "grab", touchAction: "none" }}
+        {...(isEd || isInlineEditing ? {} : listeners)}
+        {...attributes}
+      >
         <GripVertical size={14} strokeWidth={1.5} />
       </div>
       <div className="checkbox" style={{ ...styles.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
@@ -152,12 +169,10 @@ const MemoTableRow = memo(function TableRow({
       prev.columnOrder.some((c, i) => c !== next.columnOrder[i])) return false;
   if (prev.isInlineEditing !== next.isInlineEditing) return false;
   if (prev.inlineEditField !== next.inlineEditField) return false;
-  if (prev.isDragging !== next.isDragging) return false;
   if (prev.isDeleting !== next.isDeleting) return false;
   if (prev.isSavedPulse !== next.isSavedPulse) return false;
   if (prev.savedPulseField !== next.savedPulseField) return false;
   if (prev.isMenuOpen !== next.isMenuOpen) return false;
-  if (prev.insertClass !== next.insertClass) return false;
   if (prev.searchTerm !== next.searchTerm) return false;
   if (prev.allCats !== next.allCats) return false;
   if (prev.customCats !== next.customCats) return false;
@@ -181,11 +196,6 @@ export default function TableView({
   customCats,
   actionProps,
   compact,
-  dragId,
-  dragInsert,
-  handleDragStart,
-  handleDragOver,
-  handleDragEnd,
   columnOrder,
   setColumnOrder,
   sortBy,
@@ -298,14 +308,10 @@ export default function TableView({
         const needsAtt = q.confidence === "low" || q.category === "Unknown";
         const isInlineEditing = inlineEdit?.id === q.id;
         const inlineEditField = isInlineEditing ? inlineEdit.field : null;
-        const isDragging = dragId === q.id;
         const isDeleting = deletingId === q.id;
         const isSavedPulse = savedPulse?.id === q.id;
         const savedPulseField = isSavedPulse ? savedPulse.field : null;
         const isMenuOpen = openMenuId === q.id;
-        const insertClass = dragInsert?.id === q.id
-          ? (dragInsert.pos === "above" ? "drag-insert-above" : "drag-insert-below")
-          : "";
         return (
           <MemoTableRow
             key={q.id}
@@ -317,12 +323,10 @@ export default function TableView({
             isMobile={isMobile}
             isInlineEditing={isInlineEditing}
             inlineEditField={inlineEditField}
-            isDragging={isDragging}
             isDeleting={isDeleting}
             isSavedPulse={isSavedPulse}
             savedPulseField={savedPulseField}
             isMenuOpen={isMenuOpen}
-            insertClass={insertClass}
             columnOrder={columnOrder}
             compact={compact}
             allCats={allCats}
@@ -333,9 +337,6 @@ export default function TableView({
             setInlineEdit={setInlineEdit}
             saveEdit={saveEdit}
             saveInlineField={saveInlineField}
-            handleDragStart={handleDragStart}
-            handleDragOver={handleDragOver}
-            handleDragEnd={handleDragEnd}
             setOpenMenuId={setOpenMenuId}
             searchTerm={searchTerm}
           />

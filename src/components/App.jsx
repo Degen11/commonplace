@@ -575,7 +575,7 @@ export default function Commonplace() {
             <ConfirmModal
               icon={<AlertTriangle size={20} color="#EA580C" strokeWidth={2} />}
               iconColor="#EA580C"
-              iconBg="#FFF7ED"
+              iconBg="var(--cp-warning-bg)"
               borderColor="#EA580C"
               title="Start fresh?"
               description={`This will clear all ${quotes.length} entries and remove them from your saved session. This cannot be undone.`}
@@ -590,7 +590,7 @@ export default function Commonplace() {
             <ConfirmModal
               icon={<Trash2 size={20} color="#EB5757" strokeWidth={2} />}
               iconColor="#EB5757"
-              iconBg="#FEF2F2"
+              iconBg="var(--cp-error-bg)"
               borderColor="#EB5757"
               title={`Delete ${selected.size} entries?`}
               description={`This will remove ${selected.size} selected entries. You can undo immediately after.`}
@@ -682,7 +682,7 @@ export default function Commonplace() {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} strokeWidth={2} /> {apiError}</span>
               <div style={{ display: "flex", gap: 8 }}>
                 {failedEntries.length > 0 && <button style={styles.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
-                <button className="dismiss-link" style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={dismissApiError}>Dismiss</button>
+                <button className="dismiss-link" style={{ background: "none", border: "none", color: "var(--cp-error-text)", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={dismissApiError}>Dismiss</button>
               </div>
             </div>
           )}

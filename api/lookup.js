@@ -112,7 +112,7 @@ function inferCategory(source) {
   // Explicit type annotations from Wikiquote disambiguation
   if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return 'Film';
   if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return 'TV';
-  if (/\(video game\)|\(game\)/.test(s)) return 'Film';
+  if (/\(video game\)|\(game\)/.test(s)) return 'Game';
   if (/\(novel\)|\(book\)|\(play\)|\(poem\)/.test(s)) return 'Book';
   if (/\(song\)|\(album\)|\(musical\)/.test(s)) return 'Music';
   // Wikiquote pages for shows, tours, specials

@@ -542,7 +542,7 @@ function UrlImportPanel({ onLoad }) {
       </div>
 
       {error && (
-        <div style={{ marginTop: 12, padding: "8px 12px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, fontSize: 13, color: "#DC2626" }}>
+        <div style={{ marginTop: 12, padding: "8px 12px", background: "var(--cp-error-bg)", border: "1px solid var(--cp-error-border)", borderRadius: 8, fontSize: 13, color: "var(--cp-error-text)" }}>
           {error}
         </div>
       )}

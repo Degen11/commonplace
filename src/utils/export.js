@@ -40,8 +40,8 @@ export function exportCSV(quotes, collections) {
   quotes.forEach(q => rows.push([
     `"${(q.text || "").replace(/"/g, '""')}"`,
     `"${(q.source || "").replace(/"/g, '""')}"`,
-    q.category || "",
-    q.favorite ? "yes" : "no",
+    `"${(q.category || "").replace(/"/g, '""')}"`,
+    `"${q.favorite ? "yes" : "no"}"`,
     `"${(colMap[q.id] || []).join(", ")}"`,
   ]));
   download(rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv");

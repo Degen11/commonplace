@@ -146,6 +146,8 @@ const MemoCardItem = memo(function CardItem({
   if (prev.isSavedPulse !== next.isSavedPulse) return false;
   if (prev.savedPulseField !== next.savedPulseField) return false;
   if (prev.searchTerm !== next.searchTerm) return false;
+  if (prev.allCats !== next.allCats) return false;
+  if (prev.customCats !== next.customCats) return false;
   if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
   if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;

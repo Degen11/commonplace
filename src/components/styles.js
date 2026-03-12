@@ -30,6 +30,10 @@ export const baseCSS = `
     --cp-error-bg:#FEF2F2;--cp-error-border:#FECACA;--cp-error-text:#991B1B;
     --cp-warning-bg:#FFF7ED;--cp-warning-border:#FDBA74;--cp-warning-text:#9A3412;
     --cp-destructive:#EB5757;--cp-destructive-hover:#D64545;
+    --cp-bulk-bg:rgba(30,42,56,0.95);--cp-bulk-border:rgba(255,255,255,0.08);--cp-bulk-divider:rgba(255,255,255,0.12);
+    --cp-bulk-text:#E8E8E8;--cp-bulk-muted:rgba(255,255,255,0.45);
+    --cp-bulk-badge:#fff;--cp-bulk-badge-text:#1A1814;
+    --cp-bulk-input-bg:rgba(255,255,255,0.1);--cp-bulk-input-border:rgba(255,255,255,0.15);
   }
   html.dark{
     --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
@@ -43,6 +47,10 @@ export const baseCSS = `
     --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
     --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
     --cp-destructive:#EF4444;--cp-destructive-hover:#DC2626;
+    --cp-bulk-bg:rgba(50,50,50,0.95);--cp-bulk-border:rgba(255,255,255,0.08);--cp-bulk-divider:rgba(255,255,255,0.1);
+    --cp-bulk-text:#E8E8E8;--cp-bulk-muted:rgba(255,255,255,0.4);
+    --cp-bulk-badge:#90B4D4;--cp-bulk-badge-text:#1A1A1A;
+    --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text)}
@@ -223,13 +231,13 @@ export const baseCSS = `
   .filter-chip{transition:all .12s ease}
   .filter-chip:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
 
-  /* Bulk bar button hover states */
+  /* Bulk bar button hover states (dark-bg context) */
   .bulk-apply{transition:opacity .12s ease}
   .bulk-apply:hover:not(:disabled){opacity:.85}
   .bulk-del{transition:all .12s ease}
-  .bulk-del:hover{background:rgba(235,87,87,0.08) !important;border-color:#EB5757 !important}
+  .bulk-del:hover{background:rgba(248,113,113,0.15) !important;border-color:rgba(248,113,113,0.5) !important}
   .bulk-reidentify{transition:all .12s ease}
-  .bulk-reidentify:hover:not(:disabled){border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+  .bulk-reidentify:hover:not(:disabled){background:rgba(255,255,255,0.08) !important}
 
   /* Attention bar dismiss hover */
   .attention-dismiss{transition:opacity .12s ease}
@@ -473,16 +481,16 @@ export const styles = {
   dupeModalTitle:{fontSize:16,fontWeight:700,color:"var(--cp-text-secondary)",marginBottom:4,fontFamily:FONT_SANS},
   dupeModalSub:{fontSize:13,color:"var(--cp-text-muted)",fontFamily:FONT_SANS},
   dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
-  // Bulk edit — floating pill
-  bulkBar:{position:"fixed",bottom:16,left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:0,padding:"8px 8px 8px 6px",background:"var(--cp-mini-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid var(--cp-border)",borderRadius:14,boxShadow:"0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04)",zIndex:500,animation:"bulkSlideUp .2s ease",maxWidth:"calc(100vw - 32px)"},
-  bulkN:{fontSize:12,fontWeight:600,color:"#fff",whiteSpace:"nowrap",background:CP_ACCENT,padding:"5px 12px",borderRadius:8,lineHeight:1,letterSpacing:0.2},
-  bulkDivider:{width:1,height:20,background:"var(--cp-border)",margin:"0 8px",flexShrink:0},
-  bulkGroup:{display:"flex",gap:5,alignItems:"center"},
-  bulkSel:{border:"1px solid var(--cp-border-dim)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bg-card)"},
-  bulkIn:{border:"1px solid var(--cp-border-dim)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:120},
-  bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  bulkDelBtn:{padding:"5px 10px",borderRadius:6,border:"1px solid #EB5757",background:"transparent",color:"#EB5757",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",justifyContent:"center"},
-  bulkX:{background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",padding:4,borderRadius:6},
+  // Bulk edit — floating pill (dark bg in light mode, light bg in dark mode)
+  bulkBar:{position:"fixed",bottom:16,left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:0,padding:"8px 12px 8px 8px",background:"var(--cp-bulk-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid var(--cp-bulk-border)",borderRadius:14,boxShadow:"0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",zIndex:500,animation:"bulkSlideUp .2s ease",maxWidth:"calc(100vw - 32px)"},
+  bulkN:{fontSize:12,fontWeight:600,color:"var(--cp-bulk-badge-text)",whiteSpace:"nowrap",background:"var(--cp-bulk-badge)",padding:"5px 12px",borderRadius:8,lineHeight:1,letterSpacing:0.2},
+  bulkDivider:{width:1,height:20,background:"var(--cp-bulk-divider)",margin:"0 10px",flexShrink:0},
+  bulkGroup:{display:"flex",gap:5,alignItems:"center",whiteSpace:"nowrap"},
+  bulkSel:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
+  bulkIn:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:120,background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
+  bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:"#fff",color:CP_ACCENT,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  bulkDelBtn:{padding:"5px 10px",borderRadius:6,border:"1px solid rgba(235,87,87,0.4)",background:"transparent",color:"#F87171",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",justifyContent:"center"},
+  bulkX:{background:"none",border:"none",color:"var(--cp-bulk-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",padding:4,borderRadius:6},
 
   // Header overflow menu
   hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:8,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},

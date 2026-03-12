@@ -749,7 +749,16 @@ export default function Commonplace() {
               onBatchReIdentify={() => batchReIdentify(selected)}
               isReidentifying={reidentifyingIds.size > 0}
               collections={collections}
-              onAddToCollection={addToCollection}
+              onAddToCollection={(collectionId, quoteIds) => {
+                addToCollection(collectionId, quoteIds);
+                const col = collections.find(c => c.id === collectionId);
+                const count = quoteIds.length;
+                showToast(
+                  `Added ${count} ${count === 1 ? "quote" : "quotes"} to "${col?.name || "collection"}"`,
+                  "Undo",
+                  () => removeFromCollection(collectionId, quoteIds),
+                );
+              }}
               onRemoveFromCollection={handleRemoveFromCollection}
               activeCollectionId={activeCollectionId}
             />

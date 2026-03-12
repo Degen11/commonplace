@@ -1,5 +1,5 @@
 import { styles } from "./styles";
-import { X, RefreshCw, FolderPlus, FolderMinus, Trash2 } from "lucide-react";
+import { X, RefreshCw, FolderMinus, Trash2 } from "lucide-react";
 
 function Divider() {
   return <div style={styles.bulkDivider} />;
@@ -20,6 +20,16 @@ export default function BulkBar({
   activeCollectionId,
 }) {
   const hasCollections = collections && collections.length > 0;
+
+  // Shared inline button style for dark-bg context
+  const btnBase = {
+    padding: "5px 10px", borderRadius: 6,
+    border: "1px solid var(--cp-bulk-input-border)",
+    background: "transparent", color: "var(--cp-bulk-text)",
+    fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+    display: "inline-flex", alignItems: "center", gap: 4,
+    whiteSpace: "nowrap",
+  };
 
   return (
     <div style={styles.bulkBar}>
@@ -53,14 +63,7 @@ export default function BulkBar({
         <button
           className="ui-tip bulk-reidentify"
           data-tip="Re-identify selected with AI"
-          style={{
-            padding: "5px 10px", borderRadius: 6,
-            border: "1px solid var(--cp-accent)",
-            background: "transparent", color: "var(--cp-accent)",
-            fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-            display: "inline-flex", alignItems: "center", gap: 4,
-            opacity: isReidentifying ? 0.5 : 1,
-          }}
+          style={{ ...btnBase, opacity: isReidentifying ? 0.5 : 1 }}
           onClick={onBatchReIdentify}
           disabled={isReidentifying}
         >
@@ -72,13 +75,7 @@ export default function BulkBar({
           <button
             className="ui-tip"
             data-tip="Remove from this collection"
-            style={{
-              padding: "5px 10px", borderRadius: 6,
-              border: "1px solid var(--cp-border)",
-              background: "transparent", color: "var(--cp-text-secondary)",
-              fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-              display: "inline-flex", alignItems: "center", gap: 4,
-            }}
+            style={btnBase}
             onClick={() => onRemoveFromCollection(activeCollectionId, [...selected])}
           >
             <FolderMinus size={12} strokeWidth={2} />
@@ -91,10 +88,8 @@ export default function BulkBar({
             className="ui-tip"
             data-tip="Add selected to collection"
             style={{
-              padding: "5px 8px", borderRadius: 6,
-              border: "1px solid var(--cp-border)",
-              background: "transparent", color: "var(--cp-text)",
-              fontSize: 12, fontFamily: "inherit", cursor: "pointer",
+              ...btnBase, padding: "5px 8px",
+              background: "var(--cp-bulk-input-bg)",
             }}
             value=""
             onChange={e => {

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
-import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter, DragOverlay } from "@dnd-kit/core";
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, rectSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -149,6 +149,15 @@ export default function Commonplace() {
   const keyboardSensor = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
   const sensors = useSensors(pointerSensor, keyboardSensor);
   const [activeDragId, setActiveDragId] = useState(null);
+
+  // Prioritize collection droppables (pointer must be inside them),
+  // then fall back to closestCenter for sortable reordering
+  const collisionDetection = useCallback((args) => {
+    const pointerHits = pointerWithin(args);
+    const collectionHit = pointerHits.find(c => typeof c.id === "string" && c.id.startsWith("collection:"));
+    if (collectionHit) return [collectionHit];
+    return closestCenter(args);
+  }, []);
 
   const handleDndStart = useCallback(({ active }) => {
     setActiveDragId(active.id);
@@ -846,7 +855,7 @@ export default function Commonplace() {
           ))}
 
           {/* Main content area with optional sidebar */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
+          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
           <div style={{ display: "flex", gap: 0 }}>
             <CollectionsSidebar
                 collections={collections}
@@ -994,7 +1003,7 @@ export default function Commonplace() {
                 <div style={{ position: "relative" }}>
                   {count > 1 && (
                     <span style={{
-                      position: "absolute", top: -8, left: -8,
+                      position: "absolute", top: -8, left: -8, zIndex: 1,
                       background: "#3C5775", color: "#fff",
                       fontSize: 11, fontWeight: 700, lineHeight: 1,
                       padding: "3px 7px", borderRadius: 10,

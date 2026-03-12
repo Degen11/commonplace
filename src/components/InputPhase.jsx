@@ -327,40 +327,42 @@ const HP = {
     fontFamily: FONT_SANS,
   },
 
-  // Features
+  // Features — compact horizontal: icon left, text right, 4 across
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: 24,
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 20,
     marginTop: 40,
     textAlign: "left",
   },
   featureCard: {
-    background: "var(--cp-bg-card)",
-    border: "1px solid var(--cp-border-light)",
-    borderRadius: 14,
-    padding: "28px 24px",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 12,
+    padding: 0,
+    background: "transparent",
+    border: "none",
   },
   featureIconWrap: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    marginBottom: 16,
+    borderRadius: 9,
+    flexShrink: 0,
   },
   featureTitle: {
     fontFamily: FONT_SANS,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 600,
     color: "var(--cp-text)",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   featureDesc: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 300,
-    lineHeight: 1.6,
+    lineHeight: 1.5,
     color: "var(--cp-text-muted)",
     fontFamily: FONT_SANS,
   },
@@ -892,14 +894,16 @@ export default function InputPhase({
                   className="hp-feature-card"
                   style={{
                     ...HP.featureCard,
-                    ...reveal(featuresVisible, 0.1 + i * 0.12),
+                    ...reveal(featuresVisible, 0.1 + i * 0.1),
                   }}
                 >
                   <div style={{ ...HP.featureIconWrap, background: `${f.color}12` }}>
-                    <Icon size={24} color={f.color} strokeWidth={1.5} />
+                    <Icon size={18} color={f.color} strokeWidth={1.5} />
                   </div>
-                  <h3 style={HP.featureTitle}>{f.title}</h3>
-                  <p style={HP.featureDesc}>{f.desc}</p>
+                  <div>
+                    <h3 style={HP.featureTitle}>{f.title}</h3>
+                    <p style={HP.featureDesc}>{f.desc}</p>
+                  </div>
                 </div>
               );
             })}

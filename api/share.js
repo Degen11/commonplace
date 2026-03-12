@@ -1,8 +1,8 @@
 import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
+import { sharePostSchema, shareGetSchema, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 15;
 const ID_LENGTH = 8;
-const MAX_QUOTES = 10000;
 const EXPIRY_DAYS = 30;
 
 // Generate a short URL-safe ID (a-z, 0-9)
@@ -13,17 +13,6 @@ function generateShareId() {
   globalThis.crypto.getRandomValues(bytes);
   for (let i = 0; i < ID_LENGTH; i++) id += chars[bytes[i] % chars.length];
   return id;
-}
-
-// Validate a single quote for sharing (minimal: text, source, category, fav)
-function validateShareQuote(q) {
-  if (!Array.isArray(q) || q.length < 3) return null;
-  const [text, source, category, fav] = q;
-  if (typeof text !== 'string' || typeof source !== 'string' || typeof category !== 'string') return null;
-  if (text.length === 0 || text.length > 5000) return null;
-  if (source.length > 500 || category.length > 100) return null;
-  const clean = s => s.replace(/<[^>]*>/g, '').trim();
-  return [clean(text), clean(source), clean(category), fav === 1 ? 1 : 0];
 }
 
 export default async function handler(req, res) {
@@ -48,10 +37,9 @@ export default async function handler(req, res) {
 
   // ── GET: Fetch a shared collection ──
   if (req.method === 'GET') {
-    const id = req.query.id;
-    if (!id || typeof id !== 'string' || id.length < 4 || id.length > 20) {
-      return res.status(400).json({ error: 'Invalid share ID' });
-    }
+    const { ok, error: idError } = parseBody(shareGetSchema, req.query);
+    if (!ok) return res.status(400).json({ error: 'Invalid share ID' });
+    const { id } = req.query;
 
     try {
       const { data, error } = await supabase
@@ -90,28 +78,14 @@ export default async function handler(req, res) {
       return res.status(415).json({ error: 'Content-Type must be application/json' });
     }
 
-    const { quotes, title } = req.body || {};
+    const { ok, data: parsed, error: validationError } = parseBody(sharePostSchema, req.body);
+    if (!ok) return res.status(400).json({ error: validationError });
 
-    if (!Array.isArray(quotes) || quotes.length === 0) {
-      return res.status(400).json({ error: 'quotes must be a non-empty array' });
-    }
-    if (quotes.length > MAX_QUOTES) {
-      return res.status(400).json({ error: `Too many quotes (max ${MAX_QUOTES})` });
-    }
-
-    const validated = [];
-    for (const q of quotes) {
-      const v = validateShareQuote(q);
-      if (v) validated.push(v);
-    }
+    const { quotes: validated, title: sanitizedTitle } = parsed;
 
     if (validated.length === 0) {
       return res.status(400).json({ error: 'No valid quotes found' });
     }
-
-    const sanitizedTitle = typeof title === 'string'
-      ? title.replace(/<[^>]*>/g, '').trim().slice(0, 100)
-      : null;
 
     const id = generateShareId();
     const expiresAt = new Date(Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString();

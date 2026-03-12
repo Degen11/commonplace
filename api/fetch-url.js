@@ -1,4 +1,5 @@
 import { setCorsHeaders, validateOrigin, getClientIp, getSupabase, checkRateLimit } from './_shared.js';
+import { fetchUrlSchema, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 15; // per minute
 const MAX_CONTENT_LENGTH = 500_000; // 500KB text limit
@@ -21,24 +22,13 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
   }
 
-  const { url, extractMode = 'all' } = req.body || {};
-  if (!url || typeof url !== 'string') {
-    return res.status(400).json({ error: 'URL is required' });
-  }
+  const { ok, data: body, error: validationError } = parseBody(fetchUrlSchema, req.body);
+  if (!ok) return res.status(400).json({ error: validationError });
 
-  const validModes = ['all', 'quotes', 'main', 'headings'];
-  if (!validModes.includes(extractMode)) {
-    return res.status(400).json({ error: 'Invalid extractMode. Use: all, quotes, main, headings' });
-  }
+  const { url, extractMode } = body;
 
-  // Validate URL
-  let parsed;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return res.status(400).json({ error: 'Invalid URL' });
-  }
-
+  // Validate protocol (Zod validates URL format, but we also need protocol check)
+  const parsed = new URL(url);
   if (!['http:', 'https:'].includes(parsed.protocol)) {
     return res.status(400).json({ error: 'Only HTTP/HTTPS URLs are supported' });
   }

@@ -1,4 +1,5 @@
 import { setCorsHeaders, validateOrigin, getClientIp, checkRateLimit, getSupabase } from './_shared.js';
+import { lookupSchema, parseBody } from './_schemas.js';
 
 const RATE_LIMIT = 60;
 
@@ -147,14 +148,11 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests' });
   }
 
-  const { quotes } = req.body || {};
-  if (!Array.isArray(quotes) || quotes.length === 0 || quotes.length > 20) {
-    return res.status(400).json({ error: 'Invalid quotes array (1-20 items)' });
-  }
+  const { ok, data: body, error: validationError } = parseBody(lookupSchema, req.body);
+  if (!ok) return res.status(400).json({ error: validationError });
 
-  const results = await Promise.all(quotes.map(async (q, i) => {
-    const text = typeof q.text === 'string' ? q.text : '';
-    const hint = typeof q.hint === 'string' ? q.hint : null;
+  const results = await Promise.all(body.quotes.map(async (q, i) => {
+    const { text, hint } = q;
     if (!text) return { i, found: false };
 
     const norm = normalizeForCache(text);

@@ -22,7 +22,6 @@ import {
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT,
 } from "../config";
 
-import Toast from "./Toast";
 import DupeModal from "./DupeModal";
 import CollectionDupeModal from "./CollectionDupeModal";
 import InputPhase from "./InputPhase";
@@ -50,7 +49,7 @@ import {
 } from "lucide-react";
 
 export default function Commonplace() {
-  const { toasts, showToast, dismissToast } = useToastContext();
+  const { showToast } = useToastContext();
   const {
     quotes, setQuotes,
     customCats, setCustomCats,
@@ -595,8 +594,6 @@ export default function Commonplace() {
       {/* ── Results phase ── */}
       {phase === "results" && (
         <div style={styles.wrap} className={fadeClass}>
-
-          {toasts.length > 0 && <Toast key={toasts[0].id} id={toasts[0].id} message={toasts[0].message} action={toasts[0].action} onAction={toasts[0].onAction} onDismiss={dismissToast} variant={toasts[0].variant} />}
 
           {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 

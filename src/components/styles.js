@@ -265,6 +265,7 @@ export const baseCSS = `
   }
   @media (max-width: 600px) {
     .hp-features-grid{grid-template-columns:1fr !important}
+    .hp-hero-sub{max-width:none !important}
     .hp-hero-headline{font-size:32px !important;letter-spacing:-1px !important}
     .hp-hero-sub{font-size:16px !important}
     .hp-section{padding:48px 20px !important}

@@ -252,8 +252,7 @@ export const baseCSS = `
   /* ═══════════ Homepage redesign ═══════════ */
   .hp-primary{transition:all .2s ease}
   .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.3);transform:translateY(-1px)}
-  .hp-feature-card{transition:all .25s ease}
-  .hp-feature-card:hover{border-color:rgba(60,87,117,0.2) !important;transform:translateY(-3px);box-shadow:var(--cp-shadow-card)}
+  .hp-feature-card{transition:opacity .25s ease}
   html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
 
   /* Hero split → stack on tablet */

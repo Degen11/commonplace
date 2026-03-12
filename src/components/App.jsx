@@ -983,14 +983,24 @@ export default function Commonplace() {
               const count = selected.has(activeDragId) && selected.size > 1 ? selected.size : 1;
               const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
               return (
-                <div style={{
-                  background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
-                  borderRadius: 8, padding: "8px 14px", fontSize: 13,
-                  boxShadow: "var(--cp-shadow-md)", maxWidth: 320, opacity: 0.92,
-                  color: "var(--cp-text)",
-                }}>
-                  {preview}
-                  {count > 1 && <span style={{ marginLeft: 8, fontSize: 11, color: "var(--cp-text-muted)", fontWeight: 600 }}>+{count - 1} more</span>}
+                <div style={{ position: "relative" }}>
+                  <div style={{
+                    background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
+                    borderRadius: 8, padding: "8px 14px", fontSize: 13,
+                    boxShadow: "var(--cp-shadow-md)", maxWidth: 320, opacity: 0.92,
+                    color: "var(--cp-text)",
+                  }}>
+                    {preview}
+                  </div>
+                  {count > 1 && (
+                    <span style={{
+                      position: "absolute", top: -8, right: -8,
+                      background: "#2383E2", color: "#fff",
+                      fontSize: 11, fontWeight: 700, lineHeight: 1,
+                      padding: "3px 7px", borderRadius: 10,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
+                    }}>{count}</span>
+                  )}
                 </div>
               );
             })() : null}

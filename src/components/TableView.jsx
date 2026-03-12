@@ -113,6 +113,8 @@ const MemoTableRow = memo(function TableRow({
       className="qrow"
       data-id={q.id}
       {...(isMobile ? longPress : {})}
+      {...(isEd || isInlineEditing ? {} : listeners)}
+      {...attributes}
       style={{
         ...sortableStyle,
         ...(compact ? styles.rowCompact : styles.row),
@@ -121,13 +123,12 @@ const MemoTableRow = memo(function TableRow({
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .4, zIndex: 1 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
+        ...(!isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
     >
       <div
         className="drag-handle"
-        style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "grab", touchAction: "none" }}
-        {...(isEd || isInlineEditing ? {} : listeners)}
-        {...attributes}
+        style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "grab" }}
       >
         <GripVertical size={14} strokeWidth={1.5} />
       </div>

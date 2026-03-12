@@ -4,6 +4,20 @@ import { normalize } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { Lightbulb } from "lucide-react";
 
+// Restore common contractions stripped during normalization.
+// Only handles unambiguous cases (e.g. "weve" → "we've" but not "were" which could be past tense).
+function restoreContractions(text) {
+  return text
+    .replace(/\b(don|won|can|couldn|shouldn|wouldn|didn|isn|aren|wasn|weren|hasn|haven|hadn|mustn|needn|ain)t\b/gi, "$1't")
+    .replace(/\b(we|you|they|could|should|would|might)ve\b/gi, "$1've")
+    .replace(/\bive\b/gi, "I've")
+    .replace(/\b(you|they)re\b/gi, "$1're")
+    .replace(/\b(you|they)ll\b/gi, "$1'll")
+    .replace(/\b(you|they)d\b/gi, "$1'd")
+    .replace(/\b(let|that|what|who|here|there|where|how)s\b/gi, "$1's")
+    .replace(/\bim\b/g, "I'm");
+}
+
 // Finds the closest local DB match to the current text.
 // db is null until the dynamic import resolves (gracefully returns null then).
 // Common words that inflate similarity scores without meaningful overlap
@@ -57,8 +71,13 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
     return findSuggestion(text, localDb);
   }, [text, dismissed, localDb]);
 
+  const formatSuggestionText = (t) => {
+    const restored = restoreContractions(t);
+    return restored.charAt(0).toUpperCase() + restored.slice(1);
+  };
+
   const applySuggestion = () => {
-    setText(suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1));
+    setText(formatSuggestionText(suggestion.t));
     setSource(suggestion.s);
     setCategory(suggestion.c);
     setDismissed(true);
@@ -92,7 +111,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
   }}>
     <span style={{ color:"var(--cp-text-muted)", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
     <span style={{ color:"var(--cp-text-secondary)", fontStyle:"italic", flex:1 }}>
-      "{suggestion.t.charAt(0).toUpperCase() + suggestion.t.slice(1)}" — {suggestion.s}
+      "{formatSuggestionText(suggestion.t)}" — {suggestion.s}
     </span>
     <button
       onClick={applySuggestion}

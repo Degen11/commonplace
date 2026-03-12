@@ -221,33 +221,48 @@ const HP = {
 
   // Timeline — horizontal
   timeline: {
+    position: "relative",
+    marginTop: 48,
+    textAlign: "left",
+  },
+  timelineTrack: {
+    position: "absolute",
+    top: 4,
+    left: 0,
+    right: 0,
+    height: 2,
+    background: "var(--cp-border)",
+    borderRadius: 1,
+  },
+  timelineTrackFill: {
+    position: "absolute",
+    top: 4,
+    left: 0,
+    width: "75%",
+    height: 2,
+    background: `linear-gradient(90deg, var(--cp-border-dim) 0%, ${CP_ACCENT} 100%)`,
+    borderRadius: 1,
+  },
+  timelineColumns: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
     gap: 24,
-    marginTop: 48,
-    textAlign: "left",
+    position: "relative",
   },
   timelineMoment: {
     display: "flex",
     flexDirection: "column",
+    paddingTop: 24,
     position: "relative",
-    paddingTop: 20,
-  },
-  timelineBar: {
-    position: "absolute",
-    top: 3,
-    left: 4,
-    right: -24,
-    height: 1,
-    background: "var(--cp-border)",
   },
   timelineDot: {
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10,
     borderRadius: "50%",
     background: "var(--cp-border-dim)",
+    border: "2px solid var(--cp-bg-panel)",
     position: "absolute",
-    top: 0,
+    top: -1,
     left: 0,
     zIndex: 1,
   },
@@ -781,43 +796,46 @@ export default function InputPhase({
           </div>
 
           <div className="hp-timeline" style={HP.timeline}>
-            {TIMELINE_MOMENTS.map((moment, i) => (
+            {/* Continuous track line */}
+            <div style={HP.timelineTrack} />
+            <div style={HP.timelineTrackFill} />
+
+            <div className="hp-timeline-cols" style={HP.timelineColumns}>
+              {TIMELINE_MOMENTS.map((moment, i) => (
+                <div
+                  key={i}
+                  style={{
+                    ...HP.timelineMoment,
+                    ...reveal(timelineVisible, 0.15 + i * 0.15),
+                  }}
+                >
+                  <div style={HP.timelineDot} />
+                  <div style={HP.timelinePeriod}>{moment.period}</div>
+                  <div style={HP.timelineCount}>{moment.count} quotes</div>
+                  <div style={HP.timelineQuotes}>
+                    {moment.quotes.map((q, j) => (
+                      <div key={j} className="hp-timeline-quote" style={HP.timelineQuote}>
+                        <span style={HP.timelineQuoteTag(q.tag)}>{q.tag}</span>
+                        <span style={HP.timelineQuoteText}>&ldquo;{q.text}&rdquo;</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Final milestone */}
               <div
-                key={i}
                 style={{
                   ...HP.timelineMoment,
-                  ...reveal(timelineVisible, 0.15 + i * 0.15),
+                  ...reveal(timelineVisible, 0.15 + TIMELINE_MOMENTS.length * 0.15),
                 }}
               >
-                {/* Dot + horizontal connecting bar */}
-                <div style={HP.timelineDot} />
-                {i < TIMELINE_MOMENTS.length - 1 && <div style={HP.timelineBar} />}
-
-                <div style={HP.timelinePeriod}>{moment.period}</div>
-                <div style={HP.timelineCount}>{moment.count} quotes</div>
-                <div style={HP.timelineQuotes}>
-                  {moment.quotes.map((q, j) => (
-                    <div key={j} className="hp-timeline-quote" style={HP.timelineQuote}>
-                      <span style={HP.timelineQuoteTag(q.tag)}>{q.tag}</span>
-                      <span style={HP.timelineQuoteText}>&ldquo;{q.text}&rdquo;</span>
-                    </div>
-                  ))}
+                <div style={{ ...HP.timelineDot, background: CP_ACCENT, width: 14, height: 14, left: -2, top: -3, border: `2px solid var(--cp-bg-panel)` }} />
+                <div style={HP.timelinePeriod}>Your library</div>
+                <div style={{ ...HP.timelineCount, fontSize: 28, color: CP_ACCENT }}>200+</div>
+                <div style={{ fontSize: 13, color: "var(--cp-text-muted)", fontFamily: FONT_SANS, lineHeight: 1.5 }}>
+                  Searchable, organized,<br />always yours
                 </div>
-              </div>
-            ))}
-
-            {/* Final milestone */}
-            <div
-              style={{
-                ...HP.timelineMoment,
-                ...reveal(timelineVisible, 0.15 + TIMELINE_MOMENTS.length * 0.15),
-              }}
-            >
-              <div style={{ ...HP.timelineDot, background: CP_ACCENT, width: 14, height: 14, marginLeft: -3, marginTop: -3 }} />
-              <div style={HP.timelinePeriod}>Your library</div>
-              <div style={{ ...HP.timelineCount, fontSize: 24, color: CP_ACCENT }}>200+</div>
-              <div style={{ fontSize: 12, color: "var(--cp-text-muted)", fontFamily: FONT_SANS }}>
-                Searchable, organized, always yours
               </div>
             </div>
           </div>

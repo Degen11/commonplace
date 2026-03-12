@@ -68,16 +68,18 @@ const TIMELINE_MOMENTS = [
 
 // ── Homepage-specific styles ─────────────────────────────────────────────────
 const HP = {
-  // Hero
+  // Hero — split layout
   hero: {
-    minHeight: "90vh",
-    display: "flex",
-    flexDirection: "column",
+    minHeight: "100vh",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
     alignItems: "center",
-    justifyContent: "center",
-    padding: "80px 32px 48px",
+    gap: 48,
+    padding: "100px 48px 48px",
     position: "relative",
     background: "var(--cp-bg)",
+    maxWidth: 1200,
+    margin: "0 auto",
   },
   heroGlow: {
     position: "absolute",
@@ -85,8 +87,8 @@ const HP = {
     height: 300,
     background: "radial-gradient(ellipse, rgba(60,87,117,0.06) 0%, transparent 70%)",
     pointerEvents: "none",
-    top: "45%",
-    left: "50%",
+    top: "40%",
+    left: "25%",
     transform: "translate(-50%, -50%)",
   },
   nav: {
@@ -115,15 +117,19 @@ const HP = {
     letterSpacing: -0.5,
     color: "var(--cp-text)",
   },
-  heroContent: {
-    textAlign: "center",
+  heroLeft: {
     animation: "fadeUp .8s ease",
+    position: "relative",
+    zIndex: 1,
+  },
+  heroRight: {
+    animation: "fadeUp .8s .15s ease both",
     position: "relative",
     zIndex: 1,
   },
   heroHeadline: {
     fontFamily: FONT_SERIF,
-    fontSize: 56,
+    fontSize: 48,
     fontWeight: 700,
     letterSpacing: -2,
     lineHeight: 1.1,
@@ -136,16 +142,8 @@ const HP = {
     fontWeight: 300,
     lineHeight: 1.7,
     color: "var(--cp-text-muted)",
-    marginBottom: 36,
-    maxWidth: 480,
-    margin: "0 auto 36px",
-  },
-  heroCtas: {
-    display: "flex",
-    gap: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 28,
+    maxWidth: 440,
   },
   heroPrimary: {
     display: "inline-flex",
@@ -161,46 +159,23 @@ const HP = {
     fontFamily: FONT_SANS,
     letterSpacing: -0.2,
   },
-  heroGhost: {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "14px 28px",
-    border: "1px solid var(--cp-border)",
-    borderRadius: 10,
-    background: "transparent",
-    color: "var(--cp-text-secondary)",
-    fontSize: 16,
-    fontWeight: 500,
-    cursor: "pointer",
-    fontFamily: FONT_SANS,
-  },
   heroTrust: {
     fontSize: 13,
     color: "var(--cp-text-faint)",
     letterSpacing: 0.02,
-  },
-  scrollHint: {
-    position: "absolute",
-    bottom: 32,
-    left: "50%",
-    transform: "translateX(-50%)",
-    color: "var(--cp-text-faint)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    marginTop: 20,
   },
 
   // Sections
   section: {
-    padding: "64px 32px",
+    padding: "80px 48px",
   },
   sectionAlt: {
     background: "var(--cp-bg-panel)",
   },
   sectionInner: {
-    maxWidth: 800,
+    maxWidth: 1100,
     margin: "0 auto",
-    textAlign: "center",
   },
   sectionLabel: {
     fontSize: 12,
@@ -226,55 +201,55 @@ const HP = {
     lineHeight: 1.7,
     color: "var(--cp-text-muted)",
     maxWidth: 520,
-    margin: "0 auto",
     fontFamily: FONT_SANS,
   },
 
-  // Animation wrap
-  animationWrap: {
+  // How it works — asymmetric split (text left, animation right)
+  howSplit: {
+    display: "grid",
+    gridTemplateColumns: "5fr 7fr",
+    gap: 48,
+    alignItems: "center",
+  },
+  howLeft: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  howRight: {
     maxWidth: 560,
-    margin: "40px auto 0",
   },
 
-  // Timeline
+  // Timeline — horizontal
   timeline: {
-    maxWidth: 480,
-    margin: "48px auto 0",
-    position: "relative",
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 24,
+    marginTop: 48,
     textAlign: "left",
   },
   timelineMoment: {
     display: "flex",
-    gap: 20,
-    position: "relative",
-    paddingBottom: 36,
-  },
-  timelineDotWrap: {
-    display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    flexShrink: 0,
-    width: 8,
-    paddingTop: 3,
+    position: "relative",
+    paddingTop: 20,
+  },
+  timelineBar: {
+    position: "absolute",
+    top: 3,
+    left: 4,
+    right: -24,
+    height: 1,
+    background: "var(--cp-border)",
   },
   timelineDot: {
     width: 8,
     height: 8,
     borderRadius: "50%",
     background: "var(--cp-border-dim)",
-    flexShrink: 0,
+    position: "absolute",
+    top: 0,
+    left: 0,
     zIndex: 1,
-  },
-  timelineLine: {
-    width: 1,
-    flex: 1,
-    background: "var(--cp-border)",
-    marginTop: 4,
-  },
-  timelineContent: {
-    flex: 1,
-    minWidth: 0,
-    paddingTop: 0,
   },
   timelinePeriod: {
     fontSize: 11,
@@ -569,7 +544,6 @@ export default function InputPhase({
 }) {
   // Scroll-reveal refs
   const [howRef, howVisible] = useScrollReveal();
-  const [inputRef, inputVisible] = useScrollReveal();
   const [timelineRef, timelineVisible] = useScrollReveal(0.1);
   const [featuresRef, featuresVisible] = useScrollReveal();
   const [ctaRef, ctaVisible] = useScrollReveal();
@@ -599,81 +573,32 @@ export default function InputPhase({
       </nav>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          HERO
+          HERO — split layout: headline left, input card right
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="hp-hero" style={HP.hero}>
+      <section className="hp-hero" id="input-section" style={HP.hero}>
         <div style={HP.heroGlow} />
-        <div style={HP.heroContent}>
+
+        {/* Left column — headline & value prop */}
+        <div style={HP.heroLeft}>
           <h1 className="hp-hero-headline" style={HP.heroHeadline}>
-            Your personal library<br />of ideas
+            Your personal<br />library of ideas
           </h1>
           <p className="hp-hero-sub" style={HP.heroSub}>
             Paste messy quotes, phrases, and fragments.
-            <br />
             We organize everything and identify the sources.
           </p>
-          <div className="hp-ctas" style={HP.heroCtas}>
-            <button className="hp-primary" style={HP.heroPrimary} onClick={() => scrollTo("input-section")}>
-              Start organizing <ArrowRight size={16} strokeWidth={2} style={{ marginLeft: 6 }} />
-            </button>
-            <button className="hp-ghost" style={HP.heroGhost} onClick={() => scrollTo("how-section")}>
-              See how it works
-            </button>
-          </div>
           <p style={HP.heroTrust}>No signup · Private processing · Instant results · Free</p>
         </div>
 
-        {/* Scroll hint */}
-        <div className="hp-scroll-hint" style={HP.scrollHint}>
-          <ChevronDown size={20} strokeWidth={1.5} />
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          HOW IT WORKS — animated demo
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section
-        id="how-section"
-        ref={howRef}
-        className="hp-section"
-        style={{ ...HP.section, ...HP.sectionAlt, ...reveal(howVisible) }}
-      >
-        <div style={HP.sectionInner}>
-          <div style={HP.sectionLabel}>How it works</div>
-          <h2 style={HP.sectionHeadline}>Paste anything. We handle the rest.</h2>
-          <p style={HP.sectionSub}>
-            Drop in your messy collection of quotes, and watch them transform
-            into an organized, searchable library.
-          </p>
-          <div style={HP.animationWrap}>
-            <HowItWorksAnimation active={howVisible} />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          TRY IT NOW — input area
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <section
-        id="input-section"
-        ref={inputRef}
-        className="hp-section"
-        style={{ ...HP.section, ...reveal(inputVisible) }}
-      >
-        <div style={HP.sectionInner}>
-          <div style={HP.sectionLabel}>Try it now</div>
-          <h2 style={HP.sectionHeadline}>Paste your quotes below</h2>
-          <p style={{ ...HP.sectionSub, marginBottom: 32 }}>
-            One per line, messy is fine. We&rsquo;ll sort it all out.
-          </p>
-
+        {/* Right column — input card */}
+        <div style={HP.heroRight}>
           {initialLoading && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 16px", marginBottom: 16, background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)", borderRadius: 10, maxWidth: 640, margin: "0 auto 16px", fontSize: 13, color: "var(--cp-text-muted)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", marginBottom: 16, background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)", borderRadius: 10, fontSize: 13, color: "var(--cp-text-muted)" }}>
               <RefreshCw size={14} strokeWidth={2} className="spin" /> Restoring from cloud&hellip;
             </div>
           )}
 
-          <div style={{ ...styles.inputCard, maxWidth: 640, margin: "0 auto" }}>
+          <div style={{ ...styles.inputCard, maxWidth: "100%" }}>
             {/* Tab row */}
             <div style={styles.tabRow}>
               <button
@@ -701,7 +626,7 @@ export default function InputPhase({
                 placeholder={
                   "Paste everything here \u2014 one per line, messy is fine:\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
                 }
-                rows={10}
+                rows={8}
               />
             )}
 
@@ -813,7 +738,33 @@ export default function InputPhase({
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          TIMELINE — library growth over time
+          HOW IT WORKS — asymmetric split: text left, animation right
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section
+        id="how-section"
+        ref={howRef}
+        className="hp-section"
+        style={{ ...HP.section, ...HP.sectionAlt, ...reveal(howVisible) }}
+      >
+        <div style={HP.sectionInner}>
+          <div className="hp-how-split" style={HP.howSplit}>
+            <div style={HP.howLeft}>
+              <div style={HP.sectionLabel}>How it works</div>
+              <h2 style={HP.sectionHeadline}>Paste anything.<br />We handle the rest.</h2>
+              <p style={HP.sectionSub}>
+                Drop in your messy collection of quotes, and watch them transform
+                into an organized, searchable library.
+              </p>
+            </div>
+            <div style={HP.howRight}>
+              <HowItWorksAnimation active={howVisible} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          TIMELINE — horizontal library growth
       ═══════════════════════════════════════════════════════════════════════ */}
       <section
         ref={timelineRef}
@@ -821,41 +772,36 @@ export default function InputPhase({
         style={{ ...HP.section, ...HP.sectionAlt, ...reveal(timelineVisible) }}
       >
         <div style={HP.sectionInner}>
-          <div style={HP.sectionLabel}>Build over time</div>
-          <h2 style={HP.sectionHeadline}>Your library grows with you</h2>
-          <p style={HP.sectionSub}>
-            Every quote you collect becomes part of your personal archive.
-            Over time, it becomes a rich repository of the ideas that shaped your thinking.
-          </p>
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+            <div style={HP.sectionLabel}>Build over time</div>
+            <h2 style={HP.sectionHeadline}>Your library grows with you</h2>
+            <p style={{ ...HP.sectionSub, margin: "0 auto" }}>
+              Every quote you collect becomes part of your personal archive.
+            </p>
+          </div>
 
-          <div style={HP.timeline}>
+          <div className="hp-timeline" style={HP.timeline}>
             {TIMELINE_MOMENTS.map((moment, i) => (
               <div
                 key={i}
                 style={{
                   ...HP.timelineMoment,
-                  ...reveal(timelineVisible, 0.15 + i * 0.2),
+                  ...reveal(timelineVisible, 0.15 + i * 0.15),
                 }}
               >
-                {/* Dot + connecting line */}
-                <div style={HP.timelineDotWrap}>
-                  <div style={HP.timelineDot} />
-                  {i < TIMELINE_MOMENTS.length && <div style={HP.timelineLine} />}
-                </div>
+                {/* Dot + horizontal connecting bar */}
+                <div style={HP.timelineDot} />
+                {i < TIMELINE_MOMENTS.length - 1 && <div style={HP.timelineBar} />}
 
-                {/* Content */}
-                <div style={HP.timelineContent}>
-                  <div style={HP.timelinePeriod}>{moment.period}</div>
-                  <div style={HP.timelineCount}>{moment.count} quotes</div>
-                  <div style={HP.timelineQuotes}>
-                    {moment.quotes.map((q, j) => (
-                      <div key={j} className="hp-timeline-quote" style={HP.timelineQuote}>
-                        <span style={HP.timelineQuoteTag(q.tag)}>{q.tag}</span>
-                        <span style={HP.timelineQuoteText}>&ldquo;{q.text}&rdquo;</span>
-                        <span style={HP.timelineQuoteSrc}>&mdash; {q.source}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div style={HP.timelinePeriod}>{moment.period}</div>
+                <div style={HP.timelineCount}>{moment.count} quotes</div>
+                <div style={HP.timelineQuotes}>
+                  {moment.quotes.map((q, j) => (
+                    <div key={j} className="hp-timeline-quote" style={HP.timelineQuote}>
+                      <span style={HP.timelineQuoteTag(q.tag)}>{q.tag}</span>
+                      <span style={HP.timelineQuoteText}>&ldquo;{q.text}&rdquo;</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -864,19 +810,14 @@ export default function InputPhase({
             <div
               style={{
                 ...HP.timelineMoment,
-                paddingBottom: 0,
-                ...reveal(timelineVisible, 0.15 + TIMELINE_MOMENTS.length * 0.2),
+                ...reveal(timelineVisible, 0.15 + TIMELINE_MOMENTS.length * 0.15),
               }}
             >
-              <div style={HP.timelineDotWrap}>
-                <div style={{ ...HP.timelineDot, background: CP_ACCENT, width: 14, height: 14, marginLeft: -3, marginTop: -3 }} />
-              </div>
-              <div style={HP.timelineContent}>
-                <div style={HP.timelinePeriod}>Your library</div>
-                <div style={{ ...HP.timelineCount, fontSize: 28, color: CP_ACCENT }}>200+ quotes</div>
-                <div style={{ fontSize: 13, color: "var(--cp-text-muted)", marginTop: 4, fontFamily: FONT_SANS }}>
-                  Searchable, organized, always accessible
-                </div>
+              <div style={{ ...HP.timelineDot, background: CP_ACCENT, width: 14, height: 14, marginLeft: -3, marginTop: -3 }} />
+              <div style={HP.timelinePeriod}>Your library</div>
+              <div style={{ ...HP.timelineCount, fontSize: 24, color: CP_ACCENT }}>200+</div>
+              <div style={{ fontSize: 12, color: "var(--cp-text-muted)", fontFamily: FONT_SANS }}>
+                Searchable, organized, always yours
               </div>
             </div>
           </div>
@@ -891,10 +832,10 @@ export default function InputPhase({
         className="hp-section"
         style={{ ...HP.section, ...reveal(featuresVisible) }}
       >
-        <div style={HP.sectionInner}>
+        <div style={{ ...HP.sectionInner, textAlign: "center" }}>
           <div style={HP.sectionLabel}>Features</div>
           <h2 style={HP.sectionHeadline}>Everything you need</h2>
-          <p style={HP.sectionSub}>
+          <p style={{ ...HP.sectionSub, margin: "0 auto" }}>
             Simple enough to use in seconds. Powerful enough to manage hundreds of quotes.
           </p>
 
@@ -949,11 +890,11 @@ export default function InputPhase({
         className="hp-section"
         style={{ ...HP.section, ...HP.sectionAlt, ...reveal(ctaVisible) }}
       >
-        <div style={{ ...HP.sectionInner, textAlign: "center" }}>
+        <div style={{ ...HP.sectionInner, textAlign: "center", maxWidth: 600, margin: "0 auto" }}>
           <h2 style={{ ...HP.sectionHeadline, fontSize: 36, marginBottom: 16 }}>
             Start building your library
           </h2>
-          <p style={{ ...HP.sectionSub, marginBottom: 32 }}>
+          <p style={{ ...HP.sectionSub, marginBottom: 32, margin: "0 auto 32px" }}>
             Free. Private. No signup required.
           </p>
           <button className="hp-primary" style={HP.heroPrimary} onClick={() => scrollTo("input-section")}>

@@ -250,29 +250,29 @@ export const baseCSS = `
   }
 
   /* ═══════════ Homepage redesign ═══════════ */
-  @keyframes scrollBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-  .hp-scroll-hint{animation:scrollBounce 2s ease-in-out infinite}
   .hp-primary{transition:all .2s ease}
   .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.3);transform:translateY(-1px)}
-  .hp-ghost{transition:all .2s ease}
-  .hp-ghost:hover{background:var(--cp-bg-hover);border-color:var(--cp-border-dim)}
   .hp-feature-card{transition:all .25s ease}
   .hp-feature-card:hover{border-color:rgba(60,87,117,0.2) !important;transform:translateY(-3px);box-shadow:var(--cp-shadow-card)}
   html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
+
+  /* Hero split → stack on tablet */
   @media (max-width: 900px) {
+    .hp-hero{grid-template-columns:1fr !important;text-align:center;gap:32px !important;min-height:auto !important;padding-top:80px !important;padding-bottom:48px !important}
     .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
+    .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
+    .hp-timeline{grid-template-columns:repeat(2, 1fr) !important}
   }
   @media (max-width: 600px) {
     .hp-features-grid{grid-template-columns:1fr !important}
-    .hp-hero-headline{font-size:36px !important;letter-spacing:-1px !important}
+    .hp-hero-headline{font-size:32px !important;letter-spacing:-1px !important}
     .hp-hero-sub{font-size:16px !important}
     .hp-section{padding:48px 20px !important}
-    .hp-hero{min-height:80vh !important}
+    .hp-hero{padding:80px 20px 40px !important}
+    .hp-timeline{grid-template-columns:1fr !important}
   }
   @media (max-width: 480px) {
     .hp-hero-headline{font-size:28px !important}
-    .hp-ctas{flex-direction:column !important;width:100%}
-    .hp-ctas button{width:100%;justify-content:center}
     .hp-timeline-quote{flex-direction:column !important;align-items:flex-start !important;gap:4px !important}
   }
 

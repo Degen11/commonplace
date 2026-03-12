@@ -14,7 +14,7 @@ export const API_BATCH_SIZE         = 10;
 
 // Toast
 export const TOAST_DURATION_MS      = 2500;
-export const TOAST_ACTION_DURATION_MS = 8000;  // longer for undo / action toasts
+export const TOAST_ACTION_DURATION_MS = 3500;  // longer for undo / action toasts
 export const TOAST_EXIT_MS          = 180;
 
 // UI animations

@@ -486,7 +486,7 @@ export const styles = {
   bulkN:{fontSize:12,fontWeight:600,color:"var(--cp-bulk-badge-text)",whiteSpace:"nowrap",background:"var(--cp-bulk-badge)",padding:"5px 12px",borderRadius:8,lineHeight:1,letterSpacing:0.2},
   bulkDivider:{width:1,height:20,background:"var(--cp-bulk-divider)",margin:"0 10px",flexShrink:0},
   bulkGroup:{display:"flex",gap:5,alignItems:"center",whiteSpace:"nowrap"},
-  bulkSel:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
+  bulkSel:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 24px 5px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
   bulkIn:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:120,background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
   bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:"#fff",color:CP_ACCENT,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   bulkDelBtn:{padding:"5px 10px",borderRadius:6,border:"1px solid rgba(235,87,87,0.4)",background:"transparent",color:"#F87171",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",justifyContent:"center"},

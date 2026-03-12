@@ -41,10 +41,10 @@ export default function BulkBar({
       {/* ── Edit group: category + source + apply ── */}
       <div style={styles.bulkGroup}>
         <select style={styles.bulkSel} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}>
-          <option value="">Category...</option>
+          <option value="">Category</option>
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <input style={styles.bulkIn} placeholder="Source..." value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
+        <input style={styles.bulkIn} placeholder="Source" value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
         <button
           className="ui-tip bulk-apply"
           data-tip="Apply to selected"
@@ -88,7 +88,7 @@ export default function BulkBar({
             className="ui-tip"
             data-tip="Add selected to collection"
             style={{
-              ...btnBase, padding: "5px 8px",
+              ...btnBase, padding: "5px 24px 5px 8px",
               background: "var(--cp-bulk-input-bg)",
             }}
             value=""
@@ -99,7 +99,7 @@ export default function BulkBar({
               }
             }}
           >
-            <option value="">Add to collection...</option>
+            <option value="">Add to collection</option>
             {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         )}

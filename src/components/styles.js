@@ -63,14 +63,6 @@ export const baseCSS = `
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes savePulse{0%{background-color:rgba(5,150,105,0.12);border-radius:4px}100%{background-color:transparent}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-  @keyframes toastCountdown{from{width:100%}to{width:0%}}
-  [data-sonner-toast]{position:relative;overflow:hidden}
-  [data-sonner-toast]::after{
-    content:'';position:absolute;bottom:0;left:0;height:2px;width:100%;
-    background:var(--toast-bar-color,#2383E2);border-radius:0 0 8px 8px;
-    animation:toastCountdown var(--toast-duration,2.5s) linear forwards;
-    pointer-events:none;
-  }
   @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
   @keyframes overlayFade{from{opacity:0}to{opacity:1}}
   @keyframes exitFade{to{opacity:0}}

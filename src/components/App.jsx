@@ -987,9 +987,9 @@ export default function Commonplace() {
             />
           )}
 
-          {showBulkBar && <div style={{ height: 64 }} />}
-
           <Footer styles={styles} />
+
+          {showBulkBar && <div style={{ height: 64 }} />}
 
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}

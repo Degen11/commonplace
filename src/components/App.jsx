@@ -154,6 +154,14 @@ export default function Commonplace() {
     setActiveDragId(active.id);
   }, []);
 
+  // Anchor overlay to the cursor grab point instead of the element's top-left
+  const anchorToCursor = useCallback(({ transform, activatorEvent, activeNodeRect }) => {
+    if (!activatorEvent || !activeNodeRect) return transform;
+    const offsetX = activatorEvent.clientX - activeNodeRect.left;
+    const offsetY = activatorEvent.clientY - activeNodeRect.top;
+    return { ...transform, x: transform.x + offsetX - 20, y: transform.y + offsetY - 16 };
+  }, []);
+
   const handleDndEnd = useCallback(({ active, over }) => {
     setActiveDragId(null);
     if (!over || active.id === over.id) return;
@@ -976,7 +984,7 @@ export default function Commonplace() {
 
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
-          <DragOverlay dropAnimation={null}>
+          <DragOverlay dropAnimation={null} modifiers={[anchorToCursor]}>
             {activeDragId ? (() => {
               const q = quotes.find(x => x.id === activeDragId);
               if (!q) return null;
@@ -984,6 +992,15 @@ export default function Commonplace() {
               const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
               return (
                 <div style={{ position: "relative" }}>
+                  {count > 1 && (
+                    <span style={{
+                      position: "absolute", top: -8, left: -8,
+                      background: "#3C5775", color: "#fff",
+                      fontSize: 11, fontWeight: 700, lineHeight: 1,
+                      padding: "3px 7px", borderRadius: 10,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
+                    }}>{count}</span>
+                  )}
                   <div style={{
                     background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
                     borderRadius: 8, padding: "8px 14px", fontSize: 13,
@@ -992,15 +1009,6 @@ export default function Commonplace() {
                   }}>
                     {preview}
                   </div>
-                  {count > 1 && (
-                    <span style={{
-                      position: "absolute", top: -8, right: -8,
-                      background: "#2383E2", color: "#fff",
-                      fontSize: 11, fontWeight: 700, lineHeight: 1,
-                      padding: "3px 7px", borderRadius: 10,
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
-                    }}>{count}</span>
-                  )}
                 </div>
               );
             })() : null}

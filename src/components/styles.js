@@ -261,7 +261,7 @@ export const baseCSS = `
     .hp-hero{grid-template-columns:1fr !important;text-align:center;gap:32px !important;min-height:auto !important;padding-top:80px !important;padding-bottom:48px !important}
     .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
-    .hp-timeline{grid-template-columns:repeat(2, 1fr) !important}
+    .hp-timeline-cols{grid-template-columns:repeat(2, 1fr) !important}
   }
   @media (max-width: 600px) {
     .hp-features-grid{grid-template-columns:1fr !important}
@@ -269,7 +269,7 @@ export const baseCSS = `
     .hp-hero-sub{font-size:16px !important}
     .hp-section{padding:48px 20px !important}
     .hp-hero{padding:80px 20px 40px !important}
-    .hp-timeline{grid-template-columns:1fr !important}
+    .hp-timeline-cols{grid-template-columns:1fr !important}
   }
   @media (max-width: 480px) {
     .hp-hero-headline{font-size:28px !important}

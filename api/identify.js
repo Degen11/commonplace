@@ -13,6 +13,7 @@ CATEGORY DEFINITIONS (use when origin is known):
 - TV: television shows and series
 - Book: novels, non-fiction, poetry, plays
 - Music: song lyrics
+- Game: video games
 - Speech: famous speeches, interviews, public statements
 - Person: attributed to a real person (not from a specific work)
 - Phrase: common idiom or expression with no single clear origin
@@ -94,7 +95,7 @@ export default async function handler(req, res) {
 
   const safeBody = {
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4000,
+    max_tokens: 8192,
     temperature: 0,
     system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
     messages: [

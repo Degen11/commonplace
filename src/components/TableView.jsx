@@ -159,6 +159,8 @@ const MemoTableRow = memo(function TableRow({
   if (prev.isMenuOpen !== next.isMenuOpen) return false;
   if (prev.insertClass !== next.insertClass) return false;
   if (prev.searchTerm !== next.searchTerm) return false;
+  if (prev.allCats !== next.allCats) return false;
+  if (prev.customCats !== next.customCats) return false;
   if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
   if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;

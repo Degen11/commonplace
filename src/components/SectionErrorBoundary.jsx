@@ -19,17 +19,17 @@ export default class SectionErrorBoundary extends React.Component {
       return (
         <div style={{
           padding: "24px 16px", textAlign: "center",
-          background: "#FEF2F2", border: "1px solid #FECACA",
+          background: "var(--cp-error-bg)", border: "1px solid var(--cp-error-border)",
           borderRadius: 8, margin: "12px 0",
         }}>
-          <p style={{ fontSize: 13, color: "#991B1B", marginBottom: 12 }}>
+          <p style={{ fontSize: 13, color: "var(--cp-error-text)", marginBottom: 12 }}>
             {this.props.name ? `${this.props.name} encountered an error` : "Something went wrong in this section"}
           </p>
           <button
             onClick={this.handleReset}
             style={{
               padding: "6px 16px", fontSize: 12, fontFamily: "inherit",
-              background: "var(--cp-bg-card)", color: "#991B1B", border: "1px solid #FECACA",
+              background: "var(--cp-bg-card)", color: "var(--cp-error-text)", border: "1px solid var(--cp-error-border)",
               borderRadius: 6, cursor: "pointer",
             }}
           >

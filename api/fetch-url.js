@@ -43,10 +43,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Only HTTP/HTTPS URLs are supported' });
   }
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
+  try {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
@@ -55,7 +55,6 @@ export default async function handler(req, res) {
       },
       redirect: 'follow',
     });
-    clearTimeout(timeout);
 
     if (!response.ok) {
       return res.status(502).json({ error: `Failed to fetch URL (${response.status})` });
@@ -98,6 +97,8 @@ export default async function handler(req, res) {
     }
     console.error('fetch-url error:', err?.message || 'unknown');
     return res.status(500).json({ error: 'Failed to fetch URL' });
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

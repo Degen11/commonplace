@@ -1,7 +1,7 @@
 // ===================== CONSTANTS =====================
 
 // Source categories — identified from a known origin
-export const SOURCE_CATEGORIES = ["Film","TV","Book","Music","Speech","Person","Phrase"];
+export const SOURCE_CATEGORIES = ["Film","TV","Book","Music","Game","Speech","Person","Phrase"];
 
 // Vibe tags — used when source is Unknown; describe the nature/tone of the entry
 export const VIBE_TAGS = [
@@ -18,7 +18,7 @@ export const VIBE_TAGS = [
 ];
 
 export const DEFAULT_CATEGORIES = [...SOURCE_CATEGORIES, ...VIBE_TAGS, "Unknown"];
-export const QUOTED_CATS = new Set(["Film","TV","Book","Music","Speech","Person"]);
+export const QUOTED_CATS = new Set(["Film","TV","Book","Music","Game","Speech","Person"]);
 
 export const CAT_COLORS = {
   // Source categories
@@ -28,6 +28,7 @@ export const CAT_COLORS = {
   Music:        { bg: "rgba(225,29,72,0.12)",     text: "#E11D48" },   // rose
   Speech:       { bg: "rgba(59,130,246,0.14)",    text: "#2563EB" },   // blue
   Person:       { bg: "rgba(168,85,247,0.14)",    text: "#9333EA" },   // purple
+  Game:         { bg: "rgba(79,70,229,0.14)",     text: "#4F46E5" },   // indigo
   Phrase:       { bg: "rgba(14,165,233,0.14)",    text: "#0891B2" },   // cyan
 
   // Vibe tags

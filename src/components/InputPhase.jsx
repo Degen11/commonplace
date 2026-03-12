@@ -10,7 +10,7 @@ import { EXAMPLE_QUOTES } from "../data/constants";
 import {
   Pencil, Upload, FolderOpen, FileText,
   AlertTriangle, CheckCircle, ArrowRight, ChevronDown,
-  Sparkles, PenLine, Download, RefreshCw, Filter,
+  Sparkles, PenLine, Download, RefreshCw, Filter, Library,
 } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
@@ -72,9 +72,9 @@ const HP = {
   hero: {
     minHeight: "100vh",
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "5fr 7fr",
     alignItems: "center",
-    gap: 48,
+    gap: 40,
     padding: "100px 48px 48px",
     position: "relative",
     background: "var(--cp-bg)",
@@ -161,7 +161,8 @@ const HP = {
   },
   heroTrust: {
     fontSize: 13,
-    color: "var(--cp-text-faint)",
+    color: CP_ACCENT,
+    fontWeight: 500,
     letterSpacing: 0.02,
     marginTop: 20,
   },
@@ -329,7 +330,7 @@ const HP = {
   // Features
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    gridTemplateColumns: "repeat(2, 1fr)",
     gap: 24,
     marginTop: 40,
     textAlign: "left",
@@ -870,6 +871,12 @@ export default function InputPhase({
                 title: "Powerful editing",
                 desc: "Inline editing, drag to reorder, bulk operations, and custom categories.",
                 color: "#7C3AED",
+              },
+              {
+                icon: Library,
+                title: "Custom collections",
+                desc: "Curate your own collections, or let AI auto-group quotes by theme and topic.",
+                color: "#2563EB",
               },
               {
                 icon: Download,

@@ -112,7 +112,7 @@ export default function EmptyState({
                 onClick={() => setSearch("")}>"{search}" <X size={10} strokeWidth={2} /></button>
             )}
             {favFilter && (
-              <button className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid #FDE68A", background: "#FEF3C7", fontSize: 12, color: "#D97706", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
+              <button className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 50, border: "1px solid var(--cp-fav-chip-border)", background: "var(--cp-fav-chip-bg)", fontSize: 12, color: "var(--cp-fav-chip-text)", cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}
                 onClick={() => setFavFilter(false)}>&star; Favorites <X size={10} strokeWidth={2} /></button>
             )}
           </div>

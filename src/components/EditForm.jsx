@@ -103,53 +103,60 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         autoFocus
       />
 
-   {suggestion && (
-  <div style={{
-    display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
-    padding:"6px 10px",
-    background:"rgba(5,150,105,0.08)",
-    borderRadius:6,
-    border:"1px solid rgba(5,150,105,0.2)",
-    fontSize:12,
-  }}>
-    <span style={{ color:"var(--cp-text-muted)", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
-    <span style={{ color:"var(--cp-text-secondary)", fontStyle:"italic", flex:1 }}>
-      "{formatSuggestionText(suggestion.t)}" — {suggestion.s}
-    </span>
-    <button
-      onClick={applySuggestion}
-      style={{
-        padding:"2px 10px",
-        borderRadius:5,
-        border:"none",
-        cursor:"pointer",
-        background:"#059669",
-        color:"#fff",
-        fontSize:11,
-        fontWeight:600,
-        fontFamily:"inherit",
-        flexShrink:0,
-      }}
-    >
-      Use this
-    </button>
-    <button
-      onClick={() => setDismissed(true)}
-      style={{
-        padding:"2px 6px",
-        borderRadius:5,
-        border:"none",
-        cursor:"pointer",
-        background:"transparent",
-        color:"var(--cp-text-muted)",
-        fontSize:11,
-        fontFamily:"inherit",
-      }}
-    >
-      ✕
-    </button>
-  </div>
-)}
+      <div style={{
+        display:"grid",
+        gridTemplateRows: suggestion ? "1fr" : "0fr",
+        transition:"grid-template-rows .15s ease",
+      }}>
+        <div style={{ overflow:"hidden" }}>
+          <div style={{
+            display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
+            padding:"6px 10px",
+            background:"var(--cp-suggest-bg)",
+            borderRadius:6,
+            border:"1px solid var(--cp-suggest-border)",
+            fontSize:12,
+            marginTop: suggestion ? 0 : -1,
+          }}>
+            <span style={{ color:"var(--cp-text-muted)", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
+            <span style={{ color:"var(--cp-text-secondary)", fontStyle:"italic", flex:1 }}>
+              {suggestion ? `"${formatSuggestionText(suggestion.t)}" — ${suggestion.s}` : ""}
+            </span>
+            <button
+              onClick={applySuggestion}
+              style={{
+                padding:"2px 10px",
+                borderRadius:5,
+                border:"none",
+                cursor:"pointer",
+                background:"var(--cp-suggest-btn)",
+                color:"#fff",
+                fontSize:11,
+                fontWeight:600,
+                fontFamily:"inherit",
+                flexShrink:0,
+              }}
+            >
+              Use this
+            </button>
+            <button
+              onClick={() => setDismissed(true)}
+              style={{
+                padding:"2px 6px",
+                borderRadius:5,
+                border:"none",
+                cursor:"pointer",
+                background:"transparent",
+                color:"var(--cp-text-muted)",
+                fontSize:11,
+                fontFamily:"inherit",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
 
 
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>

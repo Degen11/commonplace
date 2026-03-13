@@ -131,12 +131,13 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     };
   }, [quotes]);
 
-  const hasActiveFilters = catFilter !== "All" || favFilter || search;
+  const hasActiveFilters = catFilter !== "All" || search;
+  const hasActiveFilterOrSort = hasActiveFilters || sortBy !== "default";
 
   const clearFilters = useCallback(() => {
     setCatFilter("All");
-    setFavFilter(false);
     setSearch("");
+    setSortBy("default");
   }, []);
 
   const computedStats = useMemo(() => {
@@ -158,6 +159,6 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     isMobile,
     filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
     cc, favCount, unknownCount,
-    hasActiveFilters, clearFilters, computedStats,
+    hasActiveFilters, hasActiveFilterOrSort, clearFilters, computedStats,
   };
 }

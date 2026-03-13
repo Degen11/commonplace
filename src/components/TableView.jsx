@@ -141,6 +141,7 @@ const MemoTableRow = memo(function TableRow({
         <div
           className="checkbox-visual"
           style={{ ...styles.check, ...(isSel ? styles.checkOn : {}) }}
+          onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
           onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
           role="checkbox"
           aria-checked={isSel}

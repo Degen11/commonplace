@@ -7,7 +7,7 @@ import { loadFromStorage } from "../utils/storage";
 
 const FUSE_OPTIONS = {
   keys: ["text", "source"],
-  threshold: 0.35,
+  threshold: 0.2,
   ignoreLocation: true,
   minMatchCharLength: 2,
 };

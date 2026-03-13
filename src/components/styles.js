@@ -94,7 +94,7 @@ export const baseCSS = `
   .copy-push{animation:copyPush .35s ease}
   .share-lift{animation:shareLift .35s ease}
   .phase-in{animation:fadeUp .3s ease}.phase-out{opacity:0;transition:opacity .2s ease}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;scrollbar-gutter:stable}
   div[style]:focus{outline:none;border-color:transparent}
 
   /* Fix 3 — instant CSS tooltip for confidence dots */

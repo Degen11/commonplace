@@ -233,9 +233,10 @@ export const baseCSS = `
   .view-btn{transition:background .12s ease,color .12s ease}
   .view-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
 
-  /* Category pill hover */
+  /* Category pill hover + suppress focus ring (pills are mouse-only) */
   .cat-pill{transition:all .15s ease}
   .cat-pill:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+  .cat-pill:focus{outline:none}
 
   /* Filter chip hover (empty state, attention bar) */
   .filter-chip{transition:all .12s ease}

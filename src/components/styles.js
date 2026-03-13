@@ -180,8 +180,8 @@ export const baseCSS = `
   .cat-scroll::-webkit-scrollbar{display:none}
   .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
 
-  /* Focus-visible accessibility (cat-pill excluded — active bg is sufficient) */
-  button:focus-visible:not(.cat-pill),a:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px;border-radius:4px}
+  /* Focus-visible accessibility */
+  button:focus-visible,a:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px;border-radius:4px}
   input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:1px}
   .check:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px}
 
@@ -233,10 +233,9 @@ export const baseCSS = `
   .view-btn{transition:background .12s ease,color .12s ease}
   .view-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
 
-  /* Category pill interactions — no persistent focus visuals */
-  .cat-pill{transition:background .15s ease,color .15s ease,opacity .15s ease}
+  /* Category pill interactions */
+  .cat-pill{transition:background .15s ease,color .15s ease,opacity .15s ease;user-select:none}
   .cat-pill:hover{border-color:var(--cp-border-dim);background:var(--cp-bg-hover)}
-  .cat-pill:focus,.cat-pill:focus-visible,.cat-pill:active{outline:none !important;outline-offset:0 !important;box-shadow:none !important;border-color:var(--cp-border) !important}
 
   /* Filter chip hover (empty state, attention bar) */
   .filter-chip{transition:all .12s ease}

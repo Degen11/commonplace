@@ -52,10 +52,30 @@ export const baseCSS = `
     --cp-bulk-badge:#90B4D4;--cp-bulk-badge-text:#1A1A1A;
     --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
   }
+  @media(prefers-color-scheme:dark){
+    html:not(.light){
+      --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
+      --cp-bg-tab:#2E2E2E;--cp-bg-input:#2A2A2A;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(234,88,12,0.07);--cp-bg-fav:rgba(250,204,21,0.06);--cp-fav-accent:rgba(250,204,21,0.4);
+      --cp-text:#E8E8E8;--cp-text-secondary:#CCCCCC;--cp-text-muted:#9A9A9A;--cp-text-faint:#7A7A7A;
+      --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
+      --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
+      --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
+      --cp-mini-bg:rgba(26,26,26,0.95);
+      --cp-accent:#90B4D4;
+      --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
+      --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
+      --cp-destructive:#EF4444;--cp-destructive-hover:#DC2626;
+      --cp-bulk-bg:rgba(50,50,50,0.95);--cp-bulk-border:rgba(255,255,255,0.08);--cp-bulk-divider:rgba(255,255,255,0.1);
+      --cp-bulk-text:#E8E8E8;--cp-bulk-muted:rgba(255,255,255,0.4);
+      --cp-bulk-badge:#90B4D4;--cp-bulk-badge-text:#1A1A1A;
+      --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
+    }
+  }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text)}
   ::selection{background:rgba(60,87,117,0.18)}
   html.dark ::selection{background:rgba(90,137,181,0.3)}
+  @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:rgba(90,137,181,0.3)}}
   textarea:focus,input:focus,select:focus{outline:none}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}

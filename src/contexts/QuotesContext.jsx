@@ -1,26 +1,25 @@
-import { createContext, useContext, useState, useRef, useEffect, useMemo, useCallback } from "react";
-import {
-  DEFAULT_CATEGORIES, REORDERABLE_COLS, sanitizeName,
-} from "../data/constants";
+// ── QuotesContext — thin bridge over Zustand store ──
+// Preserves the useQuotesContext() API so all consumers work unchanged.
+// State, persistence, cross-tab sync, and collection helpers now live in
+// the Zustand store (src/stores/quotesStore.js). This file handles:
+// - Mount-time side effects (shared links, initial cloud pull)
+// - Bridging the store to React context for backward compatibility
+// - Toast notifications that depend on React context (ToastContext)
+
+import { createContext, useContext, useEffect, useMemo, useCallback, useRef } from "react";
+import { DEFAULT_CATEGORIES } from "../data/constants";
 import { useToastContext } from "./ToastContext";
+import { useQuotesStore } from "../stores/quotesStore";
 import useSync from "../hooks/useSync";
 import { generateId } from "../utils/uuid";
-import { loadFromStorage } from "../utils/storage";
-import { mergeByTimestamp } from "../utils/sync";
 import { fetchWithTimeout } from "../utils/api";
 import {
-  TOMBSTONE_TTL_MS, STORAGE_WARN_BYTES, PERSIST_DEBOUNCE_MS,
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
-  API_TIMEOUT_MS,
-  LS_QUOTES, LS_CATS, LS_COL_ORDER, LS_DELETED_IDS, LS_COLLECTIONS,
+  API_TIMEOUT_MS, STORAGE_WARN_BYTES,
+  LS_QUOTES, LS_CATS,
 } from "../config";
 
 const QuotesContext = createContext(null);
-
-function isShareHash() {
-  const hash = window.location.hash.slice(1);
-  return hash.startsWith("s=") || hash.startsWith("p=");
-}
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -57,87 +56,47 @@ export function safeDecodeShareData(hash) {
 export function QuotesProvider({ children }) {
   const { showToast } = useToastContext();
 
-  // Synchronously initialize from localStorage to avoid flash of input phase.
-  // Shared links skip localStorage (handled in mount effect).
-  const [quotes, setQuotes] = useState(() => {
-    if (isShareHash()) return [];
-    return loadFromStorage(LS_QUOTES, a => Array.isArray(a) && a.length > 0);
-  });
-  const [customCats, setCustomCats] = useState(() => {
-    if (isShareHash()) return [];
-    return loadFromStorage(LS_CATS);
-  });
-  const [isSharedView, setIsSharedView] = useState(false);
+  // ── Pull state from Zustand store ──
+  const quotes = useQuotesStore(s => s.quotes);
+  const customCats = useQuotesStore(s => s.customCats);
+  const collections = useQuotesStore(s => s.collections);
+  const columnOrder = useQuotesStore(s => s.columnOrder);
+  const activeCollectionId = useQuotesStore(s => s.activeCollectionId);
+  const isSharedView = useQuotesStore(s => s.isSharedView);
 
-  const [columnOrder, setColumnOrder] = useState(() =>
-    loadFromStorage(LS_COL_ORDER,
-      p => Array.isArray(p) && p.length === REORDERABLE_COLS.length && REORDERABLE_COLS.every(c => p.includes(c)),
-      () => [...REORDERABLE_COLS])
-  );
+  // ── Pull actions from store (stable references — no useCallback needed) ──
+  const setQuotes = useQuotesStore(s => s.setQuotes);
+  const setCustomCats = useQuotesStore(s => s.setCustomCats);
+  const setColumnOrder = useQuotesStore(s => s.setColumnOrder);
+  const setActiveCollectionId = useQuotesStore(s => s.setActiveCollectionId);
+  const setIsSharedView = useQuotesStore(s => s.setIsSharedView);
+  const trackDeletion = useQuotesStore(s => s.trackDeletion);
+  const untrackDeletion = useQuotesStore(s => s.untrackDeletion);
+  const createCollection = useQuotesStore(s => s.createCollection);
+  const deleteCollection = useQuotesStore(s => s.deleteCollection);
+  const restoreCollection = useQuotesStore(s => s.restoreCollection);
+  const renameCollection = useQuotesStore(s => s.renameCollection);
+  const addToCollection = useQuotesStore(s => s.addToCollection);
+  const removeFromCollection = useQuotesStore(s => s.removeFromCollection);
+  const updateCollectionIcon = useQuotesStore(s => s.updateCollectionIcon);
+  const cleanCollectionRefs = useQuotesStore(s => s.cleanCollectionRefs);
+  const handleCloudData = useQuotesStore(s => s.handleCloudData);
+  const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
 
-  const [collections, setCollections] = useState(() => loadFromStorage(LS_COLLECTIONS));
-  const [activeCollectionId, setActiveCollectionId] = useState(null);
-
-  const storageLimitWarned = useRef(false);
   const allCats = useMemo(() => [...DEFAULT_CATEGORIES, ...customCats], [customCats]);
 
-  // Track whether initial data load (localStorage or cloud) is complete
-  const initialLoadDone = useRef(false);
-
-  // Track deleted quote IDs as tombstones for sync merge
-  const [initDeletedIds] = useState(() => {
-    const now = Date.now();
-    return loadFromStorage(LS_DELETED_IDS,
-      p => Array.isArray(p),
-    ).filter(e => e && now - e.deletedAt < TOMBSTONE_TTL_MS);
+  // ── Storage limit warning (needs toast) ──
+  const storageLimitWarned = useRef(false);
+  useEffect(() => {
+    if (storageLimitWarned.current) return;
+    const state = useQuotesStore.getState();
+    if (state._storageLimitHit) {
+      storageLimitWarned.current = true;
+      showToast("Large collection \u2014 your data is backed up to the cloud.");
+    }
   });
-  const deletedIdsRef = useRef(initDeletedIds);
 
-  const trackDeletion = useCallback((quoteIds) => {
-    const now = Date.now();
-    const newEntries = quoteIds.map(id => ({ id, deletedAt: now }));
-    deletedIdsRef.current = [...deletedIdsRef.current, ...newEntries];
-    try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(deletedIdsRef.current)); } catch { /* ignore */ }
-  }, []);
-
-  const untrackDeletion = useCallback((quoteIds) => {
-    const idSet = new Set(quoteIds);
-    deletedIdsRef.current = deletedIdsRef.current.filter(e => !idSet.has(e.id));
-    try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(deletedIdsRef.current)); } catch { /* ignore */ }
-  }, []);
-
-  // ── Cloud sync ──
-  const handleCloudData = useCallback((cloudQuotes, cloudCats, cloudCollections) => {
-    if (!initialLoadDone.current) {
-      // First load — no local data, use cloud data directly
-      initialLoadDone.current = true;
-      setQuotes(cloudQuotes);
-      setCustomCats(cloudCats);
-      if (cloudCollections?.length > 0) setCollections(cloudCollections);
-      try {
-        localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
-        localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
-        if (cloudCollections?.length > 0) localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections));
-      } catch(e) { /* ignore */ }
-      return;
-    }
-
-    // Returning user — merge cloud into local, keeping newer versions
-    if (cloudQuotes?.length > 0) {
-      setQuotes(prev => mergeByTimestamp(prev, cloudQuotes, "updatedAt"));
-    }
-    if (cloudCats?.length > 0) {
-      setCustomCats(prev => {
-        const catSet = new Set(prev);
-        const newCats = cloudCats.filter(c => !catSet.has(c));
-        return newCats.length > 0 ? [...prev, ...newCats] : prev;
-      });
-    }
-    if (cloudCollections?.length > 0) {
-      setCollections(prev => mergeByTimestamp(prev, cloudCollections, "createdAt"));
-    }
-  }, []);
-
+  // ── Cloud sync via useSync (will be replaced by TanStack Query in phase 2) ──
   const handleSyncError = useCallback((message) => {
     showToast(message);
   }, [showToast]);
@@ -147,167 +106,32 @@ export function QuotesProvider({ children }) {
     onSyncError: handleSyncError,
   });
 
-  // ── Debounced persistence to localStorage ──
-  const saveTimerRef = useRef(null);
-
-  const persistQuotes = useCallback((q, cats, shared) => {
-    if (q.length === 0 || shared) return;
-    try {
-      const data = JSON.stringify(q);
-      const catsData = JSON.stringify(cats);
-      const totalSize = data.length + catsData.length;
-
-      if (!storageLimitWarned.current && totalSize > STORAGE_WARN_BYTES) {
-        storageLimitWarned.current = true;
-        showToast("Large collection \u2014 your data is backed up to the cloud.");
-      }
-
-      localStorage.setItem(LS_QUOTES, data);
-      localStorage.setItem(LS_CATS, catsData);
-    } catch(e) {
-      // localStorage full — that's fine, data is in Supabase
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      persistQuotes(quotes, customCats, isSharedView);
-    }, PERSIST_DEBOUNCE_MS);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [quotes, customCats, isSharedView, persistQuotes]);
-
   // ── Push to Supabase whenever quotes/categories change ──
   useEffect(() => {
     if (isSharedView) return;
-    if (quotes.length === 0 && deletedIdsRef.current.length === 0) return;
-    schedulePush(quotes, customCats, deletedIdsRef.current, collections);
+    const deletedIds = useQuotesStore.getState()._deletedIds;
+    if (quotes.length === 0 && deletedIds.length === 0) return;
+    schedulePush(quotes, customCats, deletedIds, collections);
   }, [quotes, customCats, collections, isSharedView, schedulePush]);
-
-  // Persist column order
-  useEffect(() => {
-    try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(columnOrder)); } catch(e) { /* ignore */ }
-  }, [columnOrder]);
-
-  // Persist collections
-  useEffect(() => {
-    try { localStorage.setItem(LS_COLLECTIONS, JSON.stringify(collections)); } catch(e) { /* ignore */ }
-  }, [collections]);
-
-  // ── Collection helpers ──
-  const createCollection = useCallback((name) => {
-    const sanitized = sanitizeName(name);
-    if (!sanitized) return { error: "invalid" };
-    // Check inside the state setter to avoid race conditions with rapid calls
-    let newCol = null;
-    let duplicate = false;
-    setCollections(prev => {
-      if (prev.some(c => c.name.toLowerCase() === sanitized.toLowerCase())) {
-        duplicate = true;
-        return prev;
-      }
-      newCol = { id: generateId(), name: sanitized, quoteIds: [], createdAt: Date.now() };
-      return [...prev, newCol];
-    });
-    if (duplicate) return { error: "duplicate", name: sanitized };
-    return newCol;
-  }, []);
-
-  const deleteCollection = useCallback((id) => {
-    setCollections(prev => prev.filter(c => c.id !== id));
-    setActiveCollectionId(prev => prev === id ? null : prev);
-  }, []);
-
-  const restoreCollection = useCallback((col) => {
-    setCollections(prev => {
-      if (prev.some(c => c.id === col.id)) return prev;
-      return [...prev, col];
-    });
-  }, []);
-
-  const renameCollection = useCallback((id, name) => {
-    const sanitized = sanitizeName(name);
-    if (!sanitized) return;
-    setCollections(prev => prev.map(c => c.id === id ? { ...c, name: sanitized } : c));
-  }, []);
-
-  const addToCollection = useCallback((collectionId, quoteIds) => {
-    setCollections(prev => prev.map(c => {
-      if (c.id !== collectionId) return c;
-      const existing = new Set(c.quoteIds);
-      const newIds = quoteIds.filter(id => !existing.has(id));
-      if (newIds.length === 0) return c;
-      return { ...c, quoteIds: [...c.quoteIds, ...newIds] };
-    }));
-  }, []);
-
-  const removeFromCollection = useCallback((collectionId, quoteIds) => {
-    const toRemove = new Set(quoteIds);
-    setCollections(prev => prev.map(c => {
-      if (c.id !== collectionId) return c;
-      return { ...c, quoteIds: c.quoteIds.filter(id => !toRemove.has(id)) };
-    }));
-  }, []);
-
-  const updateCollectionIcon = useCallback((id, icon) => {
-    setCollections(prev => prev.map(c => c.id === id ? { ...c, icon } : c));
-  }, []);
-
-  // Remove deleted quote IDs from all collection quoteIds arrays
-  const cleanCollectionRefs = useCallback((deletedQuoteIds) => {
-    const toRemove = new Set(deletedQuoteIds);
-    setCollections(prev => {
-      let changed = false;
-      const next = prev.map(c => {
-        const filtered = c.quoteIds.filter(id => !toRemove.has(id));
-        if (filtered.length !== c.quoteIds.length) { changed = true; return { ...c, quoteIds: filtered }; }
-        return c;
-      });
-      return changed ? next : prev;
-    });
-  }, []);
-
-  // ── Cross-tab storage sync ──
-  // When another tab writes to localStorage, pick up the changes.
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === LS_QUOTES && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setQuotes(parsed);
-        } catch { /* ignore corrupt data */ }
-      } else if (e.key === LS_CATS && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setCustomCats(parsed);
-        } catch { /* ignore */ }
-      } else if (e.key === LS_COLLECTIONS && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setCollections(parsed);
-        } catch { /* ignore */ }
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
 
   // ── Mount: shared link OR mark ready / pull from cloud ──
   useEffect(() => {
-    // 1a. Check for base64 shared link
     const hash = window.location.hash.slice(1);
+
+    // 1a. Base64 shared link
     if (hash.startsWith("s=")) {
       const decoded = safeDecodeShareData(hash.slice(2));
       if (decoded?.length > 0) {
-        setQuotes(decoded); setIsSharedView(true);
-        initialLoadDone.current = true;
+        setQuotes(decoded);
+        setIsSharedView(true);
+        setInitialLoading(false);
         return;
       }
       showToast("This shared link couldn't be loaded \u2014 it may be corrupted.", null, null, "error");
-      try { window.history.replaceState(null, "", window.location.pathname); } catch(e) { /* ignore */ }
+      try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
     }
 
-    // 1b. Check for public collection link (async/await instead of .then() chain)
+    // 1b. Public collection link
     if (hash.startsWith("p=")) {
       const shareId = hash.slice(2);
       if (shareId.length >= 4 && shareId.length <= 20) {
@@ -334,7 +158,7 @@ export function QuotesProvider({ children }) {
 
             setQuotes(reconstructed);
             setIsSharedView(true);
-            initialLoadDone.current = true;
+            setInitialLoading(false);
             if (data.title) {
               showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
             }
@@ -349,7 +173,6 @@ export function QuotesProvider({ children }) {
               : "Couldn't load this shared collection.";
             showToast(msg, null, null, "error");
             try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
-            // Fall through to normal load
             markReady();
             pull();
           }
@@ -359,27 +182,27 @@ export function QuotesProvider({ children }) {
     }
 
     // 2. If quotes were loaded synchronously from localStorage, mark ready
-    //    and background-pull to pick up any quotes missing locally.
     try {
       const saved = localStorage.getItem(LS_QUOTES);
       if (saved) {
         const q = JSON.parse(saved);
         if (q?.length > 0) {
-          initialLoadDone.current = true;
           markReady();
           pull();
           return;
         }
       }
-    } catch(e) {
+    } catch {
       showToast("Saved session couldn't be loaded. Starting fresh.", null, null, "error");
-      try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch(e2) { /* ignore */ }
+      try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch { /* ignore */ }
     }
 
-    // 3. No local data — try to pull from Supabase (auto-restores via handleCloudData)
+    // 3. No local data — pull from Supabase
     pull();
-  }, [showToast, pull, markReady]);
+  }, [showToast, pull, markReady, setQuotes, setIsSharedView, setInitialLoading]);
 
+  // ── Build context value ──
+  // This is the same shape as before so all consumers work unchanged.
   const value = useMemo(() => ({
     quotes, setQuotes,
     customCats, setCustomCats,
@@ -397,7 +220,8 @@ export function QuotesProvider({ children }) {
     cleanCollectionRefs,
     manualPush,
   }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, restoreCollection, renameCollection, addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs, manualPush]);
+       collections, activeCollectionId, createCollection, deleteCollection, restoreCollection, renameCollection,
+       addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs, manualPush]);
 
   return (
     <QuotesContext.Provider value={value}>

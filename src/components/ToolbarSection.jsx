@@ -7,6 +7,8 @@ const SORT_OPTIONS = [
   { key: "confidence", label: "Needs attention first", badge: "alert" },
   { key: "alpha",      label: "Alphabetical",         badge: "A-Z" },
   { key: "category",   label: "By category",          badge: "Cat" },
+  { key: "shortest",   label: "Shortest first",       badge: "Len" },
+  { key: "longest",    label: "Longest first",        badge: "Len" },
 ];
 
 export default function ToolbarSection({

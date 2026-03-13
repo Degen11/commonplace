@@ -23,6 +23,8 @@ export const SORT_OPTIONS = [
   { key: "confidence", label: "Needs attention first" },
   { key: "alpha",      label: "Alphabetical" },
   { key: "category",   label: "By category" },
+  { key: "shortest",   label: "Shortest first" },
+  { key: "longest",    label: "Longest first" },
 ];
 
 export default function useViewPreferences(quotes, { activeCollectionId, collections } = {}) {
@@ -102,6 +104,8 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
       result.sort((a, b) => strip(a.text).localeCompare(strip(b.text), undefined, { sensitivity: "base" }));
     }
     else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category, undefined, { sensitivity: "base" }));
+    else if (sortBy === "shortest") result.sort((a, b) => a.text.length - b.text.length);
+    else if (sortBy === "longest") result.sort((a, b) => b.text.length - a.text.length);
     return result;
   }, [quotes, catFilter, favFilter, debouncedSearch, sortBy, fuseIndex]);
 

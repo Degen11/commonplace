@@ -1,11 +1,5 @@
 import { QUOTED_CATS } from "../data/constants";
 
-// Strip rich text markers (**bold**, *italic*, __underline__) to plain text
-const RICH_RE = /(\*\*(.+?)\*\*|__(.+?)__|(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*))/g;
-function stripMarkers(text) {
-  return text.replace(RICH_RE, (_, _full, bold, underline, italic) => bold || underline || italic);
-}
-
 export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text || ""}\u201D` : (q.text || "");
 
 function groupByCategory(quotes) {
@@ -42,15 +36,17 @@ function download(content, name, type) {
 
 export function exportCSV(quotes, collections) {
   const colMap = buildCollectionMap(collections);
-  const rows = [["Text", "Source", "Category", "Favorite", "Collection"]];
+  const esc = s => `"${(s || "").replace(/"/g, '""')}"`;
+  const rows = [[esc("Text"), esc("Source"), esc("Category"), esc("Favorite"), esc("Collection")]];
   quotes.forEach(q => rows.push([
-    `"${stripMarkers(q.text || "").replace(/"/g, '""')}"`,
-    `"${(q.source || "").replace(/"/g, '""')}"`,
-    `"${(q.category || "").replace(/"/g, '""')}"`,
-    `"${q.favorite ? "yes" : "no"}"`,
-    `"${(colMap[q.id] || []).join(", ")}"`,
+    esc(q.text),
+    esc(q.source),
+    esc(q.category),
+    esc(q.favorite ? "yes" : "no"),
+    esc((colMap[q.id] || []).join(", ")),
   ]));
-  download(rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv");
+  // UTF-8 BOM ensures spreadsheet apps detect encoding correctly
+  download("\uFEFF" + rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv;charset=utf-8");
 }
 
 export function exportMD(quotes, collections) {
@@ -95,7 +91,7 @@ export function exportTXT(quotes, collections) {
     text += `${cat.toUpperCase()}\n${"\u2500".repeat(cat.length)}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      const t = stripMarkers(q.text || ""); const s = q.source || "";
+      const t = q.text || ""; const s = q.source || "";
       const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
       QUOTED_CATS.has(q.category)
         ? text += `"${t}" \u2014 ${s}${f}${c}\n`
@@ -114,7 +110,7 @@ export function richCopyToClipboard(quotes, collections) {
     text += `\u2726 ${cat.toUpperCase()}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      const t = stripMarkers(q.text || ""); const s = q.source || "";
+      const t = q.text || ""; const s = q.source || "";
       const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
       if (QUOTED_CATS.has(q.category)) {
         text += `\u201C${t}\u201D\n`;
@@ -135,7 +131,7 @@ export function copyToClipboard(quotes, collections) {
     text += `${cat}\n${"\u2500".repeat(cat.length)}\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      const t = stripMarkers(q.text || ""); const s = q.source || "";
+      const t = q.text || ""; const s = q.source || "";
       const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
       QUOTED_CATS.has(q.category) ? text += `"${t}" \u2014 ${s}${f}${c}\n` : text += `${t} \u2014 ${s}${f}${c}\n`;
     });

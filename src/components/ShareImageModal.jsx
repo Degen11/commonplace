@@ -45,7 +45,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
     >
       <div style={{
         background: "var(--cp-bg-card)", borderRadius: 12, padding: 0,
-        maxWidth: 480, width: "100%", overflow: "hidden",
+        maxWidth: "min(90vw, 480px)", width: "100%", overflow: "hidden",
         animation: "slideIn .2s ease",
       }}>
         <div style={{
@@ -95,6 +95,15 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                     position: "absolute", top: 0, left: 0, right: 0, height: 3,
                     background: theme.accent,
                   }} />
+                  {isGenerating && (
+                    <div style={{
+                      position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      borderRadius: 5,
+                    }}>
+                      <Loader size={20} strokeWidth={2} color="#fff" className="spin" />
+                    </div>
+                  )}
                   <div style={{
                     fontSize: 8, fontStyle: "italic", color: theme.text,
                     lineHeight: 1.4, overflow: "hidden",
@@ -113,6 +122,11 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--cp-text-secondary)" }}>
                     {theme.label}
                   </div>
+                  {isGenerating && (
+                    <div style={{ fontSize: 11, color: "var(--cp-text-muted)", marginTop: 2 }}>
+                      Generating image...
+                    </div>
+                  )}
                 </div>
                 <div style={{ flexShrink: 0, color: "var(--cp-text-muted)" }}>
                   {isGenerating

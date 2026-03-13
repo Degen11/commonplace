@@ -35,7 +35,7 @@ export default function StatsOverlay({
         else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
       }}
     >
-      <div style={{ maxWidth: 720, width: "100%" }}>
+      <div style={{ maxWidth: "min(90vw, 720px)", width: "100%" }}>
         <StatsPanel quotes={quotes} computedStats={computedStats} cc={cc} customCats={customCats} onClose={handleClose} />
       </div>
     </div>

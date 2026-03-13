@@ -4,6 +4,12 @@ import { getCatColor } from "../data/constants";
 import { CheckCircle } from "lucide-react";
 import Logo from "./Logo";
 
+const PHASE_LABELS = {
+  local:  "Matching known quotes\u2026",
+  lookup: "Looking up sources\u2026",
+  api:    "Identifying remaining entries\u2026",
+};
+
 export default function ProcessingPhase({
   fadeClass,
   progress,
@@ -13,6 +19,8 @@ export default function ProcessingPhase({
   processingDone,
 }) {
   const doneCount = progress?.done || 0;
+  const total = progress?.total || 0;
+  const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const isComplete = processingDone || progress?.phase === "complete";
   const reversedFeed = useMemo(() => [...identifiedFeed].reverse(), [identifiedFeed]);
 
@@ -30,22 +38,22 @@ export default function ProcessingPhase({
             <div style={{ animation: "fadeUp .3s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
               <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <h2 style={{ ...styles.procTitle, color: "#059669" }}>All done!</h2>
-              <p style={styles.procSub}>{progress?.total || 0} entries organized and ready to explore</p>
+              <p style={styles.procSub}>{total} entries organized and ready to explore</p>
             </div>
           </>
         ) : (
           <>
             <h2 style={styles.procTitle}>Organizing your collection...</h2>
-            <p style={styles.procSub}>{progress?.phase === "local" ? "Checking local database..." : progress?.phase === "lookup" ? "Searching online databases..." : "AI is identifying remaining entries..."}</p>
+            <p style={styles.procSub}>{PHASE_LABELS[progress?.phase] || PHASE_LABELS.api}</p>
           </>
         )}
         {progress && (
           <div style={styles.procCard}>
             <div style={styles.procTop}>
-              <span style={{ fontWeight: 600 }}>{progress.done} of {progress.total}</span>
-              <span style={{ color: isComplete ? "#059669" : "var(--cp-text-muted)" }}>{progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0}%</span>
+              <span style={{ fontWeight: 600 }}>{doneCount} of {total}</span>
+              <span style={{ color: isComplete ? "#059669" : "var(--cp-text-muted)" }}>{pct}%</span>
             </div>
-            <div style={styles.track}><div style={{ ...styles.fill, width: `${progress.total > 0 ? (progress.done / progress.total) * 100 : 0}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
+            <div style={styles.track}><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
           </div>
         )}

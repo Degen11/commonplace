@@ -133,6 +133,12 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
 
   const hasActiveFilters = catFilter !== "All" || favFilter || search;
 
+  const clearFilters = useCallback(() => {
+    setCatFilter("All");
+    setFavFilter(false);
+    setSearch("");
+  }, []);
+
   const computedStats = useMemo(() => {
     if (quotes.length === 0) return null;
     const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
@@ -152,6 +158,6 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     isMobile,
     filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
     cc, favCount, unknownCount,
-    hasActiveFilters, computedStats,
+    hasActiveFilters, clearFilters, computedStats,
   };
 }

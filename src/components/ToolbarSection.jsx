@@ -50,22 +50,22 @@ export default function ToolbarSection({
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
             <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
               style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button tabIndex={-1} className="cat-pill" onClick={e => { e.currentTarget.blur(); setCatFilter("All"); }} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+              <div role="button" className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</div>
               {favCount > 0 && (
-                <button tabIndex={-1} className="cat-pill" onClick={e => { e.currentTarget.blur(); setFavFilter(!favFilter); }} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
+                <div role="button" className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
                   ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}>{favCount}</span>
-                </button>
+                </div>
               )}
               {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
                 const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <button key={c} tabIndex={-1} className="cat-pill" onClick={e => { e.currentTarget.blur(); setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                return <div key={c} role="button" className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
                   {customCats.includes(c) && <span title="Remove category" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
-                </button>;
+                </div>;
               })}
               {showNewCat ? (
                 <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>

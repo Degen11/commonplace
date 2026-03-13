@@ -58,7 +58,7 @@ function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
   useEffect(() => { textRef.current?.focus(); }, []);
 
   const doAdd = () => {
-    onAdd(text.trim(), source.trim() || undefined, undefined);
+    onAdd(text.trim(), source.trim() || undefined, undefined, { skipDupeCheck: true });
     setText("");
     setSource("");
     setDupeMatch(null);
@@ -488,7 +488,7 @@ export default function Commonplace() {
     setShowAddMore(false);
   };
 
-  const handleQuickAdd = useCallback((text, source, category) => {
+  const handleQuickAdd = useCallback((text, source, category, { skipDupeCheck } = {}) => {
     if (!text || !text.trim()) return;
     const addQuote = () => {
       const newQuote = {
@@ -505,11 +505,13 @@ export default function Commonplace() {
       showToast("Quote added", null, null, "success");
     };
 
-    const match = quotes.find(q => similarity(q.text, text) > DUPE_SIMILARITY_THRESHOLD);
-    if (match) {
-      const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
-      showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
-      return;
+    if (!skipDupeCheck) {
+      const match = quotes.find(q => similarity(q.text, text) > DUPE_SIMILARITY_THRESHOLD);
+      if (match) {
+        const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
+        showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
+        return;
+      }
     }
     addQuote();
   }, [quotes, setQuotes, showToast]);

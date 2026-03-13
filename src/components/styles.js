@@ -608,7 +608,7 @@ export const styles = {
 };
 
 export const cardStyles = {
-  card:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:8,padding:16,transition:"all .15s",cursor:"grab"},
+  card:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:8,padding:16,transition:"border-color .15s, box-shadow .15s",cursor:"grab"},
   favCard:{boxShadow:"inset 3px 0 0 var(--cp-fav-accent)",background:"var(--cp-bg-fav)"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0.3,transition:"opacity .15s"},

@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
 import EditForm from "./EditForm";
@@ -12,38 +11,7 @@ import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart } from "lucide-react";
 import HighlightText from "./HighlightText";
 
-/**
- * Thin un-memoized wrapper that owns the useSortable hook.
- * This ensures dnd-kit's transform/transition/isDragging updates always
- * reach the DOM without being blocked by the inner memo comparator.
- */
-function SortableCardWrapper({ id, isMobile, isEd, isInlineEditing, children }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
-
-  const sortableStyle = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    ...(isDragging ? { opacity: 0.4, zIndex: 0 } : {}),
-  };
-
-  // On desktop, attach dnd-kit drag listeners; on mobile, card uses long-press instead
-  const dragListeners = !isMobile && !isEd && !isInlineEditing ? listeners : undefined;
-
-  return (
-    <div ref={setNodeRef} style={{ ...sortableStyle, position: "relative", borderRadius: 8 }}>
-      {children({ attributes, dragListeners, isDragging })}
-    </div>
-  );
-}
-
-const MemoCardContent = memo(function CardContent({
+const MemoCardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
@@ -52,9 +20,14 @@ const MemoCardContent = memo(function CardContent({
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   isDeleting,
   searchTerm,
-  // Passed from SortableCardWrapper via render prop
-  attributes, dragListeners, isDragging,
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    isDragging,
+  } = useSortable({ id: q.id, transition: null });
+
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
@@ -88,10 +61,10 @@ const MemoCardContent = memo(function CardContent({
   // On desktop, use dnd-kit listeners on the card; on mobile, use long-press + swipe
   const interactionProps = isMobile
     ? { ...longPress, ...swipeHandlers }
-    : { ...(dragListeners || {}) };
+    : { ...(isEd || isInlineEditing ? {} : listeners) };
 
   return (
-    <>
+    <div ref={setNodeRef} style={{ position: "relative", borderRadius: 8, ...(isDragging ? { opacity: 0.35 } : {}) }}>
       {/* Swipe hint background — only rendered during active swipe */}
       {(isSwipingLeft || isSwipingRight) && (
         <div style={{
@@ -118,11 +91,8 @@ const MemoCardContent = memo(function CardContent({
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
         ...(q.favorite ? cardStyles.favCard : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
-        ...(isDragging ? { cursor: "grabbing" } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
-        ...(!isDragging && offsetX !== 0
-          ? { transform: `translateX(${offsetX}px)`, transition: "none" }
-          : {}),
+        ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
@@ -167,7 +137,7 @@ const MemoCardContent = memo(function CardContent({
         )
       }
     </div>
-    </>
+    </div>
   );
 }, (prev, next) => {
   if (prev.q !== next.q) return false;
@@ -182,35 +152,9 @@ const MemoCardContent = memo(function CardContent({
   if (prev.savedPulseField !== next.savedPulseField) return false;
   if (prev.searchTerm !== next.searchTerm) return false;
   if (prev.allCats !== next.allCats) return false;
-  if (prev.customCats !== next.customCats) return false;
-  if (prev.isDragging !== next.isDragging) return false;
-  if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
+  if (prev.customCats !== next.customCats) return false;  if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
   if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;
 });
 
-/**
- * Exported CardItem: un-memoized sortable wrapper + memoized content.
- * This separation ensures dnd-kit transform updates always apply to the DOM
- * (via the wrapper) while expensive card content re-renders are still skipped
- * when only drag positions change.
- */
-export default function CardItem(props) {
-  return (
-    <SortableCardWrapper
-      id={props.q.id}
-      isMobile={props.isMobile}
-      isEd={props.isEd}
-      isInlineEditing={props.isInlineEditing}
-    >
-      {({ attributes, dragListeners, isDragging }) => (
-        <MemoCardContent
-          {...props}
-          attributes={attributes}
-          dragListeners={dragListeners}
-          isDragging={isDragging}
-        />
-      )}
-    </SortableCardWrapper>
-  );
-}
+export default MemoCardItem;

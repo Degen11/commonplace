@@ -234,7 +234,7 @@ export const baseCSS = `
   .view-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
 
   /* Category pill interactions — no persistent focus visuals */
-  .cat-pill{transition:all .15s ease}
+  .cat-pill{transition:background .15s ease,color .15s ease,opacity .15s ease}
   .cat-pill:hover{border-color:var(--cp-border-dim);background:var(--cp-bg-hover)}
   .cat-pill:focus,.cat-pill:focus-visible{outline:none !important;outline-offset:0 !important;box-shadow:none !important}
 
@@ -535,7 +535,7 @@ export const styles = {
 
   // Category pills — horizontal scroll with fade
   cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid var(--cp-border)",position:"sticky",top:0,background:"var(--cp-bg)",zIndex:50,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
-  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid var(--cp-border)",background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500,whiteSpace:"nowrap",flexShrink:0,transition:"all .15s ease"},
+  catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,border:"1px solid var(--cp-border)",background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500,whiteSpace:"nowrap",flexShrink:0,transition:"background .15s ease, color .15s ease, opacity .15s ease"},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed var(--cp-border-dim)",background:"transparent",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
   newCatIn:{border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,width:90,fontFamily:"inherit"},

@@ -9,6 +9,9 @@ export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) 
   const startX = useRef(0);
   const startY = useRef(0);
   const cancelled = useRef(false);
+  // Ref mirrors offsetX state so onTouchEnd always reads the latest value,
+  // even if React hasn't re-rendered since the last onTouchMove.
+  const offsetRef = useRef(0);
 
   const onTouchStart = useCallback((e) => {
     if (!enabled) return;
@@ -25,28 +28,34 @@ export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) 
     const dy = Math.abs(touch.clientY - startY.current);
     if (dy > CANCEL_Y) {
       cancelled.current = true;
+      offsetRef.current = 0;
       setOffsetX(0);
       return;
     }
     const dx = touch.clientX - startX.current;
     // Dampen the offset for a rubber-band feel
-    setOffsetX(dx * 0.6);
+    const dampened = dx * 0.6;
+    offsetRef.current = dampened;
+    setOffsetX(dampened);
   }, []);
 
   const onTouchEnd = useCallback(() => {
     if (!tracking.current) return;
     tracking.current = false;
-    const dx = offsetX;
+    // Read from ref — always current, regardless of React render timing
+    const dx = offsetRef.current;
+    offsetRef.current = 0;
     setOffsetX(0);
     if (cancelled.current) return;
     if (dx < -THRESHOLD && onSwipeLeft) onSwipeLeft();
     else if (dx > THRESHOLD && onSwipeRight) onSwipeRight();
-  }, [offsetX, onSwipeLeft, onSwipeRight]);
+  }, [onSwipeLeft, onSwipeRight]);
 
   // Reset if disabled mid-swipe
   useEffect(() => {
     if (!enabled) {
       tracking.current = false;
+      offsetRef.current = 0;
       setOffsetX(0);
     }
   }, [enabled]);

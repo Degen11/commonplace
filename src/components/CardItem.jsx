@@ -34,6 +34,7 @@ const MemoCardItem = memo(function CardItem({
   const sortableStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
+    ...(isDragging ? { opacity: 0.4, zIndex: 0 } : {}),
   };
 
   const longPress = useLongPress(
@@ -99,9 +100,8 @@ const MemoCardItem = memo(function CardItem({
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
         ...(q.favorite ? cardStyles.favCard : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
-        ...(isDragging ? { opacity: .4 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
-        ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
+        ...(!isDragging && offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: isDragging ? "none" : "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}

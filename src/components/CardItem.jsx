@@ -43,7 +43,7 @@ const MemoCardItem = memo(function CardItem({
 
   const swipeEnabled = isMobile && !isEd && !isInlineEditing;
   const { offsetX, swipeHandlers } = useSwipe({
-    onSwipeLeft: useCallback(() => actionProps.handleDelete(q.id), [actionProps.handleDelete, q.id]),
+    onSwipeLeft: useCallback(() => actionProps.onDelete(q.id), [actionProps.onDelete, q.id]),
     onSwipeRight: useCallback(() => actionProps.onFav(q.id), [actionProps.onFav, q.id]),
     enabled: swipeEnabled,
   });

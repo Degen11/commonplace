@@ -45,8 +45,84 @@ import CollectionsSidebar from "./CollectionsSidebar";
 import { styles } from "./styles";
 
 import {
-  AlertTriangle, Zap, Bot, Globe, XCircle, RefreshCw, Eye, Trash2, X,
+  AlertTriangle, Zap, Bot, Globe, XCircle, RefreshCw, Eye, Trash2, X, Plus,
 } from "lucide-react";
+
+function QuickAddBar({ onAdd, onClose, allCats }) {
+  const textRef = useRef(null);
+  const [text, setText] = useState("");
+  const [source, setSource] = useState("");
+
+  useEffect(() => { textRef.current?.focus(); }, []);
+
+  const handleSubmit = (e) => {
+    e?.preventDefault();
+    if (!text.trim()) return;
+    onAdd(text.trim(), source.trim() || undefined, undefined);
+    setText("");
+    setSource("");
+    textRef.current?.focus();
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
+        background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)",
+        animation: "fadeUp .2s ease",
+      }}
+    >
+      <Plus size={14} strokeWidth={2} style={{ color: "var(--cp-text-muted)", flexShrink: 0 }} />
+      <input
+        ref={textRef}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Quote text…"
+        style={{
+          flex: 1, minWidth: 0, padding: "6px 10px", fontSize: 13, fontFamily: "inherit",
+          border: "1px solid var(--cp-border)", borderRadius: 6,
+          background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
+        }}
+        onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
+      />
+      <input
+        value={source}
+        onChange={e => setSource(e.target.value)}
+        placeholder="Source (optional)"
+        style={{
+          width: 160, padding: "6px 10px", fontSize: 13, fontFamily: "inherit",
+          border: "1px solid var(--cp-border)", borderRadius: 6,
+          background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
+        }}
+        onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
+      />
+      <button
+        type="submit"
+        disabled={!text.trim()}
+        style={{
+          padding: "6px 14px", fontSize: 13, fontWeight: 500, fontFamily: "inherit",
+          background: text.trim() ? "var(--cp-accent)" : "var(--cp-bg-tab)",
+          color: text.trim() ? "#fff" : "var(--cp-text-muted)",
+          border: "none", borderRadius: 6, cursor: text.trim() ? "pointer" : "default",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Add
+      </button>
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: "var(--cp-text-muted)", padding: 4, borderRadius: 4, flexShrink: 0,
+        }}
+      >
+        <X size={14} strokeWidth={2} />
+      </button>
+    </form>
+  );
+}
 
 export default function Commonplace() {
   const { showToast } = useToastContext();
@@ -212,6 +288,7 @@ export default function Commonplace() {
   const [importedFileName, setImportedFileName] = useState(null);
   const [dismissedAtCount, setDismissedAtCount] = useState(null);
   const [showShortcuts, setShowShortcuts]       = useState(false);
+  const [showQuickInput, setShowQuickInput]     = useState(false);
   const [collectionDupes, setCollectionDupes]   = useState([]);
   const [shareImageQuote, setShareImageQuote]   = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -327,6 +404,7 @@ export default function Commonplace() {
     showSort, setShowSort,
     showShortcuts, setShowShortcuts,
     showStats, showAddMore,
+    showQuickInput, setShowQuickInput,
     reviewQueue, setReviewQueue,
     selAll,
     visible,
@@ -883,6 +961,14 @@ export default function Commonplace() {
                 favCount={favCount}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
+
+          {showQuickInput && (
+            <QuickAddBar
+              onAdd={(text, source, category) => { handleQuickAdd(text, source, category); setShowQuickInput(false); }}
+              onClose={() => setShowQuickInput(false)}
+              allCats={allCats}
+            />
+          )}
 
           {/* TABLE VIEW */}
           {view === "table" && (

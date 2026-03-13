@@ -276,10 +276,13 @@ export const baseCSS = `
 
   /* Hero split → stack on tablet */
   @media (max-width: 900px) {
-    .hp-hero{grid-template-columns:1fr !important;text-align:center;gap:32px !important;min-height:auto !important;padding-top:80px !important;padding-bottom:48px !important}
+    .hp-hero{grid-template-columns:1fr !important;text-align:center;gap:32px !important;min-height:auto !important;padding:80px 32px 48px !important}
+    .hp-hero-headline{font-size:38px !important;letter-spacing:-1.5px !important}
+    .hp-hero-sub{max-width:none !important;font-size:17px !important}
     .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
     .hp-timeline-cols{grid-template-columns:repeat(2, 1fr) !important}
+    .hp-section{padding:60px 32px !important}
   }
   @media (max-width: 600px) {
     .hp-features-grid{grid-template-columns:1fr !important}

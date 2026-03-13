@@ -13,6 +13,7 @@ const SHORTCUTS = [
   { keys: ["/"], desc: "Focus search" },
   { keys: ["?"], desc: "Toggle this panel" },
   { section: "Actions" },
+  { keys: ["N"], desc: "Quick add a quote" },
   { keys: ["F"], desc: "Toggle favorite on selected" },
   { keys: ["D"], desc: "Delete selected" },
   { keys: [`${MOD}+A`], desc: "Select all visible quotes" },

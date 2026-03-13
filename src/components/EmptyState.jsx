@@ -116,12 +116,30 @@ export default function EmptyState({
                 onClick={() => setFavFilter(false)}>&star; Favorites <X size={10} strokeWidth={2} /></button>
             )}
           </div>
-          <button className="reset-btn" style={{
-            background: "var(--cp-bg-tab)", border: "none", color: "var(--cp-text-muted)", cursor: "pointer",
-            fontSize: 13, fontFamily: "inherit", fontWeight: 500, padding: "8px 20px",
-            borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 6,
-          }}
-            onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Reset all filters</button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            <button className="reset-btn" style={{
+              background: "var(--cp-bg-tab)", border: "none", color: "var(--cp-text-muted)", cursor: "pointer",
+              fontSize: 13, fontFamily: "inherit", fontWeight: 500, padding: "8px 20px",
+              borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 6,
+            }}
+              onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Reset all filters</button>
+            {onBrowseAll && (
+              <button
+                className="hdr-btn"
+                onClick={onBrowseAll}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "8px 20px", borderRadius: 100,
+                  border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
+                  color: "var(--cp-accent)", fontSize: 13, fontWeight: 500,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                <Library size={14} strokeWidth={1.5} />
+                Browse all quotes
+              </button>
+            )}
+          </div>
         </>
       )}
     </div>

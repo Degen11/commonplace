@@ -17,6 +17,7 @@ export default function useKeyboardShortcuts({
   showSort, setShowSort,
   showShortcuts, setShowShortcuts,
   showStats, showAddMore,
+  showQuickInput, setShowQuickInput,
   reviewQueue, setReviewQueue,
   selAll,
   visible,
@@ -29,7 +30,7 @@ export default function useKeyboardShortcuts({
   stateRef.current = {
     phase, search, editingId, inlineEdit,
     selected, confirmClear, confirmBulkDel,
-    showExport, showSort, showShortcuts, showStats, showAddMore,
+    showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
     reviewQueue, selAll, visible, onFav, handleDelete, bulkDel,
   };
 
@@ -46,6 +47,7 @@ export default function useKeyboardShortcuts({
       const isEditing = s.editingId || s.inlineEdit;
 
       if (e.key === "Escape") {
+        if (s.showQuickInput) { setShowQuickInput(false); return; }
         if (s.confirmClear) { setConfirmClear(false); return; }
         if (s.confirmBulkDel) { setConfirmBulkDel(false); return; }
         if (s.showExport) { setShowExport(false); return; }
@@ -79,6 +81,12 @@ export default function useKeyboardShortcuts({
 
       // Skip action/navigation shortcuts when modals or editing are active
       if (modalOpen || isEditing) return;
+
+      if (e.key === "n") {
+        e.preventDefault();
+        setShowQuickInput(true);
+        return;
+      }
 
       if (e.key === "/") {
         e.preventDefault();
@@ -126,5 +134,5 @@ export default function useKeyboardShortcuts({
     return () => document.removeEventListener("keydown", handler);
   }, [showToast, setEditingId, setSelected, setReviewQueue, setSearch,
       setConfirmBulkDel, setConfirmClear, setShowExport, setShowSort,
-      setShowShortcuts, lastSelectedIndex]);
+      setShowShortcuts, setShowQuickInput, lastSelectedIndex]);
 }

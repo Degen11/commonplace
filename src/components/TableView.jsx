@@ -209,6 +209,7 @@ export default function TableView({
   savedPulse,
   deletingId,
   searchTerm,
+  isDragging,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -266,16 +267,59 @@ export default function TableView({
   };
 
   // ── Window-based virtualizer — only renders rows near the viewport ──
+  // Disabled during drag so dnd-kit's transform animations work in normal flow.
   const virtualizer = useWindowVirtualizer({
     count: filtered.length,
     estimateSize: () => compact ? ROW_HEIGHT_COMPACT_ESTIMATE : ROW_HEIGHT_ESTIMATE,
     overscan: VIRTUALIZER_OVERSCAN,
     scrollMargin: listRef.current?.offsetTop ?? 0,
+    enabled: !isDragging,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
 
   const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
+
+  const renderRow = (q) => {
+    const isSel = selected.has(q.id);
+    const isEd = editingId === q.id;
+    const needsAtt = q.confidence === "low" || q.category === "Unknown";
+    const isInlineEditing = inlineEdit?.id === q.id;
+    const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+    const isDeleting = deletingId === q.id;
+    const isSavedPulse = savedPulse?.id === q.id;
+    const savedPulseField = isSavedPulse ? savedPulse.field : null;
+    const isMenuOpen = openMenuId === q.id;
+    return (
+      <MemoTableRow
+        key={q.id}
+        q={q}
+        isSel={isSel}
+        isEd={isEd}
+        needsAtt={needsAtt}
+        sortBy={sortBy}
+        isMobile={isMobile}
+        isInlineEditing={isInlineEditing}
+        inlineEditField={inlineEditField}
+        isDeleting={isDeleting}
+        isSavedPulse={isSavedPulse}
+        savedPulseField={savedPulseField}
+        isMenuOpen={isMenuOpen}
+        columnOrder={columnOrder}
+        compact={compact}
+        allCats={allCats}
+        customCats={customCats}
+        actionProps={actionProps}
+        toggleSel={toggleSel}
+        setEditingId={setEditingId}
+        setInlineEdit={setInlineEdit}
+        saveEdit={saveEdit}
+        saveInlineField={saveInlineField}
+        setOpenMenuId={setOpenMenuId}
+        searchTerm={searchTerm}
+      />
+    );
+  };
 
   return (
     <div style={{ overflowX: "visible" }}>
@@ -319,24 +363,20 @@ export default function TableView({
         </div>
       )}
 
-      <div
-        ref={listRef}
-        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
-      >
-        {virtualItems.map(virtualRow => {
-          const q = filtered[virtualRow.index];
-          const isSel = selected.has(q.id);
-          const isEd = editingId === q.id;
-          const needsAtt = q.confidence === "low" || q.category === "Unknown";
-          const isInlineEditing = inlineEdit?.id === q.id;
-          const inlineEditField = isInlineEditing ? inlineEdit.field : null;
-          const isDeleting = deletingId === q.id;
-          const isSavedPulse = savedPulse?.id === q.id;
-          const savedPulseField = isSavedPulse ? savedPulse.field : null;
-          const isMenuOpen = openMenuId === q.id;
-          return (
+      {isDragging ? (
+        // Normal document flow during drag — dnd-kit needs it for shift animations
+        <div ref={listRef}>
+          {filtered.map(renderRow)}
+        </div>
+      ) : (
+        // Virtualized — only rows near the viewport are in the DOM
+        <div
+          ref={listRef}
+          style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+        >
+          {virtualItems.map(virtualRow => (
             <div
-              key={q.id}
+              key={filtered[virtualRow.index].id}
               data-index={virtualRow.index}
               ref={virtualizer.measureElement}
               style={{
@@ -347,36 +387,11 @@ export default function TableView({
                 transform: `translateY(${virtualRow.start - virtualizer.options.scrollMargin}px)`,
               }}
             >
-              <MemoTableRow
-                q={q}
-                isSel={isSel}
-                isEd={isEd}
-                needsAtt={needsAtt}
-                sortBy={sortBy}
-                isMobile={isMobile}
-                isInlineEditing={isInlineEditing}
-                inlineEditField={inlineEditField}
-                isDeleting={isDeleting}
-                isSavedPulse={isSavedPulse}
-                savedPulseField={savedPulseField}
-                isMenuOpen={isMenuOpen}
-                columnOrder={columnOrder}
-                compact={compact}
-                allCats={allCats}
-                customCats={customCats}
-                actionProps={actionProps}
-                toggleSel={toggleSel}
-                setEditingId={setEditingId}
-                setInlineEdit={setInlineEdit}
-                saveEdit={saveEdit}
-                saveInlineField={saveInlineField}
-                setOpenMenuId={setOpenMenuId}
-                searchTerm={searchTerm}
-              />
+              {renderRow(filtered[virtualRow.index])}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

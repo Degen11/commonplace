@@ -236,7 +236,7 @@ export const baseCSS = `
   /* Category pill interactions — no persistent focus visuals */
   .cat-pill{transition:background .15s ease,color .15s ease,opacity .15s ease}
   .cat-pill:hover{border-color:var(--cp-border-dim);background:var(--cp-bg-hover)}
-  .cat-pill:focus,.cat-pill:focus-visible{outline:none !important;outline-offset:0 !important;box-shadow:none !important}
+  .cat-pill:focus,.cat-pill:focus-visible,.cat-pill:active{outline:none !important;outline-offset:0 !important;box-shadow:none !important;border-color:var(--cp-border) !important}
 
   /* Filter chip hover (empty state, attention bar) */
   .filter-chip{transition:all .12s ease}

@@ -180,8 +180,8 @@ export const baseCSS = `
   .cat-scroll::-webkit-scrollbar{display:none}
   .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
 
-  /* Focus-visible accessibility */
-  button:focus-visible,a:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px;border-radius:4px}
+  /* Focus-visible accessibility (cat-pill excluded — active bg is sufficient) */
+  button:focus-visible:not(.cat-pill),a:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px;border-radius:4px}
   input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:1px}
   .check:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px}
 

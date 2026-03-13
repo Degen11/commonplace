@@ -100,7 +100,7 @@ const MemoCardItem = memo(function CardItem({
     >
       <div style={cardStyles.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id); }}>
+          <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}>
             {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
           </div>
           {isInlineEditing && inlineEditField === "category"

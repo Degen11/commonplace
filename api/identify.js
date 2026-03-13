@@ -58,7 +58,7 @@ EXAMPLE OUTPUT:
 const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}'
-) + ' For cleanText: fix typos, fix \'i\' → \'I\', capitalize the first word, preserve original meaning.';
+) + ' For cleanText: fix typos, fix \'i\' → \'I\', capitalize the first word, preserve original meaning. Return plain text only — never wrap in markdown, asterisks, or any formatting markers.';
 
 export default async function handler(req, res) {
   setCorsHeaders(req, res);

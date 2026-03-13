@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { styles } from "./styles";
+import { styles, CP_ACCENT } from "./styles";
 import { X, Search, ArrowUpDown, AlertTriangle } from "lucide-react";
 
 const SORT_OPTIONS = [
@@ -50,9 +50,9 @@ export default function ToolbarSection({
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
             <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
               style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <div role="button" className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</div>
+              <div role="button" className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)", ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</div>
               {favCount > 0 && (
-                <div role="button" className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
+                <div role="button" className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706" } : {}) }}>
                   ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}>{favCount}</span>
                 </div>
               )}

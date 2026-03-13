@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect, useRef, memo } from "react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import EditForm from "./EditForm";
@@ -24,6 +25,10 @@ const COL_CONFIG = {
   source:   { label: "Source",   style: { ...COL_BASE.source, textAlign: "left" } },
   category: { label: "Category", style: { ...COL_BASE.category, textAlign: "left" } },
 };
+
+const ROW_HEIGHT_ESTIMATE = 48;
+const ROW_HEIGHT_COMPACT_ESTIMATE = 34;
+const VIRTUALIZER_OVERSCAN = 15;
 
 
 // ── Memoized row component — only re-renders when its own data changes ──
@@ -208,6 +213,7 @@ export default function TableView({
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const listRef = useRef(null);
 
   // Close overflow menu when clicking outside
   useEffect(() => {
@@ -259,6 +265,16 @@ export default function TableView({
     setDragColOver(null);
   };
 
+  // ── Window-based virtualizer — only renders rows near the viewport ──
+  const virtualizer = useWindowVirtualizer({
+    count: filtered.length,
+    estimateSize: () => compact ? ROW_HEIGHT_COMPACT_ESTIMATE : ROW_HEIGHT_ESTIMATE,
+    overscan: VIRTUALIZER_OVERSCAN,
+    scrollMargin: listRef.current?.offsetTop ?? 0,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
   const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
 
   return (
@@ -303,46 +319,64 @@ export default function TableView({
         </div>
       )}
 
-      {filtered.map(q => {
-        const isSel = selected.has(q.id);
-        const isEd = editingId === q.id;
-        const needsAtt = q.confidence === "low" || q.category === "Unknown";
-        const isInlineEditing = inlineEdit?.id === q.id;
-        const inlineEditField = isInlineEditing ? inlineEdit.field : null;
-        const isDeleting = deletingId === q.id;
-        const isSavedPulse = savedPulse?.id === q.id;
-        const savedPulseField = isSavedPulse ? savedPulse.field : null;
-        const isMenuOpen = openMenuId === q.id;
-        return (
-          <MemoTableRow
-            key={q.id}
-            q={q}
-            isSel={isSel}
-            isEd={isEd}
-            needsAtt={needsAtt}
-            sortBy={sortBy}
-            isMobile={isMobile}
-            isInlineEditing={isInlineEditing}
-            inlineEditField={inlineEditField}
-            isDeleting={isDeleting}
-            isSavedPulse={isSavedPulse}
-            savedPulseField={savedPulseField}
-            isMenuOpen={isMenuOpen}
-            columnOrder={columnOrder}
-            compact={compact}
-            allCats={allCats}
-            customCats={customCats}
-            actionProps={actionProps}
-            toggleSel={toggleSel}
-            setEditingId={setEditingId}
-            setInlineEdit={setInlineEdit}
-            saveEdit={saveEdit}
-            saveInlineField={saveInlineField}
-            setOpenMenuId={setOpenMenuId}
-            searchTerm={searchTerm}
-          />
-        );
-      })}
+      <div
+        ref={listRef}
+        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+      >
+        {virtualItems.map(virtualRow => {
+          const q = filtered[virtualRow.index];
+          const isSel = selected.has(q.id);
+          const isEd = editingId === q.id;
+          const needsAtt = q.confidence === "low" || q.category === "Unknown";
+          const isInlineEditing = inlineEdit?.id === q.id;
+          const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+          const isDeleting = deletingId === q.id;
+          const isSavedPulse = savedPulse?.id === q.id;
+          const savedPulseField = isSavedPulse ? savedPulse.field : null;
+          const isMenuOpen = openMenuId === q.id;
+          return (
+            <div
+              key={q.id}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualRow.start - virtualizer.options.scrollMargin}px)`,
+              }}
+            >
+              <MemoTableRow
+                q={q}
+                isSel={isSel}
+                isEd={isEd}
+                needsAtt={needsAtt}
+                sortBy={sortBy}
+                isMobile={isMobile}
+                isInlineEditing={isInlineEditing}
+                inlineEditField={inlineEditField}
+                isDeleting={isDeleting}
+                isSavedPulse={isSavedPulse}
+                savedPulseField={savedPulseField}
+                isMenuOpen={isMenuOpen}
+                columnOrder={columnOrder}
+                compact={compact}
+                allCats={allCats}
+                customCats={customCats}
+                actionProps={actionProps}
+                toggleSel={toggleSel}
+                setEditingId={setEditingId}
+                setInlineEdit={setInlineEdit}
+                saveEdit={saveEdit}
+                saveInlineField={saveInlineField}
+                setOpenMenuId={setOpenMenuId}
+                searchTerm={searchTerm}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

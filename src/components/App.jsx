@@ -86,7 +86,7 @@ function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
           ref={textRef}
           value={text}
           onChange={e => { setText(e.target.value); setDupeMatch(null); }}
-          placeholder="Quote text\u2026"
+          placeholder="Quote text…"
           style={{
             flex: 1, minWidth: 0, padding: "6px 10px", fontSize: 13, fontFamily: "inherit",
             border: "1px solid var(--cp-border)", borderRadius: 6,
@@ -234,7 +234,7 @@ export default function Commonplace() {
     isMobile,
     filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
     cc, favCount, unknownCount,
-    hasActiveFilters, clearFilters, computedStats,
+    hasActiveFilters, hasActiveFilterOrSort, clearFilters, computedStats,
   } = useViewPreferences(quotes, { activeCollectionId, collections });
 
   const {
@@ -959,7 +959,7 @@ export default function Commonplace() {
               showSort={showSort}
               setShowSort={setShowSort}
               sortRef={sortRef}
-              hasActiveFilters={hasActiveFilters}
+              hasActiveFilters={hasActiveFilterOrSort}
               clearFilters={clearFilters}
             />
           </SectionErrorBoundary>

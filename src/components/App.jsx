@@ -347,6 +347,7 @@ export default function Commonplace() {
   const pendingScrollAdjust = useRef(null);
   const catScrollRef        = useRef(null);
   const headerRef           = useRef(null);
+  const [toolbarHeight, setToolbarHeight] = useState(44);
 
 
   // useLayoutEffect prevents flash of input phase on synchronous loads
@@ -375,6 +376,17 @@ export default function Commonplace() {
     }, { threshold: 0 });
     obs.observe(headerRef.current);
     return () => obs.disconnect();
+  }, [phase]);
+
+  // Measure toolbar height so sticky children (tHead, sidebar) can offset dynamically
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setToolbarHeight(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [phase]);
 
   // Close dropdowns when scrolling between main/mini header
@@ -1004,6 +1016,7 @@ export default function Commonplace() {
                 onFindDupes={handleFindDupes}
                 uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
                 favCount={favCount}
+                toolbarHeight={toolbarHeight}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -1042,6 +1055,7 @@ export default function Commonplace() {
                 savedPulse={savedPulse}
                 deletingId={deletingId}
                 searchTerm={search}
+                toolbarHeight={toolbarHeight}
               />
               </SortableContext>
             </SectionErrorBoundary>

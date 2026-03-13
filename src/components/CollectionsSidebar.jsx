@@ -250,6 +250,7 @@ export default function CollectionsSidebar({
   onFindDupes,
   uniqueSources,
   favCount,
+  toolbarHeight = 44,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -339,7 +340,7 @@ export default function CollectionsSidebar({
       <div style={{
         width: 48, flexShrink: 0, paddingRight: 8,
         display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
-        position: "sticky", top: 44, alignSelf: "flex-start",
+        position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
       }}>
         <button
           onClick={() => setCollapsed(false)}
@@ -391,7 +392,7 @@ export default function CollectionsSidebar({
       fontFamily: "'DM Sans',-apple-system,sans-serif",
       animation: "slideD .15s ease",
       overflow: "visible",
-      position: "sticky", top: 44, alignSelf: "flex-start",
+      position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
     }}>
       {/* Overview card */}
       <div style={styles.sidebarOverview}>

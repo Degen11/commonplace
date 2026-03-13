@@ -210,6 +210,7 @@ export default function TableView({
   savedPulse,
   deletingId,
   searchTerm,
+  toolbarHeight = 44,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -289,7 +290,7 @@ export default function TableView({
   return (
     <div style={{ overflowX: "visible" }}>
       {filtered.length > 0 && (
-        <div style={styles.tHead}>
+        <div style={{ ...styles.tHead, top: toolbarHeight }}>
           <div style={{ width: 20, flexShrink: 0 }} />
           <div className="ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
             <div

@@ -34,6 +34,8 @@ export const baseCSS = `
     --cp-bulk-text:#E8E8E8;--cp-bulk-muted:rgba(255,255,255,0.45);
     --cp-bulk-badge:#fff;--cp-bulk-badge-text:#1A1814;
     --cp-bulk-input-bg:rgba(255,255,255,0.1);--cp-bulk-input-border:rgba(255,255,255,0.15);
+    --cp-fav-chip-bg:#FEF3C7;--cp-fav-chip-border:#FDE68A;--cp-fav-chip-text:#D97706;
+    --cp-suggest-bg:rgba(5,150,105,0.08);--cp-suggest-border:rgba(5,150,105,0.2);--cp-suggest-btn:#059669;
   }
   html.dark{
     --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
@@ -51,6 +53,8 @@ export const baseCSS = `
     --cp-bulk-text:#E8E8E8;--cp-bulk-muted:rgba(255,255,255,0.4);
     --cp-bulk-badge:#90B4D4;--cp-bulk-badge-text:#1A1A1A;
     --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
+    --cp-fav-chip-bg:rgba(250,204,21,0.10);--cp-fav-chip-border:rgba(250,204,21,0.25);--cp-fav-chip-text:rgba(250,204,21,0.7);
+    --cp-suggest-bg:rgba(5,150,105,0.12);--cp-suggest-border:rgba(5,150,105,0.3);--cp-suggest-btn:#10B981;
   }
   @media(prefers-color-scheme:dark){
     html:not(.light){
@@ -69,6 +73,8 @@ export const baseCSS = `
       --cp-bulk-text:#E8E8E8;--cp-bulk-muted:rgba(255,255,255,0.4);
       --cp-bulk-badge:#90B4D4;--cp-bulk-badge-text:#1A1A1A;
       --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
+      --cp-fav-chip-bg:rgba(250,204,21,0.10);--cp-fav-chip-border:rgba(250,204,21,0.25);--cp-fav-chip-text:rgba(250,204,21,0.7);
+      --cp-suggest-bg:rgba(5,150,105,0.12);--cp-suggest-border:rgba(5,150,105,0.3);--cp-suggest-btn:#10B981;
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -123,6 +129,13 @@ export const baseCSS = `
   }
   .col-drag-header:active{cursor:grabbing}
 
+  /*
+   * Why !important: Base styles are applied inline via style={} props (e.g. styles.row,
+   * styles.catPill) which have higher specificity than any CSS selector. Interactive
+   * states (:hover, :active, :disabled) and responsive overrides (@media) must use
+   * !important to win over inline styles. This is inherent to the inline-style architecture.
+   */
+
   /* Row interactions (optimized) */
   .qrow{cursor:default;transition:background 0.18s ease}
   .qrow:hover{background:var(--cp-bg-hover) !important}
@@ -155,8 +168,7 @@ export const baseCSS = `
   .tab-btn:hover{background:var(--cp-bg-hover) !important}
   .drop-zone{transition:all .2s ease}
   .how-card{transition:background .2s ease,transform .2s ease}
-  .how-card:hover{background:var(--cp-bg-card) !important;transform:translateY(-2px)}
-  .feature-card:hover{border-color:rgba(60,87,117,0.15) !important}
+  .how-card:hover{background:var(--cp-bg-card);transform:translateY(-2px)}
   /* General-purpose UI tooltip (extends conf-tooltip pattern) */
   .ui-tip{position:relative}
   .ui-tip::after{
@@ -220,11 +232,6 @@ export const baseCSS = `
   .overflow-menu-item-destructive svg{transition:color .15s ease}
   .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
   .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
-
-  /* Collections sidebar — reveal edit/delete buttons on hover */
-  .coll-edit-btn{opacity:0 !important;transition:opacity .12s !important}
-  div:hover>.coll-edit-btn{opacity:0.6 !important}
-  .coll-edit-btn:hover{opacity:1 !important}
 
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}

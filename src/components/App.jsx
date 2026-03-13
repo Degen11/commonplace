@@ -573,6 +573,8 @@ export default function Commonplace() {
             onProcess={handleProcess}
             onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName, importCollections)}
             fileInputRef={fileInputRef}
+            dark={dark}
+            toggleTheme={toggleTheme}
           />
         </SectionErrorBoundary>
       )}

@@ -9,9 +9,13 @@ import { baseCSS } from './components/styles'
 // Apply theme immediately to prevent flash of wrong theme
 try {
   const saved = localStorage.getItem("commonplace_theme");
-  if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+  if (saved === "dark") {
     document.documentElement.classList.add("dark");
+  } else if (saved === "light") {
+    // Explicit light choice — add "light" class so CSS media-query dark fallback is overridden
+    document.documentElement.classList.add("light");
   }
+  // When no saved preference, the CSS @media(prefers-color-scheme:dark) handles it automatically
 } catch {}
 
 // Inject global CSS once at app root (was previously injected 3x via <style> tags)

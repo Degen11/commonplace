@@ -23,11 +23,24 @@ export function getSupabase() {
 
 // ── Rate limiting ──
 const rateMap = new Map();
+const RATE_MAP_MAX_SIZE = 10_000; // prevent unbounded growth from many unique IPs
 
 function checkRateLimitInMemory(ip, limit) {
   const now = Date.now();
-  for (const [key, entry] of rateMap) {
-    if (now - entry.start > 60000) rateMap.delete(key);
+  // Evict expired entries — full sweep when approaching capacity
+  if (rateMap.size > RATE_MAP_MAX_SIZE / 2) {
+    for (const [key, entry] of rateMap) {
+      if (now - entry.start > 60000) rateMap.delete(key);
+    }
+  }
+  // Hard cap: if still over limit after cleanup, drop oldest entries
+  if (rateMap.size >= RATE_MAP_MAX_SIZE) {
+    const toDelete = rateMap.size - RATE_MAP_MAX_SIZE + 1;
+    const keys = rateMap.keys();
+    for (let i = 0; i < toDelete; i++) {
+      const { value } = keys.next();
+      if (value !== undefined) rateMap.delete(value);
+    }
   }
   const entry = rateMap.get(ip);
   if (!entry || now - entry.start > 60000) {
@@ -69,7 +82,11 @@ export function setCorsHeaders(req, res, methods = 'POST, OPTIONS') {
 export function validateOrigin(req) {
   const origin = req.headers['origin'] || '';
   const referer = req.headers['referer'] || '';
-  return ALLOWED_ORIGINS.some(o => origin === o || referer === o || referer.startsWith(o + '/'));
+  // Parse referer origin properly to prevent subdomain spoofing
+  // (e.g. "https://commonplace.pro.evil.com/" must not pass)
+  let refererOrigin = '';
+  try { refererOrigin = new URL(referer).origin; } catch { /* invalid referer */ }
+  return ALLOWED_ORIGINS.some(o => origin === o || refererOrigin === o);
 }
 
 export function getClientIp(req) {

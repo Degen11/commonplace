@@ -43,7 +43,7 @@ export default function ShortcutsModal({ onClose }) {
     >
       <div style={{
         background: "var(--cp-bg-card)", borderRadius: 12, padding: 0,
-        maxWidth: 420, width: "100%", overflow: "hidden",
+        maxWidth: "min(90vw, 420px)", width: "100%", overflow: "hidden",
         animation: "slideIn .2s ease",
       }}>
         <div style={{

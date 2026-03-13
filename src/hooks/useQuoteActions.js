@@ -33,9 +33,13 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   // ── Delete ──
   // Undo data is captured directly in the toast callback closure,
   // so multiple rapid deletes each get their own independent undo.
+  // We capture the ID of the *preceding* quote (neighbor) so that undo can
+  // re-insert relative to it — immune to index shifts from other deletes.
   const handleDelete = useCallback((id) => {
-    const deleted = quotesRef.current.find(q => q.id === id);
-    const idx = quotesRef.current.findIndex(q => q.id === id);
+    const current = quotesRef.current;
+    const idx = current.findIndex(q => q.id === id);
+    const deleted = current[idx];
+    const neighborId = idx > 0 ? current[idx - 1].id : null;
     setDeletingId(id);
     setTimeout(() => {
       if (!mountedRef.current) return;
@@ -44,7 +48,12 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       trackDeletion([id]);
       if (cleanCollectionRefs) cleanCollectionRefs([id]);
       showToast("Entry deleted", "Undo", () => {
-        setQuotes(p => { const n = [...p]; n.splice(Math.min(idx, n.length), 0, deleted); return n; });
+        setQuotes(p => {
+          const n = [...p];
+          const insertAt = neighborId ? n.findIndex(q => q.id === neighborId) + 1 : 0;
+          n.splice(insertAt, 0, deleted);
+          return n;
+        });
         untrackDeletion([id]);
       });
     }, DELETE_ANIM_MS);

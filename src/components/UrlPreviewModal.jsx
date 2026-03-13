@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X, Check, Eye, Filter } from "lucide-react";
 import { styles } from "./styles";
 
@@ -10,9 +10,16 @@ const EXTRACT_MODES = [
 ];
 
 export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetch, currentMode }) {
-  const [selectedLines, setSelectedLines] = useState(() => new Set(preview.lines.map((_, i) => i)));
+  const [selectedLines, setSelectedLines] = useState(() => new Set(preview.lines?.map((_, i) => i) ?? []));
   const [mode, setMode] = useState(currentMode || "all");
   const [refetching, setRefetching] = useState(false);
+
+  // Re-select all lines when preview.lines changes (e.g. after refetch with different mode)
+  const linesRef = useRef(preview.lines);
+  if (preview.lines !== linesRef.current) {
+    linesRef.current = preview.lines;
+    setSelectedLines(new Set(preview.lines?.map((_, i) => i) ?? []));
+  }
 
   const toggleLine = (i) => {
     setSelectedLines(prev => {
@@ -42,7 +49,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
   return (
     <div style={styles.dupeModalOverlay} onClick={onCancel}>
       <div
-        style={{ ...styles.dupeModalBox, maxWidth: 640 }}
+        style={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

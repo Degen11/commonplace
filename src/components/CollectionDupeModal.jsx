@@ -66,7 +66,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
 
   return (
     <div style={styles.dupeModalOverlay} role="dialog" aria-modal="true" aria-label="Duplicate scan results" onClick={onClose}>
-      <div ref={boxRef} tabIndex={-1} style={{ ...styles.dupeModalBox, maxWidth: 640, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+      <div ref={boxRef} tabIndex={-1} style={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)", maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={styles.dupeModalHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Search size={22} color="var(--cp-text-secondary)" strokeWidth={1.5} />

@@ -26,6 +26,8 @@ export default function ToolbarSection({
   sortBy, setSortBy,
   showSort, setShowSort,
   sortRef,
+  hasActiveFilters,
+  clearFilters,
 }) {
   const searchInputRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -127,6 +129,22 @@ export default function ToolbarSection({
                 }}
               >
                 <Search size={15} strokeWidth={2} />
+              </button>
+            )}
+            {hasActiveFilters && (
+              <button
+                className="reset-btn"
+                onClick={clearFilters}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--cp-text-muted)", padding: "4px 8px",
+                  fontSize: 11, fontWeight: 500, fontFamily: "inherit",
+                  borderRadius: 6, whiteSpace: "nowrap",
+                  display: "flex", alignItems: "center", gap: 3,
+                }}
+              >
+                <X size={11} strokeWidth={2.5} />
+                Clear
               </button>
             )}
             <div ref={sortRef} style={{ position: "relative" }}>

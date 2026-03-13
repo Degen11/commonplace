@@ -489,7 +489,7 @@ export const styles = {
 
   // Dupe modal — #9 removed shadow (overlay provides depth)
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
-  dupeModalBox:{background:"var(--cp-bg-card)",borderRadius:14,padding:0,maxWidth:560,width:"100%",overflow:"clip",fontFamily:FONT_SANS,maxHeight:"85vh",display:"flex",flexDirection:"column"},
+  dupeModalBox:{background:"var(--cp-bg-card)",borderRadius:14,padding:0,maxWidth:"min(90vw, 560px)",width:"100%",overflow:"clip",fontFamily:FONT_SANS,maxHeight:"85vh",display:"flex",flexDirection:"column"},
   dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid var(--cp-border)"},
   dupeModalTitle:{fontSize:16,fontWeight:700,color:"var(--cp-text-secondary)",marginBottom:4,fontFamily:FONT_SANS},
   dupeModalSub:{fontSize:13,color:"var(--cp-text-muted)",fontFamily:FONT_SANS},
@@ -590,7 +590,7 @@ export const styles = {
 
   // Modal — #9 removed shadow (overlay provides depth)
   modalOverlay:{position:"fixed",inset:0,background:"var(--cp-overlay)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease"},
-  confirmBox:{background:"var(--cp-bg-card)",borderRadius:12,padding:24,maxWidth:400,width:"100%"},
+  confirmBox:{background:"var(--cp-bg-card)",borderRadius:12,padding:24,maxWidth:"min(90vw, 400px)",width:"100%"},
   confirmCancel:{padding:"8px 16px",borderRadius:6,border:"1px solid var(--cp-border)",background:"var(--cp-bg-card)",color:"var(--cp-text-secondary)",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   confirmYes:{padding:"8px 16px",borderRadius:6,border:"none",background:"var(--cp-destructive)",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
 

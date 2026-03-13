@@ -523,10 +523,19 @@ export default function Commonplace() {
     copiedId,
     reidentifying: reidentifyingIds,
     collections,
-    onAddToCollection: addToCollection,
+    onAddToCollection: (collectionId, quoteIds) => {
+      addToCollection(collectionId, quoteIds);
+      const col = collections.find(c => c.id === collectionId);
+      const count = quoteIds.length;
+      showToast(
+        `Added ${count} ${count === 1 ? "quote" : "quotes"} to "${col?.name || "collection"}"`,
+        "Undo",
+        () => removeFromCollection(collectionId, quoteIds),
+      );
+    },
     onRemoveFromCollection: handleRemoveFromCollection,
     activeCollectionId,
-  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, addToCollection, handleRemoveFromCollection, activeCollectionId]);
+  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, addToCollection, removeFromCollection, handleRemoveFromCollection, activeCollectionId, showToast]);
 
   const exportDropdownContent = (
     <ExportDropdown

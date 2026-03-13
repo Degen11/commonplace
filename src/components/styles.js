@@ -236,7 +236,7 @@ export const baseCSS = `
   /* Category pill hover + suppress focus ring (pills are mouse-only) */
   .cat-pill{transition:all .15s ease}
   .cat-pill:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
-  .cat-pill:focus{outline:none}
+  .cat-pill:focus,.cat-pill:focus-visible{outline:none !important}
 
   /* Filter chip hover (empty state, attention bar) */
   .filter-chip{transition:all .12s ease}

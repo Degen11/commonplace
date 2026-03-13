@@ -50,9 +50,9 @@ export default function ToolbarSection({
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
             <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
               style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+              <button className="cat-pill" onClick={e => { e.currentTarget.blur(); setCatFilter("All"); }} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
               {favCount > 0 && (
-                <button className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
+                <button className="cat-pill" onClick={e => { e.currentTarget.blur(); setFavFilter(!favFilter); }} style={{ ...styles.catPill, ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706", borderColor: "rgba(217,119,6,0.25)" } : {}) }}>
                   ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}>{favCount}</span>
                 </button>
               )}
@@ -60,7 +60,7 @@ export default function ToolbarSection({
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
                 const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <button key={c} className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                return <button key={c} className="cat-pill" onClick={e => { e.currentTarget.blur(); setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}

@@ -12,6 +12,9 @@ import {
   PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD,
 } from "../config";
 
+// Strip outer ** wrapping that the AI sometimes adds to cleanText
+const stripOuterBold = t => t && t.startsWith("**") && t.endsWith("**") ? t.slice(2, -2) : t;
+
 // ── State machine ──
 // idle → dupes → processing → done → idle
 //                    ↓
@@ -210,7 +213,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
           safeDispatch({ type: "FEED_APPEND", items: results.map(r => {
             const item = chunk[r.i];
-            return { text: (useFormatting && r.cleanText) ? r.cleanText : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
+            return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
           }) });
           // Cache only high-confidence AI results (fire-and-forget)
           const cacheItems = results
@@ -244,7 +247,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       const lookup = lookupResults.get(i);
       if (lookup) return makeQuote(fmt(p.text), lookup.source, fallbackCategory(lookup.category, allCats), lookup.confidence || "medium");
       const api = apiResults.get(i);
-      if (api) return makeQuote((useFormatting && api.cleanText) ? api.cleanText : p.text, api.source || p.hint, fallbackCategory(api.category, allCats), api.confidence);
+      if (api) return makeQuote((useFormatting && api.cleanText) ? stripOuterBold(api.cleanText) : p.text, api.source || p.hint, fallbackCategory(api.category, allCats), api.confidence);
       return makeQuote(fmt(p.text), p.hint);
     });
 

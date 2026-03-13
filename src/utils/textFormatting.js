@@ -111,24 +111,28 @@ export function basicFormat(text) {
        .replace(/\bi've\b/gi, "I've")
        .replace(/\bi'd\b/gi, "I'd");
 
-  t = t.replace(/\bcant\b/g, "can't")
-       .replace(/\bdont\b/g, "don't")
-       .replace(/\bwont\b/g, "won't")
-       .replace(/\bdidnt\b/g, "didn't")
-       .replace(/\bdoesnt\b/g, "doesn't")
-       .replace(/\bwouldnt\b/g, "wouldn't")
-       .replace(/\bcouldnt\b/g, "couldn't")
-       .replace(/\bshouldnt\b/g, "shouldn't")
-       .replace(/\bisnt\b/g, "isn't")
-       .replace(/\barent\b/g, "aren't")
-       .replace(/\bwasnt\b/g, "wasn't")
-       .replace(/\bwerent\b/g, "weren't")
-       .replace(/\bhasnt\b/g, "hasn't")
-       .replace(/\bhavent\b/g, "haven't")
-       .replace(/\bhadnt\b/g, "hadn't")
-       .replace(/\bthats\b/g, "that's")
-       .replace(/\bwhats\b/g, "what's")
-       .replace(/\bwhos\b/g, "who's");
+  // Case-insensitive contraction fixes — preserves original capitalization
+  const fixContraction = (re, fixed) => {
+    t = t.replace(re, m => m[0] === m[0].toUpperCase() ? fixed.charAt(0).toUpperCase() + fixed.slice(1) : fixed);
+  };
+  fixContraction(/\bcant\b/gi, "can't");
+  fixContraction(/\bdont\b/gi, "don't");
+  fixContraction(/\bwont\b/gi, "won't");
+  fixContraction(/\bdidnt\b/gi, "didn't");
+  fixContraction(/\bdoesnt\b/gi, "doesn't");
+  fixContraction(/\bwouldnt\b/gi, "wouldn't");
+  fixContraction(/\bcouldnt\b/gi, "couldn't");
+  fixContraction(/\bshouldnt\b/gi, "shouldn't");
+  fixContraction(/\bisnt\b/gi, "isn't");
+  fixContraction(/\barent\b/gi, "aren't");
+  fixContraction(/\bwasnt\b/gi, "wasn't");
+  fixContraction(/\bwerent\b/gi, "weren't");
+  fixContraction(/\bhasnt\b/gi, "hasn't");
+  fixContraction(/\bhavent\b/gi, "haven't");
+  fixContraction(/\bhadnt\b/gi, "hadn't");
+  fixContraction(/\bthats\b/gi, "that's");
+  fixContraction(/\bwhats\b/gi, "what's");
+  fixContraction(/\bwhos\b/gi, "who's");
 
   for (const { re, right } of MISSPELLING_PATTERNS) {
     re.lastIndex = 0;
@@ -168,9 +172,9 @@ export function normalize(s) {
     .trim();
 }
 
-function wordSet(s) {
+function wordSet(normalized) {
   return new Set(
-    normalize(s)
+    normalized
       .split(" ")
       .filter(Boolean)
       .filter(w => (w.match(/[\p{L}\p{N}]/gu) || []).length >= 2)
@@ -183,7 +187,7 @@ export function similarity(a, b) {
   if (na === nb) return 1;
   if (na.includes(nb) || nb.includes(na)) return 0.9;
 
-  const wa = wordSet(a), wb = wordSet(b);
+  const wa = wordSet(na), wb = wordSet(nb);
   if (wa.size + wb.size === 0) return 0;
   if (!wa.size || !wb.size) return 0;
 

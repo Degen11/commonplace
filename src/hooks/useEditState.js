@@ -104,8 +104,14 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
 
   const toggleSel = useCallback((id, shiftKey = false) => {
     if (shiftKey && lastSelectedIndex.current !== null) {
+      const lastIndex = selScope.findIndex(q => q.id === lastSelectedIndex.current);
       const currentIndex = selScope.findIndex(q => q.id === id);
-      const lastIndex = lastSelectedIndex.current;
+      if (lastIndex < 0 || currentIndex < 0) {
+        // Anchor no longer visible — fall back to single toggle
+        setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+        lastSelectedIndex.current = id;
+        return;
+      }
       const start = Math.min(currentIndex, lastIndex);
       const end = Math.max(currentIndex, lastIndex);
       const rangeIds = selScope.slice(start, end + 1).map(q => q.id);
@@ -114,14 +120,14 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
         rangeIds.forEach(rangeId => n.add(rangeId));
         return n;
       });
-      lastSelectedIndex.current = currentIndex;
+      lastSelectedIndex.current = id;
     } else {
       setSelected(p => {
         const n = new Set(p);
         n.has(id) ? n.delete(id) : n.add(id);
         return n;
       });
-      lastSelectedIndex.current = selScope.findIndex(q => q.id === id);
+      lastSelectedIndex.current = id;
     }
   }, [selScope]);
 
@@ -183,7 +189,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       });
       untrackDeletion([...deletedIds]);
     });
-  }, [quotes, selected, setQuotes, showToast, trackDeletion, untrackDeletion]);
+  }, [quotes, selected, setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs]);
 
   const startReviewFlow = useCallback(() => {
     const attentionIds = quotes

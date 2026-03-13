@@ -1,5 +1,11 @@
 import { QUOTED_CATS } from "../data/constants";
 
+// Strip rich text markers (**bold**, *italic*, __underline__) to plain text
+const RICH_RE = /(\*\*(.+?)\*\*|__(.+?)__|(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*))/g;
+function stripMarkers(text) {
+  return text.replace(RICH_RE, (_, _full, bold, underline, italic) => bold || underline || italic);
+}
+
 export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text || ""}\u201D` : (q.text || "");
 
 function groupByCategory(quotes) {
@@ -38,7 +44,7 @@ export function exportCSV(quotes, collections) {
   const colMap = buildCollectionMap(collections);
   const rows = [["Text", "Source", "Category", "Favorite", "Collection"]];
   quotes.forEach(q => rows.push([
-    `"${(q.text || "").replace(/"/g, '""')}"`,
+    `"${stripMarkers(q.text || "").replace(/"/g, '""')}"`,
     `"${(q.source || "").replace(/"/g, '""')}"`,
     `"${(q.category || "").replace(/"/g, '""')}"`,
     `"${q.favorite ? "yes" : "no"}"`,
@@ -59,7 +65,7 @@ export function exportMD(quotes, collections) {
       const c = colMap[q.id]?.length ? ` \u2014 *${colMap[q.id].join(", ")}*` : "";
       QUOTED_CATS.has(q.category)
         ? md += `> \u201C${t}\u201D\n> \u2014 *${s}*${f}${c}\n\n`
-        : md += `- **${t}** \u2014 ${s}${f}${c}\n`;
+        : md += `- ${t} \u2014 ${s}${f}${c}\n`;
     });
     md += "\n";
   });
@@ -89,7 +95,7 @@ export function exportTXT(quotes, collections) {
     text += `${cat.toUpperCase()}\n${"\u2500".repeat(cat.length)}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      const t = q.text || ""; const s = q.source || "";
+      const t = stripMarkers(q.text || ""); const s = q.source || "";
       const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
       QUOTED_CATS.has(q.category)
         ? text += `"${t}" \u2014 ${s}${f}${c}\n`
@@ -108,7 +114,7 @@ export function richCopyToClipboard(quotes, collections) {
     text += `\u2726 ${cat.toUpperCase()}\n\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      const t = q.text || ""; const s = q.source || "";
+      const t = stripMarkers(q.text || ""); const s = q.source || "";
       const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
       if (QUOTED_CATS.has(q.category)) {
         text += `\u201C${t}\u201D\n`;
@@ -129,7 +135,7 @@ export function copyToClipboard(quotes, collections) {
     text += `${cat}\n${"\u2500".repeat(cat.length)}\n`;
     qs.forEach(q => {
       const f = q.favorite ? " \u2605" : "";
-      const t = q.text || ""; const s = q.source || "";
+      const t = stripMarkers(q.text || ""); const s = q.source || "";
       const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
       QUOTED_CATS.has(q.category) ? text += `"${t}" \u2014 ${s}${f}${c}\n` : text += `${t} \u2014 ${s}${f}${c}\n`;
     });

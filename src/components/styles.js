@@ -363,7 +363,7 @@ export const styles = {
   tabBtnActive:{background:"var(--cp-bg-card)",color:"var(--cp-text)",boxShadow:"0 1px 3px rgba(0,0,0,.08)"},
 
   // Drop zone
-  dropZone:{border:"2px dashed var(--cp-border)",borderRadius:10,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"var(--cp-bg-card)"},
+  dropZone:{borderWidth:2,borderStyle:"dashed",borderColor:"var(--cp-border)",borderRadius:10,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"var(--cp-bg-card)"},
   dropZoneActive:{borderColor:"#2563EB",background:"rgba(59,130,246,0.08)"},
   dropIcon:{fontSize:32,marginBottom:12},
   dropTitle:{fontSize:14,fontWeight:600,color:"var(--cp-text-secondary)",marginBottom:6},

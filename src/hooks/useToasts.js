@@ -12,7 +12,7 @@ export default function useToasts() {
 
     if (variant === "success") return toast.success(message, opts);
     if (variant === "error") return toast.error(message, opts);
-    return toast(message, opts);
+    return toast.info(message, opts);
   }, []);
 
   return { showToast };

@@ -1,4 +1,12 @@
-import { useRef, useCallback, useEffect, useState } from "react";
+// ── Cloud sync hook — TanStack Query edition ──
+// Replaces hand-rolled retry/backoff/debounce/ref patterns with
+// TanStack Query's built-in mutation retry and query caching.
+//
+// External API is unchanged: { syncStatus, lastSynced, initialLoading,
+// pull, schedulePush, manualPush, markReady }
+
+import { useRef, useCallback, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateId } from "../utils/uuid";
 import {
   SYNC_DEBOUNCE_MS, SYNC_MAX_RETRIES, SYNC_INITIAL_DELAY_MS,
@@ -19,120 +27,98 @@ function getOrCreateDeviceId() {
   }
 }
 
+const deviceId = getOrCreateDeviceId();
+
+// ── API functions (pure, no hooks) ──
+
+async function fetchSyncData() {
+  if (!deviceId) return null;
+  const r = await fetch(`/api/sync?device_id=${deviceId}`, {
+    headers: { "X-Requested-With": "CommonplaceApp" },
+  });
+  if (!r.ok) return null;
+  return r.json();
+}
+
+async function pushSyncData(payload) {
+  const r = await fetch("/api/sync", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "CommonplaceApp",
+    },
+    body: JSON.stringify({ device_id: deviceId, ...payload }),
+  });
+  if (!r.ok) {
+    const body = await r.text().catch(() => "");
+    throw new Error(`Sync failed (${r.status}): ${body}`);
+  }
+  return r.json();
+}
+
+// ── Hook ──
+
 export default function useSync({ onCloudData, onSyncError }) {
-  const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+  const queryClient = useQueryClient();
+  const [syncStatus, setSyncStatus] = useState("idle");
   const [lastSynced, setLastSynced] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
-  const deviceId = useRef(getOrCreateDeviceId());
-  const pushTimer = useRef(null);
-  const retryTimer = useRef(null);
-  const mountedRef = useRef(true);
   const initialLoadDone = useRef(false);
-  const consecutiveFailures = useRef(0);
+  const pushTimer = useRef(null);
   const lastErrorNotified = useRef(0);
+  const consecutiveFailures = useRef(0);
 
-  // Refs for latest data — retries always read current values instead of stale closures
-  const latestQuotes = useRef([]);
-  const latestCustomCats = useRef([]);
-  const latestDeletedIds = useRef([]);
-  const latestCollections = useRef([]);
+  // Refs for latest data — schedulePush updates these, mutation reads them.
+  // TanStack Query handles retries, but the mutation function needs current data.
+  const latestPayload = useRef(null);
 
-  // Allow external callers (e.g. QuotesContext) to mark initial load complete
-  // so push is unblocked even when data came from localStorage, not pull().
   const markReady = useCallback(() => {
     initialLoadDone.current = true;
     setInitialLoading(false);
   }, []);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
+  // ── Pull: TanStack Query handles caching and refetching ──
+  const pullQuery = useQuery({
+    queryKey: ["sync", "pull"],
+    queryFn: fetchSyncData,
+    enabled: false, // Manual trigger only — we control when to pull
+    staleTime: 30_000,
+    retry: 1,
+  });
 
-  // ── Pull: fetch from Supabase on mount ──
-  const pullControllerRef = useRef(null);
   const pull = useCallback(async () => {
-    if (!deviceId.current) return;
-    if (pullControllerRef.current) pullControllerRef.current.abort();
-    const controller = new AbortController();
-    pullControllerRef.current = controller;
+    if (!deviceId) return;
     try {
-      const r = await fetch(`/api/sync?device_id=${deviceId.current}`, {
-        headers: { "X-Requested-With": "CommonplaceApp" },
-        signal: controller.signal,
+      const result = await queryClient.fetchQuery({
+        queryKey: ["sync", "pull"],
+        queryFn: fetchSyncData,
+        staleTime: 0, // Force fresh fetch
       });
-      if (!r.ok) return;
-      const data = await r.json();
-      if (!mountedRef.current) return;
-
-      if (data.quotes?.length > 0) {
-        onCloudData(data.quotes, data.customCategories || [], data.collections || []);
+      if (result?.quotes?.length > 0) {
+        onCloudData(result.quotes, result.customCategories || [], result.collections || []);
       }
       initialLoadDone.current = true;
-    } catch (err) {
-      if (err.name === "AbortError") return;
-      // Silent fail — localStorage is still the primary store
+    } catch {
+      // Silent fail — localStorage is the primary store
     } finally {
-      if (mountedRef.current) setInitialLoading(false);
+      setInitialLoading(false);
     }
-  }, [onCloudData]);
+  }, [onCloudData, queryClient]);
 
-  // ── Push: send current state to Supabase (with exponential backoff) ──
-  // Reads from refs so retries always push the latest data, not stale closure values.
-  const push = useCallback(async (retriesLeft = SYNC_MAX_RETRIES, delay = SYNC_INITIAL_DELAY_MS) => {
-    if (!deviceId.current) return;
-    if (!initialLoadDone.current) return;
-    if (!mountedRef.current) return;
-
-    const quotes = latestQuotes.current;
-    const customCats = latestCustomCats.current;
-    const deletedIds = latestDeletedIds.current;
-    const collections = latestCollections.current;
-
-    if (quotes.length === 0 && (!deletedIds || deletedIds.length === 0)) return;
-
-    setSyncStatus("syncing");
-
-    try {
-      const payload = {
-        device_id: deviceId.current,
-        quotes,
-        customCategories: customCats,
-        collections,
-      };
-      if (deletedIds && deletedIds.length > 0) {
-        payload.deletedIds = deletedIds;
-      }
-      const r = await fetch("/api/sync", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "CommonplaceApp",
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!mountedRef.current) return;
-      if (r.ok) {
-        setSyncStatus("synced");
-        setLastSynced(new Date());
-        consecutiveFailures.current = 0;
-      } else {
-        const body = await r.text().catch(() => "");
-        throw new Error(`Sync failed (${r.status}): ${body}`);
-      }
-    } catch (err) {
-      console.error("[useSync] push error:", err?.message || err);
-      if (!mountedRef.current) return;
-
-      // Exponential backoff: 2s → 4s → 8s → 16s
-      if (retriesLeft > 0) {
-        retryTimer.current = setTimeout(() => {
-          if (mountedRef.current) push(retriesLeft - 1, delay * 2);
-        }, delay);
-        return;
-      }
-
-      // All retries exhausted
+  // ── Push: TanStack Query mutation with exponential backoff ──
+  const pushMutation = useMutation({
+    mutationFn: pushSyncData,
+    retry: SYNC_MAX_RETRIES,
+    retryDelay: (attempt) => SYNC_INITIAL_DELAY_MS * Math.pow(2, attempt),
+    onMutate: () => {
+      setSyncStatus("syncing");
+    },
+    onSuccess: () => {
+      setSyncStatus("synced");
+      setLastSynced(new Date());
+      consecutiveFailures.current = 0;
+    },
+    onError: () => {
       setSyncStatus("error");
       consecutiveFailures.current++;
 
@@ -147,55 +133,61 @@ export default function useSync({ onCloudData, onSyncError }) {
           );
         }
       }
-    }
-  }, [onSyncError]);
+    },
+  });
 
-  // ── Debounced push — call this whenever quotes/categories change ──
+  // ── Debounced push — same API as before ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
-    // Update refs so push() and retries always see latest data
-    latestQuotes.current = quotes;
-    latestCustomCats.current = customCats;
-    latestDeletedIds.current = deletedIds;
-    latestCollections.current = collections || [];
+    // Always capture latest data
+    const payload = {
+      quotes,
+      customCategories: customCats,
+      collections: collections || [],
+    };
+    if (deletedIds?.length > 0) {
+      payload.deletedIds = deletedIds;
+    }
+    latestPayload.current = payload;
 
-    // Clear any pending push AND any pending retry — the new push supersedes both
+    // Debounce: clear pending push, schedule new one
     if (pushTimer.current) clearTimeout(pushTimer.current);
-    if (retryTimer.current) clearTimeout(retryTimer.current);
     pushTimer.current = setTimeout(() => {
-      push();
+      if (!initialLoadDone.current) return;
+      if (!deviceId) return;
+      const p = latestPayload.current;
+      if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
+      pushMutation.mutate(p);
     }, SYNC_DEBOUNCE_MS);
-  }, [push]);
+  }, [pushMutation]);
 
-  // Sync when coming back online after being offline
+  // Manual sync — push immediately with fresh retries
+  const manualPush = useCallback(() => {
+    if (pushTimer.current) clearTimeout(pushTimer.current);
+    consecutiveFailures.current = 0;
+    const p = latestPayload.current;
+    if (p) pushMutation.mutate(p);
+  }, [pushMutation]);
+
+  // Sync when coming back online
   useEffect(() => {
     const handleOnline = () => {
-      if (latestQuotes.current.length > 0 && initialLoadDone.current) {
-        push();
+      if (latestPayload.current && initialLoadDone.current) {
+        pushMutation.mutate(latestPayload.current);
       }
     };
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, [push]);
+  }, [pushMutation]);
 
-  // Cleanup all timers and abort in-flight pull on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (pushTimer.current) clearTimeout(pushTimer.current);
-      if (retryTimer.current) clearTimeout(retryTimer.current);
-      if (pullControllerRef.current) pullControllerRef.current.abort();
     };
   }, []);
 
-  // Manual sync — clears pending timers and pushes immediately with fresh retries
-  const manualPush = useCallback(() => {
-    if (pushTimer.current) clearTimeout(pushTimer.current);
-    if (retryTimer.current) clearTimeout(retryTimer.current);
-    consecutiveFailures.current = 0;
-    push();
-  }, [push]);
-
   return {
-    deviceId: deviceId.current,
+    deviceId,
     syncStatus,
     lastSynced,
     initialLoading,

@@ -11,7 +11,6 @@ const PHASE_LABELS = {
 };
 
 export default function ProcessingPhase({
-  fadeClass,
   progress,
   identifiedFeed,
   customCats,
@@ -25,7 +24,7 @@ export default function ProcessingPhase({
   const reversedFeed = useMemo(() => [...identifiedFeed].reverse(), [identifiedFeed]);
 
   return (
-    <div style={styles.wrap} className={fadeClass}>
+    <div style={styles.wrap}>
       <nav style={styles.nav}>
         <span style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }}><Logo size={22} />Commonplace</span>
         <div style={styles.navRight}>

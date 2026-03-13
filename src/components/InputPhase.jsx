@@ -548,7 +548,6 @@ function UrlImportPanel({ onLoad }) {
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function InputPhase({
-  fadeClass,
   rawInput, setRawInput,
   inputTab, setInputTab,
   isDragOver, setIsDragOver,
@@ -580,7 +579,7 @@ export default function InputPhase({
   };
 
   return (
-    <div className={fadeClass} style={{ background: "var(--cp-bg)", minHeight: "100vh", fontFamily: FONT_SANS }}>
+    <div style={{ background: "var(--cp-bg)", minHeight: "100vh", fontFamily: FONT_SANS }}>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           FIXED NAV

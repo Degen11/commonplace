@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
 import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, rectSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { AnimatePresence, motion } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useProcessing from "../hooks/useProcessing";
@@ -18,7 +19,7 @@ import { similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
 import {
-  DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS, PHASE_TRANSITION_MS,
+  DUPE_SIMILARITY_THRESHOLD, DRAFT_SAVE_DEBOUNCE_MS,
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT,
 } from "../config";
 
@@ -188,14 +189,14 @@ export default function Commonplace() {
   } = useQuotesContext();
 
   const [phase, setPhase]         = useState("input");
-  const [fadeClass, setFadeClass] = useState("phase-in");
   const [rawInput, setRawInput]   = useState(() => {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
 
+  // Phase transitions are now handled by AnimatePresence + motion.div
+  // instead of the old fadeClass + setTimeout pattern.
   const goPhase = useCallback((next) => {
-    setFadeClass("phase-out");
-    setTimeout(() => { setPhase(next); setFadeClass("phase-in"); }, PHASE_TRANSITION_MS);
+    setPhase(next);
   }, []);
 
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
@@ -354,7 +355,6 @@ export default function Commonplace() {
   useLayoutEffect(() => {
     if (quotes.length > 0 && phase === "input") {
       setPhase("results");
-      setFadeClass("phase-in");
     }
   }, [quotes.length, phase]);
 
@@ -682,6 +682,13 @@ export default function Commonplace() {
     />
   );
 
+  // Shared motion variants for phase transitions
+  const phaseVariants = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+
   return (
     <>
       <Analytics />
@@ -700,11 +707,12 @@ export default function Commonplace() {
         onDeleteQuotes={handleDupeDeleteBatch}
       />
 
+      <AnimatePresence mode="wait">
       {/* ── Input phase ── */}
       {phase === "input" && (
+        <motion.div key="input" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
         <SectionErrorBoundary name="Input">
           <InputPhase
-            fadeClass={fadeClass}
             rawInput={rawInput} setRawInput={setRawInput}
             inputTab={inputTab} setInputTab={setInputTab}
             isDragOver={isDragOver} setIsDragOver={setIsDragOver}
@@ -719,13 +727,14 @@ export default function Commonplace() {
             toggleTheme={toggleTheme}
           />
         </SectionErrorBoundary>
+        </motion.div>
       )}
 
       {/* ── Processing phase ── */}
       {phase === "processing" && (
+        <motion.div key="processing" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
         <SectionErrorBoundary name="Processing">
           <ProcessingPhase
-            fadeClass={fadeClass}
             progress={progress}
             identifiedFeed={identifiedFeed}
             customCats={customCats}
@@ -733,11 +742,13 @@ export default function Commonplace() {
             onCancel={cancelProcessing}
           />
         </SectionErrorBoundary>
+        </motion.div>
       )}
 
       {/* ── Results phase ── */}
       {phase === "results" && (
-        <div style={styles.wrap} className={fadeClass}>
+        <motion.div key="results" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
+        <div style={styles.wrap}>
 
           {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 
@@ -913,7 +924,15 @@ export default function Commonplace() {
             )
           )}
 
+          <AnimatePresence>
           {showBulkBar && (
+            <motion.div
+              key="bulk-bar"
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+              exit={{ opacity: 0, y: "100%", transition: { duration: 0.15, ease: "easeIn" } }}
+              style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 500 }}
+            >
             <BulkBar
               selected={selected}
               setSelected={setSelected}
@@ -940,7 +959,9 @@ export default function Commonplace() {
               onRemoveFromCollection={handleRemoveFromCollection}
               activeCollectionId={activeCollectionId}
             />
+            </motion.div>
           )}
+          </AnimatePresence>
 
           <SectionErrorBoundary name="Toolbar">
             <ToolbarSection
@@ -1179,7 +1200,9 @@ export default function Commonplace() {
           </DragOverlay>
           </DndContext>
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </>
   );
 }

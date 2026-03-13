@@ -1,10 +1,21 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './components/App'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './contexts/ToastContext'
 import { QuotesProvider } from './contexts/QuotesContext'
 import { baseCSS } from './components/styles'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 // Apply theme immediately to prevent flash of wrong theme
 try {
@@ -26,11 +37,13 @@ document.head.appendChild(style)
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ToastProvider>
-        <QuotesProvider>
-          <App />
-        </QuotesProvider>
-      </ToastProvider>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <QuotesProvider>
+            <App />
+          </QuotesProvider>
+        </ToastProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 )

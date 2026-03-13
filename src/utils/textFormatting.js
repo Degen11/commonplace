@@ -1,3 +1,5 @@
+import { nlpFormat } from "./smartRestore";
+
 // Proper noun set — lazy-initialized via initProperNouns() on first processing run.
 let properNouns = null;
 // Pre-compiled RegExp patterns for properNouns, built once in initProperNouns()
@@ -105,11 +107,9 @@ export function basicFormat(text) {
        .trim();
 
   t = t.replace(/  +/g, " ");
-  t = t.replace(/\bi\b/g, "I");
-  t = t.replace(/\bi'm\b/gi, "I'm")
-       .replace(/\bi'll\b/gi, "I'll")
-       .replace(/\bi've\b/gi, "I've")
-       .replace(/\bi'd\b/gi, "I'd");
+
+  // Use compromise NLP for intelligent text formatting (pronoun "I", proper nouns)
+  t = nlpFormat(t);
 
   // Case-insensitive contraction fixes — preserves original capitalization
   const fixContraction = (re, fixed) => {

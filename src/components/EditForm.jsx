@@ -1,25 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { styles } from "./styles";
 import { normalize } from "../utils/textFormatting";
+import { smartRestore } from "../utils/smartRestore";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { Lightbulb } from "lucide-react";
-
-// Restore common contractions stripped during normalization.
-// Only handles unambiguous cases where the un-apostrophed form
-// isn't a real word (e.g. "weve" → "we've" but not "lets" which
-// could be the verb "lets" or the contraction "let's").
-function restoreContractions(text) {
-  return text
-    .replace(/\b(don|won|can|couldn|shouldn|wouldn|didn|isn|aren|wasn|weren|hasn|haven|hadn|mustn|needn|ain)t\b/gi, "$1't")
-    .replace(/\b(we|you|they|could|should|would|might)ve\b/gi, "$1've")
-    .replace(/\bive\b/gi, "I've")
-    .replace(/\b(you|they)re\b/gi, "$1're")
-    .replace(/\b(you|they)ll\b/gi, "$1'll")
-    .replace(/\b(you|they)d\b/gi, "$1'd")
-    // "lets" is ambiguous (verb vs contraction) — only restore unambiguous forms
-    .replace(/\b(that|what|who|here|there|where|how)s\b/gi, "$1's")
-    .replace(/\bim\b/gi, "I'm");
-}
 
 // Finds the closest local DB match to the current text.
 // db is null until the dynamic import resolves (gracefully returns null then).
@@ -74,10 +58,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
     return findSuggestion(text, localDb);
   }, [text, dismissed, localDb]);
 
-  const formatSuggestionText = (t) => {
-    const restored = restoreContractions(t);
-    return restored.charAt(0).toUpperCase() + restored.slice(1);
-  };
+  const formatSuggestionText = (t) => smartRestore(t);
 
   const applySuggestion = () => {
     setText(formatSuggestionText(suggestion.t));

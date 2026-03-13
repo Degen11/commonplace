@@ -182,7 +182,7 @@ export default function Commonplace() {
         : [active.id];
       addToCollection(collectionId, ids);
       const col = collections.find(c => c.id === collectionId);
-      if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, null, null, "success");
+      if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, "Undo", () => removeFromCollection(collectionId, ids), "success");
       return;
     }
 
@@ -193,7 +193,7 @@ export default function Commonplace() {
       if (oldIndex < 0 || newIndex < 0) return prev;
       return arrayMove(prev, oldIndex, newIndex);
     });
-  }, [selected, collections, addToCollection, showToast, setQuotes]);
+  }, [selected, collections, addToCollection, removeFromCollection, showToast, setQuotes]);
 
   const [showExport, setShowExport]           = useState(false);
   const [showSort, setShowSort]               = useState(false);

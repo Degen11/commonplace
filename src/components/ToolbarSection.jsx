@@ -60,7 +60,7 @@ export default function ToolbarSection({
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
                 const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <div key={c} role="button" className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { background: col.bg, color: col.text, borderColor: col.bg } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                return <div key={c} role="button" className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, borderColor: on ? col.bg : "var(--cp-border)", ...(on ? { background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}>{count}</span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}

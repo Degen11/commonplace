@@ -27,7 +27,7 @@ const rateMap = new Map();
 function checkRateLimitInMemory(ip, limit) {
   const now = Date.now();
   for (const [key, entry] of rateMap) {
-    if (now - entry.start > 120000) rateMap.delete(key);
+    if (now - entry.start > 60000) rateMap.delete(key);
   }
   const entry = rateMap.get(ip);
   if (!entry || now - entry.start > 60000) {

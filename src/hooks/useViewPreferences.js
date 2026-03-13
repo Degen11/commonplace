@@ -114,7 +114,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     return filtered.filter(q => idSet.has(q.id));
   }, [filtered, activeCollectionId, collections]);
 
-  const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${quotes.length}-${activeCollectionId || "all"}`;
+  const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${activeCollectionId || "all"}`;
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(collectionFiltered, paginationKey);
 
   // ── Computed stats ──

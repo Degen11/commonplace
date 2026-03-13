@@ -16,7 +16,7 @@ const MemoCardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
-  allCats, actionProps,
+  allCats, customCats, actionProps,
   toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   isDeleting,
@@ -114,7 +114,7 @@ const MemoCardItem = memo(function CardItem({
           </div>
           {isInlineEditing && inlineEditField === "category"
             ? <select style={styles.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
-                {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+                {[...allCats, ...customCats.filter(c => !allCats.includes(c))].map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             : <span className={`inline-cat${isSavedPulse && savedPulseField === "category" ? " save-pulse" : ""}`} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2 }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
           }
@@ -161,8 +161,7 @@ const MemoCardItem = memo(function CardItem({
   if (prev.savedPulseField !== next.savedPulseField) return false;
   if (prev.searchTerm !== next.searchTerm) return false;
   if (prev.allCats !== next.allCats) return false;
-  if (prev.customCats !== next.customCats) return false;
-  if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
+  if (prev.customCats !== next.customCats) return false;  if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
   if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
   return true;
 });

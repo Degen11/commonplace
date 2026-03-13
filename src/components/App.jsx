@@ -910,7 +910,6 @@ export default function Commonplace() {
                 savedPulse={savedPulse}
                 deletingId={deletingId}
                 searchTerm={search}
-                isDragging={!!activeDragId}
               />
               </SortableContext>
             </SectionErrorBoundary>
@@ -946,6 +945,7 @@ export default function Commonplace() {
                       isSavedPulse={isSavedPulse}
                       savedPulseField={savedPulseField}
                       allCats={allCats}
+                      customCats={customCats}
                       actionProps={actionProps}
                       toggleSel={toggleSel}
                       startEditing={startEditing}

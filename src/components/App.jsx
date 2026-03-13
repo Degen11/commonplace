@@ -1045,7 +1045,7 @@ export default function Commonplace() {
 
           {showQuickInput && (
             <QuickAddBar
-              onAdd={(text, source, category) => { handleQuickAdd(text, source, category); setShowQuickInput(false); }}
+              onAdd={(text, source, category, opts) => { handleQuickAdd(text, source, category, opts); setShowQuickInput(false); }}
               onClose={() => setShowQuickInput(false)}
               allCats={allCats}
               quotes={quotes}
@@ -1100,8 +1100,8 @@ export default function Commonplace() {
                   const isSavedPulse = savedPulse?.id === q.id;
                   const savedPulseField = isSavedPulse ? savedPulse.field : null;
                   return (
+                    <motion.div key={q.id} layout layoutId={`card-${q.id}`} transition={{ layout: { duration: 0.2, ease: "easeOut" } }}>
                     <CardItem
-                      key={q.id}
                       q={q}
                       col={col}
                       isSel={isSel}
@@ -1126,6 +1126,7 @@ export default function Commonplace() {
                       isDeleting={isDeleting}
                       searchTerm={search}
                     />
+                    </motion.div>
                   );
                 })}
               </div>
@@ -1171,7 +1172,7 @@ export default function Commonplace() {
 
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
-          <DragOverlay dropAnimation={null} modifiers={[anchorToCursor]}>
+          <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }} modifiers={[anchorToCursor]}>
             {activeDragId ? (() => {
               const q = quotes.find(x => x.id === activeDragId);
               if (!q) return null;

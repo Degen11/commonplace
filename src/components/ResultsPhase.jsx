@@ -15,7 +15,7 @@ import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
 import {
   DUPE_SIMILARITY_THRESHOLD,
-  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR,
+  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
 } from "../config";
 import { pluralize } from "../utils/helpers";
 import { saveToStorage } from "../utils/storage";
@@ -128,6 +128,9 @@ export default function ResultsPhase({
   const [shareImageQuote, setShareImageQuote]   = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem(LS_SIDEBAR) === "1"; } catch { return false; }
+  });
+  const [showKbHint, setShowKbHint] = useState(() => {
+    try { return !localStorage.getItem(LS_KB_HINT); } catch { return false; }
   });
 
   // ── Refs ──
@@ -277,6 +280,11 @@ export default function ResultsPhase({
   useEffect(() => {
     saveToStorage(LS_SIDEBAR, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
+
+  const dismissKbHint = useCallback(() => {
+    setShowKbHint(false);
+    try { localStorage.setItem(LS_KB_HINT, "1"); } catch { /* ignore */ }
+  }, []);
 
   // ── Handlers ──
 
@@ -586,7 +594,7 @@ export default function ResultsPhase({
               onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
-              onShowShortcuts={() => setShowShortcuts(true)}
+              onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
             />
           </SectionErrorBoundary>
 
@@ -613,7 +621,7 @@ export default function ResultsPhase({
               dark={dark}
               toggleTheme={toggleTheme}
               setConfirmClear={setConfirmClear}
-              onShowShortcuts={() => setShowShortcuts(true)}
+              onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
             />
           )}
 
@@ -671,7 +679,7 @@ export default function ResultsPhase({
                 zIndex: 59, background: "var(--cp-mini-bg)",
                 padding: "12px 32px", borderBottom: "1px solid var(--cp-border)",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-                animation: "slideD .2s ease",
+                animation: "slideD .25s ease",
               }}>
                 <div style={{ maxWidth: 1120, margin: "0 auto" }}>
                   <AddMorePanel
@@ -757,8 +765,23 @@ export default function ResultsPhase({
               sortRef={sortRef}
               hasActiveFilters={hasActiveFilterOrSort}
               clearFilters={clearFilters}
+              resultCount={collectionFiltered.length}
+              totalCount={quotes.length}
             />
           </SectionErrorBoundary>
+
+          {showKbHint && !isMobile && quotes.length > 0 && (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "6px 14px", fontSize: 12, color: "var(--cp-text-muted)",
+              animation: "slideD .25s ease",
+            }}>
+              <span>Press <kbd style={{ padding: "1px 5px", border: "1px solid var(--cp-border)", borderRadius: 4, fontSize: 11, fontFamily: "inherit", background: "var(--cp-bg-card)" }}>?</kbd> for keyboard shortcuts</span>
+              <button onClick={dismissKbHint} style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
+                <X size={12} strokeWidth={2} />
+              </button>
+            </div>
+          )}
 
           {unknownCount > 0 && (reviewQueue.length > 0 ? (
             <div style={styles.attentionBar}>
@@ -909,7 +932,7 @@ export default function ResultsPhase({
       borderRadius: 8,
       cursor: "pointer",
       fontFamily: "inherit",
-      animation: "fadeUp .3s ease",
+      animation: "fadeUp .25s ease",
     }}
   >
     Load more ({remaining} remaining)

@@ -31,7 +31,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
   };
 
   return (
-    <div style={{ background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)", animation: "fadeUp .2s ease" }}>
+    <div style={{ background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)", animation: "fadeUp .25s ease" }}>
       <form
         onSubmit={handleSubmit}
         style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px" }}

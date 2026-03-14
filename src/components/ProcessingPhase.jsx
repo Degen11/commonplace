@@ -4,11 +4,24 @@ import { getCatColor } from "../data/constants";
 import { CheckCircle } from "lucide-react";
 import Logo from "./Logo";
 
-const PHASE_LABELS = {
-  local:  "Matching known quotes\u2026",
-  lookup: "Looking up sources\u2026",
-  api:    "Identifying remaining entries\u2026",
-};
+function phaseSubtitle(progress, doneCount, total) {
+  if (!progress) return "Preparing\u2026";
+  const remaining = total - doneCount;
+  switch (progress.phase) {
+    case "local":
+      return `Matching ${total} ${total === 1 ? "entry" : "entries"} against known quotes\u2026`;
+    case "lookup":
+      return doneCount > 0
+        ? `${doneCount} matched \u2014 checking online sources for ${remaining} more\u2026`
+        : `Looking up sources for ${total} ${total === 1 ? "entry" : "entries"}\u2026`;
+    case "api":
+      return doneCount > 0
+        ? `${doneCount} found \u2014 AI identifying ${remaining} remaining\u2026`
+        : `AI identifying ${total} ${total === 1 ? "entry" : "entries"}\u2026`;
+    default:
+      return "Identifying entries\u2026";
+  }
+}
 
 export default function ProcessingPhase({
   progress,
@@ -34,7 +47,7 @@ export default function ProcessingPhase({
       <div style={styles.procWrap}>
         {isComplete ? (
           <>
-            <div style={{ animation: "fadeUp .3s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ animation: "fadeUp .25s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
               <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <h2 style={{ ...styles.procTitle, color: "#059669" }}>All done!</h2>
               <p style={styles.procSub}>{total} entries organized and ready to explore</p>
@@ -43,7 +56,7 @@ export default function ProcessingPhase({
         ) : (
           <>
             <h2 style={styles.procTitle}>Organizing your collection...</h2>
-            <p style={styles.procSub}>{PHASE_LABELS[progress?.phase] || PHASE_LABELS.api}</p>
+            <p style={styles.procSub}>{phaseSubtitle(progress, doneCount, total)}</p>
           </>
         )}
         {progress && (

@@ -12,11 +12,14 @@ export const API_TIMEOUT_MS         = 30_000;
 export const AUTO_GROUP_TIMEOUT_MS  = 45_000;
 export const API_BATCH_SIZE         = 10;
 
-// UI animations
-export const DELETE_ANIM_MS         = 200;
+// UI animations — three standard tiers for consistency
+export const ANIM_FAST_MS           = 150;   // micro-interactions: delete, phase exit, dismiss
+export const ANIM_STANDARD_MS       = 250;   // default: fade-in, slide-down, button feedback
+export const ANIM_SLOW_MS           = 400;   // deliberate: save pulse, progress complete
+
+export const DELETE_ANIM_MS         = ANIM_FAST_MS;
 export const COPY_PULSE_MS          = 1200;
-export const SAVED_PULSE_MS         = 600;
-export const PHASE_TRANSITION_MS    = 200;
+export const SAVED_PULSE_MS         = ANIM_SLOW_MS;
 export const PROCESSING_DONE_MS     = 3000;
 export const SEARCH_DEBOUNCE_MS     = 300;
 export const DRAFT_SAVE_DEBOUNCE_MS = 500;
@@ -67,3 +70,4 @@ export const LS_THEME       = "commonplace_theme";
 export const LS_VIEW        = "commonplace_view";
 export const LS_SORT        = "commonplace_sort";
 export const LS_SIDEBAR     = "commonplace_sidebar_collapsed";
+export const LS_KB_HINT     = "commonplace_kb_hint_dismissed";

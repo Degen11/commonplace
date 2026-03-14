@@ -91,7 +91,7 @@ src/
     parsers.js                 File parsing — Kindle highlights, Readwise, CSV, JSON, Markdown
     quotes.js                  makeQuote factory, findDuplicateGroups
     export.js                  Export generators — CSV, JSON, Markdown, plain text
-    shareImage.js              Generate quote images via satori
+    shareImage.js              Generate quote share images via Canvas (2x resolution)
     api.js                     fetchWithTimeout, shared API headers
     apiErrors.js               Human-readable API error descriptions
     storage.js                 loadFromStorage / saveToStorage — safe localStorage JSON read/write with validation
@@ -186,6 +186,7 @@ vercel dev        # Test serverless functions locally
 - **useReducer for complex state** — `useProcessing` uses a reducer/dispatch pattern for its state machine
 - **Memoization** — `useMemo` for derived data, `useCallback` for handlers passed as props, `React.memo` on expensive list items with `propsEqual()` from `utils/helpers.js` for custom comparators
 - **Constants centralized** — all magic numbers live in `src/config.js`. Category definitions and Z-index scale in `src/data/constants.js`. UI thresholds (swipe, long-press, breakpoints), localStorage keys, and share hash prefixes all in `config.js`
+- **Animation timing tiers** — three standardized durations in `config.js`: `ANIM_FAST_MS` (150ms, micro-interactions), `ANIM_STANDARD_MS` (250ms, default transitions), `ANIM_SLOW_MS` (400ms, deliberate feedback like save pulse). CSS animations in `baseCSS` mirror these tiers. Don't introduce new arbitrary durations
 - **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`

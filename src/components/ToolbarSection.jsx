@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { styles, CP_ACCENT } from "./styles";
 import { X, Search, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { pluralize } from "../utils/helpers";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order",        badge: null },
@@ -28,6 +29,8 @@ export default function ToolbarSection({
   sortRef,
   hasActiveFilters,
   clearFilters,
+  resultCount,
+  totalCount,
 }) {
   const searchInputRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -118,6 +121,14 @@ export default function ToolbarSection({
                   >
                     <X size={12} strokeWidth={2} />
                   </button>
+                )}
+                {search && resultCount != null && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: "var(--cp-text-muted)",
+                    padding: "2px 7px", marginRight: 4, flexShrink: 0, whiteSpace: "nowrap",
+                  }}>
+                    {resultCount === totalCount ? `${resultCount}` : `${resultCount}/${totalCount}`}
+                  </span>
                 )}
               </div>
             ) : (

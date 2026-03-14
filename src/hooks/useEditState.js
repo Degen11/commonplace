@@ -155,9 +155,13 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       return u;
     }));
     const count = selected.size;
+    const changes = [bulkEditCat && `category \u2192 ${bulkEditCat}`, bulkEditSource.trim() && `source \u2192 ${bulkEditSource.trim()}`].filter(Boolean);
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
     const snapMap = new Map(snapshot.map(q => [q.id, q]));
-    showToast(`${count} entries updated`, "Undo", () => {
+    const msg = changes.length > 0
+      ? `Updated ${count} ${count === 1 ? "entry" : "entries"}: ${changes.join(", ")}`
+      : `${count} ${count === 1 ? "entry" : "entries"} updated`;
+    showToast(msg, "Undo", () => {
       setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
     });
   }, [quotes, selected, bulkEditCat, bulkEditSource, setQuotes, showToast]);

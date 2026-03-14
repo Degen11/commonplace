@@ -677,6 +677,7 @@ export default function ResultsPhase({
                     addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
                     addMoreRef={addMoreRef}
                     onAddMore={handleAddMore}
+                    onQuickAdd={handleQuickAdd}
                     onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
                     onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
                   />

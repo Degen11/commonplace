@@ -62,7 +62,7 @@ export default function Commonplace() {
     deletingId,
     copiedId,
     reidentifyingIds,
-    handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
+    handleDelete, copyQuote, reIdentify, batchReIdentify,
     handleFileImport,
   } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs });
 

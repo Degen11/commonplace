@@ -53,7 +53,9 @@ src/
     ToastContext.jsx            Toast notification queue
 
   components/
-    App.jsx                    Root orchestrator — phase management, DnD context, modal routing, keyboard shortcuts
+    App.jsx                    Root orchestrator — phase management, hook init (useProcessing, useQuoteActions, useTheme)
+    ResultsPhase.jsx           Results phase — owns view prefs, edit state, keyboard shortcuts, DnD, sidebar, all results UI
+    QuickAddBar.jsx            Inline quote add form with dupe detection
     InputPhase.jsx             Landing page — text input, file import, URL fetch
     ProcessingPhase.jsx        AI identification progress display
     TableView.jsx              Main table view with inline editing and drag-to-reorder
@@ -133,9 +135,11 @@ User input → smartSplit() → deduplicate against existing
 **QuotesContext** (`src/contexts/QuotesContext.jsx`) wraps the Zustand store for backward compatibility. It handles mount-time effects (shared link decoding, initial cloud pull) and bridges the store to `useQuotesContext()`. All consumers use `useQuotesContext()` — they don't access the Zustand store directly.
 
 **Local hook state** — each feature hook manages its own state:
-- `useProcessing` — useReducer state machine (idle → dupes → processing → done)
-- `useEditState` — edit mode, selected quote IDs, inline editing
-- `useViewPreferences` — sort column/direction, category filter, search term, layout mode
+- `useProcessing` — useReducer state machine (idle → dupes → processing → done). Initialized in App.jsx (spans phases)
+- `useEditState` — edit mode, selected quote IDs, inline editing. Initialized in ResultsPhase
+- `useViewPreferences` — sort column/direction, category filter, search term, layout mode. Initialized in ResultsPhase
+- `useQuoteActions` — delete/copy/re-identify animations. Initialized in App.jsx (handleFileImport used by InputPhase)
+- `useKeyboardShortcuts` — results-only keyboard handler. Initialized in ResultsPhase
 
 **Pattern: refs for async safety** — throughout the codebase, `useRef` holds latest state values for use in async callbacks (retries, debounced saves). This prevents stale closure bugs. The Zustand migration reduced some of this, but the pattern persists in hooks like `useProcessing`.
 
@@ -150,7 +154,8 @@ User input → smartSplit() → deduplicate against existing
 
 ## Key components
 
-- **`App.jsx`** — ~1200 lines. Orchestrates everything: phase transitions, DnD context, modal state, drag-and-drop handlers, keyboard shortcuts. Most hooks are initialized here and props are drilled down.
+- **`App.jsx`** — Phase orchestrator (~170 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` with `AnimatePresence`.
+- **`ResultsPhase.jsx`** — The results phase (~600 lines). Calls `useQuotesContext()` directly. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts` internally. Owns all results-specific state (modals, sidebar, DnD, toolbar), effects, and handlers.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
 - **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
@@ -197,7 +202,7 @@ vercel dev        # Test serverless functions locally
 
 ## Known issues and rough edges
 
-- `App.jsx` is very large (~1200 lines). It initializes all hooks and manages phase/modal/DnD state. Splitting it would be a significant refactor since many hooks depend on shared state
+- `ResultsPhase.jsx` is the largest component (~600 lines). It owns all results-phase concerns: view preferences, edit state, keyboard shortcuts, DnD, sidebar, modals, and the full results JSX
 - The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
 - Comment in `QuotesContext.jsx` line 99 says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
 - No TODO/FIXME comments exist in the codebase currently

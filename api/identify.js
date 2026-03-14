@@ -1,7 +1,5 @@
-import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
+import { withApiHandler, ANTHROPIC, RATE_LIMITS } from './_shared.js';
 import { identifySchema, parseBody } from './_schemas.js';
-
-const RATE_LIMIT = 30;
 
 // ── Server-side system prompt (never exposed to client) ──
 const SYSTEM_PROMPT = `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
@@ -60,24 +58,7 @@ const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}'
 ) + ' For cleanText: fix typos, fix \'i\' → \'I\', capitalize the first word, preserve original meaning. Return plain text only — never wrap in markdown, asterisks, or any formatting markers.';
 
-export default async function handler(req, res) {
-  setCorsHeaders(req, res);
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'Service not configured' });
-  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
-
-  const ct = req.headers['content-type'] || '';
-  if (!ct.includes('application/json')) return res.status(415).json({ error: 'Content-Type must be application/json' });
-  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
-
-  const supabase = getSupabase();
-  const ip = getClientIp(req);
-  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
-    return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
-  }
-
+export default withApiHandler(async (req, res) => {
   const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
@@ -85,7 +66,7 @@ export default async function handler(req, res) {
   const wantsFormatting = body.formatting === true;
 
   const safeBody = {
-    model: 'claude-haiku-4-5-20251001',
+    model: ANTHROPIC.MODEL,
     max_tokens: 8192,
     temperature: 0,
     system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
@@ -96,14 +77,14 @@ export default async function handler(req, res) {
   };
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC.URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': ANTHROPIC.VERSION,
       },
-      body: JSON.stringify(safeBody)
+      body: JSON.stringify(safeBody),
     });
 
     if (!response.ok) {
@@ -126,4 +107,7 @@ export default async function handler(req, res) {
     console.error('API proxy error:', error?.message || 'unknown');
     return res.status(500).json({ error: 'Failed to reach AI service' });
   }
-}
+}, {
+  rateLimit: RATE_LIMITS.IDENTIFY,
+  requireAnthropicKey: true,
+});

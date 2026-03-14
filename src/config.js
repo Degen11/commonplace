@@ -43,6 +43,18 @@ export const SHARE_URL_MAX_LENGTH   = 8000;
 // Duplicate detection
 export const DUPE_SIMILARITY_THRESHOLD = 0.55;
 
+// UI thresholds
+export const SWIPE_THRESHOLD_PX    = 80;   // px to trigger swipe action
+export const SWIPE_CANCEL_Y_PX    = 30;   // vertical movement cancels swipe
+export const LONG_PRESS_MS        = 400;  // ms to trigger long-press
+export const LONG_PRESS_MOVE_PX   = 10;   // px movement cancels long-press
+export const INFINITE_SCROLL_PAGE = 100;  // items per page in virtualized list
+export const MOBILE_BREAKPOINT_PX = 640;  // below this: card view, mobile layout
+
+// Share link hash prefixes
+export const SHARE_HASH_PREFIX  = "s=";  // base64-encoded share data
+export const PUBLIC_HASH_PREFIX = "p=";  // public collection link
+
 // localStorage keys (single source of truth)
 export const LS_QUOTES      = "commonplace_quotes";
 export const LS_CATS        = "commonplace_cats";
@@ -51,3 +63,7 @@ export const LS_DRAFT       = "commonplace_draft";
 export const LS_COL_ORDER   = "commonplace_col_order";
 export const LS_DELETED_IDS = "commonplace_deleted_ids";
 export const LS_COLLECTIONS = "commonplace_collections";
+export const LS_THEME       = "commonplace_theme";
+export const LS_VIEW        = "commonplace_view";
+export const LS_SORT        = "commonplace_sort";
+export const LS_SIDEBAR     = "commonplace_sidebar_collapsed";

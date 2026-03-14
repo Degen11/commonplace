@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
@@ -32,13 +33,7 @@ export default function HeaderBar({
   const [showOverflow, setShowOverflow] = useState(false);
   const overflowRef = useRef(null);
 
-  // Close overflow on outside click
-  useEffect(() => {
-    if (!showOverflow) return;
-    const h = e => { if (overflowRef.current && !overflowRef.current.contains(e.target)) setShowOverflow(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [showOverflow]);
+  useClickOutside(overflowRef, showOverflow, () => setShowOverflow(false));
 
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>

@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import { List, AlignJustify, LayoutGrid, Moon, Sun, MoreHorizontal, BarChart3, HelpCircle, Trash2 } from "lucide-react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
@@ -27,12 +28,7 @@ export default function MiniHeader({
   const [showOverflow, setShowOverflow] = useState(false);
   const overflowRef = useRef(null);
 
-  useEffect(() => {
-    if (!showOverflow) return;
-    const h = e => { if (overflowRef.current && !overflowRef.current.contains(e.target)) setShowOverflow(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [showOverflow]);
+  useClickOutside(overflowRef, showOverflow, () => setShowOverflow(false));
 
   return (
     <div style={{

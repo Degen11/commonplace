@@ -1,7 +1,5 @@
-import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp, UUID_RE } from './_shared.js';
+import { withApiHandler, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
 import { syncPostSchema, uuidV4, parseBody } from './_schemas.js';
-
-const RATE_LIMIT = 60;
 
 // ── Merge quotes by ID: union both sets, keep newer for conflicts ──
 function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
@@ -33,21 +31,7 @@ function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
   return Array.from(merged.values());
 }
 
-export default async function handler(req, res) {
-  setCorsHeaders(req, res, 'GET, POST, OPTIONS');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
-  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
-
-  const supabase = getSupabase();
-  if (!supabase) return res.status(500).json({ error: 'Storage not configured' });
-
-  const ip = getClientIp(req);
-  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
-    return res.status(429).json({ error: 'Too many requests' });
-  }
-
+export default withApiHandler(async (req, res, { supabase }) => {
   // ── GET: Fetch quotes for a device ──
   if (req.method === 'GET') {
     const { ok, error: idError } = parseBody(uuidV4, req.query.device_id);
@@ -92,7 +76,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const ct = req.headers['content-type'] || '';
     if (!ct.includes('application/json')) {
-      return res.status(415).json({ error: 'Content-Type must be application/json' });
+      return res.status(415).json({ error: ERROR_MESSAGES.INVALID_CONTENT_TYPE });
     }
 
     const { ok, data: parsed, error: validationError } = parseBody(syncPostSchema, req.body);
@@ -135,5 +119,10 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(405).json({ error: 'Method not allowed' });
-}
+  return res.status(405).json({ error: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
+}, {
+  methods: ['GET', 'POST'],
+  requireJson: false,
+  rateLimit: RATE_LIMITS.SYNC,
+  requireSupabase: true,
+});

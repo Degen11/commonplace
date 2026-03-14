@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-
-const LS_THEME = "commonplace_theme";
+import { LS_THEME } from "../config";
 
 export default function useTheme() {
   const [dark, setDark] = useState(() => {

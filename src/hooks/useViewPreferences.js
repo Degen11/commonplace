@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
-import { LS_FILTERS, SEARCH_DEBOUNCE_MS } from "../config";
-import { loadFromStorage } from "../utils/storage";
+import { LS_FILTERS, LS_VIEW, LS_SORT, SEARCH_DEBOUNCE_MS, MOBILE_BREAKPOINT_PX } from "../config";
+import { loadFromStorage, saveToStorage } from "../utils/storage";
+import { countBy } from "../utils/helpers";
 
 const FUSE_OPTIONS = {
   keys: ["text", "source"],
@@ -11,9 +12,6 @@ const FUSE_OPTIONS = {
   ignoreLocation: true,
   minMatchCharLength: 2,
 };
-
-const LS_VIEW    = "commonplace_view";
-const LS_SORT    = "commonplace_sort";
 
 const _savedView = loadFromStorage(LS_VIEW, v => v && typeof v === "object", {});
 const _initFilters = loadFromStorage(LS_FILTERS, v => v && typeof v === "object", {});
@@ -30,10 +28,10 @@ export const SORT_OPTIONS = [
 export default function useViewPreferences(quotes, { activeCollectionId, collections } = {}) {
   const [view, setView] = useState(() => {
     if (_savedView.view) {
-      if (window.innerWidth < 640 && _savedView.view === "table") return "cards";
+      if (window.innerWidth < MOBILE_BREAKPOINT_PX && _savedView.view === "table") return "cards";
       return _savedView.view;
     }
-    return window.innerWidth < 640 ? "cards" : "table";
+    return window.innerWidth < MOBILE_BREAKPOINT_PX ? "cards" : "table";
   });
   const [compact, setCompact] = useState(() =>
     typeof _savedView.compact === "boolean" ? _savedView.compact : false
@@ -49,19 +47,19 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     } catch { /* ignore */ }
     return "default";
   });
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT_PX);
 
   // ── Persist preferences ──
   useEffect(() => {
-    try { localStorage.setItem(LS_VIEW, JSON.stringify({ view, compact })); } catch(e) {}
+    saveToStorage(LS_VIEW, { view, compact });
   }, [view, compact]);
 
   useEffect(() => {
-    try { localStorage.setItem(LS_SORT, sortBy); } catch(e) {}
+    try { localStorage.setItem(LS_SORT, sortBy); } catch { /* ignore */ }
   }, [sortBy]);
 
   useEffect(() => {
-    try { localStorage.setItem(LS_FILTERS, JSON.stringify({ cat: catFilter, fav: favFilter, search })); } catch(e) {}
+    saveToStorage(LS_FILTERS, { cat: catFilter, fav: favFilter, search });
   }, [catFilter, favFilter, search]);
 
   // ── Search debounce ──
@@ -73,7 +71,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   // ── Responsive ──
   useEffect(() => {
     const h = () => {
-      const m = window.innerWidth < 640;
+      const m = window.innerWidth < MOBILE_BREAKPOINT_PX;
       setIsMobile(m);
       if (m && view === "table") setView("cards");
     };
@@ -123,9 +121,8 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
 
   // ── Computed stats ──
   const { cc, favCount, unknownCount } = useMemo(() => {
-    const cc = {}; quotes.forEach(q => { cc[q.category] = (cc[q.category] || 0) + 1; });
     return {
-      cc,
+      cc: countBy(quotes, "category"),
       favCount: quotes.filter(q => q.favorite).length,
       unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
     };
@@ -142,7 +139,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
 
   const computedStats = useMemo(() => {
     if (quotes.length === 0) return null;
-    const srcCount = {}; quotes.forEach(q => { srcCount[q.source] = (srcCount[q.source] || 0) + 1; });
+    const srcCount = countBy(quotes, "source");
     const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
     const sorted   = [...quotes].sort((a, b) => a.text.length - b.text.length);
     const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);

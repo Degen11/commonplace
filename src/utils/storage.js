@@ -20,3 +20,20 @@ export function loadFromStorage(key, validate = Array.isArray, fallback = []) {
   } catch { /* corrupt or quota — fall through */ }
   return typeof fallback === "function" ? fallback() : fallback;
 }
+
+/**
+ * JSON-stringify and write a value to localStorage.
+ * Silently swallows quota/security errors — Supabase is the backup.
+ *
+ * @param {string} key - localStorage key
+ * @param {*} value - value to serialize
+ * @returns {boolean} true if write succeeded
+ */
+export function saveToStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}

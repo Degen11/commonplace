@@ -1,12 +1,9 @@
 import { QUOTED_CATS } from "../data/constants";
+import { groupBy } from "./helpers";
 
 export const displayText = q => QUOTED_CATS.has(q.category) ? `\u201C${q.text || ""}\u201D` : (q.text || "");
 
-function groupByCategory(quotes) {
-  const grouped = {};
-  quotes.forEach(q => { (grouped[q.category] = grouped[q.category] || []).push(q); });
-  return grouped;
-}
+const groupByCategory = (quotes) => groupBy(quotes, "category");
 
 function buildCollectionMap(collections) {
   const map = {};

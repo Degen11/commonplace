@@ -1,27 +1,10 @@
-import { setCorsHeaders, validateOrigin, getClientIp, getSupabase, checkRateLimit } from './_shared.js';
+import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { fetchUrlSchema, parseBody } from './_schemas.js';
 
-const RATE_LIMIT = 15; // per minute
 const MAX_CONTENT_LENGTH = 500_000; // 500KB text limit
 const FETCH_TIMEOUT = 10_000; // 10s
 
-export default async function handler(req, res) {
-  setCorsHeaders(req, res);
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
-
-  const ct = req.headers['content-type'] || '';
-  if (!ct.includes('application/json')) return res.status(415).json({ error: 'Content-Type must be application/json' });
-  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
-
-  const supabase = getSupabase();
-  const ip = getClientIp(req);
-  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
-    return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
-  }
-
+export default withApiHandler(async (req, res) => {
   const { ok, data: body, error: validationError } = parseBody(fetchUrlSchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
@@ -90,7 +73,9 @@ export default async function handler(req, res) {
   } finally {
     clearTimeout(timeout);
   }
-}
+}, {
+  rateLimit: RATE_LIMITS.FETCH_URL,
+});
 
 function extractByMode(html, mode) {
   switch (mode) {

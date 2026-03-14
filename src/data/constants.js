@@ -1,5 +1,16 @@
 // ===================== CONSTANTS =====================
 
+// Z-index scale — centralized to prevent magic numbers in styles
+export const Z = {
+  CATEGORY_PILLS: 50,
+  OVERLAY:        59,
+  MINI_HEADER:    60,
+  DROPDOWN:       100,
+  BULK_BAR:       500,
+  MODAL:          1000,
+  TOAST:          2000,
+};
+
 // Source categories — identified from a known origin
 export const SOURCE_CATEGORIES = ["Film","TV","Book","Music","Game","Speech","Person","Phrase"];
 

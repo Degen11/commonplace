@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import { useDroppable } from "@dnd-kit/core";
 import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
@@ -42,12 +43,12 @@ function getIcon(iconName) {
 function IconPicker({ anchorRef, current, onSelect, onClose }) {
   const ref = useRef(null);
 
+  useClickOutside(ref, true, onClose);
+
   useEffect(() => {
-    const h = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     const k = e => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("mousedown", h);
     document.addEventListener("keydown", k);
-    return () => { document.removeEventListener("mousedown", h); document.removeEventListener("keydown", k); };
+    return () => document.removeEventListener("keydown", k);
   }, [onClose]);
 
   // Position above the anchor icon using a portal-like fixed position

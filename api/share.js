@@ -1,9 +1,9 @@
-import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
+import { withApiHandler, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
 import { sharePostSchema, shareGetSchema, parseBody } from './_schemas.js';
 
-const RATE_LIMIT = 15;
 const ID_LENGTH = 8;
 const EXPIRY_DAYS = 30;
+const SHARE_BASE_URL = 'https://commonplace.pro';
 
 // Generate a short URL-safe ID (a-z, 0-9)
 function generateShareId() {
@@ -15,26 +15,7 @@ function generateShareId() {
   return id;
 }
 
-export default async function handler(req, res) {
-  setCorsHeaders(req, res, 'GET, POST, OPTIONS');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-
-  const supabase = getSupabase();
-  if (!supabase) return res.status(500).json({ error: 'Storage not configured' });
-
-  // GET requests (viewing shared collections) skip origin/CSRF checks
-  // so external visitors can load shared links
-  if (req.method !== 'GET') {
-    if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
-    if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
-  }
-
-  const ip = getClientIp(req);
-  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
-    return res.status(429).json({ error: 'Too many requests' });
-  }
-
+export default withApiHandler(async (req, res, { supabase }) => {
   // ── GET: Fetch a shared collection ──
   if (req.method === 'GET') {
     const { ok, error: idError } = parseBody(shareGetSchema, req.query);
@@ -75,7 +56,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const ct = req.headers['content-type'] || '';
     if (!ct.includes('application/json')) {
-      return res.status(415).json({ error: 'Content-Type must be application/json' });
+      return res.status(415).json({ error: ERROR_MESSAGES.INVALID_CONTENT_TYPE });
     }
 
     const { ok, data: parsed, error: validationError } = parseBody(sharePostSchema, req.body);
@@ -104,7 +85,7 @@ export default async function handler(req, res) {
 
       return res.status(201).json({
         id,
-        url: `${req.headers['origin'] || 'https://commonplace.pro'}/#p=${id}`,
+        url: `${SHARE_BASE_URL}/#p=${id}`,
         expiresAt,
         count: validated.length,
       });
@@ -114,5 +95,13 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(405).json({ error: 'Method not allowed' });
-}
+  return res.status(405).json({ error: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
+}, {
+  methods: ['GET', 'POST'],
+  requireJson: false,
+  // GET requests (viewing shared collections) skip origin/CSRF checks
+  // so external visitors can load shared links
+  requireAuth: (req) => req.method !== 'GET',
+  rateLimit: RATE_LIMITS.SHARE,
+  requireSupabase: true,
+});

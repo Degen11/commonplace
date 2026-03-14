@@ -15,8 +15,10 @@ import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
 import {
   DUPE_SIMILARITY_THRESHOLD,
-  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT,
+  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR,
 } from "../config";
+import { pluralize } from "../utils/helpers";
+import { saveToStorage } from "../utils/storage";
 
 import CollectionDupeModal from "./CollectionDupeModal";
 import TableView from "./TableView";
@@ -125,7 +127,7 @@ export default function ResultsPhase({
   const [collectionDupes, setCollectionDupes]   = useState([]);
   const [shareImageQuote, setShareImageQuote]   = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try { return localStorage.getItem("commonplace_sidebar_collapsed") === "1"; } catch { return false; }
+    try { return localStorage.getItem(LS_SIDEBAR) === "1"; } catch { return false; }
   });
 
   // ── Refs ──
@@ -187,7 +189,7 @@ export default function ResultsPhase({
         : [active.id];
       addToCollection(collectionId, ids);
       const col = collections.find(c => c.id === collectionId);
-      if (col) showToast(`Added ${ids.length === 1 ? "1 quote" : `${ids.length} quotes`} to "${col.name}"`, "Undo", () => removeFromCollection(collectionId, ids), "success");
+      if (col) showToast(`Added ${pluralize(ids.length, "quote")} to "${col.name}"`, "Undo", () => removeFromCollection(collectionId, ids), "success");
       return;
     }
 
@@ -273,7 +275,7 @@ export default function ResultsPhase({
 
   // Persist sidebar collapsed state
   useEffect(() => {
-    try { localStorage.setItem("commonplace_sidebar_collapsed", sidebarCollapsed ? "1" : "0"); } catch { /* ignore */ }
+    saveToStorage(LS_SIDEBAR, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
 
   // ── Handlers ──
@@ -359,7 +361,7 @@ export default function ResultsPhase({
     setQuotes(prev => prev.filter(q => !idSet.has(q.id)));
     cleanCollectionRefs(quoteIds);
     showToast(
-      `Removed ${quoteIds.length} duplicate${quoteIds.length === 1 ? "" : "s"}`,
+      `Removed ${pluralize(quoteIds.length, "duplicate")}`,
       "Undo",
       () => {
         setQuotes(prev => {
@@ -396,7 +398,7 @@ export default function ResultsPhase({
     if (!col || col.error) throw new Error(`Collection "${name}" already exists`);
     addToCollection(col.id, matchedIds);
     setActiveCollectionId(col.id);
-    showToast(`Created "${col.name}" with ${matchedIds.length} quote${matchedIds.length === 1 ? "" : "s"}`, null, null, "success");
+    showToast(`Created "${col.name}" with ${pluralize(matchedIds.length, "quote")}`, null, null, "success");
   }, [quotes, autoGroup, createCollection, addToCollection, setActiveCollectionId, showToast]);
 
   // Compute per-collection quote counts for sidebar
@@ -418,7 +420,7 @@ export default function ResultsPhase({
     if (col) {
       showToast(
         count > 0
-          ? `Deleted "${col.name}" \u2014 ${count} ${count === 1 ? "quote stays" : "quotes stay"} in All Quotes`
+          ? `Deleted "${col.name}" \u2014 ${pluralize(count, "quote")} ${count === 1 ? "stays" : "stay"} in All Quotes`
           : `Deleted "${col.name}"`,
         "Undo",
         () => {
@@ -434,9 +436,8 @@ export default function ResultsPhase({
   const handleRemoveFromCollection = useCallback((collectionId, quoteIds) => {
     removeFromCollection(collectionId, quoteIds);
     const col = collections.find(c => c.id === collectionId);
-    const count = quoteIds.length;
     showToast(
-      `Removed ${count} ${count === 1 ? "quote" : "quotes"} from "${col?.name || "collection"}"`,
+      `Removed ${pluralize(quoteIds.length, "quote")} from "${col?.name || "collection"}"`,
       "Undo",
       () => addToCollection(collectionId, quoteIds),
     );
@@ -456,9 +457,8 @@ export default function ResultsPhase({
     onAddToCollection: (collectionId, quoteIds) => {
       addToCollection(collectionId, quoteIds);
       const col = collections.find(c => c.id === collectionId);
-      const count = quoteIds.length;
       showToast(
-        `Added ${count} ${count === 1 ? "quote" : "quotes"} to "${col?.name || "collection"}"`,
+        `Added ${pluralize(quoteIds.length, "quote")} to "${col?.name || "collection"}"`,
         "Undo",
         () => removeFromCollection(collectionId, quoteIds),
       );
@@ -713,9 +713,8 @@ export default function ResultsPhase({
               onAddToCollection={(collectionId, quoteIds) => {
                 addToCollection(collectionId, quoteIds);
                 const col = collections.find(c => c.id === collectionId);
-                const count = quoteIds.length;
                 showToast(
-                  `Added ${count} ${count === 1 ? "quote" : "quotes"} to "${col?.name || "collection"}"`,
+                  `Added ${pluralize(quoteIds.length, "quote")} to "${col?.name || "collection"}"`,
                   "Undo",
                   () => removeFromCollection(collectionId, quoteIds),
                 );

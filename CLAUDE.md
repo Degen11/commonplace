@@ -30,7 +30,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 
 ```
 api/                          Vercel serverless functions (Node.js)
-  _shared.js                  Supabase client, CORS, rate limiting, origin validation
+  _shared.js                  Supabase client, CORS, rate limiting, origin validation, withApiHandler middleware
   _schemas.js                 Zod schemas for all API endpoints
   identify.js                 POST — proxy to Claude Haiku for quote identification
   sync.js                     GET/POST — device-based cloud sync via Supabase
@@ -80,6 +80,7 @@ src/
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
     useLongPress.js            Mobile long-press for selection
+    useClickOutside.js         Close dropdowns/popups on outside click
 
   data/
     constants.js               Categories, colors, confidence levels, example quotes, sanitization
@@ -93,7 +94,8 @@ src/
     shareImage.js              Generate quote images via satori
     api.js                     fetchWithTimeout, shared API headers
     apiErrors.js               Human-readable API error descriptions
-    storage.js                 loadFromStorage — safe localStorage JSON read with validation
+    storage.js                 loadFromStorage / saveToStorage — safe localStorage JSON read/write with validation
+    helpers.js                 Shared utilities: pluralize, groupBy, countBy, propsEqual (memo comparator)
     sync.js                    mergeByTimestamp — cloud/local merge helper
     dragGhost.js               Custom drag preview elements
     richTextKeys.js            Key constants for rich text handling
@@ -162,7 +164,7 @@ User input → smartSplit() → deduplicate against existing
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
 - **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.).
 - **`_schemas.js`** — Zod schemas for all API endpoints. Server-side validation with filter-style arrays (silently drops invalid items).
-- **`_shared.js`** — Supabase client, rate limiting (in-memory with Supabase RPC fallback), CORS, origin validation.
+- **`_shared.js`** — Supabase client, rate limiting, CORS, origin validation, and `withApiHandler()` middleware that wraps all API endpoints with shared CORS/auth/rate-limit/content-type handling.
 
 ## Common commands
 
@@ -182,22 +184,28 @@ vercel dev        # Test serverless functions locally
 - **Hooks own their domain** — each major feature gets a custom hook (`useProcessing`, `useSync`, `useEditState`, etc.) that encapsulates state + logic. App.jsx initializes them and passes props down
 - **Functional updaters** — `setQuotes(prev => [...prev, ...new])` pattern used everywhere (Zustand setters accept both direct values and updater functions)
 - **useReducer for complex state** — `useProcessing` uses a reducer/dispatch pattern for its state machine
-- **Memoization** — `useMemo` for derived data, `useCallback` for handlers passed as props, `React.memo` on expensive list items
-- **Constants centralized** — all magic numbers live in `src/config.js`. Category definitions in `src/data/constants.js`
+- **Memoization** — `useMemo` for derived data, `useCallback` for handlers passed as props, `React.memo` on expensive list items with `propsEqual()` from `utils/helpers.js` for custom comparators
+- **Constants centralized** — all magic numbers live in `src/config.js`. Category definitions and Z-index scale in `src/data/constants.js`. UI thresholds (swipe, long-press, breakpoints), localStorage keys, and share hash prefixes all in `config.js`
+- **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
-- **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side
-- **Responsive breakpoint** — 640px. Below this: card view, long-press selection, mobile layouts
+- **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
+- **Click-outside pattern** — use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners
+- **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
+- **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``
+- **Responsive breakpoint** — `MOBILE_BREAKPOINT_PX` (640px) from `config.js`. Below this: card view, long-press selection, mobile layouts
 
 ## Z-index scale
 
+Defined as `Z` constants in `src/data/constants.js`:
+
 ```
-50    Category pills
-59    Overlays
-60    Mini-header (sticky)
-100   Dropdowns
-500   Bulk action bar
-1000  Modals
-2000  Toasts
+Z.CATEGORY_PILLS  50    Category pills
+Z.OVERLAY         59    Overlays
+Z.MINI_HEADER     60    Mini-header (sticky)
+Z.DROPDOWN        100   Dropdowns
+Z.BULK_BAR        500   Bulk action bar
+Z.MODAL           1000  Modals
+Z.TOAST           2000  Toasts
 ```
 
 ## Known issues and rough edges

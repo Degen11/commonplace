@@ -1,7 +1,5 @@
-import { getSupabase, checkRateLimit, setCorsHeaders, validateOrigin, getClientIp } from './_shared.js';
+import { withApiHandler, ANTHROPIC, RATE_LIMITS } from './_shared.js';
 import { autoGroupSchema, parseBody } from './_schemas.js';
-
-const RATE_LIMIT = 15; // stricter than identify — AI grouping is heavier use
 
 const SYSTEM_PROMPT = `You filter quotes by theme. Given a theme and numbered quotes, return a JSON array of matching indices. Example: [0,3,7]
 Rules:
@@ -9,24 +7,7 @@ Rules:
 - Return [] if nothing matches
 - Return ONLY the JSON array, nothing else`;
 
-export default async function handler(req, res) {
-  setCorsHeaders(req, res);
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'Service not configured' });
-  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
-
-  const ct = req.headers['content-type'] || '';
-  if (!ct.includes('application/json')) return res.status(415).json({ error: 'Content-Type must be application/json' });
-  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
-
-  const supabase = getSupabase();
-  const ip = getClientIp(req);
-  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
-    return res.status(429).json({ error: 'Too many requests. Please wait a moment and try again.' });
-  }
-
+export default withApiHandler(async (req, res) => {
   const { ok, data: body, error: validationError } = parseBody(autoGroupSchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
@@ -45,19 +26,19 @@ export default async function handler(req, res) {
   }
 
   const safeBody = {
-    model: 'claude-haiku-4-5-20251001',
+    model: ANTHROPIC.MODEL,
     max_tokens: 1024, // indices only — very small output
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userContent }],
   };
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC.URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': ANTHROPIC.VERSION,
       },
       body: JSON.stringify(safeBody),
     });
@@ -87,4 +68,7 @@ export default async function handler(req, res) {
     console.error('Auto-group API error:', error?.message || 'unknown');
     return res.status(500).json({ error: 'Failed to reach AI service' });
   }
-}
+}, {
+  rateLimit: RATE_LIMITS.AUTO_GROUP,
+  requireAnthropicKey: true,
+});

@@ -137,7 +137,17 @@ export default function ResultsPhase({
   const toolbarRef          = useRef(null);
   const pendingScrollAdjust = useRef(null);
   const catScrollRef        = useRef(null);
-  const headerRef           = useRef(null);
+  const headerObsRef        = useRef(null);
+  const headerRef           = useCallback((node) => {
+    if (headerObsRef.current) { headerObsRef.current.disconnect(); headerObsRef.current = null; }
+    if (node) {
+      const obs = new IntersectionObserver(([entry]) => {
+        setHeaderVisible(entry.isIntersecting);
+      }, { threshold: 0 });
+      obs.observe(node);
+      headerObsRef.current = obs;
+    }
+  }, []);
   const [toolbarHeight, setToolbarHeight] = useState(44);
 
   // ── DnD ──
@@ -192,14 +202,6 @@ export default function ResultsPhase({
 
   // ── Effects ──
 
-  useEffect(() => {
-    if (!headerRef.current) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      setHeaderVisible(entry.isIntersecting);
-    }, { threshold: 0 });
-    obs.observe(headerRef.current);
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     const el = toolbarRef.current;

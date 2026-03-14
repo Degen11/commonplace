@@ -91,10 +91,12 @@ export async function generateShareImage(q, styleName = "classic") {
   const contentH = quoteMarkSpace + blockH + gapAfterQuote + attrBlockH + brandingH + bottomPad;
   const H = Math.max(MIN_H, PAD + contentH + PAD);
 
+  const scale = 2;
   const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = W * scale;
+  canvas.height = H * scale;
   const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
 
   // Background
   ctx.fillStyle = theme.bg;

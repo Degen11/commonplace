@@ -61,14 +61,18 @@ export async function generateShareImage(q, styleName = "classic") {
   measure.height = 1;
   const mCtx = measure.getContext("2d");
 
-  const textX = PAD + 8;
-  const textMaxW = W - PAD * 2 - 16;
+  const accentBarW = 5;
+  const textX = PAD + accentBarW + 28;
+  const textMaxW = W - PAD - 8 - textX;
+
+  // Adaptive font size — short quotes get larger text
+  const textLen = (q.text || "").length;
+  const fontSize = textLen < 50 ? 64 : textLen < 100 ? 54 : textLen < 200 ? 48 : 42;
+  const lineH = Math.round(fontSize * 1.48);
 
   // Measure quote lines
-  mCtx.font = `italic 42px 'Playfair Display', Georgia, serif`;
+  mCtx.font = `italic ${fontSize}px 'Playfair Display', Georgia, serif`;
   const lines = wrapText(mCtx, q.text, textMaxW);
-
-  const lineH = 62;
   const blockH = lines.length * lineH;
 
   // Measure attribution lines
@@ -85,7 +89,7 @@ export async function generateShareImage(q, styleName = "classic") {
 
   // Calculate required height: top padding + quote mark area + quote + gap + attribution + gap + branding + bottom padding
   const quoteMarkSpace = 180;
-  const gapAfterQuote = 40;
+  const gapAfterQuote = Math.max(40, Math.round((MIN_H - blockH) * 0.06));
   const brandingH = 50;
   const bottomPad = PAD + 12;
   const contentH = quoteMarkSpace + blockH + gapAfterQuote + attrBlockH + brandingH + bottomPad;
@@ -102,15 +106,14 @@ export async function generateShareImage(q, styleName = "classic") {
   ctx.fillStyle = theme.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Top accent bar
-  ctx.fillStyle = theme.accent;
-  ctx.fillRect(0, 0, W, 6);
-
-  // Border
+  // Rounded border
   ctx.strokeStyle = theme.border;
   ctx.lineWidth = 1.5;
   const bi = 32;
-  ctx.strokeRect(bi, bi, W - bi * 2, H - bi * 2);
+  const br = 14;
+  ctx.beginPath();
+  ctx.roundRect(bi, bi, W - bi * 2, H - bi * 2, br);
+  ctx.stroke();
 
   // Opening quote mark
   ctx.fillStyle = theme.quoteMark;
@@ -126,7 +129,7 @@ export async function generateShareImage(q, styleName = "classic") {
 
   // Draw quote text
   ctx.fillStyle = theme.text;
-  ctx.font = `italic 42px 'Playfair Display', Georgia, serif`;
+  ctx.font = `italic ${fontSize}px 'Playfair Display', Georgia, serif`;
   ctx.textAlign = "left";
   lines.forEach((line, i) => {
     ctx.fillText(line, textX, textStartY + i * lineH);
@@ -150,6 +153,14 @@ export async function generateShareImage(q, styleName = "classic") {
       ctx.fillText(line, x, attrStartY + i * attrLineH);
     });
   }
+
+  // Left accent bar alongside quote text
+  const barTop = textStartY - lineH + 10;
+  const barBottom = attrStartY + (attrLines.length - 1) * attrLineH + 8;
+  ctx.fillStyle = theme.accent;
+  ctx.beginPath();
+  ctx.roundRect(PAD + 4, barTop, accentBarW, barBottom - barTop, accentBarW / 2);
+  ctx.fill();
 
   drawBranding(ctx, W, H, PAD, theme.brandColor);
 

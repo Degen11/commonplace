@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { INFINITE_SCROLL_PAGE } from "../config";
 
-const PAGE_SIZE = 100;
+const PAGE_SIZE = INFINITE_SCROLL_PAGE;
 
 export default function useInfiniteScroll(filtered, resetKey) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);

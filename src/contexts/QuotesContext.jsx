@@ -17,6 +17,7 @@ import {
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
   API_TIMEOUT_MS, STORAGE_WARN_BYTES,
   LS_QUOTES, LS_CATS,
+  SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
 } from "../config";
 
 const QuotesContext = createContext(null);
@@ -119,8 +120,8 @@ export function QuotesProvider({ children }) {
     const hash = window.location.hash.slice(1);
 
     // 1a. Base64 shared link
-    if (hash.startsWith("s=")) {
-      const decoded = safeDecodeShareData(hash.slice(2));
+    if (hash.startsWith(SHARE_HASH_PREFIX)) {
+      const decoded = safeDecodeShareData(hash.slice(SHARE_HASH_PREFIX.length));
       if (decoded?.length > 0) {
         setQuotes(decoded);
         setIsSharedView(true);
@@ -132,8 +133,8 @@ export function QuotesProvider({ children }) {
     }
 
     // 1b. Public collection link
-    if (hash.startsWith("p=")) {
-      const shareId = hash.slice(2);
+    if (hash.startsWith(PUBLIC_HASH_PREFIX)) {
+      const shareId = hash.slice(PUBLIC_HASH_PREFIX.length);
       if (shareId.length >= 4 && shareId.length <= 20) {
         (async () => {
           try {

@@ -7,6 +7,7 @@ import { InlineSourceInput } from "./InlineEditors";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
+import { propsEqual } from "../utils/helpers";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart } from "lucide-react";
 import HighlightText from "./HighlightText";
@@ -139,22 +140,14 @@ const MemoCardItem = memo(function CardItem({
     </div>
     </div>
   );
-}, (prev, next) => {
-  if (prev.q !== next.q) return false;
-  if (prev.isSel !== next.isSel) return false;
-  if (prev.isEd !== next.isEd) return false;
-  if (prev.needsAtt !== next.needsAtt) return false;
-  if (prev.sortBy !== next.sortBy) return false;
-  if (prev.isInlineEditing !== next.isInlineEditing) return false;
-  if (prev.inlineEditField !== next.inlineEditField) return false;
-  if (prev.isDeleting !== next.isDeleting) return false;
-  if (prev.isSavedPulse !== next.isSavedPulse) return false;
-  if (prev.savedPulseField !== next.savedPulseField) return false;
-  if (prev.searchTerm !== next.searchTerm) return false;
-  if (prev.allCats !== next.allCats) return false;
-  if (prev.customCats !== next.customCats) return false;  if ((prev.actionProps.copiedId === prev.q.id) !== (next.actionProps.copiedId === next.q.id)) return false;
-  if (prev.actionProps.reidentifying.has(prev.q.id) !== next.actionProps.reidentifying.has(next.q.id)) return false;
-  return true;
-});
+}, propsEqual(
+  "q", "isSel", "isEd", "needsAtt", "sortBy",
+  "isInlineEditing", "inlineEditField", "isDeleting",
+  "isSavedPulse", "savedPulseField", "searchTerm",
+  "allCats", "customCats",
+  ["actionProps", (prev, next) =>
+    (prev.actionProps.copiedId === prev.q.id) === (next.actionProps.copiedId === next.q.id) &&
+    prev.actionProps.reidentifying.has(prev.q.id) === next.actionProps.reidentifying.has(next.q.id)],
+));
 
 export default MemoCardItem;

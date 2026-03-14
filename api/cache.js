@@ -1,33 +1,8 @@
-import { setCorsHeaders, validateOrigin, getClientIp, checkRateLimit, getSupabase } from './_shared.js';
+import { withApiHandler, normalizeForCache, RATE_LIMITS } from './_shared.js';
 import { cacheSchema, parseBody } from './_schemas.js';
 
-const RATE_LIMIT = 60;
-
-function normalizeForCache(text) {
-  return (text || '')
-    .normalize('NFKD')
-    .toLowerCase()
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-export default async function handler(req, res) {
-  setCorsHeaders(req, res);
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!validateOrigin(req)) return res.status(403).json({ error: 'Forbidden' });
-  if (!req.headers['x-requested-with']) return res.status(403).json({ error: 'Forbidden' });
-
-  const supabase = getSupabase();
+export default withApiHandler(async (req, res, { supabase }) => {
   if (!supabase) return res.status(200).json({ cached: 0 });
-
-  const ip = getClientIp(req);
-  if (!(await checkRateLimit(ip, RATE_LIMIT, supabase))) {
-    return res.status(429).json({ error: 'Too many requests' });
-  }
 
   const { ok, data: parsed, error: validationError } = parseBody(cacheSchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
@@ -52,4 +27,7 @@ export default async function handler(req, res) {
   } catch {
     return res.status(200).json({ cached: 0 });
   }
-}
+}, {
+  rateLimit: RATE_LIMITS.CACHE,
+  requireJson: false,
+});

@@ -1,7 +1,8 @@
 import { useRef, useCallback, useState, useEffect } from "react";
+import { SWIPE_THRESHOLD_PX, SWIPE_CANCEL_Y_PX } from "../config";
 
-const THRESHOLD = 80;  // px to trigger action
-const CANCEL_Y = 30;   // vertical movement cancels swipe
+const THRESHOLD = SWIPE_THRESHOLD_PX;
+const CANCEL_Y = SWIPE_CANCEL_Y_PX;
 
 export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) {
   const [offsetX, setOffsetX] = useState(0);

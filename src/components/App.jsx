@@ -10,6 +10,7 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { sanitizeName } from "../data/constants";
+import { pluralize } from "../utils/helpers";
 import {
   DRAFT_SAVE_DEBOUNCE_MS,
   LS_DRAFT,
@@ -40,11 +41,7 @@ export default function Commonplace() {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
 
-  // Phase transitions are now handled by AnimatePresence + motion.div
-  // instead of the old fadeClass + setTimeout pattern.
-  const goPhase = useCallback((next) => {
-    setPhase(next);
-  }, []);
+  const goPhase = setPhase;
 
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
   const {
@@ -116,7 +113,7 @@ export default function Commonplace() {
         added++;
       }
     }
-    if (added > 0) showToast(`Imported ${added} collection${added === 1 ? "" : "s"}`, null, null, "success");
+    if (added > 0) showToast(`Imported ${pluralize(added, "collection")}`, null, null, "success");
   }, [collections, createCollection, updateCollectionIcon, addToCollection, showToast]);
 
   // Called by ResultsPhase when user confirms "Start fresh"

@@ -1,7 +1,8 @@
 import { useRef, useCallback, useEffect } from "react";
+import { LONG_PRESS_MS, LONG_PRESS_MOVE_PX } from "../config";
 
 // Long-press hook for mobile selection
-export default function useLongPress(onLongPress, ms = 400) {
+export default function useLongPress(onLongPress, ms = LONG_PRESS_MS) {
   const timerRef = useRef(null);
   const movedRef = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
@@ -22,7 +23,7 @@ export default function useLongPress(onLongPress, ms = 400) {
       const touch = e.touches[0];
       const dx = Math.abs(touch.clientX - startPos.current.x);
       const dy = Math.abs(touch.clientY - startPos.current.y);
-      if (dx > 10 || dy > 10) {
+      if (dx > LONG_PRESS_MOVE_PX || dy > LONG_PRESS_MOVE_PX) {
         movedRef.current = true;
         clearTimeout(timerRef.current);
         timerRef.current = null;

@@ -17,14 +17,15 @@ import {
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH,
   LS_QUOTES, LS_CATS, LS_COL_ORDER, LS_DELETED_IDS, LS_COLLECTIONS,
   PERSIST_DEBOUNCE_MS,
+  SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
 } from "../config";
-import { loadFromStorage } from "../utils/storage";
+import { loadFromStorage, saveToStorage } from "../utils/storage";
 
 // ── Helpers ──
 
 function isShareHash() {
   const hash = window.location.hash.slice(1);
-  return hash.startsWith("s=") || hash.startsWith("p=");
+  return hash.startsWith(SHARE_HASH_PREFIX) || hash.startsWith(PUBLIC_HASH_PREFIX);
 }
 
 function loadDeletedIds() {
@@ -39,6 +40,10 @@ function loadDeletedIds() {
 // and skip writes for shared views. This custom subscriber handles it.
 
 let persistTimer = null;
+
+// Memoization for allCats getter — avoids creating a new array on every access
+let _allCatsSrc = null;
+let _allCatsCache = null;
 
 function schedulePersist(state) {
   if (persistTimer) clearTimeout(persistTimer);
@@ -87,10 +92,14 @@ export const useQuotesStore = create(
     _deletedIds: loadDeletedIds(),
     _storageLimitHit: false,
 
-    // ── Derived ──
+    // ── Derived (memoized — returns same reference unless customCats changes) ──
     get allCats() {
-      const state = get();
-      return [...DEFAULT_CATEGORIES, ...state.customCats];
+      const customCats = get().customCats;
+      if (customCats !== _allCatsSrc) {
+        _allCatsSrc = customCats;
+        _allCatsCache = [...DEFAULT_CATEGORIES, ...customCats];
+      }
+      return _allCatsCache;
     },
 
     // ── Quote setters ──
@@ -113,7 +122,7 @@ export const useQuotesStore = create(
     setColumnOrder: (updater) => {
       set(state => {
         const next = typeof updater === "function" ? updater(state.columnOrder) : updater;
-        try { localStorage.setItem(LS_COL_ORDER, JSON.stringify(next)); } catch { /* ignore */ }
+        saveToStorage(LS_COL_ORDER, next);
         return { columnOrder: next };
       });
     },
@@ -138,7 +147,7 @@ export const useQuotesStore = create(
       const newEntries = quoteIds.map(id => ({ id, deletedAt: now }));
       set(state => {
         const next = [...state._deletedIds, ...newEntries];
-        try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(next)); } catch { /* ignore */ }
+        saveToStorage(LS_DELETED_IDS, next);
         return { _deletedIds: next };
       });
     },
@@ -147,7 +156,7 @@ export const useQuotesStore = create(
       const idSet = new Set(quoteIds);
       set(state => {
         const next = state._deletedIds.filter(e => !idSet.has(e.id));
-        try { localStorage.setItem(LS_DELETED_IDS, JSON.stringify(next)); } catch { /* ignore */ }
+        saveToStorage(LS_DELETED_IDS, next);
         return { _deletedIds: next };
       });
     },
@@ -167,12 +176,10 @@ export const useQuotesStore = create(
         });
         if (cloudCollections?.length > 0) {
           set({ collections: cloudCollections });
-          try { localStorage.setItem(LS_COLLECTIONS, JSON.stringify(cloudCollections)); } catch { /* ignore */ }
+          saveToStorage(LS_COLLECTIONS, cloudCollections);
         }
-        try {
-          localStorage.setItem(LS_QUOTES, JSON.stringify(cloudQuotes));
-          localStorage.setItem(LS_CATS, JSON.stringify(cloudCats));
-        } catch { /* ignore */ }
+        saveToStorage(LS_QUOTES, cloudQuotes);
+        saveToStorage(LS_CATS, cloudCats);
         return;
       }
 
@@ -291,9 +298,7 @@ useQuotesStore.subscribe(
 
 useQuotesStore.subscribe(
   state => state.collections,
-  (collections) => {
-    try { localStorage.setItem(LS_COLLECTIONS, JSON.stringify(collections)); } catch { /* ignore */ }
-  },
+  (collections) => { saveToStorage(LS_COLLECTIONS, collections); },
 );
 
 // ── Cross-tab sync ──

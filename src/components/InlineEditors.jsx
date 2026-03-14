@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
 import { ChevronDown } from "lucide-react";
@@ -42,12 +43,12 @@ export function InlineCategorySelect({ current, allCats, onSave, onCancel, custo
     }
   }, []);
 
+  useClickOutside(ref, true, () => onCancelRef.current());
+
   useEffect(() => {
     const handleKey = e => { if (e.key === "Escape") { e.stopPropagation(); onCancelRef.current(); } };
-    const handleClickOutside = e => { if (ref.current && !ref.current.contains(e.target)) onCancelRef.current(); };
     document.addEventListener("keydown", handleKey);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => { document.removeEventListener("keydown", handleKey); document.removeEventListener("mousedown", handleClickOutside); };
+    return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
   return (

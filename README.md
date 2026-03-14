@@ -93,8 +93,6 @@ src/
     export.js                  Export format generators
 ```
 
-For detailed architecture, data flow diagrams, and design decisions, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
 ### Getting Started
 
 #### Prerequisites

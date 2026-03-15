@@ -1,5 +1,7 @@
 import { styles } from "./styles";
 import { X, RefreshCw, FolderMinus, Trash2 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 function Divider() {
   return <div style={styles.bulkDivider} />;
@@ -21,16 +23,6 @@ export default function BulkBar({
 }) {
   const hasCollections = collections && collections.length > 0;
 
-  // Shared inline button style for dark-bg context
-  const btnBase = {
-    padding: "5px 10px", borderRadius: 6,
-    border: "1px solid var(--cp-bulk-input-border)",
-    background: "transparent", color: "var(--cp-bulk-text)",
-    fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-    display: "inline-flex", alignItems: "center", gap: 4,
-    whiteSpace: "nowrap",
-  };
-
   return (
     <div style={styles.bulkBar}>
       {/* ── Count badge ── */}
@@ -44,43 +36,50 @@ export default function BulkBar({
           <option value="">Category</option>
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <input style={styles.bulkIn} placeholder="Source" value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />
-        <button
-          className="ui-tip bulk-apply"
+        <Input
+          className="h-7 text-xs bg-[var(--cp-bulk-input-bg)] border-[var(--cp-bulk-input-border)] text-[var(--cp-bulk-text)] placeholder:text-[var(--cp-bulk-muted)] w-28"
+          placeholder="Source"
+          value={bulkEditSource}
+          onChange={e => setBulkEditSource(e.target.value)}
+        />
+        <Button
+          size="sm"
+          className="ui-tip h-7 bg-white text-primary hover:bg-white/90"
           data-tip="Apply to selected"
-          style={{ ...styles.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }}
           onClick={applyBulk}
           disabled={!bulkEditCat && !bulkEditSource.trim()}
         >
           Apply
-        </button>
+        </Button>
       </div>
 
       <Divider />
 
       {/* ── Actions group: re-identify + collections ── */}
       <div style={styles.bulkGroup}>
-        <button
-          className="ui-tip bulk-reidentify"
+        <Button
+          variant="outline"
+          size="sm"
+          className="ui-tip h-7 text-xs border-[var(--cp-bulk-input-border)] text-[var(--cp-bulk-text)] bg-transparent hover:bg-white/10"
           data-tip="Re-identify selected with AI"
-          style={{ ...btnBase, opacity: isReidentifying ? 0.5 : 1 }}
           onClick={onBatchReIdentify}
           disabled={isReidentifying}
         >
           <RefreshCw size={12} strokeWidth={2} className={isReidentifying ? "spin" : ""} />
           {isReidentifying ? "Re-identifying..." : "Re-identify"}
-        </button>
+        </Button>
 
         {hasCollections && activeCollectionId && (
-          <button
-            className="ui-tip"
+          <Button
+            variant="outline"
+            size="sm"
+            className="ui-tip h-7 text-xs border-[var(--cp-bulk-input-border)] text-[var(--cp-bulk-text)] bg-transparent hover:bg-white/10"
             data-tip="Remove from this collection"
-            style={btnBase}
             onClick={() => onRemoveFromCollection(activeCollectionId, [...selected])}
           >
             <FolderMinus size={12} strokeWidth={2} />
             Remove
-          </button>
+          </Button>
         )}
 
         {hasCollections && (
@@ -88,8 +87,11 @@ export default function BulkBar({
             className="ui-tip"
             data-tip="Add selected to collection"
             style={{
-              ...btnBase, padding: "5px 24px 5px 8px",
-              background: "var(--cp-bulk-input-bg)",
+              padding: "5px 24px 5px 8px", borderRadius: 6,
+              border: "1px solid var(--cp-bulk-input-border)",
+              background: "var(--cp-bulk-input-bg)", color: "var(--cp-bulk-text)",
+              fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
+              whiteSpace: "nowrap",
             }}
             value=""
             onChange={e => {
@@ -109,12 +111,24 @@ export default function BulkBar({
 
       {/* ── Destructive + dismiss ── */}
       <div style={styles.bulkGroup}>
-        <button className="ui-tip bulk-del" data-tip="Delete selected" style={styles.bulkDelBtn} onClick={onDelete}>
+        <Button
+          variant="destructive"
+          size="icon"
+          className="ui-tip h-7 w-7"
+          data-tip="Delete selected"
+          onClick={onDelete}
+        >
           <Trash2 size={13} strokeWidth={2} />
-        </button>
-        <button className="ui-tip" data-tip="Clear selection" style={styles.bulkX} onClick={() => setSelected(new Set())}>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ui-tip h-7 w-7 text-[var(--cp-bulk-muted)] hover:text-[var(--cp-bulk-text)]"
+          data-tip="Clear selection"
+          onClick={() => setSelected(new Set())}
+        >
           <X size={14} strokeWidth={2} />
-        </button>
+        </Button>
       </div>
     </div>
   );

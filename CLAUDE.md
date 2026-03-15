@@ -22,6 +22,10 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **@supabase/supabase-js 2** — database client (server-side only)
 - **vite-plugin-pwa** — service worker / PWA manifest
 - **Vercel** — hosting + serverless functions
+- **Tailwind CSS 4** — utility-first CSS framework (via `@tailwindcss/vite` plugin)
+- **Radix UI** — headless accessible primitives (Dialog, DropdownMenu, Select, Slot)
+- **class-variance-authority** — component variant definitions (Button)
+- **clsx + tailwind-merge** — conditional className composition (`cn()` utility)
 - **Vitest 4** — test runner (configured in `vite.config.js`)
 
 ## Architecture
@@ -43,7 +47,11 @@ api/                          Vercel serverless functions (Node.js)
 
 src/
   main.jsx                    Entry point — React root, QueryClient, providers, theme init, CSS injection
+  app.css                     Tailwind CSS v4 entry point + @theme mapping (--cp-* → Tailwind semantics)
   config.js                   All tunable constants (timeouts, limits, thresholds, localStorage keys)
+
+  lib/
+    utils.js                   cn() utility — clsx + tailwind-merge for className composition
 
   stores/
     quotesStore.js             Zustand store — quotes, collections, column order, deletion tombstones
@@ -66,7 +74,13 @@ src/
     EditForm.jsx               Full quote editor modal
     InlineEditors.jsx          Click-to-edit source/category with autocomplete
     CollectionsSidebar.jsx     Collection management sidebar
-    styles.js                  All CSS-in-JS style objects + baseCSS (global CSS string)
+    styles.js                  Legacy CSS-in-JS style objects + baseCSS (global CSS string). Being replaced by ui/ components
+    ui/
+      button.jsx               Button component — variants: default, destructive, outline, secondary, ghost, link
+      input.jsx                Input + Textarea components
+      dialog.jsx               Dialog (modal) — Radix-based with overlay, focus trap, ARIA
+      dropdown-menu.jsx        DropdownMenu — Radix-based with keyboard nav, ARIA
+      select.jsx               Select — Radix-based with search, keyboard nav, check indicators
 
   hooks/
     useProcessing.js           Core pipeline — local lookup → external lookup → AI batch identification
@@ -162,7 +176,8 @@ User input → smartSplit() → deduplicate against existing
 - **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
-- **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.).
+- **`styles.js`** — Legacy CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for non-migrated components. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.).
+- **`src/components/ui/`** — shadcn-style UI primitives (Button, Input, Textarea, Dialog, DropdownMenu, Select). Built on Radix UI + Tailwind CSS. These replace the scattered inline button/input/modal/dropdown styles from `styles.js`.
 - **`_schemas.js`** — Zod schemas for all API endpoints. Server-side validation with filter-style arrays (silently drops invalid items).
 - **`_shared.js`** — Supabase client, rate limiting, CORS, origin validation, and `withApiHandler()` middleware that wraps all API endpoints with shared CORS/auth/rate-limit/content-type handling.
 
@@ -179,8 +194,23 @@ vercel dev        # Test serverless functions locally
 ## Code conventions
 
 - **No TypeScript** — entire codebase is plain JavaScript with JSX
-- **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`) injected via `<style>` tag in `main.jsx`
-- **File naming**: components are PascalCase `.jsx`, hooks are `use*` camelCase `.js`, utils are camelCase `.js`, API routes are kebab-case `.js`, API private modules prefixed with `_`
+- **Dual styling system (migration in progress)**:
+  - **New code**: use shadcn-style UI components from `src/components/ui/` with Tailwind CSS classes. Use `cn()` from `src/lib/utils.js` for conditional classNames
+  - **Legacy code**: inline style objects from `styles.js`. Being migrated to Tailwind + UI components incrementally
+  - **Theme**: CSS custom properties (`--cp-*`) on `:root` remain the single source of truth for colors. `src/app.css` maps them to Tailwind semantic tokens (`bg-primary`, `text-foreground`, etc.)
+  - **Global CSS**: `baseCSS` string in `styles.js` still handles keyframes, interactive states, and utility classes. Injected via `<style>` tag in `main.jsx`
+- **UI component conventions** (shadcn/ui pattern):
+  - Components live in `src/components/ui/` with kebab-case filenames
+  - Use Radix UI primitives for accessibility (focus trap, keyboard nav, ARIA)
+  - Style with Tailwind utility classes via `className`, not inline `style` props
+  - Expose `className` prop for customization; use `cn()` to merge
+  - Use `forwardRef` on all primitive components
+  - Button variants defined via `class-variance-authority` (cva)
+  - Prefer `<Button variant="destructive">` over `style={styles.confirmYes}`
+  - Prefer `<Dialog>` over manual modal overlay + `useScrollLock`
+  - Prefer `<DropdownMenu>` over manual overflow menu + `useClickOutside`
+  - Prefer `<Select>` over native `<select>` with inline styles
+- **File naming**: components are PascalCase `.jsx`, hooks are `use*` camelCase `.js`, utils are camelCase `.js`, API routes are kebab-case `.js`, API private modules prefixed with `_`, UI primitives are kebab-case `.jsx` in `ui/`
 - **Hooks own their domain** — each major feature gets a custom hook (`useProcessing`, `useSync`, `useEditState`, etc.) that encapsulates state + logic. App.jsx initializes them and passes props down
 - **Functional updaters** — `setQuotes(prev => [...prev, ...new])` pattern used everywhere (Zustand setters accept both direct values and updater functions)
 - **useReducer for complex state** — `useProcessing` uses a reducer/dispatch pattern for its state machine
@@ -211,6 +241,7 @@ Z.TOAST           2000  Toasts
 
 ## Known issues and rough edges
 
+- **UI component migration is partial** — `ConfirmModal`, `EditForm`, `QuickAddBar`, `HeaderBar` (overflow menu), and `BulkBar` have been migrated to shadcn-style UI components. Remaining components (`InputPhase`, `MiniHeader`, `CollectionsSidebar`, `ToolbarSection`, `ExportDropdown`, `CardItem`, `TableView`, `DupeModal`, `ShortcutsModal`, `ShareImageModal`, `UrlPreviewModal`, `AddMorePanel`, `StatsOverlay`) still use legacy `styles.*` objects. Migrate them incrementally using the same pattern: replace `<button style={styles.foo}>` with `<Button variant="...">`, etc.
 - `ResultsPhase.jsx` is the largest component (~600 lines). It owns all results-phase concerns: view preferences, edit state, keyboard shortcuts, DnD, sidebar, modals, and the full results JSX
 - The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
 - Comment in `QuotesContext.jsx` line 99 says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
@@ -225,7 +256,7 @@ Z.TOAST           2000  Toasts
 - **Don't modify `_shared.js` ALLOWED_ORIGINS** without also updating the CSP header in `vercel.json` — they must stay in sync
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import
-- **`styles.js` is the only place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`
+- **Style in the right place** — for new/migrated components, use Tailwind classes via `className` and `cn()`. For legacy components still using `styles.*`, keep changes in `styles.js`. Don't mix both approaches in the same component. `baseCSS` handles global CSS (keyframes, interactive states) and is injected once in `main.jsx`. `app.css` is the Tailwind entry point — don't add component styles there, only theme-level config
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy

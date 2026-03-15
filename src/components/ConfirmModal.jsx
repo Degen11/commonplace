@@ -1,5 +1,13 @@
 import useScrollLock from "../hooks/useScrollLock";
-import { styles } from "./styles";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "./ui/dialog";
+import { Button } from "./ui/button";
 
 export default function ConfirmModal({
   icon,
@@ -15,20 +23,35 @@ export default function ConfirmModal({
   useScrollLock();
 
   return (
-    <div style={styles.modalOverlay} role="dialog" aria-modal="true" aria-label={title} onClick={onCancel}>
-      <div style={{ ...styles.confirmBox, borderTop: `3px solid ${borderColor}` }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            {icon}
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogContent
+        showClose={false}
+        className="max-w-sm"
+        style={{ borderTop: `3px solid ${borderColor}` }}
+      >
+        <DialogHeader>
+          <div className="flex items-center gap-2.5 mb-1">
+            <div
+              className="flex items-center justify-center shrink-0 rounded-[10px]"
+              style={{ width: 36, height: 36, background: iconBg }}
+            >
+              {icon}
+            </div>
+            <DialogTitle>{title}</DialogTitle>
           </div>
-          <p style={{ fontSize: 15, fontWeight: 600 }}>{title}</p>
-        </div>
-        <p style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 20, lineHeight: 1.5 }}>{description}</p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onCancel}>{cancelLabel}</button>
-          <button className="confirm-yes" style={styles.confirmYes} onClick={onConfirm}>{confirmLabel}</button>
-        </div>
-      </div>
-    </div>
+          <DialogDescription className="leading-relaxed">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

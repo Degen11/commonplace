@@ -161,6 +161,7 @@ export default function ResultsPhase({
   const keyboardSensor = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
   const sensors = useSensors(pointerSensor, keyboardSensor);
   const [activeDragId, setActiveDragId] = useState(null);
+  const [overDragId, setOverDragId] = useState(null);
 
   const collisionDetection = useCallback((args) => {
     const pointerHits = pointerWithin(args);
@@ -180,8 +181,13 @@ export default function ResultsPhase({
     return { ...transform, x: transform.x + offsetX - 20, y: transform.y + offsetY - 16 };
   }, []);
 
+  const handleDndOver = useCallback(({ over }) => {
+    setOverDragId(over?.id ?? null);
+  }, []);
+
   const handleDndEnd = useCallback(({ active, over }) => {
     setActiveDragId(null);
+    setOverDragId(null);
     if (!over || active.id === over.id) return;
 
     // Drop onto a collection
@@ -805,7 +811,7 @@ export default function ResultsPhase({
           ))}
 
           {/* Main content area with optional sidebar */}
-          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
+          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
           <div style={{ display: "flex", gap: 0 }}>
             <CollectionsSidebar
                 collections={collections}
@@ -872,8 +878,8 @@ export default function ResultsPhase({
           {view === "cards" && (
             <SectionErrorBoundary name="Card view">
               <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-                {visible.map((q) => {
+              <div style={isMobile ? { display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 } : { columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
+                {visible.map((q, i) => {
                   const col = getCatColor(q.category, customCats);
                   const isSel = selected.has(q.id);
                   const isEd  = editingId === q.id;
@@ -883,8 +889,9 @@ export default function ResultsPhase({
                   const isDeleting = deletingId === q.id;
                   const isSavedPulse = savedPulse?.id === q.id;
                   const savedPulseField = isSavedPulse ? savedPulse.field : null;
+                  const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
                   return (
-                    <motion.div key={q.id} layout layoutId={`card-${q.id}`} transition={{ layout: { duration: 0.2, ease: "easeOut" } }}>
+                    <motion.div key={q.id} style={{ breakInside: "avoid", marginBottom: 12 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.6) }}>
                     <CardItem
                       q={q}
                       col={col}
@@ -909,6 +916,7 @@ export default function ResultsPhase({
                       setEditingId={setEditingId}
                       isDeleting={isDeleting}
                       searchTerm={search}
+                      isOverTarget={isOverTarget}
                     />
                     </motion.div>
                   );

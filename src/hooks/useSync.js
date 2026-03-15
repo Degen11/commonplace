@@ -72,6 +72,10 @@ export default function useSync({ onCloudData, onSyncError }) {
   // TanStack Query handles retries, but the mutation function needs current data.
   const latestPayload = useRef(null);
 
+  // Stable ref for mutate — useMutation returns a new object each render,
+  // so depending on pushMutation in useCallback deps causes infinite re-renders.
+  const mutateRef = useRef(null);
+
   const markReady = useCallback(() => {
     initialLoadDone.current = true;
     setInitialLoading(false);
@@ -136,6 +140,9 @@ export default function useSync({ onCloudData, onSyncError }) {
     },
   });
 
+  // Keep mutateRef in sync with latest mutate function
+  mutateRef.current = pushMutation.mutate;
+
   // ── Debounced push — same API as before ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
     // Always capture latest data
@@ -156,28 +163,28 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!deviceId) return;
       const p = latestPayload.current;
       if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      pushMutation.mutate(p);
+      mutateRef.current(p);
     }, SYNC_DEBOUNCE_MS);
-  }, [pushMutation]);
+  }, []);
 
   // Manual sync — push immediately with fresh retries
   const manualPush = useCallback(() => {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     consecutiveFailures.current = 0;
     const p = latestPayload.current;
-    if (p) pushMutation.mutate(p);
-  }, [pushMutation]);
+    if (p) mutateRef.current(p);
+  }, []);
 
   // Sync when coming back online
   useEffect(() => {
     const handleOnline = () => {
       if (latestPayload.current && initialLoadDone.current) {
-        pushMutation.mutate(latestPayload.current);
+        mutateRef.current(latestPayload.current);
       }
     };
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, [pushMutation]);
+  }, []);
 
   // Cleanup timers on unmount
   useEffect(() => {

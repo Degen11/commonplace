@@ -18,7 +18,7 @@ export default function ConfirmModal({
     <div style={styles.modalOverlay} role="dialog" aria-modal="true" aria-label={title} onClick={onCancel}>
       <div style={{ ...styles.confirmBox, borderTop: `3px solid ${borderColor}` }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 6, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             {icon}
           </div>
           <p style={{ fontSize: 15, fontWeight: 600 }}>{title}</p>

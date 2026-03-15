@@ -18,7 +18,7 @@ export function ToastProvider({ children }) {
             color: "#fff",
             fontSize: 13,
             fontWeight: 500,
-            borderRadius: 8,
+            borderRadius: 6,
             boxShadow: "0 4px 16px rgba(0,0,0,.2)",
             border: "none",
           },

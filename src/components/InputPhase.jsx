@@ -129,10 +129,10 @@ const HP = {
     zIndex: 1,
   },
   heroHeadline: {
-    fontFamily: FONT_SERIF,
+    fontFamily: FONT_SANS,
     fontSize: 48,
     fontWeight: 700,
-    letterSpacing: -2,
+    letterSpacing: "-0.03em",
     lineHeight: 1.1,
     color: "var(--cp-text)",
     marginBottom: 20,
@@ -151,7 +151,7 @@ const HP = {
     alignItems: "center",
     padding: "14px 32px",
     border: "none",
-    borderRadius: 10,
+    borderRadius: 6,
     background: CP_ACCENT,
     color: "#fff",
     fontSize: 16,
@@ -189,10 +189,10 @@ const HP = {
     fontFamily: FONT_SANS,
   },
   sectionHeadline: {
-    fontFamily: FONT_SERIF,
+    fontFamily: FONT_SANS,
     fontSize: 32,
     fontWeight: 700,
-    letterSpacing: -1,
+    letterSpacing: "-0.03em",
     lineHeight: 1.2,
     color: "var(--cp-text)",
     marginBottom: 12,
@@ -278,7 +278,7 @@ const HP = {
     fontFamily: FONT_SANS,
   },
   timelineCount: {
-    fontFamily: FONT_SERIF,
+    fontFamily: FONT_SANS,
     fontSize: 20,
     fontWeight: 700,
     color: "var(--cp-text)",
@@ -339,7 +339,7 @@ const HP = {
   featureCard: {
     background: "var(--cp-bg-card)",
     border: "1px solid var(--cp-border-light)",
-    borderRadius: 12,
+    borderRadius: 6,
     padding: "20px 18px",
     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
   },
@@ -349,7 +349,7 @@ const HP = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: 6,
     marginBottom: 14,
   },
   featureTitle: {
@@ -493,12 +493,12 @@ function UrlImportPanel({ onLoad }) {
           onChange={e => setUrl(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") handleFetch(); }}
           placeholder="https://example.com/quotes"
-          style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+          style={{ flex: 1, padding: "10px 14px", borderRadius: 6, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 14, fontFamily: "inherit", outline: "none" }}
         />
         <button
           onClick={() => handleFetch()}
           disabled={loading || !url.trim()}
-          style={{ padding: "10px 18px", borderRadius: 8, border: "none", background: loading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+          style={{ padding: "10px 18px", borderRadius: 4, border: "none", background: loading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
         >
           {loading ? "Fetching..." : "Fetch"}
         </button>
@@ -535,7 +535,7 @@ function UrlImportPanel({ onLoad }) {
       </div>
 
       {error && (
-        <div style={{ marginTop: 12, padding: "8px 12px", background: "var(--cp-error-bg)", border: "1px solid var(--cp-error-border)", borderRadius: 8, fontSize: 13, color: "var(--cp-error-text)" }}>
+        <div style={{ marginTop: 12, padding: "8px 12px", background: "var(--cp-error-bg)", border: "1px solid var(--cp-error-border)", borderRadius: 4, fontSize: 13, color: "var(--cp-error-text)" }}>
           {error}
         </div>
       )}
@@ -622,7 +622,7 @@ export default function InputPhase({
         {/* Right column — input card */}
         <div style={HP.heroRight}>
           {initialLoading && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", marginBottom: 16, background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)", borderRadius: 10, fontSize: 13, color: "var(--cp-text-muted)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", marginBottom: 16, background: "var(--cp-bg-card)", border: "1px solid var(--cp-border-light)", borderRadius: 6, fontSize: 13, color: "var(--cp-text-muted)" }}>
               <RefreshCw size={14} strokeWidth={2} className="spin" /> Restoring from cloud&hellip;
             </div>
           )}

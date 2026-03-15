@@ -82,7 +82,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
           {pending.map(({ group, groupIndex }) => (
               <div key={groupIndex} style={{
                 border: "1px solid var(--cp-border)",
-                borderRadius: 14,
+                borderRadius: 6,
                 marginBottom: 16,
                 background: "var(--cp-bg-card)",
                 overflow: "hidden",

@@ -57,7 +57,7 @@ export function InlineCategorySelect({ current, allCats, onSave, onCancel, custo
       ...(flipUp ? { bottom: "100%", top: "auto" } : { top: "100%", bottom: "auto" }),
       ...(flipLeft ? { right: 0, left: "auto" } : { left: 0 }),
       zIndex: 100,
-      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
+      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
       boxShadow: "var(--cp-shadow-md)", padding: 6,
       display: "flex", flexWrap: "wrap", gap: 4, width: 220,
       animation: "slideD .12s ease",

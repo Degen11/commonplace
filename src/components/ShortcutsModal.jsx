@@ -42,7 +42,7 @@ export default function ShortcutsModal({ onClose }) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        background: "var(--cp-bg-card)", borderRadius: 12, padding: 0,
+        background: "var(--cp-bg-card)", borderRadius: 6, padding: 0,
         maxWidth: "min(90vw, 420px)", width: "100%", overflow: "hidden",
         animation: "slideIn .2s ease",
       }}>
@@ -50,7 +50,7 @@ export default function ShortcutsModal({ onClose }) {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "16px 20px 12px", borderBottom: "1px solid var(--cp-border)",
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: "'Satoshi',-apple-system,sans-serif" }}>
             Keyboard shortcuts
           </h2>
           <button

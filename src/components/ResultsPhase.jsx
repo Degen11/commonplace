@@ -929,7 +929,7 @@ export default function ResultsPhase({
       color: "#2383E2",
       background: "none",
       border: "1px solid var(--cp-border)",
-      borderRadius: 8,
+      borderRadius: 6,
       cursor: "pointer",
       fontFamily: "inherit",
       animation: "fadeUp .25s ease",
@@ -969,13 +969,13 @@ export default function ResultsPhase({
                       position: "absolute", top: -8, left: -8, zIndex: 1,
                       background: "#3C5775", color: "#fff",
                       fontSize: 11, fontWeight: 700, lineHeight: 1,
-                      padding: "3px 7px", borderRadius: 10,
+                      padding: "3px 7px", borderRadius: 6,
                       boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
                     }}>{count}</span>
                   )}
                   <div style={{
                     background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
-                    borderRadius: 8, padding: "8px 14px", fontSize: 13,
+                    borderRadius: 6, padding: "8px 14px", fontSize: 13,
                     boxShadow: "var(--cp-shadow-md)", maxWidth: 320, opacity: 0.92,
                     color: "var(--cp-text)",
                   }}>

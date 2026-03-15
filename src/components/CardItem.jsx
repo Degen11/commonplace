@@ -65,11 +65,11 @@ const MemoCardItem = memo(function CardItem({
     : { ...(isEd || isInlineEditing ? {} : listeners) };
 
   return (
-    <div ref={setNodeRef} style={{ position: "relative", borderRadius: 8, ...(isDragging ? { opacity: 0.35 } : {}) }}>
+    <div ref={setNodeRef} style={{ position: "relative", borderRadius: 6, ...(isDragging ? { opacity: 0.35 } : {}) }}>
       {/* Swipe hint background — only rendered during active swipe */}
       {(isSwipingLeft || isSwipingRight) && (
         <div style={{
-          position: "absolute", inset: 0, borderRadius: 8,
+          position: "absolute", inset: 0, borderRadius: 6,
           background: isSwipingLeft
             ? `rgba(220,38,38,${0.08 + swipeProgress * 0.10})`
             : `rgba(245,158,11,${0.08 + swipeProgress * 0.10})`,

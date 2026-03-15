@@ -60,7 +60,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
           const Icon = k.icon;
           return (
             <div key={k.label} style={{
-              background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
+              background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
               padding: "10px 10px", cursor: "default",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
@@ -94,7 +94,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
       </div>
 
       {/* Confidence breakdown — inline */}
-      <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8 }}>
+      <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3, color: "var(--cp-text-secondary)" }}>
             <BarChart3 size={13} color="var(--cp-text-muted)" /> Confidence
@@ -202,7 +202,7 @@ const CompactBar = ({ label, count, pct, color, maxW }) => (
 const AttentionBanner = ({ count }) => (
   <div style={{
     marginTop: 12, padding: "10px 14px", background: "rgba(234,88,12,0.08)",
-    border: "1px solid rgba(234,88,12,0.2)", borderRadius: 8, fontSize: 13,
+    border: "1px solid rgba(234,88,12,0.2)", borderRadius: 6, fontSize: 13,
     color: "#EA580C", display: "flex", alignItems: "center", gap: 8,
   }}>
     <AlertCircle size={16} color="#EA580C" style={{ flexShrink: 0 }} />

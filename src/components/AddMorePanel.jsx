@@ -106,7 +106,7 @@ export default function AddMorePanel({
   };
 
   const tabStyle = (active) => ({
-    flex: 1, padding: "5px 0", border: "none", borderRadius: 5, fontSize: 12, fontWeight: 500,
+    flex: 1, padding: "5px 0", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 500,
     cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
     background: active ? "var(--cp-bg-card)" : "transparent",
     color: active ? "var(--cp-text)" : "var(--cp-text-muted)",

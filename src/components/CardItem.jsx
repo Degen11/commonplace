@@ -7,6 +7,7 @@ import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
+import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { propsEqual } from "../utils/helpers";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
@@ -43,6 +44,7 @@ const MemoCardItem = memo(function CardItem({
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -127,7 +129,9 @@ const MemoCardItem = memo(function CardItem({
         ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
         : (
           <>
-            <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}><HighlightText text={displayText(q)} term={searchTerm} /></p>
+            <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>
+              {(() => { const full = displayText(q); const truncatable = full.length > QUOTE_TRUNCATE_CHARS; const shown = truncatable && !expanded ? full.slice(0, QUOTE_TRUNCATE_CHARS).replace(/\s+\S*$/, "") + "\u2026" : full; return (<><HighlightText text={shown} term={searchTerm} />{truncatable && (<button onClick={e => { e.stopPropagation(); setExpanded(v => !v); }} style={{ background: "none", border: "none", color: "var(--cp-text-muted)", cursor: "pointer", fontSize: 12, fontFamily: "inherit", padding: "0 4px", marginLeft: 4, opacity: 0.7 }}>{expanded ? "less" : "more"}</button>)}</>); })()}
+            </p>
             <div style={cardStyles.srcRow}>
               <span style={{ color: "var(--cp-text-faint)" }}>—</span>
               {isInlineEditing && inlineEditField === "source"

@@ -21,6 +21,7 @@ const MemoCardItem = memo(function CardItem({
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   isDeleting,
   searchTerm,
+  isOverTarget,
 }) {
   const {
     attributes,
@@ -95,6 +96,7 @@ const MemoCardItem = memo(function CardItem({
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
+        ...(isOverTarget ? { boxShadow: "inset 0 2px 0 #3C5775", transition: "box-shadow .15s ease" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
       onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
@@ -144,7 +146,7 @@ const MemoCardItem = memo(function CardItem({
   "q", "isSel", "isEd", "needsAtt", "sortBy",
   "isInlineEditing", "inlineEditField", "isDeleting",
   "isSavedPulse", "savedPulseField", "searchTerm",
-  "allCats", "customCats",
+  "allCats", "customCats", "isOverTarget",
   ["actionProps", (prev, next) =>
     (prev.actionProps.copiedId === prev.q.id) === (next.actionProps.copiedId === next.q.id) &&
     prev.actionProps.reidentifying.has(prev.q.id) === next.actionProps.reidentifying.has(next.q.id)],

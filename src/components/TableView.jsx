@@ -10,6 +10,7 @@ import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { propsEqual } from "../utils/helpers";
 import { styles } from "./styles";
+import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { Pencil, ChevronDown, GripVertical } from "lucide-react";
 import HighlightText from "./HighlightText";
 
@@ -57,6 +58,8 @@ const MemoTableRow = memo(function TableRow({
     transition,
   };
 
+  const [expanded, setExpanded] = useState(false);
+
   const longPress = useLongPress(
     useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
     400
@@ -66,16 +69,34 @@ const MemoTableRow = memo(function TableRow({
 
   const renderColumn = (colKey) => {
     switch(colKey) {
-      case "content":
+      case "content": {
+        const full = displayText(q);
+        const truncatable = !compact && full.length > QUOTE_TRUNCATE_CHARS;
+        const shown = truncatable && !expanded
+          ? full.slice(0, QUOTE_TRUNCATE_CHARS).replace(/\s+\S*$/, "") + "\u2026"
+          : full;
         return (
           <div key="content" style={COL_BASE.content}
             onClick={() => { if (!isEd) setEditingId(q.id); }}>
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
-              : <p style={compact ? styles.entryTextCompact : styles.entryText}><HighlightText text={displayText(q)} term={searchTerm} /></p>
+              : compact
+                ? <p style={{ ...styles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} /></p>
+                : <p style={styles.entryText}>
+                    <HighlightText text={shown} term={searchTerm} />
+                    {truncatable && (
+                      <button
+                        onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
+                        style={{ background: "none", border: "none", color: "var(--cp-text-muted)", cursor: "pointer", fontSize: 12, fontFamily: "inherit", padding: "0 4px", marginLeft: 4, opacity: 0.7 }}
+                      >
+                        {expanded ? "less" : "more"}
+                      </button>
+                    )}
+                  </p>
             }
           </div>
         );
+      }
       case "source":
         return (
           <div key="source" className={`src-col${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={COL_BASE.source}>

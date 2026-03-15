@@ -13,6 +13,7 @@ import { styles } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { Pencil, ChevronDown, GripVertical } from "lucide-react";
 import HighlightText from "./HighlightText";
+import Tooltip from "./Tooltip";
 
 
 // Column configuration — original flex-based layout
@@ -66,6 +67,7 @@ const MemoTableRow = memo(function TableRow({
   );
 
   const col = getCatColor(q.category, customCats);
+  const catPillRef = useRef(null);
 
   const renderColumn = (colKey) => {
     switch(colKey) {
@@ -119,13 +121,14 @@ const MemoTableRow = memo(function TableRow({
           <div key="category" className={isSavedPulse && savedPulseField === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
             <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             <span
+              ref={catPillRef}
               className="inline-cat"
               style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
               onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
               title="Click to change category"
             >{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
             {isInlineEditing && inlineEditField === "category" && (
-              <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+              <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} anchorEl={catPillRef.current} />
             )}
           </div>
         );
@@ -304,19 +307,21 @@ export default function TableView({
       {filtered.length > 0 && (
         <div style={{ ...styles.tHead, top: toolbarHeight }}>
           <div style={{ width: 20, flexShrink: 0 }} />
-          <div className="ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
-            <div
-              className="checkbox-visual"
-              style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}
-              onClick={(e) => { e.currentTarget.blur(); selAll(); }}
-              role="checkbox"
-              aria-checked={allSelected}
-              tabIndex={0}
-              onKeyDown={e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); selAll(); } }}
-            >
-              {allSelected && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+          <Tooltip tip="Select all" placement="bottom">
+            <div style={styles.chkW}>
+              <div
+                className="checkbox-visual"
+                style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}
+                onClick={(e) => { e.currentTarget.blur(); selAll(); }}
+                role="checkbox"
+                aria-checked={allSelected}
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); selAll(); } }}
+              >
+                {allSelected && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+              </div>
             </div>
-          </div>
+          </Tooltip>
           {columnOrder.map(colKey => (
             <div
               key={colKey}

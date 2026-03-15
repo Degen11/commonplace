@@ -100,22 +100,13 @@ export const baseCSS = `
   .copy-push{animation:copyPush .25s ease}
   .share-lift{animation:shareLift .25s ease}
   .phase-in{animation:fadeUp .25s ease}.phase-out{opacity:0;transition:opacity .15s ease}
+  /* View Transitions API — progressive enhancement for phase changes */
+  ::view-transition-old(root){animation:fadeUp .15s ease reverse}
+  ::view-transition-new(root){animation:fadeUp .25s ease}
   html{scroll-behavior:smooth;scrollbar-gutter:stable}
   div[style]:focus{outline:none;border-color:transparent}
 
-  /* Fix 3 — instant CSS tooltip for confidence dots */
-  .conf-tooltip{position:relative;cursor:help}
-  .conf-tooltip::after{
-    content:attr(data-tip);
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:var(--cp-toast-bg);color:#fff;padding:4px 10px;border-radius:5px;
-    font-size:11px;font-weight:400;letter-spacing:0;white-space:nowrap;
-    opacity:0;pointer-events:none;z-index:200;
-    transition:opacity .08s ease;
-  }
-  .conf-tooltip:hover::after{opacity:1}
-
-  /* Fix 2 — column header drag handle - COMPLETELY REMOVE SHADOW */
+  /* Column header drag handle */
   .col-drag-header{
     cursor:grab;
     user-select:none;
@@ -169,21 +160,6 @@ export const baseCSS = `
   .drop-zone{transition:all .2s ease}
   .how-card{transition:background .2s ease,transform .2s ease}
   .how-card:hover{background:var(--cp-bg-card);transform:translateY(-2px)}
-  /* General-purpose UI tooltip (extends conf-tooltip pattern) */
-  .ui-tip{position:relative}
-  .ui-tip::after{
-    content:attr(data-tip);
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:var(--cp-toast-bg);color:#fff;padding:4px 10px;border-radius:5px;
-    font-size:11px;font-weight:400;white-space:nowrap;
-    opacity:0;pointer-events:none;z-index:200;
-    transition:opacity .12s ease .2s;
-  }
-  .ui-tip:hover::after{opacity:1}
-  .ui-tip:active::after{opacity:0;transition:none}
-  .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
-  .ui-tip-left::after{left:auto;right:0;transform:none}
-
   /* Drag insertion indicator */
   .drag-insert-above{box-shadow:inset 0 2px 0 #3C5775 !important}
   .drag-insert-below{box-shadow:inset 0 -2px 0 #3C5775 !important}
@@ -468,7 +444,8 @@ export const styles = {
   viewOn:{background:"var(--cp-bg-hover)",color:"var(--cp-text-secondary)"},
 
   // Export dropdown
-  expDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"slideD .15s ease",maxHeight:"70vh",overflowY:"auto"},
+  expDrop:{background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"slideD .15s ease",maxHeight:"70vh",overflowY:"auto"},
+  expDropContent:{},
   expOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   expOptNote:{display:"block",width:"100%",padding:"4px 12px 8px",fontSize:11,color:"var(--cp-text-muted)",fontFamily:"inherit"},
 
@@ -513,7 +490,7 @@ export const styles = {
   bulkX:{background:"none",border:"none",color:"var(--cp-bulk-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",padding:4,borderRadius:6},
 
   // Header overflow menu
-  hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  hdrOverflowMenu:{background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
   hdrOverflowItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
   hdrOverflowDivider:{height:1,background:"var(--cp-border)",margin:"4px 0"},
   hdrOverflowSectionLabel:{padding:"6px 12px 2px",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em",color:"var(--cp-text-faint)"},
@@ -535,7 +512,7 @@ export const styles = {
   srchIn:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"var(--cp-text-secondary)",background:"var(--cp-bg-card)"},
   clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:12},
   sortBtn:{display:"flex",alignItems:"center",padding:"7px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",minWidth:180},
-  sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:220,zIndex:100,padding:4,transition:"opacity .15s ease, transform .15s ease"},
+  sortDrop:{background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:220,zIndex:100,padding:4,animation:"slideD .15s ease"},
   sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   sortOptOn:{background:"var(--cp-bg-hover)",fontWeight:600},
 
@@ -580,7 +557,7 @@ export const styles = {
   rowAct:{flex:"0 0 68px",display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"var(--cp-text-faint)",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
   overflowWrap:{position:"relative"},
-  overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  overflowMenu:{background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
   overflowMenuItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
   overflowMenuDivider:{height:1,background:"var(--cp-border)",margin:"4px 0"},
   overflowMenuItemDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#EB5757",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease, color .1s ease"},

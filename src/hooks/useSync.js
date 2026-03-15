@@ -136,6 +136,11 @@ export default function useSync({ onCloudData, onSyncError }) {
     },
   });
 
+  // Stable reference to mutate — avoids recreating schedulePush when
+  // TanStack Query returns a new mutation result object each render.
+  const mutateRef = useRef(pushMutation.mutate);
+  mutateRef.current = pushMutation.mutate;
+
   // ── Debounced push — same API as before ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
     // Always capture latest data
@@ -156,17 +161,17 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!deviceId) return;
       const p = latestPayload.current;
       if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      pushMutation.mutate(p);
+      mutateRef.current(p);
     }, SYNC_DEBOUNCE_MS);
-  }, [pushMutation]);
+  }, []);
 
   // Manual sync — push immediately with fresh retries
   const manualPush = useCallback(() => {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     consecutiveFailures.current = 0;
     const p = latestPayload.current;
-    if (p) pushMutation.mutate(p);
-  }, [pushMutation]);
+    if (p) mutateRef.current(p);
+  }, []);
 
   // Sync when coming back online
   useEffect(() => {

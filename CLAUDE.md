@@ -12,6 +12,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **TanStack React Query 5** — server state / sync mutations
 - **TanStack React Virtual 3** — virtualized list rendering
 - **motion 12** (Framer Motion successor) — animations via `motion/react`
+- **@floating-ui/react** — tooltip/popover/dropdown positioning (replaces manual viewport detection and CSS tooltips)
 - **@dnd-kit** — drag-and-drop reordering (core + sortable)
 - **Fuse.js 7** — fuzzy search
 - **compromise 14** — NLP (proper noun detection in text formatting)
@@ -64,7 +65,8 @@ src/
     MiniHeader.jsx             Sticky header on scroll
     BulkBar.jsx                Bulk actions — reassign category/source, delete
     EditForm.jsx               Full quote editor modal
-    InlineEditors.jsx          Click-to-edit source/category with autocomplete
+    InlineEditors.jsx          Click-to-edit source/category with @floating-ui positioning
+    Tooltip.jsx                @floating-ui powered tooltip — replaces CSS ::after tooltips
     CollectionsSidebar.jsx     Collection management sidebar
     styles.js                  All CSS-in-JS style objects + baseCSS (global CSS string)
 
@@ -80,6 +82,7 @@ src/
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
     useLongPress.js            Mobile long-press for selection
+    useDropdownPosition.js     @floating-ui hook for dropdown/popover positioning
     useClickOutside.js         Close dropdowns/popups on outside click
 
   data/
@@ -194,7 +197,11 @@ vercel dev        # Test serverless functions locally
 - **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
-- **Click-outside pattern** — use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners
+- **Tooltips** — use `<Tooltip tip="..." placement="top|bottom">` component (`Tooltip.jsx`) powered by `@floating-ui/react`. Old CSS tooltips (`.ui-tip`, `.conf-tooltip`) have been removed. Don't add new CSS `::after` tooltips
+- **Dropdown positioning** — use `useDropdownPosition({ open, onClose, placement })` hook from `hooks/useDropdownPosition.js`. Returns `{ refs, floatingStyles, getFloatingProps }`. Render dropdown content in a `<FloatingPortal>` with `ref={drop.refs.setFloating}` and `style={{ ...drop.floatingStyles, ...styles.myDrop }}`. The hook handles click-outside dismiss and viewport flipping. Don't use manual `getBoundingClientRect()` or `position: absolute` for dropdowns
+- **Click-outside pattern** — for dropdowns, `useDropdownPosition` includes `useDismiss` (handles click-outside and Escape). For other use cases, use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners
+- **View Transitions API** — `App.jsx` uses `document.startViewTransition()` with `ReactDOM.flushSync()` for phase changes as progressive enhancement. Falls back to `AnimatePresence` in unsupported browsers
+- **Card view masonry** — CSS `columns` property (`columns: "280px auto"`) with `break-inside: avoid` on items. Mobile falls back to single-column flex layout
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
 - **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``
 - **Responsive breakpoint** — `MOBILE_BREAKPOINT_PX` (640px) from `config.js`. Below this: card view, long-press selection, mobile layouts
@@ -231,6 +238,8 @@ Z.TOAST           2000  Toasts
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import
 - **`styles.js` is the only place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`
+- **Don't add CSS tooltips** — use the `<Tooltip>` component, not `className="ui-tip" data-tip="..."`. The CSS tooltip rules have been removed
+- **Don't use position: absolute for dropdowns** — use `useDropdownPosition` hook + `FloatingPortal`. The hook handles viewport awareness and click-outside
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy

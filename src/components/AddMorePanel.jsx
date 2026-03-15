@@ -4,6 +4,7 @@ import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { styles } from "./styles";
 import { Pencil, Bot, FileText, FolderOpen, CheckCircle, Link, Eye } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
+import Tooltip from "./Tooltip";
 
 export default function AddMorePanel({
   addMoreInput, setAddMoreInput,
@@ -144,12 +145,14 @@ export default function AddMorePanel({
             placeholder="Paste additional quotes, one per line. Similar entries will be flagged for review." />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 8, gap: 12 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-              <label className="ui-tip ui-tip-below" data-tip="Normalize quotes, dashes, and whitespace" style={styles.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
-                <div style={{ ...styles.fmtToggleTrack, background: addMoreFormatting ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
-                  <div style={{ ...styles.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
-                </div>
-                Clean up formatting
-              </label>
+              <Tooltip tip="Normalize quotes, dashes, and whitespace" placement="bottom">
+                <label style={styles.fmtToggleWrap} onClick={() => setAddMoreFormatting(p => !p)}>
+                  <div style={{ ...styles.fmtToggleTrack, background: addMoreFormatting ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
+                    <div style={{ ...styles.fmtToggleThumb, left: addMoreFormatting ? 15 : 2 }} />
+                  </div>
+                  Clean up formatting
+                </label>
+              </Tooltip>
               <span style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
                 {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
               </span>
@@ -218,11 +221,9 @@ export default function AddMorePanel({
           {/* Extraction mode selector */}
           <div style={{ display: "flex", gap: 3, marginTop: 6, flexWrap: "wrap" }}>
             {EXTRACT_MODES.map(m => (
-              <button
-                key={m.value}
+              <Tooltip key={m.value} tip={m.desc} placement="bottom">
+                <button
                 onClick={() => setExtractMode(m.value)}
-                className="ui-tip ui-tip-below"
-                data-tip={m.desc}
                 style={{
                   padding: "2px 8px",
                   borderRadius: 50,
@@ -238,6 +239,7 @@ export default function AddMorePanel({
               >
                 {m.label}
               </button>
+              </Tooltip>
             ))}
           </div>
 

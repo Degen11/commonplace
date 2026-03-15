@@ -304,7 +304,7 @@ export default function TableView({
       {filtered.length > 0 && (
         <div style={{ ...styles.tHead, top: toolbarHeight }}>
           <div style={{ width: 20, flexShrink: 0 }} />
-          <div className="ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
+          <div className="ui-tip ui-tip-below" data-tip="Select all" style={{ ...styles.chkW, ...(allSelected ? { opacity: 1 } : {}) }}>
             <div
               className="checkbox-visual"
               style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}

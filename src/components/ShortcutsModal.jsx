@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
 import useScrollLock from "../hooks/useScrollLock";
-import { styles } from "./styles";
+import { styles, FONT_SANS } from "./styles";
 
 const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 const MOD = IS_MAC ? "\u2318" : "Ctrl";
@@ -50,7 +50,7 @@ export default function ShortcutsModal({ onClose }) {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "16px 20px 12px", borderBottom: "1px solid var(--cp-border)",
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: "'Satoshi',-apple-system,sans-serif" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: FONT_SANS }}>
             Keyboard shortcuts
           </h2>
           <button

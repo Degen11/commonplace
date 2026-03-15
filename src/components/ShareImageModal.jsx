@@ -3,7 +3,7 @@ import { X, Loader, Download } from "lucide-react";
 import { generateShareImage, IMAGE_STYLES } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
 import useScrollLock from "../hooks/useScrollLock";
-import { styles } from "./styles";
+import { styles, FONT_SANS } from "./styles";
 
 const STYLE_KEYS = Object.keys(IMAGE_STYLES);
 
@@ -52,7 +52,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "16px 20px 12px", borderBottom: "1px solid var(--cp-border)",
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: "'Satoshi',-apple-system,sans-serif" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: FONT_SANS }}>
             Share as image
           </h2>
           <button
@@ -113,7 +113,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                   </div>
                   <div style={{
                     fontSize: 6, color: theme.attr, marginTop: 3,
-                    fontFamily: "'Satoshi', sans-serif",
+                    fontFamily: FONT_SANS,
                   }}>
                     — {quote.source || "Unknown"}
                   </div>

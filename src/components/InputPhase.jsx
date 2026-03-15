@@ -34,10 +34,10 @@ function useScrollReveal(threshold = 0.15) {
 
 // ── Timeline data ────────────────────────────────────────────────────────────
 const TAG_COLORS = {
-  Film:   { bg: "rgba(139,92,246,0.14)",  text: "#7C3AED" },
-  Speech: { bg: "rgba(59,130,246,0.14)",  text: "#2563EB" },
-  Person: { bg: "rgba(168,85,247,0.14)",  text: "#9333EA" },
-  Book:   { bg: "rgba(217,119,6,0.14)",   text: "#D97706" },
+  Film:   { bg: "rgba(139,92,246,0.08)",  text: "#7A48CE" },
+  Speech: { bg: "rgba(59,130,246,0.08)",  text: "#3967CD" },
+  Person: { bg: "rgba(168,85,247,0.08)",  text: "#8B43CC" },
+  Book:   { bg: "rgba(217,119,6,0.08)",   text: "#C07621" },
 };
 
 const TIMELINE_MOMENTS = [
@@ -883,19 +883,19 @@ export default function InputPhase({
                 icon: PenLine,
                 title: "Powerful editing",
                 desc: "Inline editing, drag to reorder, bulk operations, and custom categories.",
-                color: "#7C3AED",
+                color: "#7A48CE",
               },
               {
                 icon: Library,
                 title: "Custom collections",
                 desc: "Curate your own collections, or let AI auto-group quotes by theme and topic.",
-                color: "#2563EB",
+                color: "#3967CD",
               },
               {
                 icon: Download,
                 title: "Flexible export",
                 desc: "Export as CSV, Markdown, or JSON. Compatible with Notion, Obsidian, and more.",
-                color: "#059669",
+                color: "#218D6C",
               },
             ].map((f, i) => {
               const Icon = f.icon;

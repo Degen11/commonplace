@@ -355,7 +355,7 @@ export const styles = {
 
   // Hero brand mark — dominant visual anchor
   heroBrandWrap:{display:"flex",alignItems:"center",gap:10,marginBottom:4,justifyContent:"center"},
-  heroBrandName:{fontFamily:FONT_SANS,fontSize:42,fontWeight:700,letterSpacing:"-0.03em",color:"var(--cp-text)",lineHeight:1.1},
+  heroBrandName:{fontFamily:FONT_SERIF,fontSize:42,fontWeight:700,letterSpacing:-1.5,color:"var(--cp-text)",lineHeight:1.1},
 
   // Tagline — clearly secondary
   heroTagline:{fontFamily:FONT_SANS,fontSize:18,fontWeight:300,color:"var(--cp-text-muted)",lineHeight:1.5,marginTop:2},

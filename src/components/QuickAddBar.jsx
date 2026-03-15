@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { similarity } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
 import { AlertTriangle, Plus, X } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
   const textRef = useRef(null);
@@ -31,91 +33,76 @@ export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
   };
 
   return (
-    <div style={{ background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)", animation: "fadeUp .25s ease" }}>
+    <div className="bg-card border-b border-border animate-in fade-in slide-in-from-top-1 duration-250">
       <form
         onSubmit={handleSubmit}
-        style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px" }}
+        className="flex items-center gap-2 px-4 py-2.5"
       >
-        <Plus size={14} strokeWidth={2} style={{ color: "var(--cp-text-muted)", flexShrink: 0 }} />
-        <input
+        <Plus size={14} strokeWidth={2} className="text-muted-foreground shrink-0" />
+        <Input
           ref={textRef}
           value={text}
           onChange={e => { setText(e.target.value); setDupeMatch(null); }}
           placeholder="Quote text…"
-          style={{
-            flex: 1, minWidth: 0, padding: "6px 10px", fontSize: 13, fontFamily: "inherit",
-            border: "1px solid var(--cp-border)", borderRadius: 6,
-            background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
-          }}
+          className="flex-1 min-w-0 h-8 text-[13px]"
           onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
         />
-        <input
+        <Input
           value={source}
           onChange={e => setSource(e.target.value)}
           placeholder="Source (optional)"
-          style={{
-            width: 160, padding: "6px 10px", fontSize: 13, fontFamily: "inherit",
-            border: "1px solid var(--cp-border)", borderRadius: 6,
-            background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
-          }}
+          className="w-40 h-8 text-[13px]"
           onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
         />
-        <button
+        <Button
           type="submit"
+          size="sm"
           disabled={!text.trim()}
-          style={{
-            padding: "6px 14px", fontSize: 13, fontWeight: 500, fontFamily: "inherit",
-            background: text.trim() ? "var(--cp-accent)" : "var(--cp-bg-tab)",
-            color: text.trim() ? "#fff" : "var(--cp-text-muted)",
-            border: "none", borderRadius: 6, cursor: text.trim() ? "pointer" : "default",
-            whiteSpace: "nowrap",
-          }}
         >
           Add
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: "var(--cp-text-muted)", padding: 4, borderRadius: 4, flexShrink: 0,
-          }}
+          className="text-muted-foreground"
         >
           <X size={14} strokeWidth={2} />
-        </button>
+        </Button>
       </form>
       {dupeMatch && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8, padding: "6px 16px 10px",
-          fontSize: 12, color: "var(--cp-warning-text)",
-          background: "var(--cp-warning-bg)",
-          flexWrap: "wrap",
-        }}>
-          <AlertTriangle size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
-          <span style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex items-center gap-2 px-4 py-1.5 pb-2.5 text-xs flex-wrap"
+          style={{
+            color: "var(--cp-warning-text)",
+            background: "var(--cp-warning-bg)",
+          }}
+        >
+          <AlertTriangle size={13} strokeWidth={2} className="shrink-0" />
+          <span className="flex-1 min-w-0">
             Similar to: "{dupeMatch.text.length > 60 ? dupeMatch.text.slice(0, 60) + "\u2026" : dupeMatch.text}"
           </span>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={doAdd}
+            className="h-6 text-[11px]"
             style={{
-              padding: "3px 10px", borderRadius: 5, border: "1px solid var(--cp-warning-border)",
-              background: "transparent", color: "var(--cp-warning-text)",
-              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              whiteSpace: "nowrap",
+              borderColor: "var(--cp-warning-border)",
+              color: "var(--cp-warning-text)",
             }}
           >
             Add anyway
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setDupeMatch(null)}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--cp-warning-text)", padding: 2, fontSize: 11, fontFamily: "inherit",
-              opacity: 0.7,
-            }}
+            className="h-6 text-[11px] opacity-70"
+            style={{ color: "var(--cp-warning-text)" }}
           >
             Cancel
-          </button>
+          </Button>
         </div>
       )}
     </div>

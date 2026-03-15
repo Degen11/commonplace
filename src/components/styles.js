@@ -453,7 +453,7 @@ export const styles = {
 
   // Results header — #4 tightened padding rhythm
   header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"32px 0 16px",borderBottom:"1px solid var(--cp-border)",flexWrap:"wrap",gap:12},
-  title:{fontFamily:FONT_SANS,fontSize:32,fontWeight:700,letterSpacing:"-0.03em",color:"var(--cp-text-secondary)",lineHeight:1},
+  title:{fontFamily:FONT_SERIF,fontSize:32,fontWeight:700,letterSpacing:-1,color:"var(--cp-text-secondary)",lineHeight:1},
   sub:{fontSize:13,color:"var(--cp-text-muted)",marginTop:6,letterSpacing:"0.01em"},
   hdrBtn:{padding:"6px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   exportBtn:{padding:"6px 14px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:600,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit"},

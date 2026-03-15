@@ -3,15 +3,6 @@ import useClickOutside from "../hooks/useClickOutside";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
-import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "./ui/dropdown-menu";
 import {
   List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
   MoreHorizontal, BarChart3, Trash2,
@@ -39,23 +30,22 @@ export default function HeaderBar({
   toggleTheme,
   onShowShortcuts,
 }) {
+  const [showOverflow, setShowOverflow] = useState(false);
+  const overflowRef = useRef(null);
+
+  useClickOutside(overflowRef, showOverflow, () => setShowOverflow(false));
+
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
       <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
         <Logo size={28} />
         Commonplace
       </h1>
-      <div className="flex gap-1.5 items-center flex-wrap">
+      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ui-tip ui-tip-below"
-          data-tip={dark ? "Light mode" : "Dark mode"}
-          onClick={toggleTheme}
-        >
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip={dark ? "Light mode" : "Dark mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
           {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
-        </Button>
+        </button>
         {!isMobile && (
           <div style={styles.viewTog}>
             <button className="ui-tip ui-tip-below view-btn" data-tip="Table view" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
@@ -70,59 +60,37 @@ export default function HeaderBar({
           </div>
         )}
         <div ref={exportRef} style={{ position: "relative" }}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ui-tip ui-tip-below"
-            data-tip="Export or share your collection"
-            onClick={() => setShowExport(!showExport)}
-          >
-            Export ↓
-          </Button>
+          <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={styles.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
           {showExport && headerVisible && exportDropdownContent}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ui-tip ui-tip-below text-primary"
-          data-tip="Add more quotes"
-          onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}
-        >
-          + Add more
-        </Button>
-
-        {/* Overflow menu — migrated to Radix DropdownMenu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ui-tip ui-tip-below"
-              data-tip="More actions"
-            >
-              <MoreHorizontal size={16} strokeWidth={1.5} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>View</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setShowStats(s => !s)}>
-              <BarChart3 size={15} strokeWidth={1.5} className="text-muted-foreground" />
-              {showStats ? "Hide full stats" : "Full stats"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Preferences</DropdownMenuLabel>
-            <DropdownMenuItem onClick={onShowShortcuts}>
-              <HelpCircle size={15} strokeWidth={1.5} className="text-muted-foreground" />
-              Keyboard shortcuts
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Data</DropdownMenuLabel>
-            <DropdownMenuItem destructive onClick={() => setConfirmClear(true)}>
-              <Trash2 size={15} strokeWidth={1.5} />
-              New batch
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
+        {/* Overflow menu */}
+        <div ref={overflowRef} style={{ position: "relative" }}>
+          <button className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
+            <MoreHorizontal size={16} strokeWidth={1.5} />
+          </button>
+          {showOverflow && (
+            <div style={styles.hdrOverflowMenu}>
+              <div style={styles.hdrOverflowSectionLabel}>View</div>
+              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowStats(s => !s); setShowOverflow(false); }}>
+                <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                {showStats ? "Hide full stats" : "Full stats"}
+              </button>
+              <div style={styles.hdrOverflowDivider} />
+              <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
+              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { onShowShortcuts(); setShowOverflow(false); }}>
+                <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                Keyboard shortcuts
+              </button>
+              <div style={styles.hdrOverflowDivider} />
+              <div style={styles.hdrOverflowSectionLabel}>Data</div>
+              <button className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => { setConfirmClear(true); setShowOverflow(false); }}>
+                <Trash2 size={15} strokeWidth={1.5} />
+                New batch
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,5 @@
-import { useState } from "react";
-import useDropdownPosition from "../hooks/useDropdownPosition";
-import { FloatingPortal } from "@floating-ui/react";
-import Tooltip from "./Tooltip";
+import { useState, useRef } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
@@ -21,6 +19,7 @@ export default function HeaderBar({
   isMobile,
   setConfirmClear,
   addMoreRef,
+  exportRef,
   headerRef,
   headerVisible,
   exportDropdownContent,
@@ -32,9 +31,9 @@ export default function HeaderBar({
   onShowShortcuts,
 }) {
   const [showOverflow, setShowOverflow] = useState(false);
+  const overflowRef = useRef(null);
 
-  const overflow = useDropdownPosition({ open: showOverflow, onClose: () => setShowOverflow(false) });
-  const exportDrop = useDropdownPosition({ open: showExport && headerVisible, onClose: () => setShowExport(false) });
+  useClickOutside(overflowRef, showOverflow, () => setShowOverflow(false));
 
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
@@ -44,52 +43,34 @@ export default function HeaderBar({
       </h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
-        <Tooltip tip={dark ? "Light mode" : "Dark mode"} placement="bottom">
-          <button className="hdr-btn" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
-            {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
-          </button>
-        </Tooltip>
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip={dark ? "Light mode" : "Dark mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
+          {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
+        </button>
         {!isMobile && (
           <div style={styles.viewTog}>
-            <Tooltip tip="Table view" placement="bottom">
-              <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
-                <List size={16} strokeWidth={1.5} />
-              </button>
-            </Tooltip>
-            <Tooltip tip="Compact view" placement="bottom">
-              <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
-                <AlignJustify size={16} strokeWidth={1.5} />
-              </button>
-            </Tooltip>
-            <Tooltip tip="Card view" placement="bottom">
-              <button className="view-btn" style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={() => setView("cards")}>
-                <LayoutGrid size={16} strokeWidth={1.5} />
-              </button>
-            </Tooltip>
+            <button className="ui-tip ui-tip-below view-btn" data-tip="Table view" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
+              <List size={16} strokeWidth={1.5} />
+            </button>
+            <button className="ui-tip ui-tip-below view-btn" data-tip="Compact view" style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
+              <AlignJustify size={16} strokeWidth={1.5} />
+            </button>
+            <button className="ui-tip ui-tip-below view-btn" data-tip="Card view" style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={() => setView("cards")}>
+              <LayoutGrid size={16} strokeWidth={1.5} />
+            </button>
           </div>
         )}
-        <Tooltip tip="Export or share your collection" placement="bottom">
-          <button ref={exportDrop.refs.setReference} className="hdr-btn" style={styles.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-        </Tooltip>
-        {showExport && headerVisible && (
-          <FloatingPortal>
-            <div ref={exportDrop.refs.setFloating} style={{ ...exportDrop.floatingStyles, ...styles.expDrop }} {...exportDrop.getFloatingProps()}>
-              {exportDropdownContent}
-            </div>
-          </FloatingPortal>
-        )}
-        <Tooltip tip="Add more quotes" placement="bottom">
-          <button className="hdr-btn" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
-        </Tooltip>
+        <div ref={exportRef} style={{ position: "relative" }}>
+          <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={styles.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
+          {showExport && headerVisible && exportDropdownContent}
+        </div>
+        <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
         {/* Overflow menu */}
-        <Tooltip tip="More actions" placement="bottom">
-          <button ref={overflow.refs.setReference} className="hdr-btn" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
+        <div ref={overflowRef} style={{ position: "relative" }}>
+          <button className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
             <MoreHorizontal size={16} strokeWidth={1.5} />
           </button>
-        </Tooltip>
-        {showOverflow && (
-          <FloatingPortal>
-            <div ref={overflow.refs.setFloating} style={{ ...overflow.floatingStyles, ...styles.hdrOverflowMenu }} {...overflow.getFloatingProps()}>
+          {showOverflow && (
+            <div style={styles.hdrOverflowMenu}>
               <div style={styles.hdrOverflowSectionLabel}>View</div>
               <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowStats(s => !s); setShowOverflow(false); }}>
                 <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
@@ -108,8 +89,8 @@ export default function HeaderBar({
                 New batch
               </button>
             </div>
-          </FloatingPortal>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

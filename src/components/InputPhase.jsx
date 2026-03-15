@@ -14,7 +14,6 @@ import {
   Moon, Sun,
 } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
-import Tooltip from "./Tooltip";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useScrollReveal(threshold = 0.15) {
@@ -508,29 +507,30 @@ function UrlImportPanel({ onLoad }) {
       {/* Extraction mode selector */}
       <div style={{ display: "flex", gap: 4, marginTop: 10, flexWrap: "wrap" }}>
         {EXTRACT_MODES.map(m => (
-          <Tooltip key={m.value} tip={m.desc} placement="bottom">
-            <button
-              onClick={() => setExtractMode(m.value)}
-              style={{
-                padding: "3px 10px",
-                borderRadius: 50,
-                border: extractMode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
-                background: extractMode === m.value ? "rgba(60,87,117,0.10)" : "transparent",
-                color: extractMode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-muted)",
-                fontSize: 11,
-                fontWeight: extractMode === m.value ? 600 : 400,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                transition: "all .15s",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              {m.value === "quotes" && <Filter size={10} strokeWidth={2} />}
-              {m.label}
-            </button>
-          </Tooltip>
+          <button
+            key={m.value}
+            onClick={() => setExtractMode(m.value)}
+            className="ui-tip ui-tip-below"
+            data-tip={m.desc}
+            style={{
+              padding: "3px 10px",
+              borderRadius: 50,
+              border: extractMode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
+              background: extractMode === m.value ? "rgba(60,87,117,0.10)" : "transparent",
+              color: extractMode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-muted)",
+              fontSize: 11,
+              fontWeight: extractMode === m.value ? 600 : 400,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all .15s",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            {m.value === "quotes" && <Filter size={10} strokeWidth={2} />}
+            {m.label}
+          </button>
         ))}
       </div>
 
@@ -590,15 +590,14 @@ export default function InputPhase({
           <span style={HP.navName}>Commonplace</span>
         </div>
         <div style={{ marginLeft: "auto" }}>
-          <Tooltip tip={dark ? "Light mode" : "Dark mode"} placement="bottom">
-            <button
-              className="hdr-btn"
-              style={{ ...styles.statsBtn, padding: "5px 8px" }}
-              onClick={toggleTheme}
-            >
-              {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
-            </button>
-          </Tooltip>
+          <button
+            className="ui-tip ui-tip-below hdr-btn"
+            data-tip={dark ? "Light mode" : "Dark mode"}
+            style={{ ...styles.statsBtn, padding: "5px 8px" }}
+            onClick={toggleTheme}
+          >
+            {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
+          </button>
         </div>
       </nav>
 
@@ -732,17 +731,17 @@ export default function InputPhase({
                         Smart quotes detected — enable formatting cleanup?
                       </span>
                     )}
-                    <Tooltip tip="Normalize quotes, dashes, and whitespace" placement="bottom">
-                      <label
-                        style={styles.fmtToggleWrap}
-                        onClick={() => setFormattingEnabled((p) => !p)}
-                      >
-                        <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
-                          <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
-                        </div>
-                        Clean up formatting
-                      </label>
-                    </Tooltip>
+                    <label
+                      className="ui-tip ui-tip-below"
+                      data-tip="Normalize quotes, dashes, and whitespace"
+                      style={styles.fmtToggleWrap}
+                      onClick={() => setFormattingEnabled((p) => !p)}
+                    >
+                      <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
+                        <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
+                      </div>
+                      Clean up formatting
+                    </label>
                     {formattingEnabled && count > 0 && <FormattingPreview rawInput={rawInput} />}
                   </div>
                 );

@@ -2,9 +2,6 @@ import { useRef, useEffect, useState } from "react";
 import { styles, CP_ACCENT } from "./styles";
 import { X, Search, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { pluralize } from "../utils/helpers";
-import Tooltip from "./Tooltip";
-import useDropdownPosition from "../hooks/useDropdownPosition";
-import { FloatingPortal } from "@floating-ui/react";
 
 const SORT_OPTIONS = [
   { key: "default",    label: "Default order",        badge: null },
@@ -29,6 +26,7 @@ export default function ToolbarSection({
   search, setSearch,
   sortBy, setSortBy,
   showSort, setShowSort,
+  sortRef,
   hasActiveFilters,
   clearFilters,
   resultCount,
@@ -36,7 +34,6 @@ export default function ToolbarSection({
 }) {
   const searchInputRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const sortDrop = useDropdownPosition({ open: showSort, onClose: () => setShowSort(false) });
 
   // Keep search open when there's a value
   useEffect(() => {
@@ -135,18 +132,18 @@ export default function ToolbarSection({
                 )}
               </div>
             ) : (
-              <Tooltip tip="Search (/)" placement="bottom">
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: "var(--cp-text-muted)", padding: "6px",
-                    display: "flex", alignItems: "center", borderRadius: 6,
-                  }}
-                >
-                  <Search size={15} strokeWidth={2} />
-                </button>
-              </Tooltip>
+              <button
+                className="ui-tip ui-tip-below"
+                data-tip="Search (/) "
+                onClick={() => setSearchOpen(true)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--cp-text-muted)", padding: "6px",
+                  display: "flex", alignItems: "center", borderRadius: 6,
+                }}
+              >
+                <Search size={15} strokeWidth={2} />
+              </button>
             )}
             {hasActiveFilters && (
               <button
@@ -164,9 +161,10 @@ export default function ToolbarSection({
                 Clear
               </button>
             )}
-            <Tooltip tip="Sort order" placement="bottom">
+            <div ref={sortRef} style={{ position: "relative" }}>
               <button
-                ref={sortDrop.refs.setReference}
+                className="ui-tip ui-tip-below"
+                data-tip="Sort order"
                 onClick={() => setShowSort(!showSort)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
@@ -185,19 +183,20 @@ export default function ToolbarSection({
                   </span>
                 )}
               </button>
-            </Tooltip>
-            {showSort && (
-              <FloatingPortal>
-                <div ref={sortDrop.refs.setFloating} style={{ ...sortDrop.floatingStyles, ...styles.sortDrop, minWidth: 200 }} {...sortDrop.getFloatingProps()}>
-                  {SORT_OPTIONS.map(o => (
-                    <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
-                      onClick={() => { setSortBy(o.key); setShowSort(false); }}>
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-              </FloatingPortal>
-            )}
+              <div style={{
+                ...styles.sortDrop, right: 0, left: "auto", minWidth: 200,
+                opacity: showSort ? 1 : 0,
+                transform: showSort ? "translateY(0)" : "translateY(-4px)",
+                pointerEvents: showSort ? "auto" : "none",
+              }}>
+                {SORT_OPTIONS.map(o => (
+                  <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
+                    onClick={() => { setSortBy(o.key); setShowSort(false); }}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,4 @@
 import { styles } from "./styles";
-import Tooltip from "./Tooltip";
 import { getCatColor, CONF_COLORS } from "../data/constants";
 import { useMemo, useEffect } from "react";
 
@@ -156,22 +155,22 @@ const PanelHeader = ({ onClose }) => (
     <span style={{ fontSize: 15, fontWeight: 600, color: "var(--cp-text-secondary)" }}>
       Collection breakdown
     </span>
-    <Tooltip tip="Close (Esc)">
-      <button
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          width: 28, height: 28, borderRadius: 6, border: "none",
-          background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
-          transition: "all 0.2s ease",
-        }}
-        onClick={onClose}
-        aria-label="Close panel"
-        onMouseEnter={e => { e.currentTarget.style.background = "var(--cp-bg-tab)"; e.currentTarget.style.color = "var(--cp-text-secondary)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--cp-text-muted)"; }}
-      >
-        <X size={16} />
-      </button>
-    </Tooltip>
+    <button
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        width: 28, height: 28, borderRadius: 6, border: "none",
+        background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
+        transition: "all 0.2s ease",
+      }}
+      className="ui-tip"
+      data-tip="Close (Esc)"
+      onClick={onClose}
+      aria-label="Close panel"
+      onMouseEnter={e => { e.currentTarget.style.background = "var(--cp-bg-tab)"; e.currentTarget.style.color = "var(--cp-text-secondary)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--cp-text-muted)"; }}
+    >
+      <X size={16} />
+    </button>
   </div>
 );
 

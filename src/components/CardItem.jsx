@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, useRef, memo } from "react";
+import { useState, useCallback, useEffect, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
 import EditForm from "./EditForm";
-import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
+import { InlineSourceInput } from "./InlineEditors";
 import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
@@ -42,7 +42,6 @@ const MemoCardItem = memo(function CardItem({
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const catPillRef = useRef(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -105,10 +104,12 @@ const MemoCardItem = memo(function CardItem({
           <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}>
             {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
           </div>
-          <span ref={catPillRef} className={`inline-cat${isSavedPulse && savedPulseField === "category" ? " save-pulse" : ""}`} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2 }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
-          {isInlineEditing && inlineEditField === "category" && (
-            <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} anchorEl={catPillRef.current} />
-          )}
+          {isInlineEditing && inlineEditField === "category"
+            ? <select style={styles.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>
+                {[...allCats, ...customCats.filter(c => !allCats.includes(c))].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            : <span className={`inline-cat${isSavedPulse && savedPulseField === "category" ? " save-pulse" : ""}`} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2 }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "category"); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
+          }
         </div>
         <div className="ca" style={{ ...cardStyles.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
           <FavBtn q={q} onFav={actionProps.onFav} />

@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { styles } from "./styles";
 import useScrollLock from "../hooks/useScrollLock";
 import { Search } from "lucide-react";
-import Tooltip from "./Tooltip";
 
 export default function DupeModal(props) {
   if (props.pendingDupes.length === 0) return null;
@@ -138,27 +137,27 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
                     ✓ Keep
                   </button>
                   {dupe.matchedSource && dupe.incoming.hint && dupe.matchedSource !== dupe.incoming.hint && (
-                    <Tooltip tip="Keep new entry, combine sources">
-                      <button
-                        onClick={() => setDupeDecision(i, "merge")}
-                        style={{
-                          padding: "6px 16px",
-                          borderRadius: 0,
-                          border: "none",
-                          background: isMerge ? "#059669" : "var(--cp-bg-card)",
-                          color: isMerge ? "white" : "var(--cp-text)",
-                          fontSize: 13,
-                          fontWeight: 500,
-                          cursor: "pointer",
-                          borderRight: "1px solid var(--cp-border)",
-                          transition: "all 0.15s ease",
-                        }}
-                        onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.1)")}
-                        onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "var(--cp-bg-card)")}
-                      >
-                        ↻ Merge
-                      </button>
-                    </Tooltip>
+                    <button
+                      onClick={() => setDupeDecision(i, "merge")}
+                      style={{
+                        padding: "6px 16px",
+                        borderRadius: 0,
+                        border: "none",
+                        background: isMerge ? "#059669" : "var(--cp-bg-card)",
+                        color: isMerge ? "white" : "var(--cp-text)",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        borderRight: "1px solid var(--cp-border)",
+                        transition: "all 0.15s ease",
+                      }}
+                      className="ui-tip"
+                      data-tip="Keep new entry, combine sources"
+                      onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.1)")}
+                      onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "var(--cp-bg-card)")}
+                    >
+                      ↻ Merge
+                    </button>
                   )}
                   <button
                     onClick={() => setDupeDecision(i, "skip")}

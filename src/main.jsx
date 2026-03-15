@@ -6,7 +6,6 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './contexts/ToastContext'
 import { QuotesProvider } from './contexts/QuotesContext'
 import { baseCSS } from './components/styles'
-import './app.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {

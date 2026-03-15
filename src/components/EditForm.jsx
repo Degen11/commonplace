@@ -1,17 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
+import { styles } from "./styles";
 import { normalize } from "../utils/textFormatting";
 import { smartRestore } from "../utils/smartRestore";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { Lightbulb } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input, Textarea } from "./ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "./ui/select";
 
 // Finds the closest local DB match to the current text.
 // db is null until the dynamic import resolves (gracefully returns null then).
@@ -77,12 +69,11 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
 
   return (
     <div
-      className="flex flex-col gap-1.5"
-      style={{ marginTop: inCard ? 8 : 0 }}
+      style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: inCard ? 8 : 0 }}
       onClick={e => e.stopPropagation()}
     >
-      <Textarea
-        className="min-h-[40px] text-[13px] resize-y"
+      <textarea
+        style={{ ...styles.textarea, minHeight: 40, fontSize: 13, padding: 8 }}
         value={text}
         onChange={e => { setText(e.target.value); setDismissed(false); }}
         onKeyDown={e => {
@@ -99,42 +90,59 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
         transition:"grid-template-rows .15s ease",
       }}>
         <div style={{ overflow:"hidden" }}>
-          <div className="flex items-center gap-2 flex-wrap rounded-md text-xs"
-            style={{
-              padding:"6px 10px",
-              background:"var(--cp-suggest-bg)",
-              border:"1px solid var(--cp-suggest-border)",
-              marginTop: suggestion ? 0 : -1,
-            }}>
-            <span className="text-muted-foreground shrink-0 inline-flex items-center gap-1">
-              <Lightbulb size={13} strokeWidth={2} /> Did you mean:
-            </span>
-            <span className="text-secondary-foreground italic flex-1">
+          <div style={{
+            display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
+            padding:"6px 10px",
+            background:"var(--cp-suggest-bg)",
+            borderRadius:6,
+            border:"1px solid var(--cp-suggest-border)",
+            fontSize:12,
+            marginTop: suggestion ? 0 : -1,
+          }}>
+            <span style={{ color:"var(--cp-text-muted)", flexShrink:0, display:"inline-flex", alignItems:"center", gap:4 }}><Lightbulb size={13} strokeWidth={2} /> Did you mean:</span>
+            <span style={{ color:"var(--cp-text-secondary)", fontStyle:"italic", flex:1 }}>
               {suggestion ? `"${formatSuggestionText(suggestion.t)}" — ${suggestion.s}` : ""}
             </span>
-            <Button
-              size="sm"
+            <button
               onClick={applySuggestion}
-              className="h-6 px-2.5 text-[11px]"
-              style={{ background:"var(--cp-suggest-btn)" }}
+              style={{
+                padding:"2px 10px",
+                borderRadius:5,
+                border:"none",
+                cursor:"pointer",
+                background:"var(--cp-suggest-btn)",
+                color:"#fff",
+                fontSize:11,
+                fontWeight:600,
+                fontFamily:"inherit",
+                flexShrink:0,
+              }}
             >
               Use this
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+            </button>
+            <button
               onClick={() => setDismissed(true)}
-              className="h-6 w-6 text-muted-foreground"
+              style={{
+                padding:"2px 6px",
+                borderRadius:5,
+                border:"none",
+                cursor:"pointer",
+                background:"transparent",
+                color:"var(--cp-text-muted)",
+                fontSize:11,
+                fontFamily:"inherit",
+              }}
             >
               ✕
-            </Button>
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-1.5 items-center flex-wrap">
-        <Input
-          className="flex-1 min-w-0 h-8 text-[13px]"
+
+      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+        <input
+          style={styles.editIn}
           value={source}
           onChange={e => setSource(e.target.value)}
           placeholder="Source..."
@@ -143,17 +151,17 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
             if (e.key === "Enter") { e.preventDefault(); onSave(q.id, text, source, category); }
           }}
         />
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-auto min-w-[120px] h-8 text-[13px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {allCats.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Button size="sm" onClick={() => onSave(q.id, text, source, category)}>Save</Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+        <select
+          style={styles.editSel}
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+        >
+          {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <button style={styles.editSave} onClick={() => onSave(q.id, text, source, category)}>Save</button>
+        <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
       </div>
+
     </div>
   );
 }

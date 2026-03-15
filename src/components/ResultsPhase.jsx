@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
-import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin, closestCenter, DragOverlay } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, rectSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "motion/react";
 import useViewPreferences from "../hooks/useViewPreferences";
 import useEditState from "../hooks/useEditState";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
+import useDndQuotes from "../hooks/useDndQuotes";
 
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
@@ -20,7 +21,8 @@ import {
 import { pluralize } from "../utils/helpers";
 import { saveToStorage } from "../utils/storage";
 
-import CollectionDupeModal from "./CollectionDupeModal";
+import ResultsModals from "./ResultsModals";
+import NotificationBars from "./NotificationBars";
 import TableView from "./TableView";
 import CardItem from "./CardItem";
 import Footer from "./Footer";
@@ -29,20 +31,15 @@ import ToolbarSection from "./ToolbarSection";
 import BulkBar from "./BulkBar";
 import SectionErrorBoundary from "./SectionErrorBoundary";
 import MiniHeader from "./MiniHeader";
-import ConfirmModal from "./ConfirmModal";
 import StatsOverlay from "./StatsOverlay";
 import AddMorePanel from "./AddMorePanel";
 import ExportDropdown from "./ExportDropdown";
 import EmptyState from "./EmptyState";
-import ShortcutsModal from "./ShortcutsModal";
-import ShareImageModal from "./ShareImageModal";
 import CollectionsSidebar from "./CollectionsSidebar";
 import QuickAddBar from "./QuickAddBar";
 import { styles } from "./styles";
 
-import {
-  AlertTriangle, Zap, Bot, Globe, XCircle, RefreshCw, Eye, Trash2, X,
-} from "lucide-react";
+import { X } from "lucide-react";
 
 export default function ResultsPhase({
   // From useProcessing (stays in App.jsx)
@@ -108,6 +105,11 @@ export default function ResultsPhase({
     startReviewFlow,
   } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs });
 
+  const {
+    sensors, activeDragId, overDragId,
+    collisionDetection, handleDndStart, handleDndOver, handleDndEnd, anchorToCursor,
+  } = useDndQuotes({ selected, collections, addToCollection, removeFromCollection, showToast, setQuotes });
+
   // ── Local state ──
 
   const [showExport, setShowExport]           = useState(false);
@@ -155,64 +157,7 @@ export default function ResultsPhase({
   }, []);
   const [toolbarHeight, setToolbarHeight] = useState(44);
 
-  // ── DnD ──
-
-  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
-  const keyboardSensor = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
-  const sensors = useSensors(pointerSensor, keyboardSensor);
-  const [activeDragId, setActiveDragId] = useState(null);
-  const [overDragId, setOverDragId] = useState(null);
-
-  const collisionDetection = useCallback((args) => {
-    const pointerHits = pointerWithin(args);
-    const collectionHit = pointerHits.find(c => typeof c.id === "string" && c.id.startsWith("collection:"));
-    if (collectionHit) return [collectionHit];
-    return closestCenter(args);
-  }, []);
-
-  const handleDndStart = useCallback(({ active }) => {
-    setActiveDragId(active.id);
-  }, []);
-
-  const anchorToCursor = useCallback(({ transform, activatorEvent, activeNodeRect }) => {
-    if (!activatorEvent || !activeNodeRect) return transform;
-    const offsetX = activatorEvent.clientX - activeNodeRect.left;
-    const offsetY = activatorEvent.clientY - activeNodeRect.top;
-    return { ...transform, x: transform.x + offsetX - 20, y: transform.y + offsetY - 16 };
-  }, []);
-
-  const handleDndOver = useCallback(({ over }) => {
-    setOverDragId(over?.id ?? null);
-  }, []);
-
-  const handleDndEnd = useCallback(({ active, over }) => {
-    setActiveDragId(null);
-    setOverDragId(null);
-    if (!over || active.id === over.id) return;
-
-    // Drop onto a collection
-    if (typeof over.id === "string" && over.id.startsWith("collection:")) {
-      const collectionId = over.id.replace("collection:", "");
-      const ids = selected.has(active.id) && selected.size > 1
-        ? [...selected]
-        : [active.id];
-      addToCollection(collectionId, ids);
-      const col = collections.find(c => c.id === collectionId);
-      if (col) showToast(`Added ${pluralize(ids.length, "quote")} to "${col.name}"`, "Undo", () => removeFromCollection(collectionId, ids), "success");
-      return;
-    }
-
-    // Sortable reorder
-    setQuotes(prev => {
-      const oldIndex = prev.findIndex(q => q.id === active.id);
-      const newIndex = prev.findIndex(q => q.id === over.id);
-      if (oldIndex < 0 || newIndex < 0) return prev;
-      return arrayMove(prev, oldIndex, newIndex);
-    });
-  }, [selected, collections, addToCollection, removeFromCollection, showToast, setQuotes]);
-
   // ── Effects ──
-
 
   useEffect(() => {
     const el = toolbarRef.current;
@@ -333,9 +278,9 @@ export default function ResultsPhase({
 
   const handleClear = useCallback(() => {
     if (quotes.length > 0) trackDeletion(quotes.map(q => q.id));
-    try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {}
+    try { window.history.replaceState(null, "", window.location.pathname); } catch {}
     setIsSharedView(false);
-    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch(e) {}
+    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch {}
     setQuotes([]);
     setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default");
@@ -457,6 +402,16 @@ export default function ResultsPhase({
     );
   }, [collections, removeFromCollection, addToCollection, showToast]);
 
+  const handleAddToCollection = useCallback((collectionId, quoteIds) => {
+    addToCollection(collectionId, quoteIds);
+    const col = collections.find(c => c.id === collectionId);
+    showToast(
+      `Added ${pluralize(quoteIds.length, "quote")} to "${col?.name || "collection"}"`,
+      "Undo",
+      () => removeFromCollection(collectionId, quoteIds),
+    );
+  }, [collections, addToCollection, removeFromCollection, showToast]);
+
   const showBulkBar = selected.size > 0;
 
   const actionProps = useMemo(() => ({
@@ -468,18 +423,10 @@ export default function ResultsPhase({
     copiedId,
     reidentifying: reidentifyingIds,
     collections,
-    onAddToCollection: (collectionId, quoteIds) => {
-      addToCollection(collectionId, quoteIds);
-      const col = collections.find(c => c.id === collectionId);
-      showToast(
-        `Added ${pluralize(quoteIds.length, "quote")} to "${col?.name || "collection"}"`,
-        "Undo",
-        () => removeFromCollection(collectionId, quoteIds),
-      );
-    },
+    onAddToCollection: handleAddToCollection,
     onRemoveFromCollection: handleRemoveFromCollection,
     activeCollectionId,
-  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, addToCollection, removeFromCollection, handleRemoveFromCollection, activeCollectionId, showToast]);
+  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, handleAddToCollection, handleRemoveFromCollection, activeCollectionId]);
 
   const exportDropdownContent = (
     <ExportDropdown
@@ -519,60 +466,24 @@ export default function ResultsPhase({
 
   return (
     <>
-      <CollectionDupeModal
-        dupeGroups={collectionDupes}
-        onClose={() => setCollectionDupes([])}
-        onDeleteQuotes={handleDupeDeleteBatch}
+      <ResultsModals
+        showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts}
+        shareImageQuote={shareImageQuote} setShareImageQuote={setShareImageQuote} showToast={showToast}
+        confirmClear={confirmClear} setConfirmClear={setConfirmClear} handleClear={handleClear} quotesLength={quotes.length}
+        confirmBulkDel={confirmBulkDel} setConfirmBulkDel={setConfirmBulkDel} bulkDel={bulkDel} selectedSize={selected.size}
+        collectionDupes={collectionDupes} setCollectionDupes={setCollectionDupes} handleDupeDeleteBatch={handleDupeDeleteBatch}
       />
 
       <div style={styles.wrap}>
 
-          {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-
-          {shareImageQuote && (
-            <ShareImageModal
-              quote={shareImageQuote}
-              onClose={() => setShareImageQuote(null)}
-              showToast={showToast}
-            />
-          )}
-
-          {confirmClear && (
-            <ConfirmModal
-              icon={<AlertTriangle size={20} color="#EA580C" strokeWidth={2} />}
-              iconColor="#EA580C"
-              iconBg="var(--cp-warning-bg)"
-              borderColor="#EA580C"
-              title="Start fresh?"
-              description={`This will clear all ${quotes.length} entries and remove them from your saved session. This cannot be undone.`}
-              cancelLabel="Keep my entries"
-              confirmLabel="Clear everything"
-              onCancel={() => setConfirmClear(false)}
-              onConfirm={handleClear}
-            />
-          )}
-
-          {confirmBulkDel && (
-            <ConfirmModal
-              icon={<Trash2 size={20} color="#EB5757" strokeWidth={2} />}
-              iconColor="#EB5757"
-              iconBg="var(--cp-error-bg)"
-              borderColor="#EB5757"
-              title={`Delete ${selected.size} entries?`}
-              description={`This will remove ${selected.size} selected entries. You can undo immediately after.`}
-              cancelLabel="Keep entries"
-              confirmLabel={`Delete ${selected.size} entries`}
-              onCancel={() => setConfirmBulkDel(false)}
-              onConfirm={bulkDel}
-            />
-          )}
-
-          {isSharedView && (
-            <div style={styles.shareBanner}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({quotes.length} entries)</span>
-              <button style={styles.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", window.location.pathname); } catch(e) {} }}>Make it yours</button>
-            </div>
-          )}
+          <NotificationBars
+            isSharedView={isSharedView} setIsSharedView={setIsSharedView} quotesLength={quotes.length}
+            apiError={apiError} failedEntries={failedEntries} retryFailed={retryFailed} dismissApiError={dismissApiError}
+            stats={stats} dismissStats={dismissStats}
+            unknownCount={unknownCount} reviewQueue={reviewQueue} setReviewQueue={setReviewQueue} setEditingId={setEditingId}
+            sortBy={sortBy} dismissedAtCount={dismissedAtCount} setDismissedAtCount={setDismissedAtCount}
+            handleStartReview={handleStartReview}
+          />
 
           <SectionErrorBoundary name="Header">
             <HeaderBar
@@ -643,28 +554,6 @@ export default function ResultsPhase({
             />
           )}
 
-          {apiError && (
-            <div style={styles.errorBar}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} strokeWidth={2} /> {apiError}</span>
-              <div style={{ display: "flex", gap: 8 }}>
-                {failedEntries.length > 0 && <button style={styles.retryBtn} onClick={retryFailed}>Retry failed ({failedEntries.length})</button>}
-                <button className="dismiss-link" style={{ background: "none", border: "none", color: "var(--cp-error-text)", cursor: "pointer", fontSize: 12, textDecoration: "underline" }} onClick={dismissApiError}>Dismiss</button>
-              </div>
-            </div>
-          )}
-
-          {stats && (
-            <div style={styles.statsBar}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} strokeWidth={2} /> <strong>{stats.local}</strong> matched locally</span>
-              {stats.lookup > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={13} strokeWidth={2} /> <strong>{stats.lookup}</strong> found online</span></>}
-              <span style={styles.statDot} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
-              {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><XCircle size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
-              {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-              <button style={styles.statsDismiss} onClick={dismissStats}><X size={14} strokeWidth={2} /></button>
-            </div>
-          )}
-
           {showAddMore && (
             headerVisible ? (
               <div style={styles.addMorePanel}>
@@ -724,15 +613,7 @@ export default function ResultsPhase({
               onBatchReIdentify={() => batchReIdentify(selected)}
               isReidentifying={reidentifyingIds.size > 0}
               collections={collections}
-              onAddToCollection={(collectionId, quoteIds) => {
-                addToCollection(collectionId, quoteIds);
-                const col = collections.find(c => c.id === collectionId);
-                showToast(
-                  `Added ${pluralize(quoteIds.length, "quote")} to "${col?.name || "collection"}"`,
-                  "Undo",
-                  () => removeFromCollection(collectionId, quoteIds),
-                );
-              }}
+              onAddToCollection={handleAddToCollection}
               onRemoveFromCollection={handleRemoveFromCollection}
               activeCollectionId={activeCollectionId}
             />
@@ -788,27 +669,6 @@ export default function ResultsPhase({
               </button>
             </div>
           )}
-
-          {unknownCount > 0 && (reviewQueue.length > 0 ? (
-            <div style={styles.attentionBar}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={styles.attentionCount}>{reviewQueue.length}</span>
-                <span>{reviewQueue.length === 1 ? "entry" : "entries"} remaining in review</span>
-              </div>
-              <button style={{ ...styles.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
-            </div>
-          ) : sortBy !== "confidence" && (dismissedAtCount === null || unknownCount > dismissedAtCount) && (
-            <div style={styles.attentionBar}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={styles.attentionCount}>{unknownCount}</span>
-                <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
-                <button className="ui-tip attention-dismiss" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
-              </div>
-            </div>
-          ))}
 
           {/* Main content area with optional sidebar */}
           <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>

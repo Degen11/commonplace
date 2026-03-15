@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
@@ -45,17 +45,6 @@ const MemoCardItem = memo(function CardItem({
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleDown = (e) => {
-      if (!e.target.closest(".overflow-btn") && !e.target.closest("[data-overflow-menu]")) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleDown);
-    return () => document.removeEventListener("mousedown", handleDown);
-  }, [menuOpen]);
 
   // Swipe visual hints
   const isSwipingLeft = offsetX < -20;

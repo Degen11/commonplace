@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
+import { toggleInSet, addAllToSet } from "../utils/helpers";
 
 export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
   const [editingId, setEditingId]           = useState(null);
@@ -101,25 +102,17 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       const currentIndex = selScope.findIndex(q => q.id === id);
       if (lastIndex < 0 || currentIndex < 0) {
         // Anchor no longer visible — fall back to single toggle
-        setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+        setSelected(p => toggleInSet(p, id));
         lastSelectedIndex.current = id;
         return;
       }
       const start = Math.min(currentIndex, lastIndex);
       const end = Math.max(currentIndex, lastIndex);
       const rangeIds = selScope.slice(start, end + 1).map(q => q.id);
-      setSelected(p => {
-        const n = new Set(p);
-        rangeIds.forEach(rangeId => n.add(rangeId));
-        return n;
-      });
+      setSelected(p => addAllToSet(p, rangeIds));
       lastSelectedIndex.current = id;
     } else {
-      setSelected(p => {
-        const n = new Set(p);
-        n.has(id) ? n.delete(id) : n.add(id);
-        return n;
-      });
+      setSelected(p => toggleInSet(p, id));
       lastSelectedIndex.current = id;
     }
   }, [selScope]);

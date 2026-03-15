@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
 import { CONF_COLORS } from "../data/constants";
@@ -22,6 +23,7 @@ export function FavBtn({ q, onFav }) {
 }
 
 export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
+  const wrapRef = useRef(null);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
   const [copyAnim, setCopyAnim] = useState(false);
@@ -32,13 +34,15 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
   const isReidentifying = actionProps.reidentifying.has(q.id);
   const collections = actionProps.collections || [];
 
+  useClickOutside(wrapRef, isOpen, onToggle);
+
   // Reset submenu when menu closes
   useEffect(() => {
     if (!isOpen) setShowCollections(false);
   }, [isOpen]);
 
   return (
-    <div style={styles.overflowWrap}>
+    <div ref={wrapRef} style={styles.overflowWrap}>
       <button
         ref={btnRef}
         className="overflow-btn act-btn"

@@ -1,4 +1,6 @@
 import { useReducer, useRef, useCallback, useEffect, useMemo } from "react";
+import useMounted from "./useMounted";
+import { useSafeDispatch } from "./useMounted";
 import { buildValidCats, fallbackCategory } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
@@ -9,7 +11,7 @@ import { fetchWithTimeout, API_HEADERS } from "../utils/api";
 import { describeApiError } from "../utils/apiErrors";
 import {
   API_TIMEOUT_MS, AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
-  PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD,
+  PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD, LS_DRAFT,
 } from "../config";
 
 // Strip outer ** wrapping that the AI sometimes adds to cleanText
@@ -91,23 +93,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const autoTransitionRef = useRef(null);
   const pendingContinuationRef = useRef(null);
 
-  // Guard state updates after unmount
-  const mountedRef = useRef(true);
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
+  const mountedRef = useMounted();
+  const safeDispatch = useSafeDispatch(dispatch);
 
   // Refs for latest values — so callbacks never read stale closures
   const quotesRef = useRef(quotes);
   quotesRef.current = quotes;
   const stateRef = useRef(state);
   stateRef.current = state;
-
-  // Single safe dispatch — replaces 7 safeSet* wrappers
-  const safeDispatch = useCallback((action) => {
-    if (mountedRef.current) dispatch(action);
-  }, []);
 
   // ── API: batch identification ──
   const identifyBatch = useCallback(async (items, withFormatting = false, externalSignal) => {
@@ -255,7 +248,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
     appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
     safeDispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
-    try { localStorage.removeItem("commonplace_draft"); } catch(e) {}
+    try { localStorage.removeItem(LS_DRAFT); } catch {}
     // Auto-transition after processing completes
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
     autoTransitionRef.current = setTimeout(() => {

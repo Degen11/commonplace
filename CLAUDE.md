@@ -54,7 +54,9 @@ src/
 
   components/
     App.jsx                    Root orchestrator — phase management, hook init (useProcessing, useQuoteActions, useTheme)
-    ResultsPhase.jsx           Results phase — owns view prefs, edit state, keyboard shortcuts, DnD, sidebar, all results UI
+    ResultsPhase.jsx           Results phase — owns view prefs, edit state, keyboard shortcuts, sidebar, all results UI
+    ResultsModals.jsx          All modal dialogs for results phase (shortcuts, share image, confirm clear/delete, dupe modal)
+    NotificationBars.jsx       Status/notification bars (shared view, API errors, processing stats, attention/review)
     QuickAddBar.jsx            Inline quote add form with dupe detection
     InputPhase.jsx             Landing page — text input, file import, URL fetch
     ProcessingPhase.jsx        AI identification progress display
@@ -75,8 +77,11 @@ src/
     useEditState.js            Edit mode, selected IDs, inline editing state
     useViewPreferences.js      Filtering, sorting, search, layout mode (persisted to localStorage)
     useKeyboardShortcuts.js    Global keyboard shortcuts (Esc cascade, Ctrl+A, etc.)
+    useDndQuotes.js            Drag-and-drop state, sensors, and handlers for quote reordering/collection drops
     useInfiniteScroll.js       Pagination — 100 items per page via intersection observer
     useTheme.js                Dark/light theme toggle (CSS custom properties)
+    useMounted.js              Mount guard ref + useSafeDispatch for async safety
+    useFlipPosition.js         Viewport-aware flip positioning for dropdowns
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
     useLongPress.js            Mobile long-press for selection
@@ -95,7 +100,7 @@ src/
     api.js                     fetchWithTimeout, shared API headers
     apiErrors.js               Human-readable API error descriptions
     storage.js                 loadFromStorage / saveToStorage — safe localStorage JSON read/write with validation
-    helpers.js                 Shared utilities: pluralize, groupBy, countBy, propsEqual (memo comparator)
+    helpers.js                 Shared utilities: pluralize, groupBy, countBy, propsEqual, Set helpers (addToSet, removeFromSet, etc.)
     sync.js                    mergeByTimestamp — cloud/local merge helper
     dragGhost.js               Custom drag preview elements
     richTextKeys.js            Key constants for rich text handling
@@ -157,7 +162,7 @@ User input → smartSplit() → deduplicate against existing
 ## Key components
 
 - **`App.jsx`** — Phase orchestrator (~170 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` with `AnimatePresence`.
-- **`ResultsPhase.jsx`** — The results phase (~600 lines). Calls `useQuotesContext()` directly. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts` internally. Owns all results-specific state (modals, sidebar, DnD, toolbar), effects, and handlers.
+- **`ResultsPhase.jsx`** — The results phase. Calls `useQuotesContext()` directly. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
 - **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
@@ -194,7 +199,11 @@ vercel dev        # Test serverless functions locally
 - **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
-- **Click-outside pattern** — use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners
+- **Click-outside pattern** — use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners. `OverflowMenu` handles its own click-outside internally
+- **Mount guard pattern** — use `useMounted()` from `hooks/useMounted.js` instead of manual `mountedRef` + `useEffect` boilerplate. For dispatch wrappers, use `useSafeDispatch(dispatch)`
+- **Immutable Set updates** — use `addToSet`, `removeFromSet`, `toggleInSet`, `addAllToSet`, `removeAllFromSet` from `utils/helpers.js` instead of inline `new Set(prev)` + mutate patterns
+- **Flip positioning** — use `useFlipPosition(ref)` from `hooks/useFlipPosition.js` for viewport-aware dropdown positioning instead of manual `getBoundingClientRect` + `useState`
+- **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
 - **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``
 - **Responsive breakpoint** — `MOBILE_BREAKPOINT_PX` (640px) from `config.js`. Below this: card view, long-press selection, mobile layouts
@@ -215,7 +224,7 @@ Z.TOAST           2000  Toasts
 
 ## Known issues and rough edges
 
-- `ResultsPhase.jsx` is the largest component (~600 lines). It owns all results-phase concerns: view preferences, edit state, keyboard shortcuts, DnD, sidebar, modals, and the full results JSX
+- `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
 - Comment in `QuotesContext.jsx` line 99 says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
 - No TODO/FIXME comments exist in the codebase currently

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import useClickOutside from "../hooks/useClickOutside";
+import useFlipPosition from "../hooks/useFlipPosition";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
 import { ChevronDown } from "lucide-react";
@@ -32,16 +33,7 @@ export function InlineCategorySelect({ current, allCats, onSave, onCancel, custo
   const ref = useRef(null);
   const onCancelRef = useRef(onCancel);
   onCancelRef.current = onCancel;
-  const [flipUp, setFlipUp] = useState(false);
-  const [flipLeft, setFlipLeft] = useState(false);
-
-  useEffect(() => {
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      if (rect.bottom > window.innerHeight - 8) setFlipUp(true);
-      if (rect.right > window.innerWidth - 8) setFlipLeft(true);
-    }
-  }, []);
+  const { flipUp, flipLeft } = useFlipPosition(ref);
 
   useClickOutside(ref, true, () => onCancelRef.current());
 

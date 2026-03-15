@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import useMounted from "./useMounted";
 import { fallbackCategory, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
@@ -6,6 +7,7 @@ import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
 import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } from "../config";
 import { describeApiError } from "../utils/apiErrors";
+import { addToSet, removeFromSet, addAllToSet, removeAllFromSet } from "../utils/helpers";
 
 export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
   const [deletingId, setDeletingId]             = useState(null);
@@ -13,21 +15,14 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
 
   const reidentifyAbortRefs  = useRef(new Map());
-  const mountedRef           = useRef(true);
+  const mountedRef           = useMounted();
   const quotesRef            = useRef(quotes);
   quotesRef.current = quotes;
 
-  // ── Mount guard + abort re-identify controllers on unmount ──
+  // Abort all in-flight re-identify requests on unmount
   useEffect(() => {
-    mountedRef.current = true;
     const refs = reidentifyAbortRefs.current;
-    return () => {
-      mountedRef.current = false;
-      for (const controller of refs.values()) {
-        controller.abort();
-      }
-      refs.clear();
-    };
+    return () => { for (const c of refs.values()) c.abort(); refs.clear(); };
   }, []);
 
   // ── Delete ──
@@ -100,10 +95,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     const controller = new AbortController();
     reidentifyAbortRefs.current.set(q.id, controller);
 
-    setReidentifyingIds(prev => new Set(prev).add(q.id));
+    setReidentifyingIds(prev => addToSet(prev, q.id));
     const clearId = () => {
       reidentifyAbortRefs.current.delete(q.id);
-      setReidentifyingIds(prev => { const s = new Set(prev); s.delete(q.id); return s; });
+      setReidentifyingIds(prev => removeFromSet(prev, q.id));
     };
 
     try {
@@ -162,19 +157,11 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       if (existing) existing.abort();
       reidentifyAbortRefs.current.set(id, controller);
     });
-    setReidentifyingIds(prev => {
-      const s = new Set(prev);
-      ids.forEach(id => s.add(id));
-      return s;
-    });
+    setReidentifyingIds(prev => addAllToSet(prev, ids));
 
     const clearIds = () => {
       ids.forEach(id => reidentifyAbortRefs.current.delete(id));
-      setReidentifyingIds(prev => {
-        const s = new Set(prev);
-        ids.forEach(id => s.delete(id));
-        return s;
-      });
+      setReidentifyingIds(prev => removeAllFromSet(prev, ids));
     };
 
     try {

@@ -37,6 +37,24 @@ export function countBy(arr, key) {
   return counts;
 }
 
+// ── Immutable Set helpers ──
+// Return new Sets — safe for React state updates like setSelected(prev => addToSet(prev, id)).
+
+/** Return a new Set with `item` added. */
+export function addToSet(set, item) { return new Set(set).add(item); }
+
+/** Return a new Set with `item` removed. */
+export function removeFromSet(set, item) { const s = new Set(set); s.delete(item); return s; }
+
+/** Return a new Set with `item` toggled (added if missing, removed if present). */
+export function toggleInSet(set, item) { const s = new Set(set); s.has(item) ? s.delete(item) : s.add(item); return s; }
+
+/** Return a new Set with all `items` added. */
+export function addAllToSet(set, items) { const s = new Set(set); for (const i of items) s.add(i); return s; }
+
+/** Return a new Set with all `items` removed. */
+export function removeAllFromSet(set, items) { const s = new Set(set); for (const i of items) s.delete(i); return s; }
+
 /**
  * Create a shallow props equality comparator for React.memo.
  * Compares only the listed keys, returning true if all are ===.

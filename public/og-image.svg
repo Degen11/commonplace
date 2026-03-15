@@ -28,28 +28,28 @@
   <rect x="560" y="258" width="80" height="3" rx="1.5" fill="#3C5775"/>
 
   <!-- Subtitle -->
-  <text x="600" y="300" text-anchor="middle" font-family="'DM Sans', Inter, sans-serif" font-size="24" fill="#6B6A67">Organize your messy quotes</text>
+  <text x="600" y="300" text-anchor="middle" font-family="'Satoshi', -apple-system, sans-serif" font-size="24" fill="#6B6A67">Organize your messy quotes</text>
 
   <!-- Category pills — total 590px wide, centered at (1200-590)/2 = 305 -->
   <g>
     <rect x="305" y="350" width="100" height="40" rx="20" fill="#F3E8FF"/>
-    <text x="355" y="376" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="16" font-weight="600" fill="#7C3AED">Film</text>
+    <text x="355" y="376" text-anchor="middle" font-family="'Satoshi', sans-serif" font-size="16" font-weight="600" fill="#7A48CE">Film</text>
 
     <rect x="425" y="350" width="100" height="40" rx="20" fill="#DCFCE7"/>
-    <text x="475" y="376" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="16" font-weight="600" fill="#16A34A">TV</text>
+    <text x="475" y="376" text-anchor="middle" font-family="'Satoshi', sans-serif" font-size="16" font-weight="600" fill="#2D9754">TV</text>
 
     <rect x="545" y="350" width="100" height="40" rx="20" fill="#FEF3C7"/>
-    <text x="595" y="376" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="16" font-weight="600" fill="#D97706">Book</text>
+    <text x="595" y="376" text-anchor="middle" font-family="'Satoshi', sans-serif" font-size="16" font-weight="600" fill="#C07621">Book</text>
 
     <rect x="665" y="350" width="100" height="40" rx="20" fill="#FFE4E6"/>
-    <text x="715" y="376" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="16" font-weight="600" fill="#E11D48">Music</text>
+    <text x="715" y="376" text-anchor="middle" font-family="'Satoshi', sans-serif" font-size="16" font-weight="600" fill="#C53253">Music</text>
 
     <rect x="785" y="350" width="110" height="40" rx="20" fill="#E0F2FE"/>
-    <text x="840" y="376" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="16" font-weight="600" fill="#0284C7">Speech</text>
+    <text x="840" y="376" text-anchor="middle" font-family="'Satoshi', sans-serif" font-size="16" font-weight="600" fill="#1E80B2">Speech</text>
   </g>
 
   <!-- Workflow -->
-  <text font-family="'DM Sans', sans-serif" font-size="20" font-weight="500" text-anchor="middle" y="470">
+  <text font-family="'Satoshi', sans-serif" font-size="20" font-weight="500" text-anchor="middle" y="470">
     <tspan x="600" fill="#3C5775">Paste</tspan>
     <tspan fill="#C8C4BC">  &#x2192;  </tspan>
     <tspan fill="#3C5775">Identify</tspan>

@@ -193,8 +193,8 @@ const CompactBar = ({ label, count, pct, color, maxW }) => (
         {count} <span style={{ fontSize: 10 }}>({Math.round(pct)}%)</span>
       </span>
     </div>
-    <div style={{ height: 4, background: "var(--cp-bg-tab)", borderRadius: 3, overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 3, transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+    <div style={{ height: 4, background: "var(--cp-bg-tab)", borderRadius: 2, overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 2, transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }} />
     </div>
   </div>
 );

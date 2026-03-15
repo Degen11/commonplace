@@ -7,7 +7,7 @@ import {
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
 } from "lucide-react";
-import { CP_ACCENT, styles } from "./styles";
+import { CP_ACCENT, FONT_SANS, styles } from "./styles";
 
 // Icon set for the picker
 const ICON_OPTIONS = [
@@ -390,7 +390,7 @@ export default function CollectionsSidebar({
     <div style={{
       width: 220, flexShrink: 0, padding: "0 12px 0 4px",
       display: "flex", flexDirection: "column",
-      fontFamily: "'Satoshi',-apple-system,sans-serif",
+      fontFamily: FONT_SANS,
       animation: "slideD .15s ease",
       overflow: "visible",
       position: "sticky", top: toolbarHeight, alignSelf: "flex-start",

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { ClipboardList, Zap, CheckCircle, RefreshCw } from "lucide-react";
-import { CP_ACCENT } from "./styles";
+import { CP_ACCENT, FONT_SANS } from "./styles";
 
 // ── Data ────────────────────────────────────────────────────────────────────
 const RAW_LINES = [
@@ -12,11 +12,11 @@ const RAW_LINES = [
 ];
 
 const RESULT_CARDS = [
-  { tag: "Person", tagBg: "rgba(168,85,247,0.14)", tagColor: "#9333EA",  text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
-  { tag: "Film",   tagBg: "rgba(139,92,246,0.14)", tagColor: "#7C3AED",  text: "All those moments will be lost in time",    source: "Blade Runner" },
-  { tag: "Person", tagBg: "rgba(168,85,247,0.14)", tagColor: "#9333EA",  text: "The unexamined life is not worth living",   source: "Socrates" },
-  { tag: "Book",   tagBg: "rgba(217,119,6,0.14)",  tagColor: "#D97706",  text: "Not all those who wander are lost",         source: "J.R.R. Tolkien" },
-  { tag: "Speech", tagBg: "rgba(59,130,246,0.14)", tagColor: "#2563EB",  text: "Be the change",                            source: "Mahatma Gandhi" },
+  { tag: "Person", tagBg: "rgba(168,85,247,0.08)", tagColor: "#8B43CC",  text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
+  { tag: "Film",   tagBg: "rgba(139,92,246,0.08)", tagColor: "#7A48CE",  text: "All those moments will be lost in time",    source: "Blade Runner" },
+  { tag: "Person", tagBg: "rgba(168,85,247,0.08)", tagColor: "#8B43CC",  text: "The unexamined life is not worth living",   source: "Socrates" },
+  { tag: "Book",   tagBg: "rgba(217,119,6,0.08)",  tagColor: "#C07621",  text: "Not all those who wander are lost",         source: "J.R.R. Tolkien" },
+  { tag: "Speech", tagBg: "rgba(59,130,246,0.08)", tagColor: "#3967CD",  text: "Be the change",                            source: "Mahatma Gandhi" },
 ];
 
 const STEPS = [
@@ -63,7 +63,7 @@ const S = {
     fontSize: 12,
   },
   stage: (dark) => ({
-    borderRadius: 10,
+    borderRadius: 6,
     overflow: "hidden",
     border: `1px solid ${dark ? DARK_BORDER : "var(--cp-border-light)"}`,
     background: dark ? DARK_BG : "var(--cp-bg-card)",
@@ -125,7 +125,7 @@ const S = {
     gap: 8,
     padding: "8px 12px",
     background: "var(--cp-bg-card)",
-    borderRadius: 7,
+    borderRadius: 6,
     border: "1px solid rgba(60,87,117,0.12)",
     boxShadow: "0 1px 3px rgba(60,87,117,0.06)",
     opacity: visible ? 1 : 0,
@@ -146,7 +146,7 @@ const S = {
     fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
   }),
   cardText: {
-    fontFamily: "'Satoshi',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
     fontSize: 12,
     color: "var(--cp-text-secondary)",
     flex: 1,
@@ -156,7 +156,7 @@ const S = {
     whiteSpace: "nowrap",
   },
   cardSrc: {
-    fontFamily: "'Satoshi',-apple-system,sans-serif",
+    fontFamily: FONT_SANS,
     fontSize: 11,
     color: "var(--cp-text-muted)",
     whiteSpace: "nowrap",

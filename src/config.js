@@ -46,6 +46,9 @@ export const SHARE_URL_MAX_LENGTH   = 8000;
 // Duplicate detection
 export const DUPE_SIMILARITY_THRESHOLD = 0.55;
 
+// Text truncation
+export const QUOTE_TRUNCATE_CHARS  = 180;  // truncate quotes beyond this in table view
+
 // UI thresholds
 export const SWIPE_THRESHOLD_PX    = 80;   // px to trigger swipe action
 export const SWIPE_CANCEL_Y_PX    = 30;   // vertical movement cancels swipe

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, memo } from "react";
+import { useState, useCallback, useRef, memo } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -228,18 +228,6 @@ export default function TableView({
   const [dragColOver, setDragColOver] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const listRef = useRef(null);
-
-  // Close overflow menu when clicking outside
-  useEffect(() => {
-    if (!openMenuId) return;
-    const handleDown = (e) => {
-      if (!e.target.closest(".overflow-btn") && !e.target.closest("[data-overflow-menu]")) {
-        setOpenMenuId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleDown);
-    return () => document.removeEventListener("mousedown", handleDown);
-  }, [openMenuId]);
 
   const handleColDragStart = (e, colId) => {
     e.stopPropagation();

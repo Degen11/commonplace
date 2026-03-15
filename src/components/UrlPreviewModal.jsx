@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { X, Check, Eye, Filter } from "lucide-react";
 import { styles } from "./styles";
+import Tooltip from "./Tooltip";
 
 const EXTRACT_MODES = [
   { value: "all", label: "Everything", desc: "All text content from the page" },
@@ -75,30 +76,29 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
           {/* Extraction mode selector */}
           <div style={{ display: "flex", gap: 4, marginTop: 12, flexWrap: "wrap" }}>
             {EXTRACT_MODES.map(m => (
-              <button
-                key={m.value}
-                onClick={() => handleModeChange(m.value)}
-                className="ui-tip ui-tip-below"
-                data-tip={m.desc}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 50,
-                  border: mode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
-                  background: mode === m.value ? "rgba(60,87,117,0.10)" : "var(--cp-bg-card)",
-                  color: mode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-muted)",
-                  fontSize: 11,
-                  fontWeight: mode === m.value ? 600 : 500,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all .15s",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                {m.value === "quotes" && <Filter size={10} strokeWidth={2} />}
-                {m.label}
-              </button>
+              <Tooltip key={m.value} tip={m.desc} placement="bottom">
+                <button
+                  onClick={() => handleModeChange(m.value)}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 50,
+                    border: mode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
+                    background: mode === m.value ? "rgba(60,87,117,0.10)" : "var(--cp-bg-card)",
+                    color: mode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-muted)",
+                    fontSize: 11,
+                    fontWeight: mode === m.value ? 600 : 500,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    transition: "all .15s",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {m.value === "quotes" && <Filter size={10} strokeWidth={2} />}
+                  {m.label}
+                </button>
+              </Tooltip>
             ))}
           </div>
         </div>

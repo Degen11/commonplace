@@ -91,13 +91,6 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     setInlineEdit(null);
     setSavedPulse({ id, field });
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), SAVED_PULSE_MS);
-    // First-use inline edit tip
-    try {
-      if (!localStorage.getItem("commonplace_inline_tip")) {
-        localStorage.setItem("commonplace_inline_tip", "1");
-        showToast("Tip: Click any source or category to quickly edit inline");
-      }
-    } catch(e) { /* ignore */ }
   }, [setQuotes, showToast]);
 
   const selScope = visibleFiltered || filtered;

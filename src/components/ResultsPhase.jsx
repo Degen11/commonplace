@@ -37,6 +37,7 @@ import EmptyState from "./EmptyState";
 import ShortcutsModal from "./ShortcutsModal";
 import ShareImageModal from "./ShareImageModal";
 import CollectionsSidebar from "./CollectionsSidebar";
+import Tooltip from "./Tooltip";
 import QuickAddBar from "./QuickAddBar";
 import { styles } from "./styles";
 
@@ -136,9 +137,6 @@ export default function ResultsPhase({
   // ── Refs ──
 
   const addMoreRef          = useRef(null);
-  const exportRef           = useRef(null);
-  const miniExportRef       = useRef(null);
-  const sortRef             = useRef(null);
   const toolbarRef          = useRef(null);
   const pendingScrollAdjust = useRef(null);
   const catScrollRef        = useRef(null);
@@ -261,15 +259,11 @@ export default function ResultsPhase({
   useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter, updateCatFade]);
 
   useEffect(() => {
+    if (!editingId) return;
     const h = e => {
-      if (exportRef.current && !exportRef.current.contains(e.target) && (!miniExportRef.current || !miniExportRef.current.contains(e.target))) setShowExport(false);
-      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
-
-      if (editingId) {
-        const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
-        if (!clickedInside) {
-          setEditingId(null);
-        }
+      const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
+      if (!clickedInside) {
+        setEditingId(null);
       }
     };
     document.addEventListener("mousedown", h);
@@ -585,7 +579,6 @@ export default function ResultsPhase({
               isMobile={isMobile}
               setConfirmClear={setConfirmClear}
               addMoreRef={addMoreRef}
-              exportRef={exportRef}
               headerRef={headerRef}
               headerVisible={headerVisible}
               exportDropdownContent={exportDropdownContent}
@@ -607,7 +600,6 @@ export default function ResultsPhase({
               showExport={showExport} setShowExport={setShowExport}
               showAddMore={showAddMore} setShowAddMore={setShowAddMore}
               addMoreRef={addMoreRef}
-              miniExportRef={miniExportRef}
               preserveScroll={preserveScroll}
               quotes={quotes}
               filtered={filtered}
@@ -762,7 +754,6 @@ export default function ResultsPhase({
               setSortBy={setSortBy}
               showSort={showSort}
               setShowSort={setShowSort}
-              sortRef={sortRef}
               hasActiveFilters={hasActiveFilterOrSort}
               clearFilters={clearFilters}
               resultCount={collectionFiltered.length}
@@ -798,8 +789,8 @@ export default function ResultsPhase({
                 <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
-                <button className="ui-tip attention-dismiss" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
+                <Tooltip tip="Step through entries that need attention"><button style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button></Tooltip>
+                <Tooltip tip="Dismiss"><button className="attention-dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button></Tooltip>
               </div>
             </div>
           ))}
@@ -868,12 +859,12 @@ export default function ResultsPhase({
             </SectionErrorBoundary>
           )}
 
-          {/* CARD VIEW */}
+          {/* CARD VIEW — CSS columns masonry layout with staggered entry */}
           {view === "cards" && (
             <SectionErrorBoundary name="Card view">
               <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: 12, paddingTop: 8 }}>
-                {visible.map((q) => {
+              <div style={isMobile ? { display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 } : { columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
+                {visible.map((q, i) => {
                   const col = getCatColor(q.category, customCats);
                   const isSel = selected.has(q.id);
                   const isEd  = editingId === q.id;
@@ -884,7 +875,13 @@ export default function ResultsPhase({
                   const isSavedPulse = savedPulse?.id === q.id;
                   const savedPulseField = isSavedPulse ? savedPulse.field : null;
                   return (
-                    <motion.div key={q.id} layout layoutId={`card-${q.id}`} transition={{ layout: { duration: 0.2, ease: "easeOut" } }}>
+                    <motion.div
+                      key={q.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut", delay: Math.min(i * 0.03, 0.6) }}
+                      style={{ breakInside: "avoid", marginBottom: 12 }}
+                    >
                     <CardItem
                       q={q}
                       col={col}

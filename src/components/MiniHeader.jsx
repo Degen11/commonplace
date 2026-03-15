@@ -1,6 +1,5 @@
-import { useState } from "react";
-import useDropdownPosition from "../hooks/useDropdownPosition";
-import { FloatingPortal } from "@floating-ui/react";
+import { useState, useRef } from "react";
+import useClickOutside from "../hooks/useClickOutside";
 import { List, AlignJustify, LayoutGrid, Moon, Sun, MoreHorizontal, BarChart3, HelpCircle, Trash2 } from "lucide-react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
@@ -14,7 +13,7 @@ export default function MiniHeader({
   showStats, setShowStats,
   showExport, setShowExport,
   showAddMore, setShowAddMore,
-  addMoreRef,
+  addMoreRef, miniExportRef,
   preserveScroll,
   quotes, filtered, selected, hasActiveFilters,
   showToast, collections,
@@ -27,8 +26,9 @@ export default function MiniHeader({
   onShowShortcuts,
 }) {
   const [showOverflow, setShowOverflow] = useState(false);
-  const overflow = useDropdownPosition({ open: showOverflow, onClose: () => setShowOverflow(false) });
-  const exportDrop = useDropdownPosition({ open: showExport, onClose: () => setShowExport(false) });
+  const overflowRef = useRef(null);
+
+  useClickOutside(overflowRef, showOverflow, () => setShowOverflow(false));
 
   return (
     <div style={{
@@ -58,30 +58,28 @@ export default function MiniHeader({
               <LayoutGrid size={14} strokeWidth={1.5} />
             </button>
           </div>
-          <button ref={exportDrop.refs.setReference} className="hdr-btn" style={{ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export &darr;</button>
-          {showExport && (
-            <FloatingPortal>
-              <div ref={exportDrop.refs.setFloating} style={{ ...exportDrop.floatingStyles, ...styles.expDrop }} {...exportDrop.getFloatingProps()}>
-                <ExportDropdown
-                  quotes={quotes}
-                  filtered={filtered}
-                  selected={selected}
-                  hasActiveFilters={hasActiveFilters}
-                  showToast={showToast}
-                  setShowExport={setShowExport}
-                  collections={collections}
-                />
-              </div>
-            </FloatingPortal>
-          )}
+          <div ref={miniExportRef} style={{ position: "relative" }}>
+            <button className="hdr-btn" style={{ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export &darr;</button>
+            {showExport && (
+              <ExportDropdown
+                quotes={quotes}
+                filtered={filtered}
+                selected={selected}
+                hasActiveFilters={hasActiveFilters}
+                showToast={showToast}
+                setShowExport={setShowExport}
+                collections={collections}
+              />
+            )}
+          </div>
           <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
           {/* Overflow menu */}
-          <button ref={overflow.refs.setReference} className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
-            <MoreHorizontal size={14} strokeWidth={1.5} />
-          </button>
-          {showOverflow && (
-            <FloatingPortal>
-              <div ref={overflow.refs.setFloating} style={{ ...overflow.floatingStyles, ...styles.hdrOverflowMenu }} {...overflow.getFloatingProps()}>
+          <div ref={overflowRef} style={{ position: "relative" }}>
+            <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
+              <MoreHorizontal size={14} strokeWidth={1.5} />
+            </button>
+            {showOverflow && (
+              <div style={{ ...styles.hdrOverflowMenu, right: 0 }}>
                 <div style={styles.hdrOverflowSectionLabel}>View</div>
                 <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { preserveScroll(); setShowStats(s => !s); setShowOverflow(false); }}>
                   <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
@@ -104,8 +102,8 @@ export default function MiniHeader({
                   </>
                 )}
               </div>
-            </FloatingPortal>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

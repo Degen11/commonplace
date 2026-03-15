@@ -55,7 +55,8 @@ function schedulePersist(state) {
 
       // Warn if approaching localStorage limits
       if (quotesJson.length + catsJson.length > STORAGE_WARN_BYTES) {
-        useQuotesStore.setState({ _storageLimitHit: true });
+        // Flag will be read by components that show toasts
+        state._storageLimitHit = true;
       }
 
       localStorage.setItem(LS_QUOTES, quotesJson);

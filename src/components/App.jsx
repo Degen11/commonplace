@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
-import * as ReactDOM from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -42,17 +41,7 @@ export default function Commonplace() {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
 
-  // View Transitions API — progressive enhancement for phase changes.
-  // Falls back to AnimatePresence (below) in unsupported browsers.
-  const goPhase = useCallback((next) => {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        ReactDOM.flushSync(() => setPhase(next));
-      });
-    } else {
-      setPhase(next);
-    }
-  }, []);
+  const goPhase = setPhase;
 
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
   const {

@@ -65,7 +65,7 @@ function IconPicker({ anchorRef, current, onSelect, onClose }) {
   return (
     <div ref={ref} style={{
       position: "fixed", left: pos.left, bottom: pos.bottom, zIndex: 100,
-      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 8,
+      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
       boxShadow: "var(--cp-shadow-md)", padding: 8,
       display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
       width: 180, animation: "slideD .12s ease",
@@ -390,7 +390,7 @@ export default function CollectionsSidebar({
     <div style={{
       width: 220, flexShrink: 0, padding: "0 12px 0 4px",
       display: "flex", flexDirection: "column",
-      fontFamily: "'DM Sans',-apple-system,sans-serif",
+      fontFamily: "'Satoshi',-apple-system,sans-serif",
       animation: "slideD .15s ease",
       overflow: "visible",
       position: "sticky", top: toolbarHeight, alignSelf: "flex-start",

@@ -44,7 +44,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        background: "var(--cp-bg-card)", borderRadius: 12, padding: 0,
+        background: "var(--cp-bg-card)", borderRadius: 6, padding: 0,
         maxWidth: "min(90vw, 480px)", width: "100%", overflow: "hidden",
         animation: "slideIn .2s ease",
       }}>
@@ -52,7 +52,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "16px 20px 12px", borderBottom: "1px solid var(--cp-border)",
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: "'Satoshi',-apple-system,sans-serif" }}>
             Share as image
           </h2>
           <button
@@ -73,7 +73,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                 disabled={!!generating}
                 style={{
                   display: "flex", alignItems: "center", gap: 14,
-                  padding: "12px 14px", borderRadius: 8,
+                  padding: "12px 14px", borderRadius: 6,
                   border: "1px solid var(--cp-border)",
                   background: "var(--cp-bg-card)",
                   cursor: generating ? "wait" : "pointer",
@@ -99,7 +99,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                     <div style={{
                       position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      borderRadius: 5,
+                      borderRadius: 4,
                     }}>
                       <Loader size={20} strokeWidth={2} color="#fff" className="spin" />
                     </div>
@@ -113,7 +113,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                   </div>
                   <div style={{
                     fontSize: 6, color: theme.attr, marginTop: 3,
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Satoshi', sans-serif",
                   }}>
                     — {quote.source || "Unknown"}
                   </div>

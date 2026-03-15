@@ -10,8 +10,8 @@ export function setMultiDragImage(e, count) {
     display:inline-flex;align-items:center;gap:6px;
     padding:6px 12px 6px 10px;
     background:#3C5775;color:#fff;
-    border-radius:8px;
-    font:500 12px/1 'DM Sans',-apple-system,sans-serif;
+    border-radius:4px;
+    font:500 12px/1 'Satoshi',-apple-system,sans-serif;
     white-space:nowrap;
     box-shadow:
       4px 3px 0 -1px #2D4259,

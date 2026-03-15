@@ -98,7 +98,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
           <button
             onClick={doAdd}
             style={{
-              padding: "3px 10px", borderRadius: 5, border: "1px solid var(--cp-warning-border)",
+              padding: "3px 10px", borderRadius: 4, border: "1px solid var(--cp-warning-border)",
               background: "transparent", color: "var(--cp-warning-text)",
               fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
               whiteSpace: "nowrap",

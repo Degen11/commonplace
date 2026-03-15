@@ -180,6 +180,10 @@ vercel dev        # Test serverless functions locally
 
 - **No TypeScript** — entire codebase is plain JavaScript with JSX
 - **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`) injected via `<style>` tag in `main.jsx`
+- **Fonts** — `FONT_SANS` is Satoshi (via Fontshare CDN), `FONT_SERIF` is Playfair Display (Google Fonts). Playfair is used only for the "Commonplace" wordmark (logo); all other headings and UI text use Satoshi. Don't introduce new fonts or expand Playfair usage beyond the logo
+- **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, pills, checkboxes, menu items). `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
+- **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
+- **Category pill colors** — desaturated by design (text blended ~25% toward gray, bg at 0.07-0.08 opacity). Don't restore to full Tailwind saturation
 - **File naming**: components are PascalCase `.jsx`, hooks are `use*` camelCase `.js`, utils are camelCase `.js`, API routes are kebab-case `.js`, API private modules prefixed with `_`
 - **Hooks own their domain** — each major feature gets a custom hook (`useProcessing`, `useSync`, `useEditState`, etc.) that encapsulates state + logic. App.jsx initializes them and passes props down
 - **Functional updaters** — `setQuotes(prev => [...prev, ...new])` pattern used everywhere (Zustand setters accept both direct values and updater functions)
@@ -223,6 +227,7 @@ Z.TOAST           2000  Toasts
 - **Don't bypass QuotesContext** — even though Zustand is the real store, all components read from `useQuotesContext()`. Adding direct Zustand subscriptions would create two competing data paths
 - **Don't change localStorage keys** — they're defined in `config.js` and used by both the store and the sync system. Changing them breaks existing users' data
 - **Don't modify `_shared.js` ALLOWED_ORIGINS** without also updating the CSP header in `vercel.json` — they must stay in sync
+- **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update both `index.html` and the CSP
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import
 - **`styles.js` is the only place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`

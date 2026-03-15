@@ -79,7 +79,7 @@ export async function generateShareImage(q, styleName = "classic") {
   const attrLineH = 38;
   let attrLines = [];
   if (q.source) {
-    mCtx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
+    mCtx.font = `400 26px 'Satoshi', -apple-system, sans-serif`;
     const dash = "\u2014 ";
     const dashW = mCtx.measureText(dash).width;
     const attrMaxW = textMaxW - dashW;
@@ -138,7 +138,7 @@ export async function generateShareImage(q, styleName = "classic") {
   // Draw attribution (wrapped)
   const attrStartY = textStartY + blockH + gapAfterQuote;
   if (attrLines.length > 0) {
-    ctx.font = `400 26px 'DM Sans', -apple-system, sans-serif`;
+    ctx.font = `400 26px 'Satoshi', -apple-system, sans-serif`;
     const dash = "\u2014 ";
     const dashW = ctx.measureText(dash).width;
 

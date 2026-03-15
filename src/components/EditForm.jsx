@@ -107,7 +107,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
               onClick={applySuggestion}
               style={{
                 padding:"2px 10px",
-                borderRadius:5,
+                borderRadius:4,
                 border:"none",
                 cursor:"pointer",
                 background:"var(--cp-suggest-btn)",
@@ -124,7 +124,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
               onClick={() => setDismissed(true)}
               style={{
                 padding:"2px 6px",
-                borderRadius:5,
+                borderRadius:4,
                 border:"none",
                 cursor:"pointer",
                 background:"transparent",

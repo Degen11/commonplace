@@ -146,7 +146,7 @@ const S = {
     fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
   }),
   cardText: {
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: "'Satoshi',-apple-system,sans-serif",
     fontSize: 12,
     color: "var(--cp-text-secondary)",
     flex: 1,
@@ -156,7 +156,7 @@ const S = {
     whiteSpace: "nowrap",
   },
   cardSrc: {
-    fontFamily: "'DM Sans',-apple-system,sans-serif",
+    fontFamily: "'Satoshi',-apple-system,sans-serif",
     fontSize: 11,
     color: "var(--cp-text-muted)",
     whiteSpace: "nowrap",

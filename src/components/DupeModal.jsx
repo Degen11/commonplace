@@ -46,7 +46,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
             return (
               <div key={i} style={{
                 border: "1px solid var(--cp-border)",
-                borderRadius: 14,
+                borderRadius: 6,
                 marginBottom: 16,
                 background: "var(--cp-bg-card)",
                 overflow: "hidden",
@@ -121,7 +121,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
                     onClick={() => setDupeDecision(i, "keep")}
                     style={{
                       padding: "6px 16px",
-                      borderRadius: "20px 0 0 20px",
+                      borderRadius: "6px 0 0 6px",
                       border: "none",
                       background: isKeep ? "#3C5775" : "var(--cp-bg-card)",
                       color: isKeep ? "white" : "var(--cp-text)",
@@ -163,7 +163,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
                     onClick={() => setDupeDecision(i, "skip")}
                     style={{
                       padding: "6px 16px",
-                      borderRadius: "0 20px 20px 0",
+                      borderRadius: "0 6px 6px 0",
                       border: "none",
                       background: isSkip ? "#9B9A97" : "var(--cp-bg-card)",
                       color: isSkip ? "white" : "var(--cp-text)",

@@ -11,7 +11,7 @@ import { getCatColor, CONF_LABELS } from "../data/constants";
 import { propsEqual } from "../utils/helpers";
 import { styles } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
-import { Pencil, ChevronDown, GripVertical } from "lucide-react";
+import { Pencil, ChevronDown, GripVertical, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
 
 
@@ -170,7 +170,7 @@ const MemoTableRow = memo(function TableRow({
           tabIndex={0}
           onKeyDown={e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggleSel(q.id, e.shiftKey); } }}
         >
-          {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+          {isSel && <Check size={10} strokeWidth={3} color="#fff" />}
         </div>
       </div>
 
@@ -304,7 +304,7 @@ export default function TableView({
       {filtered.length > 0 && (
         <div style={{ ...styles.tHead, top: toolbarHeight }}>
           <div style={{ width: 20, flexShrink: 0 }} />
-          <div className="ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
+          <div className="ui-tip ui-tip-below" data-tip="Select all" style={{ ...styles.chkW, ...(allSelected ? { opacity: 1 } : {}) }}>
             <div
               className="checkbox-visual"
               style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}
@@ -314,7 +314,7 @@ export default function TableView({
               tabIndex={0}
               onKeyDown={e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); selAll(); } }}
             >
-              {allSelected && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+              {allSelected && <Check size={10} strokeWidth={3} color="#fff" />}
             </div>
           </div>
           {columnOrder.map(colKey => (

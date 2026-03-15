@@ -9,7 +9,7 @@ import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { propsEqual } from "../utils/helpers";
 import { styles, cardStyles } from "./styles";
-import { Pencil, ChevronDown, Trash2, Heart } from "lucide-react";
+import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
 
 const MemoCardItem = memo(function CardItem({
@@ -104,7 +104,7 @@ const MemoCardItem = memo(function CardItem({
       <div style={cardStyles.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}>
-            {isSel && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
+            {isSel && <Check size={10} strokeWidth={3} color="#fff" />}
           </div>
           {isInlineEditing && inlineEditField === "category"
             ? <select style={styles.inlineCatSel} value={q.category} onChange={e => saveInlineField(q.id, "category", e.target.value)} onBlur={() => setInlineEdit(null)} autoFocus>

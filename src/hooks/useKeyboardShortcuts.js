@@ -20,7 +20,7 @@ export default function useKeyboardShortcuts({
   showQuickInput, setShowQuickInput,
   reviewQueue, setReviewQueue,
   selAll,
-  visible,
+  visible, filtered, hasMore, loadMore,
   onFav, handleDelete, bulkDel,
   setEditingId, setSearch,
   lastSelectedIndex,
@@ -31,7 +31,7 @@ export default function useKeyboardShortcuts({
     phase, search, editingId, inlineEdit,
     selected, confirmClear, confirmBulkDel,
     showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
-    reviewQueue, selAll, visible, onFav, handleDelete, bulkDel,
+    reviewQueue, selAll, visible, filtered, hasMore, loadMore, onFav, handleDelete, bulkDel,
   };
 
   useEffect(() => {
@@ -103,9 +103,23 @@ export default function useKeyboardShortcuts({
           const lastId = [...s.selected].pop();
           curIdx = list.findIndex(q => q.id === lastId);
         }
-        const nextIdx = e.key === "j"
-          ? Math.min(curIdx + 1, list.length - 1)
-          : Math.max(curIdx - 1, 0);
+        let nextIdx = e.key === "j" ? curIdx + 1 : curIdx - 1;
+        // Load more items when navigating past the current page
+        if (e.key === "j" && nextIdx >= list.length && s.hasMore) {
+          s.loadMore();
+          // Select from the full filtered list — the item will render after loadMore
+          const fullIdx = s.filtered.findIndex(q => q.id === list[list.length - 1]?.id);
+          const nextItem = s.filtered[fullIdx + 1];
+          if (nextItem) {
+            setSelected(new Set([nextItem.id]));
+            requestAnimationFrame(() => {
+              const el = document.querySelector(`[data-id="${nextItem.id}"]`);
+              if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            });
+          }
+          return;
+        }
+        nextIdx = Math.max(0, Math.min(nextIdx, list.length - 1));
         setSelected(new Set([list[nextIdx].id]));
         const el = document.querySelector(`[data-id="${list[nextIdx].id}"]`);
         if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });

@@ -3,7 +3,7 @@ import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
 import { toggleInSet, addAllToSet } from "../utils/helpers";
 
-export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
+export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
   const [selected, setSelected]             = useState(new Set());
@@ -162,6 +162,11 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       quote: dq,
       idx: quotes.findIndex(q => q.id === dq.id),
     }));
+    // Snapshot collection memberships so undo can restore them
+    const collectionSnapshot = collections
+      ?.filter(c => c.quoteIds.some(id => deletedIds.has(id)))
+      .map(c => ({ id: c.id, quoteIds: c.quoteIds.filter(id => deletedIds.has(id)) }))
+      || [];
     setQuotes(p => p.filter(q => !deletedIds.has(q.id)));
     trackDeletion([...deletedIds]);
     if (cleanCollectionRefs) cleanCollectionRefs([...deletedIds]);
@@ -178,8 +183,10 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
         return restored;
       });
       untrackDeletion([...deletedIds]);
+      // Restore collection memberships
+      collectionSnapshot.forEach(({ id, quoteIds }) => addToCollection(id, quoteIds));
     });
-  }, [quotes, selected, setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs]);
+  }, [quotes, selected, setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection]);
 
   const startReviewFlow = useCallback(() => {
     const attentionIds = quotes

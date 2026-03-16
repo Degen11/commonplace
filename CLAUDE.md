@@ -156,7 +156,7 @@ User input → smartSplit() → deduplicate against existing
 - **Supabase** (PostgreSQL) is the cloud backup — sync is explicit, not real-time. Schema is in `supabase/migration.sql`
 - **Sync model**: device-based UUID (no user accounts). Each browser gets a UUID stored in `commonplace_device_id`. `useSync` manages pull (on mount) and push (2s debounce after changes) via TanStack Query mutations with exponential backoff retry
 - **Deletion tombstones**: deleted quote IDs are tracked for 7 days (`TOMBSTONE_TTL_MS`) to prevent re-sync of deleted items
-- **Cross-tab sync**: the Zustand store listens to `window.storage` events to pick up changes from other tabs
+- **Cross-tab sync**: the Zustand store listens to `window.storage` events to pick up changes from other tabs. `useTheme` also listens to sync dark/light mode across tabs
 - **Persistence**: Zustand store subscribes to its own state changes and debounces writes to localStorage (300ms)
 
 ## Key components

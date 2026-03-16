@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { similarity } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
+import { getCatColor } from "../data/constants";
 import { AlertTriangle, Plus, X } from "lucide-react";
 
-export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
+export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quotes }) {
   const textRef = useRef(null);
   const [text, setText] = useState("");
   const [source, setSource] = useState("");
+  const [category, setCategory] = useState("");
   const [dupeMatch, setDupeMatch] = useState(null);
 
   useEffect(() => { textRef.current?.focus(); }, []);
 
   const doAdd = () => {
-    onAdd(text.trim(), source.trim() || undefined, undefined, { skipDupeCheck: true });
+    onAdd(text.trim(), source.trim() || undefined, category || undefined, { skipDupeCheck: true });
     setText("");
     setSource("");
     setDupeMatch(null);
@@ -29,6 +31,8 @@ export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
     }
     doAdd();
   };
+
+  const catColor = category ? getCatColor(category, customCats) : null;
 
   return (
     <div style={{ background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)", animation: "fadeUp .25s ease" }}>
@@ -60,6 +64,24 @@ export default function QuickAddBar({ onAdd, onClose, allCats, quotes }) {
           }}
           onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
         />
+        <select
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          style={{
+            width: 130, padding: "6px 8px", fontSize: 12, fontFamily: "inherit",
+            border: "1px solid var(--cp-border)", borderRadius: 4,
+            background: catColor ? catColor.bg : "var(--cp-bg)",
+            color: catColor ? catColor.text : "var(--cp-text-muted)",
+            outline: "none", cursor: "pointer",
+            fontWeight: category ? 500 : 400,
+          }}
+          onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
+        >
+          <option value="">Category…</option>
+          {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
         <button
           type="submit"
           disabled={!text.trim()}

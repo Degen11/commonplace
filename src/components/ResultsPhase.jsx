@@ -698,6 +698,7 @@ export default function ResultsPhase({
               onAdd={(text, source, category, opts) => { handleQuickAdd(text, source, category, opts); setShowQuickInput(false); }}
               onClose={() => setShowQuickInput(false)}
               allCats={allCats}
+              customCats={customCats}
               quotes={quotes}
             />
           )}

@@ -212,12 +212,6 @@ export const baseCSS = `
   /* Action button hover — driven by --hover-color custom property */
   .act-btn:hover{color:var(--hover-color) !important}
 
-  /* Hover actions — positioned outside row, bridge overlap keeps :hover alive */
-  .hover-actions .act-btn{pointer-events:none}
-  .qrow:hover .hover-actions{opacity:1 !important}
-  .qrow:hover .hover-actions .act-btn{pointer-events:auto !important}
-  @media(max-width:640px){.hover-actions{display:none !important}}
-
   /* Overflow menu — hidden until row/card hover */
   .overflow-btn{opacity:0;transition:opacity .12s ease}
   .qrow:hover .overflow-btn{opacity:1}
@@ -573,9 +567,7 @@ export const styles = {
   srcCol:{minWidth:100,maxWidth:220,flex:"0 1 220px",display:"flex",alignItems:"center",paddingLeft:10,paddingRight:12,borderLeft:"1px solid var(--cp-border-light)"},
   srcText:{fontSize:12,color:"var(--cp-text-muted)",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,letterSpacing:"0.02em",whiteSpace:"nowrap"},
-  rowAct:{flex:"0 0 68px",display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center"},
-  hoverActions:{position:"absolute",right:-68,top:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:0,paddingLeft:14,opacity:0,transition:"opacity .12s ease"},
-  hoverActionsCompact:{position:"absolute",right:-58,top:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:0,paddingLeft:12,opacity:0,transition:"opacity .12s ease"},
+  rowAct:{flex:"0 0 36px",display:"flex",justifyContent:"flex-end",alignItems:"center",position:"relative"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"var(--cp-text-faint)",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
   overflowWrap:{position:"relative"},
   overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},

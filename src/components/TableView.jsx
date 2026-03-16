@@ -5,12 +5,13 @@ import { CSS } from "@dnd-kit/utilities";
 import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
+import useClickOutside from "../hooks/useClickOutside";
 import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { propsEqual } from "../utils/helpers";
 import { styles } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
-import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2 } from "lucide-react";
+import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis } from "lucide-react";
 import HighlightText from "./HighlightText";
 
 
@@ -32,6 +33,55 @@ const ROW_HEIGHT_COMPACT_ESTIMATE = 34;
 const VIRTUALIZER_OVERSCAN = 15;
 
 
+// ── Slim row actions — ··· button with fav/copy/share dropdown ──
+function RowActions({ q, actionProps, isOpen, onToggle }) {
+  const wrapRef = useRef(null);
+  const isCopied = actionProps.copiedId === q.id;
+
+  useClickOutside(wrapRef, isOpen, onToggle);
+
+  return (
+    <div ref={wrapRef} style={styles.rowAct}>
+      <button
+        className="overflow-btn act-btn"
+        style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
+        onClick={e => { e.stopPropagation(); onToggle(); }}
+      >
+        <Ellipsis size={16} strokeWidth={2} />
+      </button>
+      {isOpen && (
+        <div data-overflow-menu style={styles.overflowMenu} onClick={e => e.stopPropagation()}>
+          <button
+            className="overflow-menu-item overflow-copy"
+            style={{ ...styles.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
+            onClick={() => { if (!isCopied) actionProps.onCopy(q); }}
+          >
+            {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
+            <span>{isCopied ? "Copied!" : "Copy"}</span>
+          </button>
+          <button
+            className="overflow-menu-item overflow-share"
+            style={styles.overflowMenuItem}
+            onClick={() => { actionProps.onShareImage(q); onToggle(); }}
+          >
+            <Share2 size={14} strokeWidth={1.5} />
+            <span>Share as image</span>
+          </button>
+          <div style={styles.overflowMenuDivider} />
+          <button
+            className="overflow-menu-item"
+            style={{ ...styles.overflowMenuItem, "--hover-color": "#F59E0B" }}
+            onClick={() => { actionProps.onFav(q.id); onToggle(); }}
+          >
+            <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} color={q.favorite ? "#F59E0B" : "currentColor"} strokeWidth={1.5} />
+            <span>{q.favorite ? "Unfavorite" : "Favorite"}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Memoized row component — only re-renders when its own data changes ──
 const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
 
@@ -39,8 +89,10 @@ const MemoTableRow = memo(function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isDeleting, isSavedPulse, savedPulseField,
+  isMenuOpen,
   columnOrder, compact, showConfidence, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
+  setOpenMenuId,
   searchTerm,
 }) {
   const {
@@ -150,7 +202,6 @@ const MemoTableRow = memo(function TableRow({
       style={{
         ...sortableStyle,
         ...(compact ? styles.rowCompact : styles.row),
-        position: "relative",
         ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
         ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
         ...(stripeColor ? { boxShadow: `inset 3px 0 0 ${stripeColor}` } : {}),
@@ -183,38 +234,18 @@ const MemoTableRow = memo(function TableRow({
 
       {columnOrder.map(colKey => renderColumn(colKey))}
 
-      <div className="hover-actions" style={compact ? styles.hoverActionsCompact : styles.hoverActions}>
-        <button
-          className="act-btn ui-tip"
-          data-tip={q.favorite ? "Unfavorite" : "Favorite"}
-          style={{ ...styles.actBtn, padding: "4px 3px", "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
-          onClick={e => { e.stopPropagation(); actionProps.onFav(q.id); }}
-        >
-          <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} strokeWidth={1.5} />
-        </button>
-        <button
-          className="act-btn ui-tip"
-          data-tip="Copy"
-          style={{ ...styles.actBtn, padding: "4px 3px", "--hover-color": "#2383E2" }}
-          onClick={e => { e.stopPropagation(); actionProps.onCopy(q); }}
-        >
-          <Copy size={13} strokeWidth={1.5} />
-        </button>
-        <button
-          className="act-btn ui-tip"
-          data-tip="Share"
-          style={{ ...styles.actBtn, padding: "4px 3px", "--hover-color": "#7C3AED" }}
-          onClick={e => { e.stopPropagation(); actionProps.onShareImage(q); }}
-        >
-          <Share2 size={13} strokeWidth={1.5} />
-        </button>
-      </div>
+      <RowActions
+        q={q}
+        actionProps={actionProps}
+        isOpen={isMenuOpen}
+        onToggle={() => setOpenMenuId(prev => prev === q.id ? null : q.id)}
+      />
     </div>
   );
 }, propsEqual(
   "q", "isSel", "isEd", "compact", "showConfidence", "sortBy", "needsAtt",
   "isInlineEditing", "inlineEditField", "isDeleting",
-  "isSavedPulse", "savedPulseField",
+  "isSavedPulse", "savedPulseField", "isMenuOpen",
   "searchTerm", "allCats", "customCats",
   ["columnOrder", (prev, next) =>
     prev.columnOrder.length === next.columnOrder.length &&
@@ -250,6 +281,7 @@ export default function TableView({
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const listRef = useRef(null);
 
   const handleColDragStart = (e, colId) => {
@@ -348,7 +380,7 @@ export default function TableView({
               {COL_CONFIG[colKey].label}
             </div>
           ))}
-          {/* No action column — actions appear on row hover */}
+          <div style={{ flex: "0 0 36px" }} />
         </div>
       )}
 
@@ -364,6 +396,7 @@ export default function TableView({
           const isDeleting = deletingId === q.id;
           const isSavedPulse = savedPulse?.id === q.id;
           const savedPulseField = isSavedPulse ? savedPulse.field : null;
+          const isMenuOpen = openMenuId === q.id;
           return (
             <div key={q.id} data-index={virtualRow.index} ref={virtualizer.measureElement}>
               <MemoTableRow
@@ -378,6 +411,7 @@ export default function TableView({
                 isDeleting={isDeleting}
                 isSavedPulse={isSavedPulse}
                 savedPulseField={savedPulseField}
+                isMenuOpen={isMenuOpen}
                 columnOrder={columnOrder}
                 compact={compact}
                 showConfidence={showConfidence}
@@ -389,6 +423,7 @@ export default function TableView({
                 setInlineEdit={setInlineEdit}
                 saveEdit={saveEdit}
                 saveInlineField={saveInlineField}
+                setOpenMenuId={setOpenMenuId}
                 searchTerm={searchTerm}
               />
             </div>

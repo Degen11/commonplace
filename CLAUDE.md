@@ -228,7 +228,7 @@ Z.TOAST           2000  Toasts
 - The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
 - Comment in `QuotesContext.jsx` line 99 says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
 - No TODO/FIXME comments exist in the codebase currently
-- The `similarity()` function in `textFormatting.js` can return NaN if both inputs normalize to empty strings (0/0 division). This doesn't currently cause bugs because NaN > 0.55 is false, but it's fragile
+- The `similarity()` function in `textFormatting.js` guards against empty word sets (returns 0 early). This was previously a fragile NaN-producing division; the guard was consolidated in a cleanup pass
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
 
 ## What to avoid
@@ -238,7 +238,7 @@ Z.TOAST           2000  Toasts
 - **Don't modify `_shared.js` ALLOWED_ORIGINS** without also updating the CSP header in `vercel.json` — they must stay in sync
 - **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update both `index.html` and the CSP
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
-- **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import
+- **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use
 - **`styles.js` is the only place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design

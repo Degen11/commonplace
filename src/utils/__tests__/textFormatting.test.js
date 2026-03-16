@@ -61,9 +61,17 @@ describe("similarity", () => {
   });
 
   it("handles strings with only short words gracefully", () => {
-    // Words shorter than 2 unicode chars are filtered by wordSet
+    // "I a" normalizes identically on both sides, so early-exit returns 1.
+    // The important thing: no NaN regardless of path taken.
     const result = similarity("I a", "I a");
     expect(Number.isNaN(result)).toBe(false);
+    expect(result).toBe(1);
+  });
+
+  it("returns 0 (not NaN) when both inputs yield empty word sets", () => {
+    // Both normalize to non-empty but all words are too short for wordSet
+    expect(similarity("I", "a")).toBe(0);
+    expect(similarity("I a", "x y")).toBe(0);
   });
 });
 

@@ -91,7 +91,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             <div
               onClick={e => e.stopPropagation()}
               style={{
-                position: "absolute", bottom: "calc(100% + 4px)", right: 0,
+                position: "absolute", top: "calc(100% + 4px)", right: 0,
                 zIndex: 100,
                 background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
                 boxShadow: "var(--cp-shadow-md)", padding: 6,

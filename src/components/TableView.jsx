@@ -141,7 +141,7 @@ const MemoTableRow = memo(function TableRow({
   return (
     <div
       ref={setNodeRef}
-      className={`qrow${q.favorite ? " fav-row" : ""}${isSel ? " sel-row" : ""}${needsAtt && sortBy === "confidence" ? " att-row" : ""}${stripeLabel ? " ui-tip" : ""}`}
+      className={`qrow${stripeLabel ? " ui-tip" : ""}`}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...(isMobile ? longPress : {})}

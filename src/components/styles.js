@@ -212,14 +212,9 @@ export const baseCSS = `
   /* Action button hover — driven by --hover-color custom property */
   .act-btn:hover{color:var(--hover-color) !important}
 
-  /* Hover actions — revealed on row hover */
+  /* Hover actions — revealed on row hover, positioned outside row */
   .qrow:hover .hover-actions{opacity:1 !important;pointer-events:auto !important}
-  .qrow:hover .hover-actions .act-btn{pointer-events:auto}
-  .qrow:hover .hover-actions{background:linear-gradient(to right, transparent, var(--cp-bg-hover) 20px) !important}
-  .qrow.fav-row:hover .hover-actions{background:linear-gradient(to right, transparent, var(--cp-bg-fav) 20px) !important}
-  .qrow.sel-row:hover .hover-actions{background:linear-gradient(to right, transparent, var(--cp-bg-selected) 20px) !important}
-  .qrow.att-row:hover .hover-actions{background:linear-gradient(to right, transparent, var(--cp-bg-attention) 20px) !important}
-  @media(max-width:640px){.hover-actions{opacity:1 !important;pointer-events:auto !important}}
+  @media(max-width:640px){.hover-actions{display:none !important}}
 
   /* Overflow menu — hidden until row/card hover */
   .overflow-btn{opacity:0;transition:opacity .12s ease}
@@ -577,8 +572,8 @@ export const styles = {
   srcText:{fontSize:12,color:"var(--cp-text-muted)",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,letterSpacing:"0.02em",whiteSpace:"nowrap"},
   rowAct:{flex:"0 0 68px",display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center"},
-  hoverActions:{position:"absolute",right:0,top:0,bottom:0,display:"flex",alignItems:"center",gap:0,paddingRight:10,paddingLeft:28,opacity:0,transition:"opacity .12s ease",pointerEvents:"none",background:"linear-gradient(to right, transparent, var(--cp-bg-card) 24px)"},
-  hoverActionsCompact:{position:"absolute",right:0,top:0,bottom:0,display:"flex",alignItems:"center",gap:0,paddingRight:8,paddingLeft:24,opacity:0,transition:"opacity .12s ease",pointerEvents:"none",background:"linear-gradient(to right, transparent, var(--cp-bg-card) 20px)"},
+  hoverActions:{position:"absolute",right:-68,top:0,bottom:0,display:"flex",alignItems:"center",gap:0,paddingLeft:6,opacity:0,transition:"opacity .12s ease",pointerEvents:"none"},
+  hoverActionsCompact:{position:"absolute",right:-58,top:0,bottom:0,display:"flex",alignItems:"center",gap:0,paddingLeft:4,opacity:0,transition:"opacity .12s ease",pointerEvents:"none"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"var(--cp-text-faint)",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
   overflowWrap:{position:"relative"},
   overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},

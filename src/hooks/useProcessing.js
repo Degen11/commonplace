@@ -92,6 +92,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const [state, dispatch] = useReducer(processingReducer, INITIAL_STATE);
   const autoTransitionRef = useRef(null);
   const pendingContinuationRef = useRef(null);
+  const abortRef = useRef(null);
 
   const mountedRef = useMounted();
   const safeDispatch = useSafeDispatch(dispatch);
@@ -134,6 +135,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   // ── Processing pipeline ──
   const runProcessing = useCallback(async (unique, appendMode, useFormatting = false) => {
+    // Create a fresh AbortController for this run
+    if (abortRef.current) abortRef.current.abort();
+    const abortController = new AbortController();
+    abortRef.current = abortController;
+    const signal = abortController.signal;
+
     const { default: localDb, localLookup } = await import("../data/localQuotes");
     initProperNouns(localDb);
 
@@ -144,7 +151,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       else needsApi.push({ ...p, idx: i });
     });
 
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || signal.aborted) return;
 
     if (localMatches.length > 0) {
       safeDispatch({ type: "FEED", feed: localMatches.map(m => ({
@@ -165,6 +172,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
           method: "POST",
           headers: API_HEADERS,
           body: JSON.stringify({ quotes: lookupBody }),
+          signal,
         });
         if (lr.ok) {
           const { results: lResults } = await lr.json();
@@ -177,12 +185,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
             });
           }
         }
-      } catch {
+      } catch (err) {
+        if (err.name === "AbortError") return;
         // Lookup failure is non-critical — fall through to AI
       }
     }
 
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || signal.aborted) return;
 
     const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
     if (lookupResults.size > 0) {
@@ -197,12 +206,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const apiResults = new Map(); let apiFailed = false; const failed = [];
     if (stillNeedsApi.length > 0) {
       for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || signal.aborted) return;
         const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
         safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
         try {
-          const results = await identifyBatch(chunk, useFormatting);
-          if (!mountedRef.current) return;
+          const results = await identifyBatch(chunk, useFormatting, signal);
+          if (!mountedRef.current || signal.aborted) return;
           results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
           safeDispatch({ type: "FEED_APPEND", items: results.map(r => {
             const item = chunk[r.i];
@@ -223,13 +232,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
             }).catch(() => {});
           }
         } catch (err) {
+          if (err.name === "AbortError") return;
           apiFailed = true; chunk.forEach(c => failed.push(c));
           safeDispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
           break;
         }
       }
     }
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || signal.aborted) return;
     if (failed.length > 0) safeDispatch({ type: "FAILED_ENTRIES", entries: failed });
 
     const localByIdx = new Map(localMatches.map(m => [m.idx, m]));
@@ -244,7 +254,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       return makeQuote(fmt(p.text), p.hint);
     });
 
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || signal.aborted) return;
     const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
     appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
     safeDispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
@@ -366,14 +376,24 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     goPhase("results");
   }, [goPhase, safeDispatch]);
 
-  // Cancel processing and return to input
+  // Cancel processing: abort in-flight requests and keep already-identified quotes
   const cancelProcessing = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    if (autoTransitionRef.current) {
+      clearTimeout(autoTransitionRef.current);
+      autoTransitionRef.current = null;
+    }
     safeDispatch({ type: "CANCEL" });
-    goPhase("input");
+    // If quotes were already added during processing, go to results; otherwise input
+    goPhase(quotesRef.current.length > 0 ? "results" : "input");
   }, [goPhase, safeDispatch]);
 
   // Reset processing-specific state (called by handleClear in App)
   const resetProcessingState = useCallback(() => {
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
     if (autoTransitionRef.current) { clearTimeout(autoTransitionRef.current); autoTransitionRef.current = null; }
     dispatch({ type: "RESET" });
     pendingContinuationRef.current = null;

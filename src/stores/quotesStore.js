@@ -48,8 +48,14 @@ let _allCatsCache = null;
 function schedulePersist(state) {
   if (persistTimer) clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
-    if (state.isSharedView || state.quotes.length === 0) return;
+    if (state.isSharedView) return;
     try {
+      if (state.quotes.length === 0) {
+        // Clear stored quotes so they don't resurrect on next load
+        localStorage.removeItem(LS_QUOTES);
+        localStorage.removeItem(LS_CATS);
+        return;
+      }
       const quotesJson = JSON.stringify(state.quotes);
       const catsJson = JSON.stringify(state.customCats);
 

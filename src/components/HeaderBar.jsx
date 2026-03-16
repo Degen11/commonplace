@@ -5,7 +5,7 @@ import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import {
   List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
-  MoreHorizontal, BarChart3, Trash2,
+  MoreHorizontal, BarChart3, Trash2, Gauge,
 } from "lucide-react";
 
 const pillStyles = syncPillStyles.full;
@@ -28,6 +28,8 @@ export default function HeaderBar({
   onManualSync,
   dark,
   toggleTheme,
+  showConfidence,
+  setShowConfidence,
   onShowShortcuts,
 }) {
   const [showOverflow, setShowOverflow] = useState(false);
@@ -75,6 +77,10 @@ export default function HeaderBar({
               <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowStats(s => !s); setShowOverflow(false); }}>
                 <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                 {showStats ? "Hide full stats" : "Full stats"}
+              </button>
+              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowConfidence(v => !v); setShowOverflow(false); }}>
+                <Gauge size={15} strokeWidth={1.5} color={showConfidence ? "var(--cp-conf-medium)" : "var(--cp-text-muted)"} />
+                {showConfidence ? "Hide confidence" : "Show confidence"}
               </button>
               <div style={styles.hdrOverflowDivider} />
               <div style={styles.hdrOverflowSectionLabel}>Preferences</div>

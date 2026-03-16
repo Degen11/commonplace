@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
-import { LS_FILTERS, LS_VIEW, LS_SORT, SEARCH_DEBOUNCE_MS, MOBILE_BREAKPOINT_PX } from "../config";
+import { LS_FILTERS, LS_VIEW, LS_SORT, LS_SHOW_CONF, SEARCH_DEBOUNCE_MS, MOBILE_BREAKPOINT_PX } from "../config";
 import { loadFromStorage, saveToStorage } from "../utils/storage";
 import { countBy } from "../utils/helpers";
 
@@ -48,6 +48,13 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     return "default";
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT_PX);
+  const [showConfidence, setShowConfidence] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LS_SHOW_CONF);
+      if (saved !== null) return saved === "true";
+    } catch { /* ignore */ }
+    return true;
+  });
 
   // ── Persist preferences ──
   useEffect(() => {
@@ -57,6 +64,10 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   useEffect(() => {
     try { localStorage.setItem(LS_SORT, sortBy); } catch { /* ignore */ }
   }, [sortBy]);
+
+  useEffect(() => {
+    try { localStorage.setItem(LS_SHOW_CONF, String(showConfidence)); } catch { /* ignore */ }
+  }, [showConfidence]);
 
   useEffect(() => {
     saveToStorage(LS_FILTERS, { cat: catFilter, fav: favFilter, search });
@@ -149,6 +160,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   return {
     view, setView,
     compact, setCompact,
+    showConfidence, setShowConfidence,
     sortBy, setSortBy,
     catFilter, setCatFilter,
     favFilter, setFavFilter,

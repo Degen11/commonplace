@@ -103,7 +103,7 @@ export default function ResultsPhase({
     toggleSel, selAll,
     applyBulk, bulkDel,
     startReviewFlow,
-  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs });
+  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
 
   const {
     sensors, activeDragId, overDragId,
@@ -455,7 +455,7 @@ export default function ResultsPhase({
     showQuickInput, setShowQuickInput,
     reviewQueue, setReviewQueue,
     selAll,
-    visible,
+    visible, filtered: collectionFiltered, hasMore, loadMore,
     onFav, handleDelete, bulkDel,
     setEditingId, setSearch,
     lastSelectedIndex,
@@ -794,7 +794,7 @@ export default function ResultsPhase({
       margin: "20px auto",
       padding: "10px 24px",
       fontSize: 13,
-      color: "#2383E2",
+      color: "var(--cp-accent)",
       background: "none",
       border: "1px solid var(--cp-border)",
       borderRadius: 6,

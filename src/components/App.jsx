@@ -61,7 +61,7 @@ export default function Commonplace() {
     reidentifyingIds,
     handleDelete, copyQuote, reIdentify, batchReIdentify,
     handleFileImport,
-  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs });
+  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
 
   const { dark, toggleTheme } = useTheme();
   const [inputTab, setInputTab]               = useState("paste");

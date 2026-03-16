@@ -46,6 +46,18 @@ export default function useTheme() {
     return () => mq.removeEventListener("change", handler);
   }, [explicit]);
 
+  // Sync theme across tabs via storage events
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key !== LS_THEME) return;
+      if (e.newValue === "dark") { setDark(true); setExplicit(true); }
+      else if (e.newValue === "light") { setDark(false); setExplicit(true); }
+      else { setExplicit(false); setDark(window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false); }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setExplicit(true);
     setDark(d => !d);

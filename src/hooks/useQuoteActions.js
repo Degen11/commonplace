@@ -9,7 +9,7 @@ import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } 
 import { describeApiError } from "../utils/apiErrors";
 import { addToSet, removeFromSet, addAllToSet, removeAllFromSet } from "../utils/helpers";
 
-export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs }) {
+export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
   const [deletingId, setDeletingId]             = useState(null);
   const [copiedId, setCopiedId]                 = useState(null);
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
@@ -18,6 +18,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const mountedRef           = useMounted();
   const quotesRef            = useRef(quotes);
   quotesRef.current = quotes;
+  const collectionsRef       = useRef(collections);
+  collectionsRef.current = collections;
 
   // Abort all in-flight re-identify requests on unmount
   useEffect(() => {
@@ -39,6 +41,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     setTimeout(() => {
       if (!mountedRef.current) return;
       setDeletingId(null);
+      // Snapshot collection memberships before cleanup
+      const collectionSnapshot = (collectionsRef.current || [])
+        .filter(c => c.quoteIds.includes(id))
+        .map(c => c.id);
       setQuotes(p => p.filter(q => q.id !== id));
       trackDeletion([id]);
       if (cleanCollectionRefs) cleanCollectionRefs([id]);
@@ -50,9 +56,11 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
           return n;
         });
         untrackDeletion([id]);
+        // Restore collection memberships
+        collectionSnapshot.forEach(cId => addToCollection(cId, [id]));
       });
     }, DELETE_ANIM_MS);
-  }, [setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs]);
+  }, [setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, addToCollection]);
 
   // ── Copy single quote ──
   const copyQuote = useCallback((q) => {

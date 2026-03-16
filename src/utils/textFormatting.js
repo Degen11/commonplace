@@ -188,7 +188,6 @@ export function similarity(a, b) {
   if (na.includes(nb) || nb.includes(na)) return 0.9;
 
   const wa = wordSet(na), wb = wordSet(nb);
-  if (wa.size + wb.size === 0) return 0;
   if (!wa.size || !wb.size) return 0;
 
   let overlap = 0;

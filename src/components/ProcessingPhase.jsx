@@ -47,10 +47,10 @@ export default function ProcessingPhase({
       <div style={styles.procWrap}>
         {isComplete ? (
           <>
-            <div style={{ animation: "fadeUp .25s ease", display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16 }} />
-              <h2 style={{ ...styles.procTitle, color: "#059669" }}>All done!</h2>
-              <p style={styles.procSub}>{total} entries organized and ready to explore</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
+              <h2 style={{ ...styles.procTitle, color: "#059669", animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
+              <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>{total} entries organized and ready to explore</p>
             </div>
           </>
         ) : (

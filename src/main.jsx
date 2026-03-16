@@ -47,3 +47,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ErrorBoundary>
   </React.StrictMode>,
 )
+
+// Pre-warm the local quotes database during idle time so the first
+// processing run doesn't stall on the ~477KB dynamic import.
+const scheduleIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200))
+scheduleIdle(() => { import('./data/localQuotes').catch(() => {}) })

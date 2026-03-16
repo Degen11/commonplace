@@ -43,11 +43,17 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     });
   }, [quotes, reviewQueue.length]);
 
-  // ── Reset shift-click index when filters change ──
-  // (catFilter/favFilter/search/sortBy changes are reflected via `filtered` identity)
+  // ── Selection scope — use a ref so toggleSel always reads the latest
+  // scope without needing to be recreated (avoids stale closures in
+  // MemoTableRow, which omits toggleSel from its propsEqual comparator). ──
+  const selScope = visibleFiltered || filtered;
+  const selScopeRef = useRef(selScope);
+  selScopeRef.current = selScope;
+
+  // ── Reset shift-click index when selection scope changes ──
   useEffect(() => {
     lastSelectedIndex.current = null;
-  }, [filtered]);
+  }, [selScope]);
 
   // ── Helpers ──
   const startEditing = useCallback((id) => {
@@ -94,12 +100,11 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), SAVED_PULSE_MS);
   }, [setQuotes]);
 
-  const selScope = visibleFiltered || filtered;
-
   const toggleSel = useCallback((id, shiftKey = false) => {
+    const scope = selScopeRef.current;
     if (shiftKey && lastSelectedIndex.current !== null) {
-      const lastIndex = selScope.findIndex(q => q.id === lastSelectedIndex.current);
-      const currentIndex = selScope.findIndex(q => q.id === id);
+      const lastIndex = scope.findIndex(q => q.id === lastSelectedIndex.current);
+      const currentIndex = scope.findIndex(q => q.id === id);
       if (lastIndex < 0 || currentIndex < 0) {
         // Anchor no longer visible — fall back to single toggle
         setSelected(p => toggleInSet(p, id));
@@ -108,26 +113,24 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       }
       const start = Math.min(currentIndex, lastIndex);
       const end = Math.max(currentIndex, lastIndex);
-      const rangeIds = selScope.slice(start, end + 1).map(q => q.id);
+      const rangeIds = scope.slice(start, end + 1).map(q => q.id);
       setSelected(p => addAllToSet(p, rangeIds));
       lastSelectedIndex.current = id;
     } else {
       setSelected(p => toggleInSet(p, id));
       lastSelectedIndex.current = id;
     }
-  }, [selScope]);
+  }, []);
 
   const selAll = useCallback(() => {
-    if (selScope.length === 0) return;
-    const allSelected = selScope.every(q => selected.has(q.id));
-    if (allSelected) {
-      setSelected(new Set());
+    const scope = selScopeRef.current;
+    if (scope.length === 0) return;
+    setSelected(prev => {
+      const allSelected = scope.every(q => prev.has(q.id));
       lastSelectedIndex.current = null;
-    } else {
-      setSelected(new Set(selScope.map(q => q.id)));
-      lastSelectedIndex.current = null;
-    }
-  }, [selScope, selected]);
+      return allSelected ? new Set() : new Set(scope.map(q => q.id));
+    });
+  }, []);
 
   const applyBulk = useCallback(() => {
     const affectedIds = new Set(selected);

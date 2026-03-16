@@ -78,6 +78,7 @@ export default function ResultsPhase({
   const {
     view, setView,
     compact, setCompact,
+    showConfidence, setShowConfidence,
     sortBy, setSortBy,
     catFilter, setCatFilter,
     favFilter, setFavFilter,
@@ -511,6 +512,8 @@ export default function ResultsPhase({
               onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
+              showConfidence={showConfidence}
+              setShowConfidence={setShowConfidence}
               onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
             />
           </SectionErrorBoundary>
@@ -722,6 +725,7 @@ export default function ResultsPhase({
                 customCats={customCats}
                 actionProps={actionProps}
                 compact={compact}
+                showConfidence={showConfidence}
                 columnOrder={columnOrder}
                 setColumnOrder={setColumnOrder}
                 sortBy={sortBy}
@@ -759,6 +763,7 @@ export default function ResultsPhase({
                       isSel={isSel}
                       isEd={isEd}
                       needsAtt={needsAtt}
+                      showConfidence={showConfidence}
                       sortBy={sortBy}
                       isMobile={isMobile}
                       isInlineEditing={isInlineEditing}

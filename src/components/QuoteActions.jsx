@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from "react";
 import useClickOutside from "../hooks/useClickOutside";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
-import { CONF_COLORS } from "../data/constants";
 
 export function FavBtn({ q, onFav }) {
   return (
@@ -151,14 +150,3 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
   );
 }
 
-export function ConfDot({ q, CONF_LABELS }) {
-  return (
-    <span
-      className="conf-tooltip"
-      data-tip={CONF_LABELS[q.confidence] || "Unknown"}
-      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, flexShrink: 0, cursor: "help" }}
-    >
-      <span style={{ ...styles.confDot, background: CONF_COLORS[q.confidence] || "#D1D5DB", pointerEvents: "none" }} />
-    </span>
-  );
-}

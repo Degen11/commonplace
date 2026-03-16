@@ -36,6 +36,7 @@ export const baseCSS = `
     --cp-bulk-input-bg:rgba(255,255,255,0.1);--cp-bulk-input-border:rgba(255,255,255,0.15);
     --cp-fav-chip-bg:#FEF3C7;--cp-fav-chip-border:#FDE68A;--cp-fav-chip-text:#D97706;
     --cp-suggest-bg:rgba(5,150,105,0.08);--cp-suggest-border:rgba(5,150,105,0.2);--cp-suggest-btn:#059669;
+    --cp-conf-high:#16A34A;--cp-conf-medium:#D97706;--cp-conf-low:#DC2626;
   }
   html.dark{
     --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
@@ -55,6 +56,7 @@ export const baseCSS = `
     --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
     --cp-fav-chip-bg:rgba(250,204,21,0.10);--cp-fav-chip-border:rgba(250,204,21,0.25);--cp-fav-chip-text:rgba(250,204,21,0.7);
     --cp-suggest-bg:rgba(5,150,105,0.12);--cp-suggest-border:rgba(5,150,105,0.3);--cp-suggest-btn:#10B981;
+    --cp-conf-high:rgba(74,222,128,0.7);--cp-conf-medium:rgba(251,191,36,0.6);--cp-conf-low:rgba(248,113,113,0.6);
   }
   @media(prefers-color-scheme:dark){
     html:not(.light){
@@ -75,6 +77,7 @@ export const baseCSS = `
       --cp-bulk-input-bg:rgba(255,255,255,0.08);--cp-bulk-input-border:rgba(255,255,255,0.12);
       --cp-fav-chip-bg:rgba(250,204,21,0.10);--cp-fav-chip-border:rgba(250,204,21,0.25);--cp-fav-chip-text:rgba(250,204,21,0.7);
       --cp-suggest-bg:rgba(5,150,105,0.12);--cp-suggest-border:rgba(5,150,105,0.3);--cp-suggest-btn:#10B981;
+      --cp-conf-high:rgba(74,222,128,0.7);--cp-conf-medium:rgba(251,191,36,0.6);--cp-conf-low:rgba(248,113,113,0.6);
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -103,18 +106,6 @@ export const baseCSS = `
   .phase-in{animation:fadeUp .25s ease}.phase-out{opacity:0;transition:opacity .15s ease}
   html{scroll-behavior:smooth;scrollbar-gutter:stable}
   div[style]:focus{outline:none;border-color:transparent}
-
-  /* Fix 3 — instant CSS tooltip for confidence dots */
-  .conf-tooltip{position:relative;cursor:help}
-  .conf-tooltip::after{
-    content:attr(data-tip);
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:var(--cp-toast-bg);color:#fff;padding:4px 10px;border-radius:5px;
-    font-size:11px;font-weight:400;letter-spacing:0;white-space:nowrap;
-    opacity:0;pointer-events:none;z-index:200;
-    transition:opacity .08s ease;
-  }
-  .conf-tooltip:hover::after{opacity:1}
 
   /* Fix 2 — column header drag handle - COMPLETELY REMOVE SHADOW */
   .col-drag-header{
@@ -567,7 +558,6 @@ export const styles = {
   },
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .18s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)"},
-  favRow:{boxShadow:"inset 3px 0 0 var(--cp-fav-accent)",background:"var(--cp-bg-fav)"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"flex-start",opacity:0.35,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid var(--cp-border-dim)",borderColor:"var(--cp-border-dim)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"#3C5775",borderColor:"#3C5775"},
@@ -576,7 +566,6 @@ export const styles = {
   // #8 srcCol flex instead of fixed width
   srcCol:{minWidth:100,maxWidth:220,flex:"0 1 220px",display:"flex",alignItems:"center",paddingLeft:10,paddingRight:12,borderLeft:"1px solid var(--cp-border-light)"},
   srcText:{fontSize:12,color:"var(--cp-text-muted)",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
-  confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,letterSpacing:"0.02em",whiteSpace:"nowrap"},
   rowAct:{flex:"0 0 68px",display:"flex",gap:2,justifyContent:"flex-end",alignItems:"center"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"var(--cp-text-faint)",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
@@ -618,7 +607,6 @@ export const styles = {
 
 export const cardStyles = {
   card:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,padding:16,transition:"border-color .15s, box-shadow .15s",cursor:"grab"},
-  favCard:{boxShadow:"inset 3px 0 0 var(--cp-fav-accent)",background:"var(--cp-bg-fav)"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
   acts:{display:"flex",gap:2,opacity:0.3,transition:"opacity .15s"},
   txt:{fontSize:14,lineHeight:1.6,color:"var(--cp-text-secondary)",marginBottom:10,whiteSpace:"pre-wrap"},

@@ -4,7 +4,7 @@ import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
 import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
-import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
+import { FavBtn, OverflowMenu } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
@@ -13,8 +13,10 @@ import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
 
+const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
+
 const MemoCardItem = memo(function CardItem({
-  q, col, isSel, isEd, needsAtt, sortBy, isMobile,
+  q, col, isSel, isEd, needsAtt, showConfidence, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
   allCats, customCats, actionProps,
@@ -46,6 +48,12 @@ const MemoCardItem = memo(function CardItem({
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  // Stripe priority: favorite > confidence (when toggle is on)
+  const stripeColor = q.favorite
+    ? "var(--cp-fav-accent)"
+    : (showConfidence && CONF_STRIPE[q.confidence]) || null;
+  const stripeLabel = !q.favorite && showConfidence ? CONF_LABELS[q.confidence] : null;
+
   // Swipe visual hints
   const isSwipingLeft = offsetX < -20;
   const isSwipingRight = offsetX > 20;
@@ -75,19 +83,21 @@ const MemoCardItem = memo(function CardItem({
         </div>
       )}
     <div
-      className="qcard"
+      className={`qcard${stripeLabel ? " ui-tip" : ""}`}
       data-id={q.id}
+      {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...interactionProps}
       {...attributes}
       style={{
         ...cardStyles.card,
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
-        ...(q.favorite ? cardStyles.favCard : {}),
+        ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
-        ...(isOverTarget ? { boxShadow: "inset 0 2px 0 #3C5775", transition: "box-shadow .15s ease" } : {}),
+        ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? "inset 0 2px 0 #3C5775" : null].filter(Boolean).join(", ") || undefined },
+        ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
       onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
@@ -127,7 +137,6 @@ const MemoCardItem = memo(function CardItem({
                 ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
                 : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
               }
-              <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             </div>
           </>
         )
@@ -136,7 +145,7 @@ const MemoCardItem = memo(function CardItem({
     </div>
   );
 }, propsEqual(
-  "q", "isSel", "isEd", "needsAtt", "sortBy",
+  "q", "isSel", "isEd", "needsAtt", "showConfidence", "sortBy",
   "isInlineEditing", "inlineEditField", "isDeleting",
   "isSavedPulse", "savedPulseField", "searchTerm",
   "allCats", "customCats", "isOverTarget",

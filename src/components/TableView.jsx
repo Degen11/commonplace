@@ -5,7 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
-import { FavBtn, OverflowMenu, ConfDot } from "./QuoteActions";
+import { FavBtn, OverflowMenu } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { propsEqual } from "../utils/helpers";
@@ -34,12 +34,14 @@ const VIRTUALIZER_OVERSCAN = 15;
 
 
 // ── Memoized row component — only re-renders when its own data changes ──
+const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
+
 const MemoTableRow = memo(function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isDeleting, isSavedPulse, savedPulseField,
   isMenuOpen,
-  columnOrder, compact, allCats, customCats, actionProps,
+  columnOrder, compact, showConfidence, allCats, customCats, actionProps,
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
   setOpenMenuId,
   searchTerm,
@@ -117,7 +119,6 @@ const MemoTableRow = memo(function TableRow({
       case "category":
         return (
           <div key="category" className={isSavedPulse && savedPulseField === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
-            <ConfDot q={q} CONF_LABELS={CONF_LABELS} />
             <span
               className="inline-cat"
               style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
@@ -134,11 +135,18 @@ const MemoTableRow = memo(function TableRow({
     }
   };
 
+  // Stripe priority: favorite > confidence (when toggle is on)
+  const stripeColor = q.favorite
+    ? "var(--cp-fav-accent)"
+    : (showConfidence && CONF_STRIPE[q.confidence]) || null;
+  const stripeLabel = !q.favorite && showConfidence ? CONF_LABELS[q.confidence] : null;
+
   return (
     <div
       ref={setNodeRef}
-      className="qrow"
+      className={`qrow${stripeLabel ? " ui-tip" : ""}`}
       data-id={q.id}
+      {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...(isMobile ? longPress : {})}
       {...(isEd || isInlineEditing ? {} : listeners)}
       {...attributes}
@@ -146,7 +154,8 @@ const MemoTableRow = memo(function TableRow({
         ...sortableStyle,
         ...(compact ? styles.rowCompact : styles.row),
         ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
-        ...(q.favorite ? styles.favRow : {}),
+        ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
+        ...(stripeColor ? { boxShadow: `inset 3px 0 0 ${stripeColor}` } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .4, zIndex: 1 } : {}),
         ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
@@ -188,7 +197,7 @@ const MemoTableRow = memo(function TableRow({
     </div>
   );
 }, propsEqual(
-  "q", "isSel", "isEd", "compact", "sortBy", "needsAtt",
+  "q", "isSel", "isEd", "compact", "showConfidence", "sortBy", "needsAtt",
   "isInlineEditing", "inlineEditField", "isDeleting",
   "isSavedPulse", "savedPulseField", "isMenuOpen",
   "searchTerm", "allCats", "customCats",
@@ -215,6 +224,7 @@ export default function TableView({
   customCats,
   actionProps,
   compact,
+  showConfidence,
   columnOrder,
   setColumnOrder,
   sortBy,
@@ -359,6 +369,7 @@ export default function TableView({
                 isMenuOpen={isMenuOpen}
                 columnOrder={columnOrder}
                 compact={compact}
+                showConfidence={showConfidence}
                 allCats={allCats}
                 customCats={customCats}
                 actionProps={actionProps}

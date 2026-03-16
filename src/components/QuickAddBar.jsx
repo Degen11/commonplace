@@ -2,14 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import { similarity } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
 import { getCatColor } from "../data/constants";
-import { AlertTriangle, Plus, X } from "lucide-react";
+import useClickOutside from "../hooks/useClickOutside";
+import { styles } from "./styles";
+import { AlertTriangle, ChevronDown, Plus, X } from "lucide-react";
 
 export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quotes }) {
   const textRef = useRef(null);
+  const catRef = useRef(null);
   const [text, setText] = useState("");
   const [source, setSource] = useState("");
   const [category, setCategory] = useState("");
+  const [showCatPicker, setShowCatPicker] = useState(false);
   const [dupeMatch, setDupeMatch] = useState(null);
+
+  useClickOutside(catRef, showCatPicker, () => setShowCatPicker(false));
 
   useEffect(() => { textRef.current?.focus(); }, []);
 
@@ -64,24 +70,57 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
           }}
           onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
         />
-        <select
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-          style={{
-            width: 130, padding: "6px 8px", fontSize: 12, fontFamily: "inherit",
-            border: "1px solid var(--cp-border)", borderRadius: 4,
-            background: catColor ? catColor.bg : "var(--cp-bg)",
-            color: catColor ? catColor.text : "var(--cp-text-muted)",
-            outline: "none", cursor: "pointer",
-            fontWeight: category ? 500 : 400,
-          }}
-          onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
-        >
-          <option value="">Category…</option>
-          {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
+        <div ref={catRef} style={{ position: "relative", flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => setShowCatPicker(p => !p)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
+              border: "1px solid var(--cp-border)", borderRadius: 4,
+              background: catColor ? catColor.bg : "var(--cp-bg)",
+              color: catColor ? catColor.text : "var(--cp-text-muted)",
+              cursor: "pointer", fontWeight: category ? 500 : 400,
+              whiteSpace: "nowrap", letterSpacing: "0.02em",
+            }}
+          >
+            {category || "Category\u2026"}
+            <ChevronDown size={12} strokeWidth={2} />
+          </button>
+          {showCatPicker && (
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                position: "absolute", bottom: "calc(100% + 4px)", right: 0,
+                zIndex: 100,
+                background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
+                boxShadow: "var(--cp-shadow-md)", padding: 6,
+                display: "flex", flexWrap: "wrap", gap: 4, width: 220,
+                animation: "slideD .12s ease",
+              }}
+            >
+              {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => {
+                const col = getCatColor(c, customCats);
+                const isActive = c === category;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => { setCategory(c); setShowCatPicker(false); }}
+                    style={{
+                      ...styles.tag, background: col.bg, color: col.text,
+                      border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
+                      cursor: "pointer", fontFamily: "inherit",
+                      fontSize: 11, padding: "3px 8px", borderRadius: 4,
+                    }}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <button
           type="submit"
           disabled={!text.trim()}

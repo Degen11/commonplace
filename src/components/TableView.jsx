@@ -187,26 +187,26 @@ const MemoTableRow = memo(function TableRow({
         <button
           className="act-btn ui-tip"
           data-tip={q.favorite ? "Unfavorite" : "Favorite"}
-          style={{ ...styles.actBtn, "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
+          style={{ ...styles.actBtn, padding: "4px 3px", "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
           onClick={e => { e.stopPropagation(); actionProps.onFav(q.id); }}
         >
-          <Star size={15} fill={q.favorite ? "#F59E0B" : "none"} strokeWidth={1.5} />
+          <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} strokeWidth={1.5} />
         </button>
         <button
           className="act-btn ui-tip"
           data-tip="Copy"
-          style={{ ...styles.actBtn, "--hover-color": "#2383E2" }}
+          style={{ ...styles.actBtn, padding: "4px 3px", "--hover-color": "#2383E2" }}
           onClick={e => { e.stopPropagation(); actionProps.onCopy(q); }}
         >
-          <Copy size={14} strokeWidth={1.5} />
+          <Copy size={13} strokeWidth={1.5} />
         </button>
         <button
           className="act-btn ui-tip"
           data-tip="Share"
-          style={{ ...styles.actBtn, "--hover-color": "#7C3AED" }}
+          style={{ ...styles.actBtn, padding: "4px 3px", "--hover-color": "#7C3AED" }}
           onClick={e => { e.stopPropagation(); actionProps.onShareImage(q); }}
         >
-          <Share2 size={14} strokeWidth={1.5} />
+          <Share2 size={13} strokeWidth={1.5} />
         </button>
       </div>
     </div>

@@ -213,6 +213,8 @@ export const baseCSS = `
   .act-btn:hover{color:var(--hover-color) !important}
 
   /* Hover actions — revealed on row hover, positioned outside row */
+  .qrow::after{content:"";position:absolute;top:0;bottom:0;right:-68px;width:68px;pointer-events:none}
+  .qrow:hover::after{pointer-events:auto}
   .qrow:hover .hover-actions{opacity:1 !important;pointer-events:auto !important}
   @media(max-width:640px){.hover-actions{display:none !important}}
 

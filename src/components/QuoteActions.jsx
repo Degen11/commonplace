@@ -63,6 +63,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
             <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
+                closeOnClick={false}
                 style={{ ...menuItemStyle, ...(isCopied ? { color: "#059669" } : {}) }}
                 onClick={() => {
                   if (!isCopied) {
@@ -86,6 +87,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               </Menu.Item>
               <Menu.Item
                 className="overflow-menu-item overflow-share"
+                closeOnClick={false}
                 style={menuItemStyle}
                 onClick={() => {
                   setShareAnim(true);

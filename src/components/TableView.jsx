@@ -35,7 +35,7 @@ const VIRTUALIZER_OVERSCAN = 15;
 
 // ── Slim row actions — ··· button with fav/copy/share dropdown ──
 function RowActions({ q, actionProps, isOpen, onToggle }) {
-  const isCopied = actionProps.copiedId === q.id;
+  const [localCopied, setLocalCopied] = useState(false);
 
   const menuContentStyle = {
     background: "var(--cp-bg-card)",
@@ -50,7 +50,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
 
   return (
     <div style={styles.rowAct}>
-      <Menu.Root open={isOpen} onOpenChange={(open) => { if (open !== isOpen) onToggle(); }}>
+      <Menu.Root open={isOpen} onOpenChange={(open) => { if (open !== isOpen) { onToggle(); if (open) setLocalCopied(false); } }}>
         <Menu.Trigger
           className="overflow-btn act-btn"
           style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
@@ -63,14 +63,16 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
             <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
-                style={{ ...styles.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
-                onClick={() => { if (!isCopied) actionProps.onCopy(q); }}
+                closeOnClick={false}
+                style={{ ...styles.overflowMenuItem, ...(localCopied ? { color: "#059669" } : {}) }}
+                onClick={() => { if (!localCopied) { setLocalCopied(true); actionProps.onCopy(q); } }}
               >
-                {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
-                <span>{isCopied ? "Copied!" : "Copy"}</span>
+                {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
+                <span>{localCopied ? "Copied!" : "Copy"}</span>
               </Menu.Item>
               <Menu.Item
                 className="overflow-menu-item overflow-share"
+                closeOnClick={false}
                 style={styles.overflowMenuItem}
                 onClick={() => { actionProps.onShareImage(q); }}
               >
@@ -79,7 +81,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
               </Menu.Item>
               <Menu.Separator style={styles.overflowMenuDivider} />
               <Menu.Item
-                className="overflow-menu-item-fav"
+                className={q.favorite ? "overflow-menu-item-fav" : "overflow-menu-item"}
                 style={styles.overflowMenuItem}
                 onClick={() => { actionProps.onFav(q.id); }}
               >
@@ -262,8 +264,7 @@ const MemoTableRow = memo(function TableRow({
   ["columnOrder", (prev, next) =>
     prev.columnOrder.length === next.columnOrder.length &&
     !prev.columnOrder.some((c, i) => c !== next.columnOrder[i])],
-  ["actionProps", (prev, next) =>
-    (prev.actionProps.copiedId === prev.q.id) === (next.actionProps.copiedId === next.q.id)],
+  ["actionProps", () => true],
 ));
 
 export default function TableView({

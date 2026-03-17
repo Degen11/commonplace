@@ -1,8 +1,7 @@
 import { Menu } from "@base-ui/react/menu";
-import { List, AlignJustify, LayoutGrid, Moon, Sun, MoreHorizontal, BarChart3, HelpCircle, Trash2 } from "lucide-react";
+import { List, AlignJustify, LayoutGrid, Moon, Sun, MoreHorizontal, BarChart3, HelpCircle, Trash2, Gauge } from "lucide-react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
-import ExportDropdown from "./ExportDropdown";
 import { styles, syncPillStyles } from "./styles";
 
 const pillStyles = syncPillStyles.mini;
@@ -10,17 +9,17 @@ const pillStyles = syncPillStyles.mini;
 export default function MiniHeader({
   view, setView, compact, setCompact,
   showStats, setShowStats,
-  showExport, setShowExport,
   showAddMore, setShowAddMore,
-  addMoreRef, miniExportRef,
+  addMoreRef,
+  exportDropdownContent,
   preserveScroll,
-  quotes, filtered, selected, hasActiveFilters,
-  showToast, collections,
   syncStatus,
   lastSynced,
   onManualSync,
   dark,
   toggleTheme,
+  showConfidence,
+  setShowConfidence,
   setConfirmClear,
   onShowShortcuts,
 }) {
@@ -52,20 +51,7 @@ export default function MiniHeader({
               <LayoutGrid size={14} strokeWidth={1.5} />
             </button>
           </div>
-          <div ref={miniExportRef} style={{ position: "relative" }}>
-            <button className="hdr-btn" style={{ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => setShowExport(!showExport)}>Export &darr;</button>
-            {showExport && (
-              <ExportDropdown
-                quotes={quotes}
-                filtered={filtered}
-                selected={selected}
-                hasActiveFilters={hasActiveFilters}
-                showToast={showToast}
-                setShowExport={setShowExport}
-                collections={collections}
-              />
-            )}
-          </div>
+          {exportDropdownContent}
           <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: "4px 10px" }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
           {/* Overflow menu */}
           <Menu.Root>
@@ -83,6 +69,10 @@ export default function MiniHeader({
                   <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>
                     <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                     {showStats ? "Hide full stats" : "Full stats"}
+                  </Menu.Item>
+                  <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowConfidence(v => !v)}>
+                    <Gauge size={15} strokeWidth={1.5} color={showConfidence ? "var(--cp-conf-medium)" : "var(--cp-text-muted)"} />
+                    {showConfidence ? "Hide confidence" : "Show confidence"}
                   </Menu.Item>
                   <Menu.Separator style={styles.hdrOverflowDivider} />
                   <div style={styles.hdrOverflowSectionLabel}>Preferences</div>

@@ -139,8 +139,6 @@ export default function ResultsPhase({
   // ── Refs ──
 
   const addMoreRef          = useRef(null);
-  const exportRef           = useRef(null);
-  const miniExportRef       = useRef(null);
   const sortRef             = useRef(null);
   const toolbarRef          = useRef(null);
   const pendingScrollAdjust = useRef(null);
@@ -214,7 +212,6 @@ export default function ResultsPhase({
 
   useEffect(() => {
     const h = e => {
-      if (exportRef.current && !exportRef.current.contains(e.target) && (!miniExportRef.current || !miniExportRef.current.contains(e.target))) setShowExport(false);
       if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
 
       if (editingId) {
@@ -429,15 +426,19 @@ export default function ResultsPhase({
     activeCollectionId,
   }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, handleAddToCollection, handleRemoveFromCollection, activeCollectionId]);
 
-  const exportDropdownContent = (
+  const makeExportDropdown = (triggerStyle, triggerClassName, triggerTip) => (
     <ExportDropdown
       quotes={quotes}
       filtered={filtered}
       selected={selected}
       hasActiveFilters={hasActiveFilters}
       showToast={showToast}
-      setShowExport={setShowExport}
+      open={showExport}
+      onOpenChange={setShowExport}
       collections={collections}
+      triggerStyle={triggerStyle}
+      triggerClassName={triggerClassName}
+      triggerTip={triggerTip}
     />
   );
 
@@ -488,25 +489,19 @@ export default function ResultsPhase({
 
           <SectionErrorBoundary name="Header">
             <HeaderBar
-              quotes={quotes}
-              filtered={filtered}
               view={view}
               compact={compact}
               setView={setView}
               setCompact={setCompact}
               showStats={showStats}
               setShowStats={setShowStats}
-              showExport={showExport}
-              setShowExport={setShowExport}
               showAddMore={showAddMore}
               setShowAddMore={setShowAddMore}
               isMobile={isMobile}
               setConfirmClear={setConfirmClear}
               addMoreRef={addMoreRef}
-              exportRef={exportRef}
               headerRef={headerRef}
-              headerVisible={headerVisible}
-              exportDropdownContent={exportDropdownContent}
+              exportDropdownContent={makeExportDropdown(styles.exportBtn, "ui-tip ui-tip-below hdr-btn", "Export or share your collection")}
               syncStatus={syncStatus}
               lastSynced={lastSynced}
               onManualSync={manualPush}
@@ -524,22 +519,17 @@ export default function ResultsPhase({
               view={view} setView={setView}
               compact={compact} setCompact={setCompact}
               showStats={showStats} setShowStats={setShowStats}
-              showExport={showExport} setShowExport={setShowExport}
               showAddMore={showAddMore} setShowAddMore={setShowAddMore}
               addMoreRef={addMoreRef}
-              miniExportRef={miniExportRef}
+              exportDropdownContent={makeExportDropdown({ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }, "hdr-btn")}
               preserveScroll={preserveScroll}
-              quotes={quotes}
-              filtered={filtered}
-              selected={selected}
-              hasActiveFilters={hasActiveFilters}
-              showToast={showToast}
-              collections={collections}
               syncStatus={syncStatus}
               lastSynced={lastSynced}
               onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
+              showConfidence={showConfidence}
+              setShowConfidence={setShowConfidence}
               setConfirmClear={setConfirmClear}
               onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
             />

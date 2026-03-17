@@ -2,6 +2,7 @@ import { Menu } from "@base-ui/react/menu";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
+
 import {
   List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
   MoreHorizontal, BarChart3, Trash2, Gauge,
@@ -10,17 +11,13 @@ import {
 const pillStyles = syncPillStyles.full;
 
 export default function HeaderBar({
-  quotes, filtered,
   view, compact, setView, setCompact,
   showStats, setShowStats,
-  showExport, setShowExport,
   showAddMore, setShowAddMore,
   isMobile,
   setConfirmClear,
   addMoreRef,
-  exportRef,
   headerRef,
-  headerVisible,
   exportDropdownContent,
   syncStatus,
   lastSynced,
@@ -55,10 +52,7 @@ export default function HeaderBar({
             </button>
           </div>
         )}
-        <div ref={exportRef} style={{ position: "relative" }}>
-          <button className="ui-tip ui-tip-below hdr-btn" data-tip="Export or share your collection" style={styles.exportBtn} onClick={() => setShowExport(!showExport)}>Export ↓</button>
-          {showExport && headerVisible && exportDropdownContent}
-        </div>
+        {exportDropdownContent}
         <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
         {/* Overflow menu */}
         <Menu.Root>

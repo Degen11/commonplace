@@ -1,5 +1,4 @@
-import { useState, useRef } from "react";
-import useClickOutside from "../hooks/useClickOutside";
+import { Menu } from "@base-ui/react/menu";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
@@ -32,11 +31,6 @@ export default function HeaderBar({
   setShowConfidence,
   onShowShortcuts,
 }) {
-  const [showOverflow, setShowOverflow] = useState(false);
-  const overflowRef = useRef(null);
-
-  useClickOutside(overflowRef, showOverflow, () => setShowOverflow(false));
-
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
       <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
@@ -67,36 +61,42 @@ export default function HeaderBar({
         </div>
         <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
         {/* Overflow menu */}
-        <div ref={overflowRef} style={{ position: "relative" }}>
-          <button className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={() => setShowOverflow(!showOverflow)}>
+        <Menu.Root>
+          <Menu.Trigger className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: "5px 8px" }}>
             <MoreHorizontal size={16} strokeWidth={1.5} />
-          </button>
-          {showOverflow && (
-            <div style={styles.hdrOverflowMenu}>
-              <div style={styles.hdrOverflowSectionLabel}>View</div>
-              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowStats(s => !s); setShowOverflow(false); }}>
-                <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
-                {showStats ? "Hide full stats" : "Full stats"}
-              </button>
-              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { setShowConfidence(v => !v); setShowOverflow(false); }}>
-                <Gauge size={15} strokeWidth={1.5} color={showConfidence ? "var(--cp-conf-medium)" : "var(--cp-text-muted)"} />
-                {showConfidence ? "Hide confidence" : "Show confidence"}
-              </button>
-              <div style={styles.hdrOverflowDivider} />
-              <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
-              <button className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { onShowShortcuts(); setShowOverflow(false); }}>
-                <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
-                Keyboard shortcuts
-              </button>
-              <div style={styles.hdrOverflowDivider} />
-              <div style={styles.hdrOverflowSectionLabel}>Data</div>
-              <button className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => { setConfirmClear(true); setShowOverflow(false); }}>
-                <Trash2 size={15} strokeWidth={1.5} />
-                New batch
-              </button>
-            </div>
-          )}
-        </div>
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+              <Menu.Popup style={{
+                background: "var(--cp-bg-card)", borderRadius: 6,
+                boxShadow: "var(--cp-shadow-md)", border: "1px solid var(--cp-border)",
+                minWidth: 200, padding: 4, animation: "menuIn .14s ease",
+              }}>
+                <div style={styles.hdrOverflowSectionLabel}>View</div>
+                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => setShowStats(s => !s)}>
+                  <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                  {showStats ? "Hide full stats" : "Full stats"}
+                </Menu.Item>
+                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => setShowConfidence(v => !v)}>
+                  <Gauge size={15} strokeWidth={1.5} color={showConfidence ? "var(--cp-conf-medium)" : "var(--cp-text-muted)"} />
+                  {showConfidence ? "Hide confidence" : "Show confidence"}
+                </Menu.Item>
+                <Menu.Separator style={styles.hdrOverflowDivider} />
+                <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
+                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => onShowShortcuts()}>
+                  <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                  Keyboard shortcuts
+                </Menu.Item>
+                <Menu.Separator style={styles.hdrOverflowDivider} />
+                <div style={styles.hdrOverflowSectionLabel}>Data</div>
+                <Menu.Item className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onSelect={() => setConfirmClear(true)}>
+                  <Trash2 size={15} strokeWidth={1.5} />
+                  New batch
+                </Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
       </div>
     </div>
   );

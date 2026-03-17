@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import useClickOutside from "../hooks/useClickOutside";
-import useFlipPosition from "../hooks/useFlipPosition";
+import { Popover } from "@base-ui/react/popover";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
 import { ChevronDown } from "lucide-react";
@@ -30,44 +29,39 @@ export function InlineSourceInput({ initial, onSave, onCancel, showHint = true }
 
 // ── Inline category picker with viewport-aware positioning ──
 export function InlineCategorySelect({ current, allCats, onSave, onCancel, customCats }) {
-  const ref = useRef(null);
   const onCancelRef = useRef(onCancel);
   onCancelRef.current = onCancel;
-  const { flipUp, flipLeft } = useFlipPosition(ref);
-
-  useClickOutside(ref, true, () => onCancelRef.current());
-
-  useEffect(() => {
-    const handleKey = e => { if (e.key === "Escape") { e.stopPropagation(); onCancelRef.current(); } };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, []);
 
   return (
-    <div ref={ref} onClick={e => e.stopPropagation()} style={{
-      position: "absolute",
-      ...(flipUp ? { bottom: "100%", top: "auto" } : { top: "100%", bottom: "auto" }),
-      ...(flipLeft ? { right: 0, left: "auto" } : { left: 0 }),
-      zIndex: 100,
-      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
-      boxShadow: "var(--cp-shadow-md)", padding: 6,
-      display: "flex", flexWrap: "wrap", gap: 4, width: 220,
-      animation: "slideD .12s ease",
-    }}>
-      {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => {
-        const col = getCatColor(c, customCats);
-        const isActive = c === current;
-        return (
-          <button key={c} onClick={() => onSave(c)} style={{
-            ...styles.tag, background: col.bg, color: col.text,
-            border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
-            cursor: "pointer", fontFamily: "inherit",
-            fontSize: 11, padding: "3px 8px", borderRadius: 4,
-          }}>
-            {c}
-          </button>
-        );
-      })}
-    </div>
+    <Popover.Root open onOpenChange={(open) => { if (!open) onCancelRef.current(); }}>
+      <Popover.Portal>
+        <Popover.Positioner side="bottom" align="start" sideOffset={0} style={{ zIndex: 100 }}>
+          <Popover.Popup
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
+              boxShadow: "var(--cp-shadow-md)", padding: 6,
+              display: "flex", flexWrap: "wrap", gap: 4, width: 220,
+              animation: "slideD .12s ease",
+            }}
+          >
+            {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => {
+              const col = getCatColor(c, customCats);
+              const isActive = c === current;
+              return (
+                <button key={c} onClick={() => onSave(c)} style={{
+                  ...styles.tag, background: col.bg, color: col.text,
+                  border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
+                  cursor: "pointer", fontFamily: "inherit",
+                  fontSize: 11, padding: "3px 8px", borderRadius: 4,
+                }}>
+                  {c}
+                </button>
+              );
+            })}
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

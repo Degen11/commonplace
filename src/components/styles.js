@@ -107,6 +107,14 @@ export const baseCSS = `
   html{scroll-behavior:smooth;scrollbar-gutter:stable}
   div[style]:focus{outline:none;border-color:transparent}
 
+  /* Base UI — Menu item highlight on hover/keyboard navigation */
+  .overflow-menu-item[data-highlighted],
+  .hdr-overflow-item[data-highlighted]{background:var(--cp-bg-hover) !important}
+  .overflow-menu-item-destructive[data-highlighted],
+  .hdr-overflow-destructive[data-highlighted]{background:rgba(220,38,38,0.06) !important}
+  /* Base UI — Dialog/Popover/Menu reset: prevent Base UI from injecting font overrides */
+  [data-base-ui-popup]{font-family:inherit}
+
   /* Fix 2 — column header drag handle - COMPLETELY REMOVE SHADOW */
   .col-drag-header{
     cursor:grab;

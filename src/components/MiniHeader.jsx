@@ -80,13 +80,13 @@ export default function MiniHeader({
                   minWidth: 200, padding: 4, animation: "menuIn .14s ease",
                 }}>
                   <div style={styles.hdrOverflowSectionLabel}>View</div>
-                  <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => { preserveScroll(); setShowStats(s => !s); }}>
+                  <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>
                     <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                     {showStats ? "Hide full stats" : "Full stats"}
                   </Menu.Item>
                   <Menu.Separator style={styles.hdrOverflowDivider} />
                   <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
-                  <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => onShowShortcuts()}>
+                  <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => onShowShortcuts()}>
                     <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                     Keyboard shortcuts
                   </Menu.Item>
@@ -94,7 +94,7 @@ export default function MiniHeader({
                     <>
                       <Menu.Separator style={styles.hdrOverflowDivider} />
                       <div style={styles.hdrOverflowSectionLabel}>Data</div>
-                      <Menu.Item className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onSelect={() => setConfirmClear(true)}>
+                      <Menu.Item className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => setConfirmClear(true)}>
                         <Trash2 size={15} strokeWidth={1.5} />
                         New batch
                       </Menu.Item>

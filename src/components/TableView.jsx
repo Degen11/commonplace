@@ -64,7 +64,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
                 style={{ ...styles.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
-                onSelect={() => { if (!isCopied) actionProps.onCopy(q); }}
+                onClick={() => { if (!isCopied) actionProps.onCopy(q); }}
               >
                 {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
                 <span>{isCopied ? "Copied!" : "Copy"}</span>
@@ -72,16 +72,16 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-share"
                 style={styles.overflowMenuItem}
-                onSelect={() => { actionProps.onShareImage(q); }}
+                onClick={() => { actionProps.onShareImage(q); }}
               >
                 <Share2 size={14} strokeWidth={1.5} />
                 <span>Share as image</span>
               </Menu.Item>
               <Menu.Separator style={styles.overflowMenuDivider} />
               <Menu.Item
-                className="overflow-menu-item"
-                style={{ ...styles.overflowMenuItem, "--hover-color": "#F59E0B" }}
-                onSelect={() => { actionProps.onFav(q.id); }}
+                className="overflow-menu-item-fav"
+                style={styles.overflowMenuItem}
+                onClick={() => { actionProps.onFav(q.id); }}
               >
                 <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} color={q.favorite ? "#F59E0B" : "currentColor"} strokeWidth={1.5} />
                 <span>{q.favorite ? "Unfavorite" : "Favorite"}</span>

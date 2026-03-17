@@ -81,7 +81,7 @@ export const baseCSS = `
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--cp-bg);color:var(--cp-text)}
+  body{background:var(--cp-bg);color:var(--cp-text);font-family:'Satoshi',-apple-system,sans-serif}
   ::selection{background:rgba(60,87,117,0.18)}
   html.dark ::selection{background:rgba(90,137,181,0.3)}
   @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:rgba(90,137,181,0.3)}}
@@ -112,8 +112,9 @@ export const baseCSS = `
   .hdr-overflow-item[data-highlighted]{background:var(--cp-bg-hover) !important}
   .overflow-menu-item-destructive[data-highlighted],
   .hdr-overflow-destructive[data-highlighted]{background:rgba(220,38,38,0.06) !important}
+  .overflow-menu-item-fav[data-highlighted]{background:rgba(245,158,11,0.08) !important;color:#D97706 !important}
   /* Base UI — Dialog/Popover/Menu reset: prevent Base UI from injecting font overrides */
-  [data-base-ui-popup]{font-family:inherit}
+  [data-base-ui-popup]{font-family:'Satoshi',-apple-system,sans-serif}
 
   /* Fix 2 — column header drag handle - COMPLETELY REMOVE SHADOW */
   .col-drag-header{

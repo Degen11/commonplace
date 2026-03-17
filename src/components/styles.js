@@ -162,7 +162,7 @@ export const baseCSS = `
   /* Checkbox hover affordance */
   .checkbox-visual:hover{border-color:#3C5775 !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
 
-  .dd-opt:hover{background:var(--cp-bg-hover) !important}
+  .dd-opt:hover,.dd-opt[data-highlighted]{background:var(--cp-bg-hover) !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
   .proc-btn{transition:all .15s ease}
   .try-btn:hover{background:var(--cp-bg-tab) !important}
@@ -469,8 +469,6 @@ export const styles = {
   viewOn:{background:"var(--cp-bg-hover)",color:"var(--cp-text-secondary)"},
 
   // Export dropdown
-  expDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"slideD .15s ease",maxHeight:"70vh",overflowY:"auto"},
-  expOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   expOptNote:{display:"block",width:"100%",padding:"4px 12px 8px",fontSize:11,color:"var(--cp-text-muted)",fontFamily:"inherit"},
 
   // Bars

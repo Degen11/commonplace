@@ -25,8 +25,8 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
   const [copyAnim, setCopyAnim] = useState(false);
   const [shareAnim, setShareAnim] = useState(false);
   const [showCollections, setShowCollections] = useState(false);
+  const [localCopied, setLocalCopied] = useState(false);
 
-  const isCopied = actionProps.copiedId === q.id;
   const isReidentifying = actionProps.reidentifying.has(q.id);
   const collections = actionProps.collections || [];
 
@@ -48,6 +48,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
         open={isOpen}
         onOpenChange={(open) => {
           if (open !== isOpen) onToggle();
+          if (open) setLocalCopied(false);
           if (!open) setShowCollections(false);
         }}
       >
@@ -64,17 +65,18 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
                 closeOnClick={false}
-                style={{ ...menuItemStyle, ...(isCopied ? { color: "#059669" } : {}) }}
+                style={{ ...menuItemStyle, ...(localCopied ? { color: "#059669" } : {}) }}
                 onClick={() => {
-                  if (!isCopied) {
+                  if (!localCopied) {
+                    setLocalCopied(true);
                     setCopyAnim(true);
                     setTimeout(() => setCopyAnim(false), 350);
                     actionProps.onCopy(q);
                   }
                 }}
               >
-                {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={copyAnim ? "copy-push" : ""} />}
-                <span>{isCopied ? "Copied!" : "Copy"}</span>
+                {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={copyAnim ? "copy-push" : ""} />}
+                <span>{localCopied ? "Copied!" : "Copy"}</span>
               </Menu.Item>
               <Menu.Item
                 className="overflow-menu-item overflow-reidentify"

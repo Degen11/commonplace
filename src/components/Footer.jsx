@@ -36,7 +36,7 @@ function LegalModal({ title, onClose, children }) {
           </button>
         </div>
         <div style={{
-          padding: "20px 24px", overflowY: "auto",
+          padding: "20px 24px", overflowY: "auto", textAlign: "left",
           fontSize: 13, lineHeight: 1.7, color: "var(--cp-text-secondary)", fontFamily: FONT_SANS,
         }}>
           {children}

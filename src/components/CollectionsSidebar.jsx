@@ -39,40 +39,25 @@ function getIcon(iconName) {
   return ICON_MAP[iconName] || FolderOpen;
 }
 
-// ── Icon picker popup — positioned above the icon ──
-function IconPicker({ current, onSelect, onClose }) {
-  return (
-    <Popover.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Popover.Portal>
-        <Popover.Positioner side="top" align="start" sideOffset={6} style={{ zIndex: 100 }}>
-          <Popover.Popup style={{
-            background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
-            boxShadow: "var(--cp-shadow-md)", padding: 8,
-            display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
-            width: 180, animation: "slideD .12s ease",
-          }}>
-            {ICON_OPTIONS.map(({ name, Component }) => (
-              <button
-                key={name}
-                onClick={() => { onSelect(name); onClose(); }}
-                style={{
-                  background: current === name ? "var(--cp-bg-hover)" : "transparent",
-                  border: current === name ? "1.5px solid var(--cp-accent)" : "1.5px solid transparent",
-                  borderRadius: 6, padding: 6, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: current === name ? "var(--cp-accent)" : "var(--cp-text-muted)",
-                  transition: "all .1s",
-                }}
-                title={name}
-              >
-                <Component size={16} strokeWidth={1.5} />
-              </button>
-            ))}
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
-  );
+// ── Icon picker grid — rendered inside a Popover.Popup by CollectionRow ──
+function IconPickerGrid({ current, onSelect, onClose }) {
+  return ICON_OPTIONS.map(({ name, Component }) => (
+    <button
+      key={name}
+      onClick={() => { onSelect(name); onClose(); }}
+      style={{
+        background: current === name ? "var(--cp-bg-hover)" : "transparent",
+        border: current === name ? "1.5px solid var(--cp-accent)" : "1.5px solid transparent",
+        borderRadius: 6, padding: 6, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: current === name ? "var(--cp-accent)" : "var(--cp-text-muted)",
+        transition: "all .1s",
+      }}
+      title={name}
+    >
+      <Component size={16} strokeWidth={1.5} />
+    </button>
+  ));
 }
 
 // ── Single collection row ──
@@ -134,13 +119,22 @@ function CollectionRow({
         >
           <Icon size={14} strokeWidth={1.5} color={isActive ? "var(--cp-accent)" : "var(--cp-text-muted)"} />
         </Popover.Trigger>
-        {iconPickerId === c.id && (
-          <IconPicker
-            current={c.icon || "FolderOpen"}
-            onSelect={iconName => updateCollectionIcon(c.id, iconName)}
-            onClose={() => setIconPickerId(null)}
-          />
-        )}
+        <Popover.Portal>
+          <Popover.Positioner side="top" align="start" sideOffset={6} style={{ zIndex: 100 }}>
+            <Popover.Popup style={{
+              background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
+              boxShadow: "var(--cp-shadow-md)", padding: 8,
+              display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
+              width: 180, animation: "slideD .12s ease",
+            }}>
+              <IconPickerGrid
+                current={c.icon || "FolderOpen"}
+                onSelect={iconName => updateCollectionIcon(c.id, iconName)}
+                onClose={() => setIconPickerId(null)}
+              />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
       </Popover.Root>
       <span style={{
         flex: 1, fontSize: 13, color: isActive ? "var(--cp-accent)" : "var(--cp-text-secondary)",

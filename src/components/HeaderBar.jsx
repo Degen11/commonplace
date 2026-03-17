@@ -73,23 +73,23 @@ export default function HeaderBar({
                 minWidth: 200, padding: 4, animation: "menuIn .14s ease",
               }}>
                 <div style={styles.hdrOverflowSectionLabel}>View</div>
-                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => setShowStats(s => !s)}>
+                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowStats(s => !s)}>
                   <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                   {showStats ? "Hide full stats" : "Full stats"}
                 </Menu.Item>
-                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => setShowConfidence(v => !v)}>
+                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowConfidence(v => !v)}>
                   <Gauge size={15} strokeWidth={1.5} color={showConfidence ? "var(--cp-conf-medium)" : "var(--cp-text-muted)"} />
                   {showConfidence ? "Hide confidence" : "Show confidence"}
                 </Menu.Item>
                 <Menu.Separator style={styles.hdrOverflowDivider} />
                 <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
-                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onSelect={() => onShowShortcuts()}>
+                <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => onShowShortcuts()}>
                   <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                   Keyboard shortcuts
                 </Menu.Item>
                 <Menu.Separator style={styles.hdrOverflowDivider} />
                 <div style={styles.hdrOverflowSectionLabel}>Data</div>
-                <Menu.Item className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onSelect={() => setConfirmClear(true)}>
+                <Menu.Item className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => setConfirmClear(true)}>
                   <Trash2 size={15} strokeWidth={1.5} />
                   New batch
                 </Menu.Item>

@@ -64,7 +64,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
                 style={{ ...menuItemStyle, ...(isCopied ? { color: "#059669" } : {}) }}
-                onSelect={() => {
+                onClick={() => {
                   if (!isCopied) {
                     setCopyAnim(true);
                     setTimeout(() => setCopyAnim(false), 350);
@@ -79,7 +79,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                 className="overflow-menu-item overflow-reidentify"
                 style={{ ...menuItemStyle, ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}) }}
                 disabled={isReidentifying}
-                onSelect={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
+                onClick={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
               >
                 <RefreshCw size={14} strokeWidth={1.5} className={isReidentifying ? "spin" : ""} />
                 <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
@@ -87,7 +87,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-share"
                 style={menuItemStyle}
-                onSelect={() => {
+                onClick={() => {
                   setShareAnim(true);
                   setTimeout(() => setShareAnim(false), 350);
                   actionProps.onShareImage(q);
@@ -103,7 +103,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                     <Menu.Item
                       className="overflow-menu-item"
                       style={menuItemStyle}
-                      onSelect={() => {
+                      onClick={() => {
                         actionProps.onRemoveFromCollection(actionProps.activeCollectionId, [q.id]);
                       }}
                     >
@@ -130,7 +130,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                             key={c.id}
                             className="overflow-menu-item"
                             style={{ ...menuItemStyle, fontSize: 12, padding: "6px 10px" }}
-                            onSelect={() => {
+                            onClick={() => {
                               actionProps.onAddToCollection(c.id, [q.id]);
                             }}
                           >
@@ -146,7 +146,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item-destructive"
                 style={styles.overflowMenuItemDestructive}
-                onSelect={() => { actionProps.onDelete(q.id); }}
+                onClick={() => { actionProps.onDelete(q.id); }}
               >
                 <Trash2 size={14} strokeWidth={1.5} />
                 <span>Delete</span>

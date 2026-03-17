@@ -52,13 +52,9 @@ function h(type, props, ...children) {
 
 export default async function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const text = url.searchParams.get('text') || '';
+  const text = url.searchParams.get('text') || 'Your personal library of ideas';
   const source = url.searchParams.get('source') || '';
   const styleName = url.searchParams.get('style') || 'classic';
-
-  if (!text) {
-    return res.status(400).send('Missing "text" query parameter');
-  }
 
   const theme = THEMES[styleName] || THEMES.classic;
   const displayText = truncate(text, 280);

@@ -22,7 +22,7 @@ const stripOuterBold = t => t && t.startsWith("**") && t.endsWith("**") ? t.slic
 //                    ↓
 //                  error (partial)
 
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   isProcessing: false,
   processingDone: false,
   progress: null,
@@ -35,7 +35,7 @@ const INITIAL_STATE = {
   stats: null,
 };
 
-function processingReducer(state, action) {
+export function processingReducer(state, action) {
   switch (action.type) {
     case "START":
       return {

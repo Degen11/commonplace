@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from "react";
-import useClickOutside from "../hooks/useClickOutside";
+import { useState } from "react";
+import { Menu } from "@base-ui/react/menu";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
 
@@ -22,9 +22,6 @@ export function FavBtn({ q, onFav }) {
 }
 
 export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
-  const wrapRef = useRef(null);
-  const menuRef = useRef(null);
-  const btnRef = useRef(null);
   const [copyAnim, setCopyAnim] = useState(false);
   const [shareAnim, setShareAnim] = useState(false);
   const [showCollections, setShowCollections] = useState(false);
@@ -33,120 +30,131 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
   const isReidentifying = actionProps.reidentifying.has(q.id);
   const collections = actionProps.collections || [];
 
-  useClickOutside(wrapRef, isOpen, onToggle);
-
-  // Reset submenu when menu closes
-  useEffect(() => {
-    if (!isOpen) setShowCollections(false);
-  }, [isOpen]);
+  const menuItemStyle = styles.overflowMenuItem;
+  const menuContentStyle = {
+    background: "var(--cp-bg-card)",
+    borderRadius: 6,
+    boxShadow: "0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",
+    minWidth: 172,
+    zIndex: 100,
+    padding: 4,
+    animation: "menuIn .14s ease",
+    transformOrigin: "var(--transform-origin)",
+  };
 
   return (
-    <div ref={wrapRef} style={styles.overflowWrap}>
-      <button
-        ref={btnRef}
-        className="overflow-btn act-btn"
-        style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
-        onClick={e => { e.stopPropagation(); onToggle(); }}
+    <div style={styles.overflowWrap}>
+      <Menu.Root
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (open !== isOpen) onToggle();
+          if (!open) setShowCollections(false);
+        }}
       >
-        <Ellipsis size={16} strokeWidth={2} />
-      </button>
-      {isOpen && (
-        <div ref={menuRef} data-overflow-menu style={styles.overflowMenu} onClick={e => e.stopPropagation()}>
-          <button
-            className="overflow-menu-item overflow-copy"
-            style={{ ...styles.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
-            onClick={() => {
-              if (!isCopied) {
-                setCopyAnim(true);
-                setTimeout(() => setCopyAnim(false), 350);
-                actionProps.onCopy(q);
-              }
-            }}
-          >
-            {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={copyAnim ? "copy-push" : ""} />}
-            <span>{isCopied ? "Copied!" : "Copy"}</span>
-          </button>
-          <button
-            className="overflow-menu-item overflow-reidentify"
-            style={{ ...styles.overflowMenuItem, ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}) }}
-            onClick={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
-            disabled={isReidentifying}
-          >
-            <RefreshCw size={14} strokeWidth={1.5} className={isReidentifying ? "spin" : ""} />
-            <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
-          </button>
-          <button
-            className="overflow-menu-item overflow-share"
-            style={styles.overflowMenuItem}
-            onClick={() => {
-              setShareAnim(true);
-              setTimeout(() => setShareAnim(false), 350);
-              actionProps.onShareImage(q);
-            }}
-          >
-            <Share2 size={14} strokeWidth={1.5} className={shareAnim ? "share-lift" : ""} />
-            <span>Share</span>
-          </button>
-          {collections.length > 0 && (
-            <>
-              <div style={styles.overflowMenuDivider} />
-              {actionProps.activeCollectionId && (
-                <button
-                  className="overflow-menu-item"
-                  style={styles.overflowMenuItem}
-                  onClick={() => {
-                    actionProps.onRemoveFromCollection(actionProps.activeCollectionId, [q.id]);
-                    onToggle();
-                  }}
-                >
-                  <FolderMinus size={14} strokeWidth={1.5} />
-                  <span>Remove from collection</span>
-                </button>
-              )}
-              <div style={{ position: "relative" }}>
-                <button
-                  className="overflow-menu-item"
-                  style={{ ...styles.overflowMenuItem, justifyContent: "space-between" }}
-                  onClick={() => setShowCollections(prev => !prev)}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <FolderPlus size={14} strokeWidth={1.5} />
-                    <span>Add to collection</span>
-                  </span>
-                  <ChevronRight size={12} strokeWidth={2} style={{ transform: showCollections ? "rotate(90deg)" : "none", transition: "transform .12s" }} />
-                </button>
-                {showCollections && (
-                  <div style={{ padding: "2px 4px 2px 24px" }}>
-                    {collections.map(c => (
-                      <button
-                        key={c.id}
-                        className="overflow-menu-item"
-                        style={{ ...styles.overflowMenuItem, fontSize: 12, padding: "6px 10px" }}
-                        onClick={() => {
-                          actionProps.onAddToCollection(c.id, [q.id]);
-                          onToggle();
-                        }}
-                      >
-                        {c.name}
-                      </button>
-                    ))}
+        <Menu.Trigger
+          className="overflow-btn act-btn"
+          style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
+          onClick={e => e.stopPropagation()}
+        >
+          <Ellipsis size={16} strokeWidth={2} />
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+            <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
+              <Menu.Item
+                className="overflow-menu-item overflow-copy"
+                style={{ ...menuItemStyle, ...(isCopied ? { color: "#059669" } : {}) }}
+                onSelect={() => {
+                  if (!isCopied) {
+                    setCopyAnim(true);
+                    setTimeout(() => setCopyAnim(false), 350);
+                    actionProps.onCopy(q);
+                  }
+                }}
+              >
+                {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={copyAnim ? "copy-push" : ""} />}
+                <span>{isCopied ? "Copied!" : "Copy"}</span>
+              </Menu.Item>
+              <Menu.Item
+                className="overflow-menu-item overflow-reidentify"
+                style={{ ...menuItemStyle, ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}) }}
+                disabled={isReidentifying}
+                onSelect={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
+              >
+                <RefreshCw size={14} strokeWidth={1.5} className={isReidentifying ? "spin" : ""} />
+                <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
+              </Menu.Item>
+              <Menu.Item
+                className="overflow-menu-item overflow-share"
+                style={menuItemStyle}
+                onSelect={() => {
+                  setShareAnim(true);
+                  setTimeout(() => setShareAnim(false), 350);
+                  actionProps.onShareImage(q);
+                }}
+              >
+                <Share2 size={14} strokeWidth={1.5} className={shareAnim ? "share-lift" : ""} />
+                <span>Share</span>
+              </Menu.Item>
+              {collections.length > 0 && (
+                <>
+                  <Menu.Separator style={styles.overflowMenuDivider} />
+                  {actionProps.activeCollectionId && (
+                    <Menu.Item
+                      className="overflow-menu-item"
+                      style={menuItemStyle}
+                      onSelect={() => {
+                        actionProps.onRemoveFromCollection(actionProps.activeCollectionId, [q.id]);
+                      }}
+                    >
+                      <FolderMinus size={14} strokeWidth={1.5} />
+                      <span>Remove from collection</span>
+                    </Menu.Item>
+                  )}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className="overflow-menu-item"
+                      style={{ ...menuItemStyle, justifyContent: "space-between", background: "none", border: "none", width: "100%", fontFamily: "inherit" }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCollections(prev => !prev); }}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <FolderPlus size={14} strokeWidth={1.5} />
+                        <span>Add to collection</span>
+                      </span>
+                      <ChevronRight size={12} strokeWidth={2} style={{ transform: showCollections ? "rotate(90deg)" : "none", transition: "transform .12s" }} />
+                    </button>
+                    {showCollections && (
+                      <div style={{ padding: "2px 4px 2px 24px" }}>
+                        {collections.map(c => (
+                          <Menu.Item
+                            key={c.id}
+                            className="overflow-menu-item"
+                            style={{ ...menuItemStyle, fontSize: 12, padding: "6px 10px" }}
+                            onSelect={() => {
+                              actionProps.onAddToCollection(c.id, [q.id]);
+                            }}
+                          >
+                            {c.name}
+                          </Menu.Item>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </>
-          )}
-          <div style={styles.overflowMenuDivider} />
-          <button
-            className="overflow-menu-item-destructive"
-            style={styles.overflowMenuItemDestructive}
-            onClick={() => { actionProps.onDelete(q.id); }}
-          >
-            <Trash2 size={14} strokeWidth={1.5} />
-            <span>Delete</span>
-          </button>
-        </div>
-      )}
+                </>
+              )}
+              <Menu.Separator style={styles.overflowMenuDivider} />
+              <Menu.Item
+                className="overflow-menu-item-destructive"
+                style={styles.overflowMenuItemDestructive}
+                onSelect={() => { actionProps.onDelete(q.id); }}
+              >
+                <Trash2 size={14} strokeWidth={1.5} />
+                <span>Delete</span>
+              </Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
     </div>
   );
 }
-

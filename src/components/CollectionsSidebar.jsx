@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import useClickOutside from "../hooks/useClickOutside";
+import { Popover } from "@base-ui/react/popover";
 import { useDroppable } from "@dnd-kit/core";
 import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
@@ -40,54 +40,38 @@ function getIcon(iconName) {
 }
 
 // ── Icon picker popup — positioned above the icon ──
-function IconPicker({ anchorRef, current, onSelect, onClose }) {
-  const ref = useRef(null);
-
-  useClickOutside(ref, true, onClose);
-
-  useEffect(() => {
-    const k = e => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", k);
-    return () => document.removeEventListener("keydown", k);
-  }, [onClose]);
-
-  // Position above the anchor icon using a portal-like fixed position
-  const [pos, setPos] = useState(null);
-  useEffect(() => {
-    if (anchorRef?.current) {
-      const rect = anchorRef.current.getBoundingClientRect();
-      setPos({ left: rect.left, bottom: window.innerHeight - rect.top + 6 });
-    }
-  }, [anchorRef]);
-
-  if (!pos) return null;
-
+function IconPicker({ current, onSelect, onClose }) {
   return (
-    <div ref={ref} style={{
-      position: "fixed", left: pos.left, bottom: pos.bottom, zIndex: 100,
-      background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
-      boxShadow: "var(--cp-shadow-md)", padding: 8,
-      display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
-      width: 180, animation: "slideD .12s ease",
-    }}>
-      {ICON_OPTIONS.map(({ name, Component }) => (
-        <button
-          key={name}
-          onClick={() => { onSelect(name); onClose(); }}
-          style={{
-            background: current === name ? "var(--cp-bg-hover)" : "transparent",
-            border: current === name ? "1.5px solid var(--cp-accent)" : "1.5px solid transparent",
-            borderRadius: 6, padding: 6, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: current === name ? "var(--cp-accent)" : "var(--cp-text-muted)",
-            transition: "all .1s",
-          }}
-          title={name}
-        >
-          <Component size={16} strokeWidth={1.5} />
-        </button>
-      ))}
-    </div>
+    <Popover.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <Popover.Portal>
+        <Popover.Positioner side="top" align="start" sideOffset={6} style={{ zIndex: 100 }}>
+          <Popover.Popup style={{
+            background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
+            boxShadow: "var(--cp-shadow-md)", padding: 8,
+            display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2,
+            width: 180, animation: "slideD .12s ease",
+          }}>
+            {ICON_OPTIONS.map(({ name, Component }) => (
+              <button
+                key={name}
+                onClick={() => { onSelect(name); onClose(); }}
+                style={{
+                  background: current === name ? "var(--cp-bg-hover)" : "transparent",
+                  border: current === name ? "1.5px solid var(--cp-accent)" : "1.5px solid transparent",
+                  borderRadius: 6, padding: 6, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: current === name ? "var(--cp-accent)" : "var(--cp-text-muted)",
+                  transition: "all .1s",
+                }}
+                title={name}
+              >
+                <Component size={16} strokeWidth={1.5} />
+              </button>
+            ))}
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
 
@@ -99,7 +83,6 @@ function CollectionRow({
 }) {
   const count = quoteCounts[c.id] || 0;
   const Icon = getIcon(c.icon);
-  const iconRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const { setNodeRef, isOver: dragOver } = useDroppable({ id: `collection:${c.id}` });
 
@@ -142,22 +125,23 @@ function CollectionRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); if (confirmDeleteId === c.id) setConfirmDeleteId(null); }}
     >
-      <span
-        ref={iconRef}
-        style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
-        onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
-        title="Change icon"
-      >
-        <Icon size={14} strokeWidth={1.5} color={isActive ? "var(--cp-accent)" : "var(--cp-text-muted)"} />
-      </span>
-      {iconPickerId === c.id && (
-        <IconPicker
-          anchorRef={iconRef}
-          current={c.icon || "FolderOpen"}
-          onSelect={iconName => updateCollectionIcon(c.id, iconName)}
-          onClose={() => setIconPickerId(null)}
-        />
-      )}
+      <Popover.Root open={iconPickerId === c.id} onOpenChange={(open) => { if (!open) setIconPickerId(null); }}>
+        <Popover.Trigger
+          render={<span />}
+          style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
+          onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
+          title="Change icon"
+        >
+          <Icon size={14} strokeWidth={1.5} color={isActive ? "var(--cp-accent)" : "var(--cp-text-muted)"} />
+        </Popover.Trigger>
+        {iconPickerId === c.id && (
+          <IconPicker
+            current={c.icon || "FolderOpen"}
+            onSelect={iconName => updateCollectionIcon(c.id, iconName)}
+            onClose={() => setIconPickerId(null)}
+          />
+        )}
+      </Popover.Root>
       <span style={{
         flex: 1, fontSize: 13, color: isActive ? "var(--cp-accent)" : "var(--cp-text-secondary)",
         fontWeight: isActive ? 600 : 400,

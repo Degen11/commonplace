@@ -1,4 +1,4 @@
-import useScrollLock from "../hooks/useScrollLock";
+import { Dialog } from "@base-ui/react/dialog";
 import { styles } from "./styles";
 
 export default function ConfirmModal({
@@ -12,23 +12,41 @@ export default function ConfirmModal({
   onCancel,
   onConfirm,
 }) {
-  useScrollLock();
-
   return (
-    <div style={styles.modalOverlay} role="dialog" aria-modal="true" aria-label={title} onClick={onCancel}>
-      <div style={{ ...styles.confirmBox, borderTop: `3px solid ${borderColor}` }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 6, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            {icon}
-          </div>
-          <p style={{ fontSize: 15, fontWeight: 600 }}>{title}</p>
+    <Dialog.Root open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <Dialog.Portal>
+        <Dialog.Backdrop
+          style={{
+            position: "fixed", inset: 0,
+            background: "var(--cp-overlay)",
+            zIndex: 1000,
+            animation: "overlayFade .15s ease-out",
+          }}
+        />
+        <div style={{
+          position: "fixed", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, padding: 20,
+          pointerEvents: "none",
+          animation: "fadeUp .15s ease-out",
+        }}>
+          <Dialog.Popup
+            style={{ ...styles.confirmBox, borderTop: `3px solid ${borderColor}`, pointerEvents: "auto" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 6, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {icon}
+              </div>
+              <Dialog.Title render={<p />} style={{ fontSize: 15, fontWeight: 600 }}>{title}</Dialog.Title>
+            </div>
+            <Dialog.Description style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 20, lineHeight: 1.5 }}>{description}</Dialog.Description>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onCancel}>{cancelLabel}</button>
+              <button className="confirm-yes" style={styles.confirmYes} onClick={onConfirm}>{confirmLabel}</button>
+            </div>
+          </Dialog.Popup>
         </div>
-        <p style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 20, lineHeight: 1.5 }}>{description}</p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onCancel}>{cancelLabel}</button>
-          <button className="confirm-yes" style={styles.confirmYes} onClick={onConfirm}>{confirmLabel}</button>
-        </div>
-      </div>
-    </div>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

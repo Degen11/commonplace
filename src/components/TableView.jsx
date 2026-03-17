@@ -2,10 +2,10 @@ import { useState, useCallback, useRef, memo } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Menu } from "@base-ui/react/menu";
 import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
-import useClickOutside from "../hooks/useClickOutside";
 import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import { propsEqual } from "../utils/helpers";
@@ -35,49 +35,61 @@ const VIRTUALIZER_OVERSCAN = 15;
 
 // ── Slim row actions — ··· button with fav/copy/share dropdown ──
 function RowActions({ q, actionProps, isOpen, onToggle }) {
-  const wrapRef = useRef(null);
   const isCopied = actionProps.copiedId === q.id;
 
-  useClickOutside(wrapRef, isOpen, onToggle);
+  const menuContentStyle = {
+    background: "var(--cp-bg-card)",
+    borderRadius: 6,
+    boxShadow: "0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",
+    minWidth: 172,
+    zIndex: 100,
+    padding: 4,
+    animation: "menuIn .14s ease",
+    transformOrigin: "var(--transform-origin)",
+  };
 
   return (
-    <div ref={wrapRef} style={styles.rowAct}>
-      <button
-        className="overflow-btn act-btn"
-        style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
-        onClick={e => { e.stopPropagation(); onToggle(); }}
-      >
-        <Ellipsis size={16} strokeWidth={2} />
-      </button>
-      {isOpen && (
-        <div data-overflow-menu style={styles.overflowMenu} onClick={e => e.stopPropagation()}>
-          <button
-            className="overflow-menu-item overflow-copy"
-            style={{ ...styles.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
-            onClick={() => { if (!isCopied) actionProps.onCopy(q); }}
-          >
-            {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
-            <span>{isCopied ? "Copied!" : "Copy"}</span>
-          </button>
-          <button
-            className="overflow-menu-item overflow-share"
-            style={styles.overflowMenuItem}
-            onClick={() => { actionProps.onShareImage(q); onToggle(); }}
-          >
-            <Share2 size={14} strokeWidth={1.5} />
-            <span>Share as image</span>
-          </button>
-          <div style={styles.overflowMenuDivider} />
-          <button
-            className="overflow-menu-item"
-            style={{ ...styles.overflowMenuItem, "--hover-color": "#F59E0B" }}
-            onClick={() => { actionProps.onFav(q.id); onToggle(); }}
-          >
-            <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} color={q.favorite ? "#F59E0B" : "currentColor"} strokeWidth={1.5} />
-            <span>{q.favorite ? "Unfavorite" : "Favorite"}</span>
-          </button>
-        </div>
-      )}
+    <div style={styles.rowAct}>
+      <Menu.Root open={isOpen} onOpenChange={(open) => { if (open !== isOpen) onToggle(); }}>
+        <Menu.Trigger
+          className="overflow-btn act-btn"
+          style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
+          onClick={e => e.stopPropagation()}
+        >
+          <Ellipsis size={16} strokeWidth={2} />
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+            <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
+              <Menu.Item
+                className="overflow-menu-item overflow-copy"
+                style={{ ...styles.overflowMenuItem, ...(isCopied ? { color: "#059669" } : {}) }}
+                onSelect={() => { if (!isCopied) actionProps.onCopy(q); }}
+              >
+                {isCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
+                <span>{isCopied ? "Copied!" : "Copy"}</span>
+              </Menu.Item>
+              <Menu.Item
+                className="overflow-menu-item overflow-share"
+                style={styles.overflowMenuItem}
+                onSelect={() => { actionProps.onShareImage(q); }}
+              >
+                <Share2 size={14} strokeWidth={1.5} />
+                <span>Share as image</span>
+              </Menu.Item>
+              <Menu.Separator style={styles.overflowMenuDivider} />
+              <Menu.Item
+                className="overflow-menu-item"
+                style={{ ...styles.overflowMenuItem, "--hover-color": "#F59E0B" }}
+                onSelect={() => { actionProps.onFav(q.id); }}
+              >
+                <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} color={q.favorite ? "#F59E0B" : "currentColor"} strokeWidth={1.5} />
+                <span>{q.favorite ? "Unfavorite" : "Favorite"}</span>
+              </Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
     </div>
   );
 }

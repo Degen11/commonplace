@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { LS_THEME } from "../config";
 
 export default function useTheme() {
+  const transitionTimerRef = useRef(null);
   const [dark, setDark] = useState(() => {
     try {
       const saved = localStorage.getItem(LS_THEME);
@@ -59,13 +60,18 @@ export default function useTheme() {
   }, []);
 
   const toggleTheme = useCallback(() => {
+    // Cancel any in-flight transition cleanup from a previous toggle
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     // Add transitioning class for smooth CSS crossfade, then remove after transition
     const el = document.documentElement;
     el.classList.add("theme-transitioning");
     setExplicit(true);
     setDark(d => !d);
     // Remove after transition completes (matches .3s in baseCSS)
-    setTimeout(() => el.classList.remove("theme-transitioning"), 350);
+    transitionTimerRef.current = setTimeout(() => {
+      el.classList.remove("theme-transitioning");
+      transitionTimerRef.current = null;
+    }, 350);
   }, []);
 
   return { dark, toggleTheme };

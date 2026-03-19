@@ -86,7 +86,7 @@ export const baseCSS = `
   /* Smooth theme transition — CSS custom property crossfade */
   :root{transition:background-color .3s ease,color .3s ease}
   body{transition:background-color .3s ease,color .3s ease}
-  .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
+  .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,background .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
   ::selection{background:rgba(60,87,117,0.18)}
   html.dark ::selection{background:rgba(90,137,181,0.3)}
   @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:rgba(90,137,181,0.3)}}

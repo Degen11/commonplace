@@ -264,7 +264,11 @@ const MemoTableRow = memo(function TableRow({
   ["columnOrder", (prev, next) =>
     prev.columnOrder.length === next.columnOrder.length &&
     !prev.columnOrder.some((c, i) => c !== next.columnOrder[i])],
-  ["actionProps", () => true],
+  ["actionProps", (prev, next) =>
+    prev.actionProps.copiedId === next.actionProps.copiedId &&
+    prev.actionProps.activeCollectionId === next.actionProps.activeCollectionId &&
+    prev.actionProps.reidentifying === next.actionProps.reidentifying &&
+    prev.actionProps.collections === next.actionProps.collections],
 ));
 
 export default function TableView({

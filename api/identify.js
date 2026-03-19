@@ -102,6 +102,13 @@ export default withApiHandler(async (req, res) => {
     }
 
     const data = await response.json();
+
+    // Validate response structure before proxying to client
+    if (!data.content || !Array.isArray(data.content) || !data.content[0]?.text) {
+      console.error('Anthropic returned unexpected structure:', JSON.stringify(data).slice(0, 200));
+      return res.status(502).json({ error: 'AI returned an unexpected response format. Please try again.' });
+    }
+
     return res.status(200).json(data);
   } catch (error) {
     console.error('API proxy error:', error?.message || 'unknown');

@@ -41,9 +41,7 @@ export default function Commonplace() {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
 
-  const goPhase = setPhase;
-
-  const processing = useProcessing({ quotes, setQuotes, allCats, goPhase });
+  const processing = useProcessing({ quotes, setQuotes, allCats, goPhase: setPhase });
   const {
     isProcessing, processingDone, progress, identifiedFeed,
     apiError, failedEntries,
@@ -118,12 +116,12 @@ export default function Commonplace() {
 
   // Called by ResultsPhase when user confirms "Start fresh"
   const clearParentState = useCallback(() => {
-    goPhase("input");
+    setPhase("input");
     setRawInput("");
     setImportedFileName(null);
     setInputTab("paste");
     resetProcessingState();
-  }, [goPhase, resetProcessingState]);
+  }, [resetProcessingState]);
 
   // Shared motion variants for phase transitions
   const phaseVariants = {

@@ -35,6 +35,7 @@ export default withApiHandler(async (req, res) => {
   try {
     const response = await fetch(ANTHROPIC.URL, {
       method: 'POST',
+      signal: AbortSignal.timeout(30_000),
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
@@ -65,6 +66,9 @@ export default withApiHandler(async (req, res) => {
 
     return res.status(200).json({ indices });
   } catch (error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      return res.status(504).json({ error: 'AI service took too long. Please try again.' });
+    }
     console.error('Auto-group API error:', error?.message || 'unknown');
     return res.status(500).json({ error: 'Failed to reach AI service' });
   }

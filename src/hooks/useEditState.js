@@ -31,7 +31,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       }
       return changed ? cleaned : prev;
     });
-  }, [quotes, selected.size]);
+  }, [quotes, selected]);
 
   // ── Filter reviewQueue when quotes change ──
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       const f = prev.filter(id => quoteIds.has(id));
       return f.length !== prev.length ? f : prev;
     });
-  }, [quotes, reviewQueue.length]);
+  }, [quotes, reviewQueue]);
 
   // ── Selection scope — use a ref so toggleSel always reads the latest
   // scope without needing to be recreated (avoids stale closures in

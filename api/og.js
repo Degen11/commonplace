@@ -36,11 +36,12 @@ function truncate(str, max) {
   return str.slice(0, max - 1) + '\u2026';
 }
 
-// Cache font data between invocations
+// Cache font data between invocations (pinned version to avoid CDN surprises)
 let fontData;
 async function loadFont() {
   if (fontData) return fontData;
-  const res = await fetch('https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff');
+  const res = await fetch('https://cdn.jsdelivr.net/fontsource/fonts/inter@5.1.1/latin-400-normal.woff');
+  if (!res.ok) throw new Error(`Font fetch failed (${res.status})`);
   fontData = Buffer.from(await res.arrayBuffer());
   return fontData;
 }

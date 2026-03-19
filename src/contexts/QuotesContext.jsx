@@ -95,7 +95,7 @@ export function QuotesProvider({ children }) {
       storageLimitWarned.current = true;
       showToast("Large collection \u2014 your data is backed up to the cloud.");
     }
-  });
+  }, [quotes, showToast]);
 
   // ── Cloud sync via useSync (will be replaced by TanStack Query in phase 2) ──
   const handleSyncError = useCallback((message) => {

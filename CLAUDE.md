@@ -230,6 +230,7 @@ Z.TOAST           2000  Toasts
 - No TODO/FIXME comments exist in the codebase currently
 - The `similarity()` function in `textFormatting.js` guards against empty word sets (returns 0 early). This was previously a fragile NaN-producing division; the guard was consolidated in a cleanup pass
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
+- Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof
 
 ## What to avoid
 
@@ -244,3 +245,5 @@ Z.TOAST           2000  Toasts
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy
 - **The assistant prefill** in `identify.js` (line 95: `{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
+- **SSRF protection in `fetch-url.js`** — `isPrivateHostname()` blocks requests to private/internal IPs (RFC1918, loopback, link-local, cloud metadata). Manual redirect following validates each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
+- **OG font pinned version** — `og.js` loads Inter font from jsdelivr with a pinned version (`@5.1.1`). Don't change to `@latest` — unpinned CDN URLs risk breakage from upstream changes

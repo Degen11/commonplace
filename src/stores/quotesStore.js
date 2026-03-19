@@ -8,8 +8,8 @@
 // - No Provider wrapper needed
 
 import { create } from "zustand";
-import { persist, subscribeWithSelector } from "zustand/middleware";
-import { DEFAULT_CATEGORIES, REORDERABLE_COLS, sanitizeName } from "../data/constants";
+import { subscribeWithSelector } from "zustand/middleware";
+import { REORDERABLE_COLS, sanitizeName } from "../data/constants";
 import { generateId } from "../utils/uuid";
 import { mergeByTimestamp } from "../utils/sync";
 import {
@@ -40,10 +40,6 @@ function loadDeletedIds() {
 // and skip writes for shared views. This custom subscriber handles it.
 
 let persistTimer = null;
-
-// Memoization for allCats getter — avoids creating a new array on every access
-let _allCatsSrc = null;
-let _allCatsCache = null;
 
 function schedulePersist(state) {
   if (persistTimer) clearTimeout(persistTimer);
@@ -97,16 +93,6 @@ export const useQuotesStore = create(
     // ── Deletion tombstones ──
     _deletedIds: loadDeletedIds(),
     _storageLimitHit: false,
-
-    // ── Derived (memoized — returns same reference unless customCats changes) ──
-    get allCats() {
-      const customCats = get().customCats;
-      if (customCats !== _allCatsSrc) {
-        _allCatsSrc = customCats;
-        _allCatsCache = [...DEFAULT_CATEGORIES, ...customCats];
-      }
-      return _allCatsCache;
-    },
 
     // ── Quote setters ──
     // Accepts either a new array or a functional updater (prev => next),
@@ -297,8 +283,8 @@ export const useQuotesStore = create(
 // persistence in the old QuotesContext.
 
 useQuotesStore.subscribe(
-  state => ({ quotes: state.quotes, customCats: state.customCats, isSharedView: state.isSharedView }),
-  (current) => schedulePersist(useQuotesStore.getState()),
+  state => ({ quotes: state.quotes, customCats: state.customCats }),
+  () => schedulePersist(useQuotesStore.getState()),
   { equalityFn: (a, b) => a.quotes === b.quotes && a.customCats === b.customCats },
 );
 

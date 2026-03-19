@@ -342,7 +342,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     const dupes = currentState.pendingDupes.length - keptCount;
-    dispatch({ type: "CLEAR_DUPES" });
+    safeDispatch({ type: "CLEAR_DUPES" });
     pendingContinuationRef.current = null;
 
     safeDispatch({ type: "START", dupes, total: finalUnique.length });

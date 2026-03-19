@@ -62,8 +62,18 @@ export async function checkRateLimit(ip, limit, supabase) {
     if (error) throw error;
     return data;
   } catch {
+    // Supabase unavailable — still enforce rate limits in-memory.
+    // In serverless environments this is per-instance (weaker), but
+    // better than allowing unlimited requests through.
     return checkRateLimitInMemory(ip, limit);
   }
+}
+
+// Best-effort IP validation — reject obviously spoofed values
+function looksLikeIp(ip) {
+  if (!ip || ip.length > 45) return false;
+  // IPv4 or IPv6 (loose check — just reject garbage)
+  return /^[\d.:a-fA-F]+$/.test(ip);
 }
 
 // ── CORS helpers ──
@@ -90,7 +100,9 @@ export function validateOrigin(req) {
 }
 
 export function getClientIp(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const forwarded = req.headers['x-forwarded-for']?.split(',')[0]?.trim();
+  if (forwarded && looksLikeIp(forwarded)) return forwarded;
+  return req.socket?.remoteAddress || 'unknown';
 }
 
 // ── Anthropic API configuration ──

@@ -25,7 +25,7 @@ export const baseCSS = `
     --cp-border:#E3E2DE;--cp-border-light:#E8E3DA;--cp-border-dim:#D3D3D0;
     --cp-shadow-card:0 2px 16px rgba(26,24,20,0.06);--cp-shadow-md:0 4px 16px rgba(0,0,0,.1);
     --cp-overlay:rgba(0,0,0,0.4);--cp-toast-bg:#37352F;--cp-toggle-off:#E0DCD4;
-    --cp-mini-bg:rgba(250,248,244,0.72);
+    --cp-mini-bg:rgba(250,248,244,0.88);
     --cp-accent:#3C5775;
     --cp-error-bg:#FEF2F2;--cp-error-border:#FECACA;--cp-error-text:#991B1B;
     --cp-warning-bg:#FFF7ED;--cp-warning-border:#FDBA74;--cp-warning-text:#9A3412;
@@ -45,7 +45,7 @@ export const baseCSS = `
     --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
     --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
     --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
-    --cp-mini-bg:rgba(26,26,26,0.72);
+    --cp-mini-bg:rgba(26,26,26,0.88);
     --cp-accent:#90B4D4;
     --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
     --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
@@ -66,7 +66,7 @@ export const baseCSS = `
       --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
       --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
       --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
-      --cp-mini-bg:rgba(26,26,26,0.72);
+      --cp-mini-bg:rgba(26,26,26,0.88);
       --cp-accent:#90B4D4;
       --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
       --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;

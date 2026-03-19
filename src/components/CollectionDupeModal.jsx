@@ -62,8 +62,9 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
           style={{
             position: "fixed", inset: 0,
             background: "rgba(0,0,0,.45)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             zIndex: 1000,
-            animation: "overlayFade .15s ease-out",
+            animation: "backdropBlurIn .2s ease-out",
           }}
         />
         <div style={{
@@ -71,7 +72,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 1000, padding: 20,
           pointerEvents: "none",
-          animation: "fadeUp .15s ease-out",
+          animation: "modalScaleIn .2s ease-out",
         }}>
           <Dialog.Popup style={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)", maxHeight: "85vh", display: "flex", flexDirection: "column", pointerEvents: "auto" }}>
             <div style={styles.dupeModalHeader}>

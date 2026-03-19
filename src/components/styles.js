@@ -25,7 +25,7 @@ export const baseCSS = `
     --cp-border:#E3E2DE;--cp-border-light:#E8E3DA;--cp-border-dim:#D3D3D0;
     --cp-shadow-card:0 2px 16px rgba(26,24,20,0.06);--cp-shadow-md:0 4px 16px rgba(0,0,0,.1);
     --cp-overlay:rgba(0,0,0,0.4);--cp-toast-bg:#37352F;--cp-toggle-off:#E0DCD4;
-    --cp-mini-bg:rgba(250,248,244,0.95);
+    --cp-mini-bg:rgba(250,248,244,0.72);
     --cp-accent:#3C5775;
     --cp-error-bg:#FEF2F2;--cp-error-border:#FECACA;--cp-error-text:#991B1B;
     --cp-warning-bg:#FFF7ED;--cp-warning-border:#FDBA74;--cp-warning-text:#9A3412;
@@ -45,7 +45,7 @@ export const baseCSS = `
     --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
     --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
     --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
-    --cp-mini-bg:rgba(26,26,26,0.95);
+    --cp-mini-bg:rgba(26,26,26,0.72);
     --cp-accent:#90B4D4;
     --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
     --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
@@ -66,7 +66,7 @@ export const baseCSS = `
       --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
       --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
       --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
-      --cp-mini-bg:rgba(26,26,26,0.95);
+      --cp-mini-bg:rgba(26,26,26,0.72);
       --cp-accent:#90B4D4;
       --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
       --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
@@ -82,6 +82,11 @@ export const baseCSS = `
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text);font-family:'Satoshi',-apple-system,sans-serif}
+
+  /* Smooth theme transition — CSS custom property crossfade */
+  :root{transition:background-color .3s ease,color .3s ease}
+  body{transition:background-color .3s ease,color .3s ease}
+  .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
   ::selection{background:rgba(60,87,117,0.18)}
   html.dark ::selection{background:rgba(90,137,181,0.3)}
   @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:rgba(90,137,181,0.3)}}
@@ -97,6 +102,9 @@ export const baseCSS = `
   @keyframes exitFade{to{opacity:0}}
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes menuIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  @keyframes modalScaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  @keyframes backdropBlurIn{from{opacity:0;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}to{opacity:1;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
+  @keyframes toastSlideIn{0%{opacity:0;transform:translateY(16px) scale(0.95)}60%{opacity:1;transform:translateY(-3px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes copyPush{0%{transform:scale(1)}40%{transform:scale(.82)}100%{transform:scale(1)}}
   @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
   @keyframes completePop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
@@ -234,6 +242,14 @@ export const baseCSS = `
   .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
   .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
 
+  /* Button press feedback — subtle scale on mousedown */
+  .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled){transform:scale(0.97) !important;transition:transform .1s ease !important}
+  .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
+
+  /* Card hover lift */
+  .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}
+  .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
+
   /* Disabled cursor */
   button:disabled{cursor:not-allowed !important}
 
@@ -313,6 +329,9 @@ export const baseCSS = `
   html.dark .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.12) !important}
   html.dark .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(0,0,0,.4)}
   html.dark input,html.dark textarea,html.dark select{background-color:var(--cp-bg-input) !important;color:var(--cp-text) !important}
+
+  /* Toast spring entrance animation */
+  [data-sonner-toast][data-mounted="true"]{animation:toastSlideIn .35s cubic-bezier(0.34,1.56,0.64,1) !important}
 `;
 
 // ── Shared sync status pill — used by both HeaderBar and MiniHeader ──
@@ -539,7 +558,7 @@ export const styles = {
   sortOptOn:{background:"var(--cp-bg-hover)",fontWeight:600},
 
   // Category pills — horizontal scroll with fade
-  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid var(--cp-border)",position:"sticky",top:0,background:"var(--cp-bg)",zIndex:50,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
+  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid var(--cp-border)",position:"sticky",top:0,background:"var(--cp-bg)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",zIndex:50,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
   catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,borderWidth:1,borderStyle:"solid",borderColor:"var(--cp-border)",background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500,letterSpacing:"0.02em",whiteSpace:"nowrap",flexShrink:0,transition:"background .15s ease, color .15s ease, opacity .15s ease"},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed var(--cp-border-dim)",background:"transparent",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},

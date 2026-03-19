@@ -31,8 +31,9 @@ export default function ShortcutsModal({ onClose }) {
           style={{
             position: "fixed", inset: 0,
             background: "var(--cp-overlay)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             zIndex: 1000,
-            animation: "overlayFade .15s ease-out",
+            animation: "backdropBlurIn .2s ease-out",
           }}
         />
         <div style={{
@@ -40,11 +41,11 @@ export default function ShortcutsModal({ onClose }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 1000, padding: 20,
           pointerEvents: "none",
+          animation: "modalScaleIn .2s ease-out",
         }}>
           <Dialog.Popup style={{
             background: "var(--cp-bg-card)", borderRadius: 6, padding: 0,
             maxWidth: "min(90vw, 420px)", width: "100%", overflow: "hidden",
-            animation: "slideIn .2s ease",
             pointerEvents: "auto",
           }}>
             <div style={{

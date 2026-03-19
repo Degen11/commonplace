@@ -836,20 +836,21 @@ export default function ResultsPhase({
               const count = selected.has(activeDragId) && selected.size > 1 ? selected.size : 1;
               const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
               return (
-                <div style={{ position: "relative" }}>
+                <div style={{ position: "relative", transform: "scale(1.03) rotate(-1.5deg)", transition: "transform .15s ease" }}>
                   {count > 1 && (
                     <span style={{
                       position: "absolute", top: -8, left: -8, zIndex: 1,
                       background: "#3C5775", color: "#fff",
                       fontSize: 11, fontWeight: 700, lineHeight: 1,
                       padding: "3px 7px", borderRadius: 6,
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
                     }}>{count}</span>
                   )}
                   <div style={{
                     background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
                     borderRadius: 6, padding: "8px 14px", fontSize: 13,
-                    boxShadow: "var(--cp-shadow-md)", maxWidth: 320, opacity: 0.92,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)",
+                    maxWidth: 320, opacity: 0.95,
                     color: "var(--cp-text)",
                   }}>
                     {preview}

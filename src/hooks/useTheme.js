@@ -59,8 +59,13 @@ export default function useTheme() {
   }, []);
 
   const toggleTheme = useCallback(() => {
+    // Add transitioning class for smooth CSS crossfade, then remove after transition
+    const el = document.documentElement;
+    el.classList.add("theme-transitioning");
     setExplicit(true);
     setDark(d => !d);
+    // Remove after transition completes (matches .3s in baseCSS)
+    setTimeout(() => el.classList.remove("theme-transitioning"), 350);
   }, []);
 
   return { dark, toggleTheme };

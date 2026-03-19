@@ -19,8 +19,9 @@ export default function ConfirmModal({
           style={{
             position: "fixed", inset: 0,
             background: "var(--cp-overlay)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             zIndex: 1000,
-            animation: "overlayFade .15s ease-out",
+            animation: "backdropBlurIn .2s ease-out",
           }}
         />
         <div style={{
@@ -28,7 +29,7 @@ export default function ConfirmModal({
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 1000, padding: 20,
           pointerEvents: "none",
-          animation: "fadeUp .15s ease-out",
+          animation: "modalScaleIn .2s ease-out",
         }}>
           <Dialog.Popup
             style={{ ...styles.confirmBox, borderTop: `3px solid ${borderColor}`, pointerEvents: "auto" }}

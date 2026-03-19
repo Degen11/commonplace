@@ -28,7 +28,9 @@ export default function MiniHeader({
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 60,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: "var(--cp-mini-bg)", borderBottom: "1px solid var(--cp-border)",
-      backdropFilter: "blur(8px)", animation: "slideD .15s ease",
+      backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+      boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
+      animation: "slideD .15s ease",
     }}>
       <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>

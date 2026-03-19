@@ -15,7 +15,7 @@ export function describeApiError(err) {
 
   if (msg.includes("malformed JSON")) return "AI returned an unreadable response. Try again.";
   if (msg.includes("Invalid API response")) return "AI returned an unexpected response format. Try again.";
-  if (err.name === "TypeError" || msg.includes("fetch")) return "Network error \u2014 check your connection and try again.";
+  if ((err.name === "TypeError" && msg.includes("fetch")) || msg.includes("Failed to fetch") || msg.includes("NetworkError")) return "Network error \u2014 check your connection and try again.";
 
   return "Couldn't reach AI. Try again.";
 }

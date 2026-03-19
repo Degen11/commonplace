@@ -163,7 +163,7 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!deviceId) return;
       const p = latestPayload.current;
       if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      mutateRef.current(p);
+      if (mutateRef.current) mutateRef.current(p);
     }, SYNC_DEBOUNCE_MS);
   }, []);
 
@@ -172,13 +172,13 @@ export default function useSync({ onCloudData, onSyncError }) {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     consecutiveFailures.current = 0;
     const p = latestPayload.current;
-    if (p) mutateRef.current(p);
+    if (p && mutateRef.current) mutateRef.current(p);
   }, []);
 
   // Sync when coming back online
   useEffect(() => {
     const handleOnline = () => {
-      if (latestPayload.current && initialLoadDone.current) {
+      if (latestPayload.current && initialLoadDone.current && mutateRef.current) {
         mutateRef.current(latestPayload.current);
       }
     };

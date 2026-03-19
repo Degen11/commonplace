@@ -1,4 +1,4 @@
-import { withApiHandler, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
+import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { sharePostSchema, shareGetSchema, parseBody } from './_schemas.js';
 
 const ID_LENGTH = 8;
@@ -54,11 +54,6 @@ export default withApiHandler(async (req, res, { supabase }) => {
 
   // ── POST: Create a shared collection ──
   if (req.method === 'POST') {
-    const ct = req.headers['content-type'] || '';
-    if (!ct.includes('application/json')) {
-      return res.status(415).json({ error: ERROR_MESSAGES.INVALID_CONTENT_TYPE });
-    }
-
     const { ok, data: parsed, error: validationError } = parseBody(sharePostSchema, req.body);
     if (!ok) return res.status(400).json({ error: validationError });
 
@@ -95,7 +90,6 @@ export default withApiHandler(async (req, res, { supabase }) => {
     }
   }
 
-  return res.status(405).json({ error: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
 }, {
   methods: ['GET', 'POST'],
   requireJson: false,

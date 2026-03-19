@@ -297,7 +297,16 @@ export default function ResultsPhase({
   };
 
   const handleFindDupes = useCallback(() => {
-    const target = activeCollectionId ? collectionFiltered : quotes;
+    // Use full collection scope (not filtered by search/category/favorites)
+    // so dupe detection covers all quotes in the target
+    let target = quotes;
+    if (activeCollectionId && collections) {
+      const col = collections.find(c => c.id === activeCollectionId);
+      if (col) {
+        const idSet = new Set(col.quoteIds);
+        target = quotes.filter(q => idSet.has(q.id));
+      }
+    }
     if (target.length < 2) {
       showToast("Need at least 2 entries to scan for duplicates.", null, null, "error");
       return;
@@ -308,7 +317,7 @@ export default function ResultsPhase({
       return;
     }
     setCollectionDupes(groups);
-  }, [quotes, collectionFiltered, activeCollectionId, showToast]);
+  }, [quotes, collections, activeCollectionId, showToast]);
 
   const handleDupeDeleteBatch = useCallback((quoteIds) => {
     const snapshot = quotes.filter(q => quoteIds.includes(q.id));

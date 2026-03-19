@@ -33,7 +33,7 @@ function download(content, name, type) {
 
 export function exportCSV(quotes, collections) {
   const colMap = buildCollectionMap(collections);
-  const esc = s => `"${(s || "").replace(/"/g, '""')}"`;
+  const esc = s => `"${(s || "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
   const rows = [[esc("Text"), esc("Source"), esc("Category"), esc("Favorite"), esc("Collection")]];
   quotes.forEach(q => rows.push([
     esc(q.text),

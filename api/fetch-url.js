@@ -3,6 +3,34 @@ import { fetchUrlSchema, parseBody } from './_schemas.js';
 
 const MAX_CONTENT_LENGTH = 500_000; // 500KB text limit
 const FETCH_TIMEOUT = 10_000; // 10s
+const MAX_REDIRECTS = 5;
+
+// Block requests to private/internal IP ranges to prevent SSRF
+function isPrivateHostname(hostname) {
+  // Block obvious private hostnames
+  if (hostname === 'localhost' || hostname === '[::1]') return true;
+  if (hostname.endsWith('.local') || hostname.endsWith('.internal')) return true;
+
+  // Strip IPv6 brackets
+  const bare = hostname.startsWith('[') ? hostname.slice(1, -1) : hostname;
+
+  // IPv4: 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 127.x.x.x, 169.254.x.x, 0.x.x.x
+  const ipv4 = bare.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [, a, b] = ipv4.map(Number);
+    if (a === 10) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 0) return true;
+  }
+
+  // IPv6 loopback and link-local
+  if (bare === '::1' || bare.startsWith('fe80:') || bare.startsWith('fc00:') || bare.startsWith('fd00:')) return true;
+
+  return false;
+}
 
 export default withApiHandler(async (req, res) => {
   const { ok, data: body, error: validationError } = parseBody(fetchUrlSchema, req.body);
@@ -16,18 +44,47 @@ export default withApiHandler(async (req, res) => {
     return res.status(400).json({ error: 'Only HTTP/HTTPS URLs are supported' });
   }
 
+  // Block private/internal IPs to prevent SSRF
+  if (isPrivateHostname(parsed.hostname)) {
+    return res.status(400).json({ error: 'URLs pointing to private/internal addresses are not allowed' });
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Commonplace/1.0 (quote-collector)',
-        'Accept': 'text/html, text/plain, */*',
-      },
-      redirect: 'follow',
-    });
+    // Manual redirect following with hop limit and SSRF validation per hop
+    let response;
+    let currentUrl = url;
+    for (let hops = 0; hops <= MAX_REDIRECTS; hops++) {
+      response = await fetch(currentUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Commonplace/1.0 (quote-collector)',
+          'Accept': 'text/html, text/plain, */*',
+        },
+        redirect: 'manual',
+      });
+
+      if (![301, 302, 303, 307, 308].includes(response.status)) break;
+
+      const location = response.headers.get('location');
+      if (!location) break;
+
+      const redirectUrl = new URL(location, currentUrl);
+      if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
+        return res.status(400).json({ error: 'Redirect to unsupported protocol' });
+      }
+      if (isPrivateHostname(redirectUrl.hostname)) {
+        return res.status(400).json({ error: 'Redirect to private/internal address blocked' });
+      }
+
+      currentUrl = redirectUrl.href;
+
+      if (hops === MAX_REDIRECTS) {
+        return res.status(400).json({ error: 'Too many redirects' });
+      }
+    }
 
     if (!response.ok) {
       return res.status(502).json({ error: `Failed to fetch URL (${response.status})` });

@@ -38,7 +38,9 @@ function disambiguateContractions(text) {
     const next = terms[i + 1];
     const word = term.text.toLowerCase();
 
-    // "were" + gerund/going/gonna → "we're"
+    // "were" + gerund/going/gonna → "we're" (contraction of "we are")
+    // Only convert when no subject precedes it — any noun/pronoun before "were"
+    // means it's past tense ("they were going", "those were good").
     if (word === "were") {
       const nextTags = next.tags;
       if (
@@ -48,10 +50,15 @@ function disambiguateContractions(text) {
         next.text.toLowerCase() === "gonna" ||
         next.text.toLowerCase() === "going"
       ) {
-        // Check it's not preceded by "they/we/you" (which makes it past tense "were")
         const prev = i > 0 ? terms[i - 1] : null;
-        const prevWord = prev?.text?.toLowerCase();
-        if (!prev || !["they", "we", "you", "who"].includes(prevWord)) {
+        const prevTags = prev?.tags || [];
+        const hasPrecedingSubject =
+          prev && (
+            prevTags.includes("Noun") ||
+            prevTags.includes("Pronoun") ||
+            prevTags.includes("ProperNoun")
+          );
+        if (!hasPrecedingSubject) {
           const re = new RegExp("\\b" + term.text + "\\b");
           result = result.replace(re, term.text[0] === "W" ? "We're" : "we're");
         }

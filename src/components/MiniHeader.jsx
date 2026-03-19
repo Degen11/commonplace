@@ -32,7 +32,7 @@ export default function MiniHeader({
       boxShadow: "0 1px 8px rgba(0,0,0,0.04)",
       animation: "slideD .15s ease",
     }}>
-      <div style={{ maxWidth: 1120, width: "100%", padding: "8px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ maxWidth: 1120, width: "100%", padding: "10px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Logo size={16} />
           <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "var(--cp-text-secondary)" }}>Commonplace</span>

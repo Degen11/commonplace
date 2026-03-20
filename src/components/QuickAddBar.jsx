@@ -38,7 +38,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
   const catColor = category ? getCatColor(category, customCats) : null;
 
   return (
-    <div style={{ background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)", animation: "fadeUp .25s ease" }}>
+    <div style={{ background: "var(--cp-bg-card)", borderBottom: "1px solid var(--cp-border)" }}>
       <form
         onSubmit={handleSubmit}
         style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px" }}

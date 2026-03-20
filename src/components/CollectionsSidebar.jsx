@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Popover } from "@base-ui/react/popover";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -316,11 +317,17 @@ export default function CollectionsSidebar({
 
   if (collapsed) {
     return (
-      <div style={{
-        width: 48, flexShrink: 0, paddingRight: 8,
-        display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
-        position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
-      }}>
+      <motion.div
+        key="collapsed"
+        initial={{ width: 220, opacity: 0 }}
+        animate={{ width: 48, opacity: 1, transition: { width: { duration: 0.2, ease: "easeOut" }, opacity: { duration: 0.15, delay: 0.1 } } }}
+        style={{
+          flexShrink: 0, paddingRight: 8,
+          display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
+          position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
+          overflow: "hidden",
+        }}
+      >
         <button
           onClick={() => setCollapsed(false)}
           style={{
@@ -360,19 +367,23 @@ export default function CollectionsSidebar({
             <CollapsedDropTarget key={c.id} c={c} isActive={activeCollectionId === c.id} setActiveCollectionId={setActiveCollectionId} Icon={Icon} />
           );
         })}
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div style={{
-      width: 220, flexShrink: 0, padding: "0 12px 0 4px",
-      display: "flex", flexDirection: "column",
-      fontFamily: FONT_SANS,
-      animation: "slideD .15s ease",
-      overflow: "visible",
-      position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
-    }}>
+    <motion.div
+      key="expanded"
+      initial={{ width: 48, opacity: 0 }}
+      animate={{ width: 220, opacity: 1, transition: { width: { duration: 0.2, ease: "easeOut" }, opacity: { duration: 0.15, delay: 0.05 } } }}
+      style={{
+        flexShrink: 0, padding: "0 12px 0 4px",
+        display: "flex", flexDirection: "column",
+        fontFamily: FONT_SANS,
+        overflow: "visible",
+        position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
+      }}
+    >
       {/* Overview card */}
       <div style={styles.sidebarOverview}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -582,6 +593,6 @@ export default function CollectionsSidebar({
       </div>
       )}
 
-    </div>
+    </motion.div>
   );
 }

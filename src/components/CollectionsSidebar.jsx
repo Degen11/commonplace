@@ -566,7 +566,7 @@ export default function CollectionsSidebar({
       {/* Collections list — only scroll vertically when many items */}
       {collections.length > 0 && (
       <div style={{
-        padding: "0 8px 8px 0",
+        padding: "0 8px 8px 4px",
         overflowX: "hidden",
         overflowY: collections.length > 12 ? "auto" : "hidden",
         maxHeight: collections.length > 12 ? 420 : "none",

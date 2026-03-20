@@ -18,8 +18,8 @@ const STEPS = [
   },
   {
     Icon: Keyboard,
-    title: "Power features",
-    body: "Press ? for keyboard shortcuts. Drag quotes into collections. Bulk-select with Shift+click. Export as CSV, Markdown, or JSON.",
+    title: "Stay organized",
+    body: "Drag quotes into collections, bulk-select with Shift+click, and export your collection anytime. Press ? to see all keyboard shortcuts.",
   },
 ];
 

@@ -120,7 +120,7 @@ export const baseCSS = `
   @keyframes exitSlideLeft{to{opacity:0;transform:translateX(-24px)}}
   @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
   @keyframes completePop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
-  @keyframes dropGlow{0%{box-shadow:0 0 0 2px var(--cp-drag-insert),0 0 0 rgba(60,87,117,0)}50%{box-shadow:0 0 0 2px var(--cp-drag-insert),0 0 12px rgba(60,87,117,0.2)}100%{box-shadow:0 0 0 2px var(--cp-drag-insert),0 0 0 rgba(60,87,117,0)}}
+  @keyframes dropGlow{0%,100%{outline-color:rgba(60,87,117,0.35)}50%{outline-color:rgba(60,87,117,0.8)}}
   .spin{animation:spin 1s linear infinite}
   .copy-push{animation:copyPush .25s ease}
   .share-lift{animation:shareLift .25s ease}

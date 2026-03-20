@@ -105,7 +105,7 @@ function CollectionRow({
         background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "transparent",
         transition: "background .12s, transform .15s ease",
         position: "relative",
-        ...(dragOver ? { transform: "scale(1.03)", animation: "dropGlow .8s ease infinite" } : {}),
+        ...(dragOver ? { transform: "scale(1.03)", outline: "2px solid var(--cp-drag-insert)", outlineOffset: -2, animation: "dropGlow .8s ease infinite" } : {}),
       }}
       onClick={() => setActiveCollectionId(c.id)}
       onMouseEnter={() => setHovered(true)}
@@ -206,7 +206,7 @@ function CollapsedDropTarget({ c, isActive, setActiveCollectionId, Icon }) {
         color: isActive ? "var(--cp-accent)" : "var(--cp-text-muted)",
         padding: 6, borderRadius: 6,
         transition: "transform .15s ease",
-        ...(dragOver ? { transform: "scale(1.1)", animation: "dropGlow .8s ease infinite" } : {}),
+        ...(dragOver ? { transform: "scale(1.1)", outline: "2px solid var(--cp-drag-insert)", outlineOffset: -2, animation: "dropGlow .8s ease infinite" } : {}),
       }}
       title={c.name}
     >

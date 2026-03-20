@@ -544,6 +544,7 @@ export default function ResultsPhase({
             />
           )}
 
+          <AnimatePresence>
           {showStats && (
             <StatsOverlay
               quotes={quotes}
@@ -555,29 +556,44 @@ export default function ResultsPhase({
               onClose={() => setShowStats(false)}
             />
           )}
+          </AnimatePresence>
 
+          <AnimatePresence>
           {showAddMore && (
             headerVisible ? (
-              <div style={styles.addMorePanel}>
-                <AddMorePanel
-                  addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
-                  addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
-                  addMoreRef={addMoreRef}
-                  onAddMore={handleAddMore}
-                  onQuickAdd={handleQuickAdd}
-                  onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
-                  allCats={allCats}
-                  onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
-                />
-              </div>
+              <motion.div
+                key="add-more-inline"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto", transition: { duration: 0.25, ease: "easeOut" } }}
+                exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                style={{ overflow: "hidden" }}
+              >
+                <div style={styles.addMorePanel}>
+                  <AddMorePanel
+                    addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
+                    addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
+                    addMoreRef={addMoreRef}
+                    onAddMore={handleAddMore}
+                    onQuickAdd={handleQuickAdd}
+                    onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
+                    allCats={allCats}
+                    onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
+                  />
+                </div>
+              </motion.div>
             ) : (
-              <div style={{
-                position: "fixed", top: 49, left: 0, right: 0,
-                zIndex: 59, background: "var(--cp-mini-bg)",
-                padding: "12px 32px", borderBottom: "1px solid var(--cp-border)",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-                animation: "slideD .25s ease",
-              }}>
+              <motion.div
+                key="add-more-fixed"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } }}
+                exit={{ opacity: 0, y: -10, transition: { duration: 0.15, ease: "easeIn" } }}
+                style={{
+                  position: "fixed", top: 49, left: 0, right: 0,
+                  zIndex: 59, background: "var(--cp-mini-bg)",
+                  padding: "12px 32px", borderBottom: "1px solid var(--cp-border)",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+                }}
+              >
                 <div style={{ maxWidth: 1120, margin: "0 auto" }}>
                   <AddMorePanel
                     addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
@@ -589,9 +605,10 @@ export default function ResultsPhase({
                     onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
                   />
                 </div>
-              </div>
+              </motion.div>
             )
           )}
+          </AnimatePresence>
 
           <AnimatePresence>
           {showBulkBar && (
@@ -659,18 +676,27 @@ export default function ResultsPhase({
             />
           </SectionErrorBoundary>
 
+          <AnimatePresence>
           {showKbHint && !isMobile && quotes.length > 0 && (
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              padding: "6px 14px", fontSize: 12, color: "var(--cp-text-muted)",
-              animation: "slideD .25s ease",
-            }}>
-              <span>Press <kbd style={{ padding: "1px 5px", border: "1px solid var(--cp-border)", borderRadius: 4, fontSize: 11, fontFamily: "inherit", background: "var(--cp-bg-card)" }}>?</kbd> for keyboard shortcuts</span>
-              <button onClick={dismissKbHint} style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
-                <X size={12} strokeWidth={2} />
-              </button>
-            </div>
+            <motion.div
+              key="kb-hint"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto", transition: { duration: 0.25, ease: "easeOut" } }}
+              exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              style={{ overflow: "hidden" }}
+            >
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "6px 14px", fontSize: 12, color: "var(--cp-text-muted)",
+              }}>
+                <span>Press <kbd style={{ padding: "1px 5px", border: "1px solid var(--cp-border)", borderRadius: 4, fontSize: 11, fontFamily: "inherit", background: "var(--cp-bg-card)" }}>?</kbd> for keyboard shortcuts</span>
+                <button onClick={dismissKbHint} style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
+                  <X size={12} strokeWidth={2} />
+                </button>
+              </div>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           {/* Main content area with optional sidebar */}
           <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
@@ -695,7 +721,15 @@ export default function ResultsPhase({
             />
             <div style={{ flex: 1, minWidth: 0 }}>
 
+          <AnimatePresence>
           {showQuickInput && (
+            <motion.div
+              key="quick-add"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto", transition: { duration: 0.2, ease: "easeOut" } }}
+              exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              style={{ overflow: "hidden" }}
+            >
             <QuickAddBar
               onAdd={(text, source, category, opts) => { handleQuickAdd(text, source, category, opts); setShowQuickInput(false); }}
               onClose={() => setShowQuickInput(false)}
@@ -703,10 +737,14 @@ export default function ResultsPhase({
               customCats={customCats}
               quotes={quotes}
             />
+            </motion.div>
           )}
+          </AnimatePresence>
 
-          {/* TABLE VIEW */}
+          {/* TABLE / CARD VIEW — cross-fade on switch */}
+          <AnimatePresence mode="wait" initial={false}>
           {view === "table" && (
+            <motion.div key="table-view" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.15 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
             <SectionErrorBoundary name="Table view">
               <SortableContext items={visible.map(q => q.id)} strategy={verticalListSortingStrategy}>
               <TableView
@@ -736,10 +774,11 @@ export default function ResultsPhase({
               />
               </SortableContext>
             </SectionErrorBoundary>
+            </motion.div>
           )}
 
-          {/* CARD VIEW */}
           {view === "cards" && (
+            <motion.div key="card-view" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.15 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
             <SectionErrorBoundary name="Card view">
               <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
               <div style={isMobile ? { display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 } : { columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
@@ -789,7 +828,9 @@ export default function ResultsPhase({
               </div>
               </SortableContext>
             </SectionErrorBoundary>
+            </motion.div>
           )}
+          </AnimatePresence>
 {hasMore && (
   <button
     className="load-more-btn"

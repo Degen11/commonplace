@@ -50,7 +50,15 @@ export default defineConfig({
     }),
   ],
   build: {
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/motion/')) return 'motion';
+          if (id.includes('node_modules/@dnd-kit/')) return 'dndkit';
+        },
+      },
+    },
   },
   test: {
     globals: true,

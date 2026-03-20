@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, memo } from "react";
+import { useState, useCallback, useRef, useEffect, memo } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -85,7 +85,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
                 style={styles.overflowMenuItem}
                 onClick={() => { actionProps.onFav(q.id); }}
               >
-                <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} color={q.favorite ? "#F59E0B" : "currentColor"} strokeWidth={1.5} />
+                <Star size={14} fill={q.favorite ? "#F59E0B" : "none"} color={q.favorite ? "#F59E0B" : "currentColor"} strokeWidth={1.5} className="fav-pop" />
                 <span>{q.favorite ? "Unfavorite" : "Favorite"}</span>
               </Menu.Item>
             </Menu.Popup>
@@ -221,7 +221,7 @@ const MemoTableRow = memo(function TableRow({
         ...(stripeColor ? { boxShadow: `inset 3px 0 0 ${stripeColor}` } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .4, zIndex: 1 } : {}),
-        ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
+        ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(!isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
     >
@@ -300,6 +300,16 @@ export default function TableView({
   const [dragColOver, setDragColOver] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const listRef = useRef(null);
+  const outerRef = useRef(null);
+
+  // Stagger-in animation on initial mount — class removed after animations complete
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    el.classList.add("stagger-in");
+    const t = setTimeout(() => el.classList.remove("stagger-in"), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleColDragStart = (e, colId) => {
     e.stopPropagation();
@@ -360,7 +370,7 @@ export default function TableView({
   const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
 
   return (
-    <div style={{ overflowX: "visible" }}>
+    <div ref={outerRef} style={{ overflowX: "visible" }}>
       {filtered.length > 0 && (
         <div style={{ ...styles.tHead, top: toolbarHeight }}>
           <div style={{ width: 20, flexShrink: 0 }} />

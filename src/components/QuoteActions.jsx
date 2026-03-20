@@ -1,21 +1,30 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Menu } from "@base-ui/react/menu";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
 
 export function FavBtn({ q, onFav }) {
+  const [animating, setAnimating] = useState(false);
+  const handleClick = useCallback((e) => {
+    e.stopPropagation();
+    setAnimating(true);
+    onFav(q.id);
+    setTimeout(() => setAnimating(false), 350);
+  }, [onFav, q.id]);
+
   return (
     <button
       className="act-btn ui-tip"
       data-tip={q.favorite ? "Remove from favorites" : "Add to favorites"}
       style={{ ...styles.actBtn, "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
-      onClick={e => { e.stopPropagation(); onFav(q.id); }}
+      onClick={handleClick}
     >
       <Star
         size={16}
         fill={q.favorite ? "#F59E0B" : "none"}
         color={q.favorite ? "#F59E0B" : "currentColor"}
         strokeWidth={1.5}
+        className={animating ? "fav-pop" : ""}
       />
     </button>
   );

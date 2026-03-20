@@ -91,7 +91,13 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   }, [view]);
 
   // ── Fuse.js index for fuzzy search ──
-  const fuseIndex = useMemo(() => new Fuse(quotes, FUSE_OPTIONS), [quotes]);
+  // Rebuild index only when quote count or content/source text changes,
+  // not on every metadata update (favorite, category, confidence, etc.)
+  const fuseFingerprint = useMemo(
+    () => quotes.map(q => q.id + q.text.length + (q.source || "").length).join("|"),
+    [quotes],
+  );
+  const fuseIndex = useMemo(() => new Fuse(quotes, FUSE_OPTIONS), [fuseFingerprint]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Filtering & sorting ──
   const filtered = useMemo(() => {

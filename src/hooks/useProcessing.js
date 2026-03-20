@@ -133,25 +133,20 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     return Array.isArray(parsed) ? parsed : [];
   }, []);
 
-  // ── Processing pipeline ──
-  const runProcessing = useCallback(async (unique, appendMode, useFormatting = false) => {
-    // Create a fresh AbortController for this run
-    if (abortRef.current) abortRef.current.abort();
-    const abortController = new AbortController();
-    abortRef.current = abortController;
-    const signal = abortController.signal;
+  // ── Processing pipeline — sub-functions ──
 
+  // Phase 1: Match entries against the local quote database
+  const handleLocalLookup = useCallback(async (unique, useFormatting) => {
     const { default: localDb, localLookup } = await import("../data/localQuotes");
     initProperNouns(localDb);
 
-    const localMatches = []; const needsApi = [];
+    const localMatches = [];
+    const needsApi = [];
     unique.forEach((p, i) => {
       const match = localLookup(p.text, p.hint);
       if (match) localMatches.push({ ...p, idx: i, result: match });
       else needsApi.push({ ...p, idx: i });
     });
-
-    if (!mountedRef.current || signal.aborted) return;
 
     if (localMatches.length > 0) {
       safeDispatch({ type: "FEED", feed: localMatches.map(m => ({
@@ -159,39 +154,40 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         source: m.result.source, category: m.result.category,
       })) });
     }
-
     safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" } });
 
-    // ── External lookup (Wikiquote, Open Library, cache) ──
-    const lookupResults = new Map();
-    if (needsApi.length > 0) {
-      try {
-        safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: "Checking online databases...", phase: "lookup" } });
-        const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
-        const lr = await fetch("/api/lookup", {
-          method: "POST",
-          headers: API_HEADERS,
-          body: JSON.stringify({ quotes: lookupBody }),
-          signal,
-        });
-        if (lr.ok) {
-          const { results: lResults } = await lr.json();
-          if (Array.isArray(lResults)) {
-            lResults.forEach(r => {
-              if (r.found) {
-                const item = needsApi[r.i];
-                if (item) lookupResults.set(item.idx, r);
-              }
-            });
-          }
-        }
-      } catch (err) {
-        if (err.name === "AbortError") return;
-        // Lookup failure is non-critical — fall through to AI
-      }
-    }
+    return { localMatches, needsApi };
+  }, [safeDispatch]);
 
-    if (!mountedRef.current || signal.aborted) return;
+  // Phase 2: Check external sources (Wikiquote, Open Library, server cache)
+  const handleExternalLookup = useCallback(async (unique, needsApi, localCount, signal) => {
+    const lookupResults = new Map();
+    if (needsApi.length === 0) return { lookupResults, stillNeedsApi: [] };
+
+    try {
+      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases...", phase: "lookup" } });
+      const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
+      const lr = await fetch("/api/lookup", {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({ quotes: lookupBody }),
+        signal,
+      });
+      if (lr.ok) {
+        const { results: lResults } = await lr.json();
+        if (Array.isArray(lResults)) {
+          lResults.forEach(r => {
+            if (r.found) {
+              const item = needsApi[r.i];
+              if (item) lookupResults.set(item.idx, r);
+            }
+          });
+        }
+      }
+    } catch (err) {
+      if (err.name === "AbortError") throw err;
+      // Lookup failure is non-critical — fall through to AI
+    }
 
     const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
     if (lookupResults.size > 0) {
@@ -199,45 +195,73 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         const item = needsApi[r.i];
         return { text: item?.text || "", source: r.source, category: r.category };
       }) });
-      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
+      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
     }
 
-    const preAiDone = localMatches.length + lookupResults.size;
-    const apiResults = new Map(); let apiFailed = false; const failed = [];
-    if (stillNeedsApi.length > 0) {
-      for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
-        if (!mountedRef.current || signal.aborted) return;
-        const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
-        safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
-        try {
-          const results = await identifyBatch(chunk, useFormatting, signal);
-          if (!mountedRef.current || signal.aborted) return;
-          results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-          safeDispatch({ type: "FEED_APPEND", items: results.map(r => {
-            const item = chunk[r.i];
-            return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
-          }) });
-          // Cache only high-confidence AI results (fire-and-forget)
-          const cacheItems = results
-            .filter(r => r.source && chunk[r.i] && r.confidence === "high")
-            .map(r => ({
-              text: chunk[r.i].text, hint: null,
-              source: r.source, category: r.category, confidence: r.confidence,
-            }));
-          if (cacheItems.length > 0) {
-            fetch("/api/cache", {
-              method: "POST",
-              headers: API_HEADERS,
-              body: JSON.stringify({ items: cacheItems }),
-            }).catch(() => {});
-          }
-        } catch (err) {
-          if (err.name === "AbortError") return;
-          apiFailed = true; chunk.forEach(c => failed.push(c));
-          safeDispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
-          break;
+    return { lookupResults, stillNeedsApi };
+  }, [safeDispatch]);
+
+  // Phase 3: Send remaining entries to Claude for AI identification in batches
+  const handleApiBatch = useCallback(async (unique, stillNeedsApi, preAiDone, useFormatting, signal) => {
+    const apiResults = new Map();
+    let apiFailed = false;
+    const failed = [];
+
+    for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
+      if (!mountedRef.current || signal.aborted) return { apiResults, apiFailed, failed };
+      const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
+      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
+      try {
+        const results = await identifyBatch(chunk, useFormatting, signal);
+        if (!mountedRef.current || signal.aborted) return { apiResults, apiFailed, failed };
+        results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
+        safeDispatch({ type: "FEED_APPEND", items: results.map(r => {
+          const item = chunk[r.i];
+          return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
+        }) });
+        // Cache only high-confidence AI results (fire-and-forget)
+        const cacheItems = results
+          .filter(r => r.source && chunk[r.i] && r.confidence === "high")
+          .map(r => ({
+            text: chunk[r.i].text, hint: null,
+            source: r.source, category: r.category, confidence: r.confidence,
+          }));
+        if (cacheItems.length > 0) {
+          fetch("/api/cache", {
+            method: "POST",
+            headers: API_HEADERS,
+            body: JSON.stringify({ items: cacheItems }),
+          }).catch(() => {});
         }
+      } catch (err) {
+        if (err.name === "AbortError") return { apiResults, apiFailed: true, failed };
+        apiFailed = true;
+        chunk.forEach(c => failed.push(c));
+        safeDispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
+        break;
       }
+    }
+
+    return { apiResults, apiFailed, failed };
+  }, [safeDispatch, identifyBatch, allCats]);
+
+  // ── Processing pipeline — orchestrator ──
+  const runProcessing = useCallback(async (unique, appendMode, useFormatting = false) => {
+    if (abortRef.current) abortRef.current.abort();
+    const abortController = new AbortController();
+    abortRef.current = abortController;
+    const signal = abortController.signal;
+
+    const { localMatches, needsApi } = await handleLocalLookup(unique, useFormatting);
+    if (!mountedRef.current || signal.aborted) return;
+
+    const { lookupResults, stillNeedsApi } = await handleExternalLookup(unique, needsApi, localMatches.length, signal);
+    if (!mountedRef.current || signal.aborted) return;
+
+    const preAiDone = localMatches.length + lookupResults.size;
+    let apiResults = new Map(), apiFailed = false, failed = [];
+    if (stillNeedsApi.length > 0) {
+      ({ apiResults, apiFailed, failed } = await handleApiBatch(unique, stillNeedsApi, preAiDone, useFormatting, signal));
     }
     if (!mountedRef.current || signal.aborted) return;
     if (failed.length > 0) safeDispatch({ type: "FAILED_ENTRIES", entries: failed });
@@ -267,7 +291,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       safeDispatch({ type: "FINISH" });
       goPhase("results");
     }, PROCESSING_DONE_MS);
-  }, [safeDispatch, identifyBatch, allCats, setQuotes, goPhase]);
+  }, [safeDispatch, handleLocalLookup, handleExternalLookup, handleApiBatch, allCats, setQuotes, goPhase]);
 
   const processEntries = useCallback(async (inputText, appendMode = false, useFormatting = false) => {
     const lines = smartSplit(inputText.trim());

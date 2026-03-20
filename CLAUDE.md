@@ -68,6 +68,9 @@ src/
     EditForm.jsx               Full quote editor modal
     InlineEditors.jsx          Click-to-edit source/category with autocomplete
     CollectionsSidebar.jsx     Collection management sidebar
+    OnboardingModal.jsx        First-run 3-step onboarding walkthrough
+    QuoteActions.jsx           Shared action components (FavBtn with pop animation)
+    HighlightText.jsx          Search term highlighting in table/card views
     styles.js                  All CSS-in-JS style objects + baseCSS (global CSS string)
 
   hooks/
@@ -165,7 +168,7 @@ User input → smartSplit() → deduplicate against existing
 - **`ResultsPhase.jsx`** — The results phase. Calls `useQuotesContext()` directly. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
 - **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
-- **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
+- **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Three extracted sub-functions (`handleLocalLookup`, `handleExternalLookup`, `handleApiBatch`) orchestrated by `runProcessing()`. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
 - **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.).
 - **`_schemas.js`** — Zod schemas for all API endpoints. Server-side validation with filter-style arrays (silently drops invalid items).
@@ -193,7 +196,7 @@ vercel dev        # Test serverless functions locally
 - **Hooks own their domain** — each major feature gets a custom hook (`useProcessing`, `useSync`, `useEditState`, etc.) that encapsulates state + logic. App.jsx initializes them and passes props down
 - **Functional updaters** — `setQuotes(prev => [...prev, ...new])` pattern used everywhere (Zustand setters accept both direct values and updater functions)
 - **useReducer for complex state** — `useProcessing` uses a reducer/dispatch pattern for its state machine
-- **Memoization** — `useMemo` for derived data, `useCallback` for handlers passed as props, `React.memo` on expensive list items with `propsEqual()` from `utils/helpers.js` for custom comparators
+- **Memoization** — `useMemo` for derived data, `useCallback` for handlers passed as props, `React.memo` on expensive list items with `propsEqual()` from `utils/helpers.js` for custom comparators. Fuse.js index uses a fingerprint string (`id + text.length + source.length`) to avoid re-indexing on metadata-only changes
 - **Constants centralized** — all magic numbers live in `src/config.js`. Category definitions and Z-index scale in `src/data/constants.js`. UI thresholds (swipe, long-press, breakpoints), localStorage keys, and share hash prefixes all in `config.js`
 - **Animation timing tiers** — three standardized durations in `config.js`: `ANIM_FAST_MS` (150ms, micro-interactions), `ANIM_STANDARD_MS` (250ms, default transitions), `ANIM_SLOW_MS` (400ms, deliberate feedback like save pulse). CSS animations in `baseCSS` mirror these tiers. Don't introduce new arbitrary durations
 - **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
@@ -247,3 +250,5 @@ Z.TOAST           2000  Toasts
 - **The assistant prefill** in `identify.js` (line 95: `{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
 - **SSRF protection in `fetch-url.js`** — `isPrivateHostname()` blocks requests to private/internal IPs (RFC1918, loopback, link-local, cloud metadata). Manual redirect following validates each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
 - **OG font pinned version** — `og.js` loads Inter font from jsdelivr with a pinned version (`@5.1.1`). Don't change to `@latest` — unpinned CDN URLs risk breakage from upstream changes
+- **Build chunk splitting** — `vite.config.js` uses a function-based `manualChunks` to split `motion` and `@dnd-kit` into separate chunks. Don't use object-based config (causes circular chunk warnings between dndkit and tanstack)
+- **Onboarding localStorage key** — `LS_ONBOARDED` (`commonplace_onboarded`) tracks whether the user has seen the first-run modal. Don't reset this without user intent

@@ -1,8 +1,17 @@
 import { useMemo } from "react";
-import { styles } from "./styles";
+import { styles, FONT_SANS } from "./styles";
 import { getCatColor } from "../data/constants";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Database, Globe, Sparkles } from "lucide-react";
 import Logo from "./Logo";
+import { pluralize } from "../utils/helpers";
+
+const statChipStyle = {
+  display: "inline-flex", alignItems: "center", gap: 6,
+  padding: "5px 12px", borderRadius: 6,
+  background: "var(--cp-bg-panel)", border: "1px solid var(--cp-border-light)",
+  fontSize: 12, color: "var(--cp-text-secondary)", fontWeight: 500,
+  fontFamily: FONT_SANS,
+};
 
 function phaseSubtitle(progress, doneCount, total) {
   if (!progress) return "Preparing\u2026";
@@ -29,6 +38,7 @@ export default function ProcessingPhase({
   customCats,
   onCancel,
   processingDone,
+  stats,
 }) {
   const doneCount = progress?.done || 0;
   const total = progress?.total || 0;
@@ -48,10 +58,35 @@ export default function ProcessingPhase({
         {isComplete ? (
           <>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <CheckCircle size={48} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
-              <h2 style={{ ...styles.procTitle, color: "#059669", animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
+              <CheckCircle size={56} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
+              <h2 style={{ ...styles.procTitle, color: "#059669", fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
               <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>{total} entries organized and ready to explore</p>
             </div>
+            {stats && (
+              <div style={{
+                display: "flex", gap: 12, marginTop: 12, justifyContent: "center",
+                flexWrap: "wrap", animation: "fadeUp .35s .35s ease both",
+              }}>
+                {stats.local > 0 && (
+                  <div style={statChipStyle}>
+                    <Database size={13} strokeWidth={1.5} color="#059669" />
+                    {pluralize(stats.local, "match", "matches")} from local DB
+                  </div>
+                )}
+                {stats.lookup > 0 && (
+                  <div style={statChipStyle}>
+                    <Globe size={13} strokeWidth={1.5} color="#2563EB" />
+                    {stats.lookup} found online
+                  </div>
+                )}
+                {stats.api > 0 && (
+                  <div style={statChipStyle}>
+                    <Sparkles size={13} strokeWidth={1.5} color="#7C3AED" />
+                    {stats.api} identified by AI
+                  </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <>

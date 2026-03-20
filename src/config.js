@@ -75,3 +75,4 @@ export const LS_SORT        = "commonplace_sort";
 export const LS_SIDEBAR     = "commonplace_sidebar_collapsed";
 export const LS_KB_HINT     = "commonplace_kb_hint_dismissed";
 export const LS_SHOW_CONF   = "commonplace_show_confidence";
+export const LS_ONBOARDED   = "commonplace_onboarded";

@@ -93,7 +93,7 @@ const MemoCardItem = memo(function CardItem({
         ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
         ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
-        ...(isDeleting ? { animation: "exitFade .18s ease forwards" } : {}),
+        ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
         ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? "inset 0 2px 0 #3C5775" : null].filter(Boolean).join(", ") || undefined },

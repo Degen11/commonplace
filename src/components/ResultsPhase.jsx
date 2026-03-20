@@ -39,7 +39,7 @@ import CollectionsSidebar from "./CollectionsSidebar";
 import QuickAddBar from "./QuickAddBar";
 import { styles } from "./styles";
 
-import { X } from "lucide-react";
+import { X, HelpCircle } from "lucide-react";
 
 export default function ResultsPhase({
   // From useProcessing (stays in App.jsx)
@@ -870,6 +870,24 @@ export default function ResultsPhase({
 
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
+
+          {/* Persistent help trigger — floating ? button */}
+          <button
+            className="ui-tip ui-tip-left hdr-btn"
+            data-tip="Help & shortcuts"
+            onClick={() => { setShowShortcuts(true); dismissKbHint(); }}
+            style={{
+              position: "fixed", bottom: showBulkBar ? 72 : 20, right: 20,
+              width: 36, height: 36, borderRadius: "50%",
+              border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
+              boxShadow: "var(--cp-shadow-card)", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--cp-text-muted)", zIndex: 59,
+              transition: "bottom .2s ease, box-shadow .15s ease",
+            }}
+          >
+            <HelpCircle size={16} strokeWidth={1.5} />
+          </button>
           <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }} modifiers={[anchorToCursor]}>
             {activeDragId ? (() => {
               const q = quotes.find(x => x.id === activeDragId);
@@ -881,7 +899,7 @@ export default function ResultsPhase({
                   {count > 1 && (
                     <span style={{
                       position: "absolute", top: -8, left: -8, zIndex: 1,
-                      background: "#3C5775", color: "#fff",
+                      background: "var(--cp-accent)", color: "#fff",
                       fontSize: 11, fontWeight: 700, lineHeight: 1,
                       padding: "3px 7px", borderRadius: 6,
                       boxShadow: "0 2px 8px rgba(0,0,0,0.25)",

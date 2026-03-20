@@ -160,6 +160,63 @@ const HP = {
     fontFamily: FONT_SANS,
     letterSpacing: -0.2,
   },
+  heroProblem: {
+    fontFamily: FONT_SANS,
+    fontSize: 14,
+    fontWeight: 500,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: CP_ACCENT,
+    marginBottom: 12,
+  },
+  heroMiniDemo: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    padding: "12px 16px",
+    background: "var(--cp-bg-panel)",
+    border: "1px solid var(--cp-border-light)",
+    borderRadius: 6,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  miniDemoLabel: {
+    fontSize: 10,
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    color: "var(--cp-text-faint)",
+  },
+  miniDemoRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    fontSize: 13,
+    flexWrap: "wrap",
+  },
+  miniDemoBefore: {
+    color: "var(--cp-text-muted)",
+    fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+    fontSize: 12,
+  },
+  miniDemoAfter: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontWeight: 500,
+    color: "var(--cp-text-secondary)",
+  },
+  miniDemoTag: {
+    fontSize: 9,
+    fontWeight: 700,
+    padding: "2px 6px",
+    borderRadius: 3,
+    background: "rgba(59,130,246,0.08)",
+    color: "#3967CD",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+    fontFamily: "'DM Mono',monospace",
+  },
   heroTrust: {
     fontSize: 13,
     color: CP_ACCENT,
@@ -609,6 +666,7 @@ export default function InputPhase({
 
         {/* Left column — headline & value prop */}
         <div style={HP.heroLeft}>
+          <p style={HP.heroProblem}>Never lose a brilliant quote again.</p>
           <h1 className="hp-hero-headline" style={HP.heroHeadline}>
             Your personal<br />library of ideas
           </h1>
@@ -616,6 +674,17 @@ export default function InputPhase({
             Paste messy quotes, phrases, and fragments.
             We organize everything and identify the sources.
           </p>
+          <div style={HP.heroMiniDemo}>
+            <div style={HP.miniDemoLabel}>See how it works</div>
+            <div style={HP.miniDemoRow}>
+              <span style={HP.miniDemoBefore}>"be the change — Gandhi"</span>
+              <ArrowRight size={14} color="var(--cp-text-faint)" style={{ flexShrink: 0 }} />
+              <span style={HP.miniDemoAfter}>
+                <span style={HP.miniDemoTag}>Speech</span>
+                Mahatma Gandhi
+              </span>
+            </div>
+          </div>
           <p style={HP.heroTrust}>No signup · Private processing · Instant results · Free</p>
         </div>
 

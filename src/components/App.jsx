@@ -21,6 +21,7 @@ import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
 import ResultsPhase from "./ResultsPhase";
 import SectionErrorBoundary from "./SectionErrorBoundary";
+import OnboardingModal from "./OnboardingModal";
 
 export default function Commonplace() {
   const { showToast } = useToastContext();
@@ -135,6 +136,7 @@ export default function Commonplace() {
       <Analytics />
       <SpeedInsights />
 
+      <OnboardingModal />
       <DupeModal
         pendingDupes={pendingDupes}
         dupeDecisions={dupeDecisions}
@@ -175,6 +177,7 @@ export default function Commonplace() {
             customCats={customCats}
             processingDone={processingDone}
             onCancel={cancelProcessing}
+            stats={stats}
           />
         </SectionErrorBoundary>
         </motion.div>

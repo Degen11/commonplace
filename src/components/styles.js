@@ -37,6 +37,9 @@ export const baseCSS = `
     --cp-fav-chip-bg:#FEF3C7;--cp-fav-chip-border:#FDE68A;--cp-fav-chip-text:#D97706;
     --cp-suggest-bg:rgba(5,150,105,0.08);--cp-suggest-border:rgba(5,150,105,0.2);--cp-suggest-btn:#059669;
     --cp-conf-high:#16A34A;--cp-conf-medium:#D97706;--cp-conf-low:#DC2626;
+    --cp-focus-ring:rgba(60,87,117,0.5);
+    --cp-drag-insert:#3C5775;
+    --cp-selection-bg:rgba(60,87,117,0.18);
   }
   html.dark{
     --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
@@ -57,6 +60,9 @@ export const baseCSS = `
     --cp-fav-chip-bg:rgba(250,204,21,0.10);--cp-fav-chip-border:rgba(250,204,21,0.25);--cp-fav-chip-text:rgba(250,204,21,0.7);
     --cp-suggest-bg:rgba(5,150,105,0.12);--cp-suggest-border:rgba(5,150,105,0.3);--cp-suggest-btn:#10B981;
     --cp-conf-high:rgba(74,222,128,0.7);--cp-conf-medium:rgba(251,191,36,0.6);--cp-conf-low:rgba(248,113,113,0.6);
+    --cp-focus-ring:rgba(144,180,212,0.5);
+    --cp-drag-insert:#90B4D4;
+    --cp-selection-bg:rgba(90,137,181,0.3);
   }
   @media(prefers-color-scheme:dark){
     html:not(.light){
@@ -78,6 +84,9 @@ export const baseCSS = `
       --cp-fav-chip-bg:rgba(250,204,21,0.10);--cp-fav-chip-border:rgba(250,204,21,0.25);--cp-fav-chip-text:rgba(250,204,21,0.7);
       --cp-suggest-bg:rgba(5,150,105,0.12);--cp-suggest-border:rgba(5,150,105,0.3);--cp-suggest-btn:#10B981;
       --cp-conf-high:rgba(74,222,128,0.7);--cp-conf-medium:rgba(251,191,36,0.6);--cp-conf-low:rgba(248,113,113,0.6);
+      --cp-focus-ring:rgba(144,180,212,0.5);
+      --cp-drag-insert:#90B4D4;
+      --cp-selection-bg:rgba(90,137,181,0.3);
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -87,11 +96,12 @@ export const baseCSS = `
   :root{transition:background-color .3s ease,color .3s ease}
   body{transition:background-color .3s ease,color .3s ease}
   .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,background .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
-  ::selection{background:rgba(60,87,117,0.18)}
-  html.dark ::selection{background:rgba(90,137,181,0.3)}
-  @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:rgba(90,137,181,0.3)}}
+  ::selection{background:var(--cp-selection-bg)}
+  html.dark ::selection{background:var(--cp-selection-bg)}
+  @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:var(--cp-selection-bg)}}
   textarea:focus,input:focus,select:focus{outline:none}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes staggerIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
   @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -106,11 +116,15 @@ export const baseCSS = `
   @keyframes backdropBlurIn{from{opacity:0;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}to{opacity:1;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
   @keyframes toastSlideIn{0%{opacity:0;transform:translateY(16px) scale(0.95)}60%{opacity:1;transform:translateY(-3px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes copyPush{0%{transform:scale(1)}40%{transform:scale(.82)}100%{transform:scale(1)}}
+  @keyframes favPop{0%{transform:scale(1)}30%{transform:scale(0.8)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+  @keyframes exitSlideLeft{to{opacity:0;transform:translateX(-24px)}}
   @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
   @keyframes completePop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes dropGlow{0%{box-shadow:0 0 0 2px var(--cp-drag-insert),0 0 0 rgba(60,87,117,0)}50%{box-shadow:0 0 0 2px var(--cp-drag-insert),0 0 12px rgba(60,87,117,0.2)}100%{box-shadow:0 0 0 2px var(--cp-drag-insert),0 0 0 rgba(60,87,117,0)}}
   .spin{animation:spin 1s linear infinite}
   .copy-push{animation:copyPush .25s ease}
   .share-lift{animation:shareLift .25s ease}
+  .fav-pop{animation:favPop .35s ease}
   .phase-in{animation:fadeUp .25s ease}.phase-out{opacity:0;transition:opacity .15s ease}
   html{scroll-behavior:smooth;scrollbar-gutter:stable}
   div[style]:focus{outline:none;border-color:transparent}
@@ -146,7 +160,7 @@ export const baseCSS = `
    */
 
   /* Row interactions (optimized) */
-  .qrow{cursor:default;transition:background 0.18s ease}
+  .qrow{cursor:default;transition:background 0.1s ease}
   .qrow:hover{background:var(--cp-bg-hover) !important}
   .qrow:hover .checkbox-visual{opacity:1 !important}
 
@@ -168,7 +182,7 @@ export const baseCSS = `
   @media(max-width:640px){.edit-hint{opacity:0.35}}
 
   /* Checkbox hover affordance */
-  .checkbox-visual:hover{border-color:#3C5775 !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
+  .checkbox-visual:hover{border-color:var(--cp-accent) !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
 
   .dd-opt:hover,.dd-opt[data-highlighted]{background:var(--cp-bg-hover) !important}
   .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
@@ -194,17 +208,17 @@ export const baseCSS = `
   .ui-tip-left::after{left:auto;right:0;transform:none}
 
   /* Drag insertion indicator */
-  .drag-insert-above{box-shadow:inset 0 2px 0 #3C5775 !important}
-  .drag-insert-below{box-shadow:inset 0 -2px 0 #3C5775 !important}
+  .drag-insert-above{box-shadow:inset 0 2px 0 var(--cp-drag-insert) !important}
+  .drag-insert-below{box-shadow:inset 0 -2px 0 var(--cp-drag-insert) !important}
 
   /* Category pills horizontal scroll */
   .cat-scroll::-webkit-scrollbar{display:none}
   .cat-scroll{-ms-overflow-style:none;scrollbar-width:none}
 
   /* Focus-visible accessibility */
-  button:focus-visible,a:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px;border-radius:4px}
-  input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:1px}
-  .check:focus-visible{outline:2px solid rgba(60,87,117,0.5);outline-offset:2px}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--cp-focus-ring);outline-offset:2px;border-radius:4px}
+  input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--cp-focus-ring);outline-offset:1px}
+  .check:focus-visible{outline:2px solid var(--cp-focus-ring);outline-offset:2px}
 
   /* Save pulse for inline edits */
   .save-pulse{animation:savePulse .4s ease}
@@ -245,6 +259,20 @@ export const baseCSS = `
   /* Button press feedback — subtle scale on mousedown */
   .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled){transform:scale(0.97) !important;transition:transform .1s ease !important}
   .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
+
+  /* Staggered entrance for table rows — uses nth-child for cascade */
+  .stagger-in .qrow{animation:staggerIn .2s ease both}
+  .stagger-in .qrow:nth-child(1){animation-delay:0s}
+  .stagger-in .qrow:nth-child(2){animation-delay:.03s}
+  .stagger-in .qrow:nth-child(3){animation-delay:.06s}
+  .stagger-in .qrow:nth-child(4){animation-delay:.09s}
+  .stagger-in .qrow:nth-child(5){animation-delay:.12s}
+  .stagger-in .qrow:nth-child(6){animation-delay:.15s}
+  .stagger-in .qrow:nth-child(7){animation-delay:.18s}
+  .stagger-in .qrow:nth-child(8){animation-delay:.21s}
+  .stagger-in .qrow:nth-child(9){animation-delay:.24s}
+  .stagger-in .qrow:nth-child(10){animation-delay:.27s}
+  .stagger-in .qrow:nth-child(n+11){animation-delay:.3s}
 
   /* Card hover lift */
   .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}
@@ -303,6 +331,7 @@ export const baseCSS = `
     .hp-hero{grid-template-columns:1fr !important;text-align:center;gap:32px !important;min-height:auto !important;padding:80px 32px 48px !important}
     .hp-hero-headline{font-size:38px !important;letter-spacing:-1.5px !important}
     .hp-hero-sub{max-width:none !important;font-size:17px !important}
+    .hp-mini-demo{text-align:left !important}
     .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
     .hp-timeline-cols{grid-template-columns:repeat(2, 1fr) !important}
@@ -582,11 +611,11 @@ export const styles = {
     top:44,
     zIndex:49,
   },
-  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .18s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
+  row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .1s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)"},
   chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"flex-start",opacity:0.35,transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid var(--cp-border-dim)",borderColor:"var(--cp-border-dim)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
-  checkOn:{background:"#3C5775",borderColor:"#3C5775"},
+  checkOn:{background:"var(--cp-accent)",borderColor:"var(--cp-accent)"},
   entryText:{fontSize:14,lineHeight:1.65,color:"var(--cp-text-secondary)",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.35,color:"var(--cp-text-secondary)",whiteSpace:"pre-wrap",cursor:"text"},
   // #8 srcCol flex instead of fixed width

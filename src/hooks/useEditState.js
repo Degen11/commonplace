@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
 import { toggleInSet, addAllToSet } from "../utils/helpers";
@@ -52,11 +52,10 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   }, [quotes, reviewQueue]);
 
   // ── Selection scope — use a ref so toggleSel always reads the latest
-  // scope without needing to be recreated (avoids stale closures in
-  // MemoTableRow, which omits toggleSel from its propsEqual comparator). ──
+  // scope without needing to be recreated (avoids stale closures). ──
   const selScope = visibleFiltered || filtered;
   const selScopeRef = useRef(selScope);
-  selScopeRef.current = selScope;
+  useEffect(() => { selScopeRef.current = selScope; }, [selScope]);
 
   // ── Reset shift-click index when selection scope changes ──
   useEffect(() => {
@@ -64,17 +63,17 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   }, [selScope]);
 
   // ── Helpers ──
-  const startEditing = useCallback((id) => {
+  const startEditing = (id) => {
     setEditingId(id);
     setInlineEdit(null);
-  }, []);
+  };
 
-  const startInlineEdit = useCallback((id, field) => {
+  const startInlineEdit = (id, field) => {
     setInlineEdit({ id, field });
     setEditingId(null);
-  }, []);
+  };
 
-  const saveEdit = useCallback((id, text, source, category) => {
+  const saveEdit = (id, text, source, category) => {
     if (!text || !text.trim()) return;
     setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high", updatedAt: Date.now() } : q));
     setEditingId(null);
@@ -95,9 +94,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
         showToast("Review complete \u2014 all entries updated!", null, null, "success");
       }
     }
-  }, [setQuotes, reviewQueue, showToast]);
+  };
 
-  const saveInlineField = useCallback((id, field, value) => {
+  const saveInlineField = (id, field, value) => {
     setQuotes(p => p.map(q => {
       if (q.id !== id) return q;
       const newVal = field === "source" ? (value.trim() || q.source) : value;
@@ -106,9 +105,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     setInlineEdit(null);
     setSavedPulse({ id, field });
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), SAVED_PULSE_MS);
-  }, [setQuotes]);
+  };
 
-  const toggleSel = useCallback((id, shiftKey = false) => {
+  const toggleSel = (id, shiftKey = false) => {
     const scope = selScopeRef.current;
     if (shiftKey && lastSelectedIndex.current !== null) {
       const lastIndex = scope.findIndex(q => q.id === lastSelectedIndex.current);
@@ -128,9 +127,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       setSelected(p => toggleInSet(p, id));
       lastSelectedIndex.current = id;
     }
-  }, []);
+  };
 
-  const selAll = useCallback(() => {
+  const selAll = () => {
     const scope = selScopeRef.current;
     if (scope.length === 0) return;
     setSelected(prev => {
@@ -138,9 +137,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       lastSelectedIndex.current = null;
       return allSelected ? new Set() : new Set(scope.map(q => q.id));
     });
-  }, []);
+  };
 
-  const applyBulk = useCallback(() => {
+  const applyBulk = () => {
     const affectedIds = new Set(selected);
     const snapshot = quotes.filter(q => affectedIds.has(q.id)).map(q => ({ ...q }));
     setQuotes(p => p.map(q => {
@@ -161,9 +160,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     showToast(msg, "Undo", () => {
       setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
     });
-  }, [quotes, selected, bulkEditCat, bulkEditSource, setQuotes, showToast]);
+  };
 
-  const bulkDel = useCallback(() => {
+  const bulkDel = () => {
     setConfirmBulkDel(false);
     const deletedQuotes = quotes.filter(q => selected.has(q.id));
     const deletedIds = new Set(selected);
@@ -197,9 +196,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       // Restore collection memberships
       collectionSnapshot.forEach(({ id, quoteIds }) => addToCollection(id, quoteIds));
     });
-  }, [quotes, selected, setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection]);
+  };
 
-  const startReviewFlow = useCallback(() => {
+  const startReviewFlow = () => {
     const attentionIds = quotes
       .filter(q => q.confidence === "low" || q.category === "Unknown")
       .sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0))
@@ -213,7 +212,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       }, 150);
     }
     return attentionIds;
-  }, [quotes]);
+  };
 
   return {
     editingId, setEditingId,

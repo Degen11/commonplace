@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -37,7 +37,7 @@ export default function Commonplace() {
     cleanCollectionRefs,
   } = useQuotesContext();
 
-  const [phase, setPhase]         = useState("input");
+  const [phase, setPhase]         = useState(() => quotes.length > 0 ? "results" : "input");
   const [rawInput, setRawInput]   = useState(() => {
     try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
   });
@@ -68,12 +68,15 @@ export default function Commonplace() {
   const [importedFileName, setImportedFileName] = useState(null);
   const fileInputRef        = useRef(null);
 
-  // useLayoutEffect prevents flash of input phase on synchronous loads
-  useLayoutEffect(() => {
-    if (quotes.length > 0 && phase === "input") {
-      setPhase("results");
-    }
-  }, [quotes.length, phase]);
+  // When quotes are loaded from sync/shared link, transition to results
+  const [prevQuotesEmpty, setPrevQuotesEmpty] = useState(quotes.length === 0);
+  if (prevQuotesEmpty && quotes.length > 0 && phase === "input") {
+    setPrevQuotesEmpty(false);
+    setPhase("results");
+  }
+  if (!prevQuotesEmpty && quotes.length === 0) {
+    setPrevQuotesEmpty(true);
+  }
 
   // Auto-save raw input draft
   useEffect(() => {
@@ -99,7 +102,7 @@ export default function Commonplace() {
 
   const handleProcess = () => processEntries(rawInput, false, formattingEnabled);
 
-  const importCollections = useCallback((imported) => {
+  const importCollections = (imported) => {
     const existingNames = new Set(collections.map(c => c.name.toLowerCase()));
     let added = 0;
     for (const c of imported) {
@@ -113,16 +116,16 @@ export default function Commonplace() {
       }
     }
     if (added > 0) showToast(`Imported ${pluralize(added, "collection")}`, null, null, "success");
-  }, [collections, createCollection, updateCollectionIcon, addToCollection, showToast]);
+  };
 
   // Called by ResultsPhase when user confirms "Start fresh"
-  const clearParentState = useCallback(() => {
+  const clearParentState = () => {
     setPhase("input");
     setRawInput("");
     setImportedFileName(null);
     setInputTab("paste");
     resetProcessingState();
-  }, [resetProcessingState]);
+  };
 
   // Shared motion variants for phase transitions
   const phaseVariants = {

@@ -1,6 +1,4 @@
-import { useReducer, useRef, useCallback, useEffect, useMemo } from "react";
-import useMounted from "./useMounted";
-import { useSafeDispatch } from "./useMounted";
+import { useReducer, useRef, useEffect } from "react";
 import { buildValidCats, fallbackCategory } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
@@ -95,17 +93,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const abortRef = useRef(null);
   const appendModeRef = useRef(false);
 
-  const mountedRef = useMounted();
-  const safeDispatch = useSafeDispatch(dispatch);
-
   // Refs for latest values — so callbacks never read stale closures
   const quotesRef = useRef(quotes);
-  quotesRef.current = quotes;
+  useEffect(() => { quotesRef.current = quotes; }, [quotes]);
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => { stateRef.current = state; }, [state]);
 
   // ── API: batch identification ──
-  const identifyBatch = useCallback(async (items, withFormatting = false, externalSignal) => {
+  const identifyBatch = async (items, withFormatting = false, externalSignal) => {
     if (items.length === 0) return [];
     const quotesBlock = items.map((it, i) => {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
@@ -132,12 +127,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     let parsed;
     try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
     return Array.isArray(parsed) ? parsed : [];
-  }, []);
+  };
 
   // ── Processing pipeline — sub-functions ──
 
   // Phase 1: Match entries against the local quote database
-  const handleLocalLookup = useCallback(async (unique, useFormatting) => {
+  const handleLocalLookup = async (unique, useFormatting) => {
     const { default: localDb, localLookup } = await import("../data/localQuotes");
     initProperNouns(localDb);
 
@@ -150,23 +145,23 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     if (localMatches.length > 0) {
-      safeDispatch({ type: "FEED", feed: localMatches.map(m => ({
+      dispatch({ type: "FEED", feed: localMatches.map(m => ({
         text: useFormatting ? basicFormat(m.text) : m.text,
         source: m.result.source, category: m.result.category,
       })) });
     }
-    safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" } });
+    dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" } });
 
     return { localMatches, needsApi };
-  }, [safeDispatch]);
+  };
 
   // Phase 2: Check external sources (Wikiquote, Open Library, server cache)
-  const handleExternalLookup = useCallback(async (unique, needsApi, localCount, signal) => {
+  const handleExternalLookup = async (unique, needsApi, localCount, signal) => {
     const lookupResults = new Map();
     if (needsApi.length === 0) return { lookupResults, stillNeedsApi: [] };
 
     try {
-      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases...", phase: "lookup" } });
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases...", phase: "lookup" } });
       const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
       const lr = await fetch("/api/lookup", {
         method: "POST",
@@ -192,31 +187,31 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
     if (lookupResults.size > 0) {
-      safeDispatch({ type: "FEED_APPEND", items: [...lookupResults.values()].map(r => {
+      dispatch({ type: "FEED_APPEND", items: [...lookupResults.values()].map(r => {
         const item = needsApi[r.i];
         return { text: item?.text || "", source: r.source, category: r.category };
       }) });
-      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
     }
 
     return { lookupResults, stillNeedsApi };
-  }, [safeDispatch]);
+  };
 
   // Phase 3: Send remaining entries to Claude for AI identification in batches
-  const handleApiBatch = useCallback(async (unique, stillNeedsApi, preAiDone, useFormatting, signal) => {
+  const handleApiBatch = async (unique, stillNeedsApi, preAiDone, useFormatting, signal) => {
     const apiResults = new Map();
     let apiFailed = false;
     const failed = [];
 
     for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
-      if (!mountedRef.current || signal.aborted) return { apiResults, apiFailed, failed };
+      if (signal.aborted) return { apiResults, apiFailed, failed };
       const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
-      safeDispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
       try {
         const results = await identifyBatch(chunk, useFormatting, signal);
-        if (!mountedRef.current || signal.aborted) return { apiResults, apiFailed, failed };
+        if (signal.aborted) return { apiResults, apiFailed, failed };
         results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-        safeDispatch({ type: "FEED_APPEND", items: results.map(r => {
+        dispatch({ type: "FEED_APPEND", items: results.map(r => {
           const item = chunk[r.i];
           return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
         }) });
@@ -238,16 +233,16 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         if (err.name === "AbortError") return { apiResults, apiFailed: true, failed };
         apiFailed = true;
         chunk.forEach(c => failed.push(c));
-        safeDispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
+        dispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
         break;
       }
     }
 
     return { apiResults, apiFailed, failed };
-  }, [safeDispatch, identifyBatch, allCats]);
+  };
 
   // ── Processing pipeline — orchestrator ──
-  const runProcessing = useCallback(async (unique, appendMode, useFormatting = false) => {
+  const runProcessing = async (unique, appendMode, useFormatting = false) => {
     appendModeRef.current = appendMode;
     if (abortRef.current) abortRef.current.abort();
     const abortController = new AbortController();
@@ -255,18 +250,18 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const signal = abortController.signal;
 
     const { localMatches, needsApi } = await handleLocalLookup(unique, useFormatting);
-    if (!mountedRef.current || signal.aborted) return;
+    if (signal.aborted) return;
 
     const { lookupResults, stillNeedsApi } = await handleExternalLookup(unique, needsApi, localMatches.length, signal);
-    if (!mountedRef.current || signal.aborted) return;
+    if (signal.aborted) return;
 
     const preAiDone = localMatches.length + lookupResults.size;
     let apiResults = new Map(), apiFailed = false, failed = [];
     if (stillNeedsApi.length > 0) {
       ({ apiResults, apiFailed, failed } = await handleApiBatch(unique, stillNeedsApi, preAiDone, useFormatting, signal));
     }
-    if (!mountedRef.current || signal.aborted) return;
-    if (failed.length > 0) safeDispatch({ type: "FAILED_ENTRIES", entries: failed });
+    if (signal.aborted) return;
+    if (failed.length > 0) dispatch({ type: "FAILED_ENTRIES", entries: failed });
 
     const localByIdx = new Map(localMatches.map(m => [m.idx, m]));
     const fmt = (t) => useFormatting ? basicFormat(t) : t;
@@ -280,22 +275,22 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       return makeQuote(fmt(p.text), p.hint);
     });
 
-    if (!mountedRef.current || signal.aborted) return;
+    if (signal.aborted) return;
     const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
     appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
-    safeDispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
+    dispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
     try { localStorage.removeItem(LS_DRAFT); } catch {}
     // Auto-transition after processing completes
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
     autoTransitionRef.current = setTimeout(() => {
-      if (!mountedRef.current) return;
+      if (abortRef.current?.signal?.aborted) return;
       autoTransitionRef.current = null;
-      safeDispatch({ type: "FINISH" });
+      dispatch({ type: "FINISH" });
       goPhase("results");
     }, PROCESSING_DONE_MS);
-  }, [safeDispatch, handleLocalLookup, handleExternalLookup, handleApiBatch, allCats, setQuotes, goPhase]);
+  };
 
-  const processEntries = useCallback(async (inputText, appendMode = false, useFormatting = false) => {
+  const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
     const lines = smartSplit(inputText.trim());
     if (!lines.length) return;
 
@@ -340,12 +335,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       return;
     }
 
-    safeDispatch({ type: "START", dupes: 0, total: unique.length });
+    dispatch({ type: "START", dupes: 0, total: unique.length });
     goPhase("processing");
     await runProcessing(unique, appendMode, useFormatting);
-  }, [safeDispatch, goPhase, runProcessing]);
+  };
 
-  const handleDupesContinue = useCallback(async () => {
+  const handleDupesContinue = async () => {
     if (!pendingContinuationRef.current) return;
     const { unique, appendMode, useFormatting } = pendingContinuationRef.current;
     const finalUnique = [...unique];
@@ -368,42 +363,42 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     const dupes = currentState.pendingDupes.length - keptCount;
-    safeDispatch({ type: "CLEAR_DUPES" });
+    dispatch({ type: "CLEAR_DUPES" });
     pendingContinuationRef.current = null;
 
-    safeDispatch({ type: "START", dupes, total: finalUnique.length });
+    dispatch({ type: "START", dupes, total: finalUnique.length });
     goPhase("processing");
     await runProcessing(finalUnique, appendMode, useFormatting);
-  }, [safeDispatch, goPhase, runProcessing]);
+  };
 
-  const retryFailed = useCallback(async () => {
+  const retryFailed = async () => {
     const currentState = stateRef.current;
     if (!currentState.failedEntries.length) return;
-    safeDispatch({ type: "API_ERROR", error: null });
+    dispatch({ type: "API_ERROR", error: null });
 
     const entriesToRetry = [...currentState.failedEntries];
     const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` \u2014 ${e.hint}` : ""}`).join("\n");
 
     try {
       await processEntries(text, true, currentState.formattingEnabled);
-      safeDispatch({ type: "FAILED_ENTRIES", entries: [] });
+      dispatch({ type: "FAILED_ENTRIES", entries: [] });
     } catch (error) {
-      safeDispatch({ type: "API_ERROR", error: "Retry failed. You can try again or edit manually." });
+      dispatch({ type: "API_ERROR", error: "Retry failed. You can try again or edit manually." });
     }
-  }, [safeDispatch, processEntries]);
+  };
 
   // Skip the auto-transition timer and go directly to results
-  const skipToResults = useCallback(() => {
+  const skipToResults = () => {
     if (autoTransitionRef.current) {
       clearTimeout(autoTransitionRef.current);
       autoTransitionRef.current = null;
     }
-    safeDispatch({ type: "FINISH" });
+    dispatch({ type: "FINISH" });
     goPhase("results");
-  }, [goPhase, safeDispatch]);
+  };
 
   // Cancel processing: abort in-flight requests and flush already-identified quotes
-  const cancelProcessing = useCallback(() => {
+  const cancelProcessing = () => {
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;
@@ -426,21 +421,21 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         }
       }
     }
-    safeDispatch({ type: "CANCEL" });
+    dispatch({ type: "CANCEL" });
     const hasQuotes = quotesRef.current.length > 0;
     goPhase(hasQuotes ? "results" : "input");
-  }, [goPhase, safeDispatch, setQuotes]);
+  };
 
   // Reset processing-specific state (called by handleClear in App)
-  const resetProcessingState = useCallback(() => {
+  const resetProcessingState = () => {
     if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
     if (autoTransitionRef.current) { clearTimeout(autoTransitionRef.current); autoTransitionRef.current = null; }
     dispatch({ type: "RESET" });
     pendingContinuationRef.current = null;
-  }, []);
+  };
 
   // ── AI auto-group: find quotes matching a theme ──
-  const autoGroup = useCallback(async (theme, quotesList, externalSignal) => {
+  const autoGroup = async (theme, quotesList, externalSignal) => {
     if (!theme || quotesList.length === 0) return [];
 
     const quoteTexts = quotesList.map(q => q.text);
@@ -457,33 +452,32 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
     const { indices } = await r.json();
     return indices.map(i => quotesList[i]?.id).filter(Boolean);
-  }, []);
+  };
 
   // Expose setters for individual fields still needed by App.jsx
-  const setDupeDecision = useCallback((index, decision) => {
+  const setDupeDecision = (index, decision) => {
     dispatch({ type: "SET_DUPE_DECISION", index, decision });
-  }, []);
+  };
 
-  const setFormattingEnabled = useCallback((enabled) => {
+  const setFormattingEnabled = (enabled) => {
     dispatch({ type: "SET_FORMATTING", enabled });
-  }, []);
+  };
 
-  const dismissApiError = useCallback(() => {
+  const dismissApiError = () => {
     dispatch({ type: "DISMISS_ERROR" });
-  }, []);
+  };
 
-  const dismissStats = useCallback(() => {
+  const dismissStats = () => {
     dispatch({ type: "DISMISS_STATS" });
-  }, []);
+  };
 
-  // Memoize return to prevent unnecessary re-renders in consumers
-  const actions = useMemo(() => ({
+  const actions = {
     identifyBatch, autoGroup,
     processEntries, handleDupesContinue, retryFailed,
     skipToResults, cancelProcessing, resetProcessingState,
     setDupeDecision, setFormattingEnabled,
     dismissApiError, dismissStats,
-  }), [identifyBatch, autoGroup, processEntries, handleDupesContinue, retryFailed, skipToResults, cancelProcessing, resetProcessingState, setDupeDecision, setFormattingEnabled, dismissApiError, dismissStats]);
+  };
 
   return { ...state, ...actions };
 }

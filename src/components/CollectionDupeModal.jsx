@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { styles } from "./styles";
 import { Search, Trash2 } from "lucide-react";
@@ -12,7 +12,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
   // Track which group index the user has resolved (and which entry ID they kept)
   const [resolved, setResolved] = useState(new Map());
   const resolvedRef = useRef(resolved);
-  resolvedRef.current = resolved;
+  useEffect(() => { resolvedRef.current = resolved; }, [resolved]);
 
   const pending = dupeGroups.reduce((acc, group, i) => {
     if (!resolved.has(i)) acc.push({ group, groupIndex: i });
@@ -39,7 +39,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     setResolved(p => new Map([...p, [groupIndex, null]]));
   };
 
-  const removeAllDupes = useCallback(() => {
+  const removeAllDupes = () => {
     const allToDelete = [];
     dupeGroups.forEach((group, i) => {
       if (resolvedRef.current.has(i)) return;
@@ -49,7 +49,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     });
     if (allToDelete.length > 0) onDeleteQuotes(allToDelete);
     onClose();
-  }, [dupeGroups, onDeleteQuotes, onClose]);
+  };
 
   if (allResolved) return null;
 

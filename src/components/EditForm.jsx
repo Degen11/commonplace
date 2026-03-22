@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { styles } from "./styles";
 import { normalize } from "../utils/textFormatting";
 import { smartRestore } from "../utils/smartRestore";
@@ -53,10 +53,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
     import("../data/localQuotes").then(m => setLocalDb(m.default));
   }, []);
 
-  const suggestion = useMemo(() => {
-    if (dismissed) return null;
-    return findSuggestion(text, localDb);
-  }, [text, dismissed, localDb]);
+  const suggestion = dismissed ? null : findSuggestion(text, localDb);
 
   const formatSuggestionText = (t) => smartRestore(t);
 

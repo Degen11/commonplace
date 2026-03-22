@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react";
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
@@ -10,14 +10,13 @@ import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import clsx from "clsx";
-import { propsEqual } from "../utils/helpers";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
 
 const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
 
-const MemoCardItem = memo(function CardItem({
+function CardItem({
   q, col, isSel, isEd, needsAtt, showConfidence, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
@@ -36,14 +35,14 @@ const MemoCardItem = memo(function CardItem({
   } = useSortable({ id: q.id, transition: null });
 
   const longPress = useLongPress(
-    useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
+    () => toggleSel(q.id),
     400
   );
 
   const swipeEnabled = isMobile && !isEd && !isInlineEditing;
   const { offsetX, swipeHandlers } = useSwipe({
-    onSwipeLeft: useCallback(() => actionProps.onDelete(q.id), [actionProps.onDelete, q.id]),
-    onSwipeRight: useCallback(() => actionProps.onFav(q.id), [actionProps.onFav, q.id]),
+    onSwipeLeft: () => actionProps.onDelete(q.id),
+    onSwipeRight: () => actionProps.onFav(q.id),
     enabled: swipeEnabled,
   });
 
@@ -150,14 +149,6 @@ const MemoCardItem = memo(function CardItem({
     </div>
     </div>
   );
-}, propsEqual(
-  "q", "isSel", "isEd", "needsAtt", "showConfidence", "sortBy",
-  "isInlineEditing", "inlineEditField", "isDeleting",
-  "isSavedPulse", "savedPulseField", "searchTerm",
-  "allCats", "customCats", "isOverTarget",
-  ["actionProps", (prev, next) =>
-    (prev.actionProps.copiedId === prev.q.id) === (next.actionProps.copiedId === next.q.id) &&
-    prev.actionProps.reidentifying.has(prev.q.id) === next.actionProps.reidentifying.has(next.q.id)],
-));
+}
 
-export default MemoCardItem;
+export default CardItem;

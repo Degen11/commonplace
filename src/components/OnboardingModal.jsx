@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, Layers, Keyboard, CheckCircle, ArrowRight } from "lucide-react";
 import { LS_ONBOARDED } from "../config";
@@ -24,14 +24,10 @@ const STEPS = [
 ];
 
 export default function OnboardingModal() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(() => {
+    try { return !localStorage.getItem(LS_ONBOARDED); } catch { return false; }
+  });
   const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(LS_ONBOARDED)) setShow(true);
-    } catch { /* ignore */ }
-  }, []);
 
   const dismiss = () => {
     setShow(false);

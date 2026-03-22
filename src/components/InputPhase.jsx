@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
@@ -435,7 +435,7 @@ const reveal = (visible, delay = 0) => ({
 // ── Formatting preview — shows before/after for a sample of entries ──────────
 function FormattingPreview({ rawInput }) {
   const [expanded, setExpanded] = useState(false);
-  const samples = useMemo(() => {
+  const samples = (() => {
     const lines = smartSplit(rawInput.trim()).slice(0, 5);
     const diffs = [];
     for (const line of lines) {
@@ -443,7 +443,7 @@ function FormattingPreview({ rawInput }) {
       if (formatted !== line) diffs.push({ before: line, after: formatted });
     }
     return diffs;
-  }, [rawInput]);
+  })();
 
   if (samples.length === 0) return null;
 

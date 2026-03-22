@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
@@ -98,19 +98,14 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   }, [view]);
 
   // ── Fuse.js index — skip rebuild when only metadata (fav/cat/confidence) changed ──
-  const fuseCache = useRef({ fingerprint: "", index: null });
+  const fuseFingerprint = buildFuseFingerprint(quotes);
   const fuseIndex = useMemo(() => {
-    const fp = buildFuseFingerprint(quotes);
-    if (fp === fuseCache.current.fingerprint && fuseCache.current.index) {
-      return fuseCache.current.index;
-    }
-    const index = new Fuse(quotes, FUSE_OPTIONS);
-    fuseCache.current = { fingerprint: fp, index };
-    return index;
-  }, [quotes]);
+    return new Fuse(quotes, FUSE_OPTIONS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fuseFingerprint]);
 
   // ── Filtering & sorting ──
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     // When searching, use Fuse.js for fuzzy matching
     let searchMatchIds = null;
     if (debouncedSearch) {
@@ -132,46 +127,44 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     else if (sortBy === "shortest") result.sort((a, b) => a.text.length - b.text.length);
     else if (sortBy === "longest") result.sort((a, b) => b.text.length - a.text.length);
     return result;
-  }, [quotes, catFilter, favFilter, debouncedSearch, sortBy, fuseIndex]);
+  })();
 
   // Apply collection scoping before pagination so hasMore/remaining counts are accurate
-  const collectionFiltered = useMemo(() => {
+  const collectionFiltered = (() => {
     if (!activeCollectionId || !collections) return filtered;
     const col = collections.find(c => c.id === activeCollectionId);
     if (!col) return filtered;
     const idSet = new Set(col.quoteIds);
     return filtered.filter(q => idSet.has(q.id));
-  }, [filtered, activeCollectionId, collections]);
+  })();
 
   const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${activeCollectionId || "all"}`;
   const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(collectionFiltered, paginationKey);
 
   // ── Computed stats ──
-  const { cc, favCount, unknownCount } = useMemo(() => {
-    return {
-      cc: countBy(quotes, "category"),
-      favCount: quotes.filter(q => q.favorite).length,
-      unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
-    };
-  }, [quotes]);
+  const { cc, favCount, unknownCount } = {
+    cc: countBy(quotes, "category"),
+    favCount: quotes.filter(q => q.favorite).length,
+    unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
+  };
 
   const hasActiveFilters = catFilter !== "All" || search;
   const hasActiveFilterOrSort = hasActiveFilters || sortBy !== "default";
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = () => {
     setCatFilter("All");
     setSearch("");
     setSortBy("default");
-  }, []);
+  };
 
-  const computedStats = useMemo(() => {
+  const computedStats = (() => {
     if (quotes.length === 0) return null;
     const srcCount = countBy(quotes, "source");
     const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
     const sorted   = [...quotes].sort((a, b) => a.text.length - b.text.length);
     const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);
     return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
-  }, [quotes]);
+  })();
 
   return {
     view, setView,

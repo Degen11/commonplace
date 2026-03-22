@@ -6,8 +6,9 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 
 ## Tech stack
 
-- **React 18** (no TypeScript — plain JSX/JS throughout)
-- **Vite 7** — dev server and build
+- **React 19** (no TypeScript — plain JSX/JS throughout)
+- **React Compiler** (`babel-plugin-react-compiler`) — automatic memoization, configured via Vite Babel plugin
+- **Vite 8** — dev server and build
 - **Zustand 5** — primary state management (`src/stores/quotesStore.js`)
 - **TanStack React Query 5** — server state / sync mutations
 - **TanStack React Virtual 3** — virtualized list rendering
@@ -83,7 +84,6 @@ src/
     useDndQuotes.js            Drag-and-drop state, sensors, and handlers for quote reordering/collection drops
     useInfiniteScroll.js       Pagination — 100 items per page via intersection observer
     useTheme.js                Dark/light theme toggle (CSS custom properties)
-    useMounted.js              Mount guard ref + useSafeDispatch for async safety
     useFlipPosition.js         Viewport-aware flip positioning for dropdowns
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
@@ -103,7 +103,7 @@ src/
     api.js                     fetchWithTimeout, shared API headers
     apiErrors.js               Human-readable API error descriptions
     storage.js                 loadFromStorage / saveToStorage — safe localStorage JSON read/write with validation
-    helpers.js                 Shared utilities: pluralize, groupBy, countBy, propsEqual, Set helpers (addToSet, removeFromSet, etc.)
+    helpers.js                 Shared utilities: pluralize, groupBy, countBy, Set helpers (addToSet, removeFromSet, etc.)
     sync.js                    mergeByTimestamp — cloud/local merge helper
     dragGhost.js               Custom drag preview elements
     richTextKeys.js            Key constants for rich text handling
@@ -151,7 +151,7 @@ User input → smartSplit() → deduplicate against existing
 - `useQuoteActions` — delete/copy/re-identify animations. Initialized in App.jsx (handleFileImport used by InputPhase)
 - `useKeyboardShortcuts` — results-only keyboard handler. Initialized in ResultsPhase
 
-**Pattern: refs for async safety** — throughout the codebase, `useRef` holds latest state values for use in async callbacks (retries, debounced saves). This prevents stale closure bugs. The Zustand migration reduced some of this, but the pattern persists in hooks like `useProcessing`.
+**Pattern: refs for async safety** — `useRef` holds latest state values for use in long-running async callbacks (retries, debounced saves). Ref assignments are done in `useEffect` (not during render) to stay compatible with the React Compiler. This pattern persists in hooks like `useProcessing`, `useQuoteActions`, and `useKeyboardShortcuts`.
 
 ## Data persistence
 
@@ -181,6 +181,7 @@ npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
 npm run test      # vitest run
+npx eslint src/   # Check React Compiler compatibility (react-hooks/refs, purity, etc.)
 vercel dev        # Test serverless functions locally
 ```
 
@@ -196,14 +197,15 @@ vercel dev        # Test serverless functions locally
 - **Hooks own their domain** — each major feature gets a custom hook (`useProcessing`, `useSync`, `useEditState`, etc.) that encapsulates state + logic. App.jsx initializes them and passes props down
 - **Functional updaters** — `setQuotes(prev => [...prev, ...new])` pattern used everywhere (Zustand setters accept both direct values and updater functions)
 - **useReducer for complex state** — `useProcessing` uses a reducer/dispatch pattern for its state machine
-- **Memoization** — `useMemo` for derived data, `useCallback` for handlers passed as props, `React.memo` on expensive list items with `propsEqual()` from `utils/helpers.js` for custom comparators. Fuse.js index uses a fingerprint string (`id + text.length + source.length`) to avoid re-indexing on metadata-only changes
+- **React Compiler handles memoization** — don't add manual `useMemo`, `useCallback`, or `React.memo` unless the compiler's ESLint rules specifically require it (e.g., unstable function references in `useEffect` deps). The compiler automatically optimizes re-renders. One intentional `useMemo` remains: the Fuse.js index in `useViewPreferences.js` uses a fingerprint-keyed `useMemo` to skip expensive rebuilds on metadata-only changes — this is annotated with an `eslint-disable` comment
 - **Constants centralized** — all magic numbers live in `src/config.js`. Category definitions and Z-index scale in `src/data/constants.js`. UI thresholds (swipe, long-press, breakpoints), localStorage keys, and share hash prefixes all in `config.js`
 - **Animation timing tiers** — three standardized durations in `config.js`: `ANIM_FAST_MS` (150ms, micro-interactions), `ANIM_STANDARD_MS` (250ms, default transitions), `ANIM_SLOW_MS` (400ms, deliberate feedback like save pulse). CSS animations in `baseCSS` mirror these tiers. Don't introduce new arbitrary durations
 - **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
 - **Click-outside pattern** — use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners. `OverflowMenu` handles its own click-outside internally
-- **Mount guard pattern** — use `useMounted()` from `hooks/useMounted.js` instead of manual `mountedRef` + `useEffect` boilerplate. For dispatch wrappers, use `useSafeDispatch(dispatch)`
+- **No mount guards needed** — React 18+ removed the "setState on unmounted component" warning. Don't add mount-guard refs or safe-dispatch wrappers. The old `useMounted.js` hook was deleted
+- **React Compiler rules** — the compiler requires code that follows the Rules of React. Key constraints: (1) don't read or write `ref.current` during render — assign refs in `useEffect` or event handlers; (2) don't call `setState` directly inside `useEffect` for derived state — use initializers, direct computation, or the `setState`-during-render pattern (see `useInfiniteScroll.js` for an example); (3) don't create components dynamically during render (e.g., `const Icon = getIcon(name)`) — use `createElement` or pass the component as a prop. Run `npx eslint src/` to check for compiler bailouts
 - **Immutable Set updates** — use `addToSet`, `removeFromSet`, `toggleInSet`, `addAllToSet`, `removeAllFromSet` from `utils/helpers.js` instead of inline `new Set(prev)` + mutate patterns
 - **Flip positioning** — use `useFlipPosition(ref)` from `hooks/useFlipPosition.js` for viewport-aware dropdown positioning instead of manual `getBoundingClientRect` + `useState`
 - **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
@@ -231,6 +233,7 @@ Z.TOAST           2000  Toasts
 - The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
 - Comment in `QuotesContext.jsx` line 99 says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
 - No TODO/FIXME comments exist in the codebase currently
+- **React Compiler bailouts** — 15 remaining ESLint errors that the compiler can't optimize: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection`, `UrlPreviewModal`, and `useEditState`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization
 - The `similarity()` function in `textFormatting.js` guards against empty word sets (returns 0 early). This was previously a fragile NaN-producing division; the guard was consolidated in a cleanup pass
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
 - Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof
@@ -252,3 +255,6 @@ Z.TOAST           2000  Toasts
 - **OG font pinned version** — `og.js` loads Inter font from jsdelivr with a pinned version (`@5.1.1`). Don't change to `@latest` — unpinned CDN URLs risk breakage from upstream changes
 - **Build chunk splitting** — `vite.config.js` uses a function-based `manualChunks` to split `motion` and `@dnd-kit` into separate chunks. Don't use object-based config (causes circular chunk warnings between dndkit and tanstack)
 - **Onboarding localStorage key** — `LS_ONBOARDED` (`commonplace_onboarded`) tracks whether the user has seen the first-run modal. Don't reset this without user intent
+- **Don't add manual memoization** — no `React.memo`, `useMemo`, or `useCallback` unless the compiler's ESLint rules (`npx eslint src/`) specifically flag a problem that requires it (e.g., unstable function in `useEffect` deps). The React Compiler handles all memoization automatically. Adding manual wrappers is dead code at best, and can interfere with the compiler at worst
+- **Don't read/write refs during render** — the React Compiler requires that `ref.current` is only accessed inside `useEffect`, event handlers, or callbacks. Assign refs in `useEffect(() => { ref.current = value; }, [value])`, not directly in the component body. This is enforced by `react-hooks/refs`
+- **Don't remove `babel-plugin-react-compiler`** from `vite.config.js` — the entire codebase relies on compiler-managed memoization. Removing it would cause performance regressions since manual `memo`/`useCallback`/`useMemo` have been stripped

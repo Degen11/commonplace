@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, memo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -9,7 +9,6 @@ import useLongPress from "../hooks/useLongPress";
 import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import clsx from "clsx";
-import { propsEqual } from "../utils/helpers";
 import { styles } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis } from "lucide-react";
@@ -97,10 +96,9 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
   );
 }
 
-// ── Memoized row component — only re-renders when its own data changes ──
 const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
 
-const MemoTableRow = memo(function TableRow({
+function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isDeleting, isSavedPulse, savedPulseField,
@@ -127,7 +125,7 @@ const MemoTableRow = memo(function TableRow({
   const [expanded, setExpanded] = useState(false);
 
   const longPress = useLongPress(
-    useCallback(() => toggleSel(q.id), [toggleSel, q.id]),
+    () => toggleSel(q.id),
     400
   );
 
@@ -257,20 +255,7 @@ const MemoTableRow = memo(function TableRow({
       />
     </div>
   );
-}, propsEqual(
-  "q", "isSel", "isEd", "compact", "showConfidence", "sortBy", "needsAtt",
-  "isInlineEditing", "inlineEditField", "isDeleting",
-  "isSavedPulse", "savedPulseField", "isMenuOpen",
-  "searchTerm", "allCats", "customCats",
-  ["columnOrder", (prev, next) =>
-    prev.columnOrder.length === next.columnOrder.length &&
-    !prev.columnOrder.some((c, i) => c !== next.columnOrder[i])],
-  ["actionProps", (prev, next) =>
-    prev.actionProps.copiedId === next.actionProps.copiedId &&
-    prev.actionProps.activeCollectionId === next.actionProps.activeCollectionId &&
-    prev.actionProps.reidentifying === next.actionProps.reidentifying &&
-    prev.actionProps.collections === next.actionProps.collections],
-));
+}
 
 export default function TableView({
   filtered,
@@ -313,10 +298,7 @@ export default function TableView({
   }, []);
 
   // Detect list order changes (sort/filter) and trigger a shuffle animation
-  const listFingerprint = useMemo(
-    () => filtered.slice(0, 8).map(q => q.id).join(","),
-    [filtered],
-  );
+  const listFingerprint = filtered.slice(0, 8).map(q => q.id).join(",");
   const prevFingerprintRef = useRef(listFingerprint);
   useEffect(() => {
     if (prevFingerprintRef.current === listFingerprint) return;
@@ -446,7 +428,7 @@ export default function TableView({
           const isMenuOpen = openMenuId === q.id;
           return (
             <div key={q.id} data-index={virtualRow.index} ref={virtualizer.measureElement}>
-              <MemoTableRow
+              <TableRow
                 q={q}
                 isSel={isSel}
                 isEd={isEd}

@@ -1,5 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import useMounted from "./useMounted";
+import { useState, useRef, useEffect } from "react";
 import { fallbackCategory, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
@@ -15,11 +14,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
 
   const reidentifyAbortRefs  = useRef(new Map());
-  const mountedRef           = useMounted();
   const quotesRef            = useRef(quotes);
-  quotesRef.current = quotes;
+  useEffect(() => { quotesRef.current = quotes; }, [quotes]);
   const collectionsRef       = useRef(collections);
-  collectionsRef.current = collections;
+  useEffect(() => { collectionsRef.current = collections; }, [collections]);
 
   // Abort all in-flight re-identify requests on unmount
   useEffect(() => {
@@ -32,14 +30,13 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   // so multiple rapid deletes each get their own independent undo.
   // We capture the ID of the *preceding* quote (neighbor) so that undo can
   // re-insert relative to it — immune to index shifts from other deletes.
-  const handleDelete = useCallback((id) => {
+  const handleDelete = (id) => {
     const current = quotesRef.current;
     const idx = current.findIndex(q => q.id === id);
     const deleted = current[idx];
     const neighborId = idx > 0 ? current[idx - 1].id : null;
     setDeletingId(id);
     setTimeout(() => {
-      if (!mountedRef.current) return;
       setDeletingId(null);
       // Snapshot collection memberships before cleanup
       const collectionSnapshot = (collectionsRef.current || [])
@@ -60,24 +57,24 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         collectionSnapshot.forEach(cId => addToCollection(cId, [id]));
       });
     }, DELETE_ANIM_MS);
-  }, [setQuotes, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, addToCollection]);
+  };
 
   // ── Copy single quote ──
-  const copyQuote = useCallback((q) => {
+  const copyQuote = (q) => {
     const text = QUOTED_CATS.has(q.category)
       ? `"${q.text}" \u2014 ${q.source}`
       : `${q.text} \u2014 ${q.source}`;
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopiedId(q.id);
-        setTimeout(() => { if (mountedRef.current) setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
+        setTimeout(() => { setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
         showToast("Copied!", null, null, "success");
       })
       .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text.", null, null, "error"));
-  }, [showToast]);
+  };
 
   // ── Share as image ──
-  const shareAsImage = useCallback(async (q) => {
+  const shareAsImage = async (q) => {
     try {
       const blob = await generateShareImage(q);
       downloadBlob(blob, "commonplace-quote.png");
@@ -85,7 +82,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     } catch {
       showToast("Couldn't generate image.", null, null, "error");
     }
-  }, [showToast]);
+  };
 
   // ── Re-identify ──
   const describeChanges = (oldQ, newSource, newCategory) => {
@@ -96,7 +93,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     return `Re-identified: ${parts.join(", ")}`;
   };
 
-  const reIdentify = useCallback(async (q) => {
+  const reIdentify = async (q) => {
     const existing = reidentifyAbortRefs.current.get(q.id);
     if (existing) existing.abort();
 
@@ -151,10 +148,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       showToast(describeApiError(err), null, null, "error");
     }
     clearId();
-  }, [setQuotes, allCats, showToast, identifyBatch]);
+  };
 
   // ── Batch re-identify (for selected quotes) ──
-  const batchReIdentify = useCallback(async (quoteIds) => {
+  const batchReIdentify = async (quoteIds) => {
     const qs = quotesRef.current.filter(q => quoteIds.has(q.id));
     if (qs.length === 0) return;
 
@@ -229,13 +226,13 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       if (err.name === "AbortError") return;
       showToast(describeApiError(err), null, null, "error");
     }
-  }, [setQuotes, allCats, showToast, identifyBatch]);
+  };
 
   // ── File import ──
   const entriesToContent = (entries) =>
     entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
 
-  const handleFileImport = useCallback((file, setRawInput, setImportedFileName, onImportCollections) => {
+  const handleFileImport = (file, setRawInput, setImportedFileName, onImportCollections) => {
     if (!file) return;
 
     // Gate: reject files that are too large to process safely in the browser
@@ -325,7 +322,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     };
     reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.", null, null, "error");
     reader.readAsText(file);
-  }, [showToast]);
+  };
 
   return {
     deletingId,

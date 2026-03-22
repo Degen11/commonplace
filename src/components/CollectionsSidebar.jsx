@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, createElement } from "react";
 import { AnimatePresence, motion, stagger, useAnimate } from "motion/react";
 import { Popover } from "@base-ui/react/popover";
 import { useDroppable } from "@dnd-kit/core";
@@ -69,7 +69,7 @@ function CollectionRow({
   iconPickerId, setIconPickerId, updateCollectionIcon, quoteCounts,
 }) {
   const count = quoteCounts[c.id] || 0;
-  const Icon = getIcon(c.icon);
+  const icon = getIcon(c.icon);
   const [hovered, setHovered] = useState(false);
   const { setNodeRef, isOver: dragOver } = useDroppable({ id: `collection:${c.id}` });
 
@@ -119,7 +119,7 @@ function CollectionRow({
           onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
           title="Change icon"
         >
-          <Icon size={14} strokeWidth={1.5} color={isActive ? "var(--cp-accent)" : "var(--cp-text-muted)"} />
+          {createElement(icon, { size: 14, strokeWidth: 1.5, color: isActive ? "var(--cp-accent)" : "var(--cp-text-muted)" })}
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Positioner side="top" align="start" sideOffset={6} style={{ zIndex: 100 }}>

@@ -523,7 +523,7 @@ export default function ResultsPhase({
           </SectionErrorBoundary>
 
           {/* Sticky mini-header when main header scrolls out */}
-          {!headerVisible && !isMobile && (
+          {!headerVisible && (
             <MiniHeader
               view={view} setView={setView}
               compact={compact} setCompact={setCompact}
@@ -541,6 +541,7 @@ export default function ResultsPhase({
               setShowConfidence={setShowConfidence}
               setConfirmClear={setConfirmClear}
               onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
+              isMobile={isMobile}
             />
           )}
 
@@ -590,7 +591,7 @@ export default function ResultsPhase({
                 style={{
                   position: "fixed", top: 49, left: 0, right: 0,
                   zIndex: 59, background: "var(--cp-mini-bg)",
-                  padding: "12px 32px", borderBottom: "1px solid var(--cp-border)",
+                  padding: isMobile ? "12px 16px" : "12px 32px", borderBottom: "1px solid var(--cp-border)",
                   boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
                 }}
               >
@@ -635,6 +636,7 @@ export default function ResultsPhase({
               onAddToCollection={handleAddToCollection}
               onRemoveFromCollection={handleRemoveFromCollection}
               activeCollectionId={activeCollectionId}
+              isMobile={isMobile}
             />
             </motion.div>
           )}
@@ -673,6 +675,7 @@ export default function ResultsPhase({
               clearFilters={clearFilters}
               resultCount={collectionFiltered.length}
               totalCount={quotes.length}
+              isMobile={isMobile}
             />
           </SectionErrorBoundary>
 
@@ -701,6 +704,7 @@ export default function ResultsPhase({
           {/* Main content area with optional sidebar */}
           <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
           <div style={{ display: "flex", gap: 0 }}>
+            {!isMobile && (
             <CollectionsSidebar
                 collections={collections}
                 activeCollectionId={activeCollectionId}
@@ -719,6 +723,7 @@ export default function ResultsPhase({
                 favCount={favCount}
                 toolbarHeight={toolbarHeight}
             />
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
 
           <AnimatePresence>
@@ -736,6 +741,7 @@ export default function ResultsPhase({
               allCats={allCats}
               customCats={customCats}
               quotes={quotes}
+              isMobile={isMobile}
             />
             </motion.div>
           )}
@@ -871,7 +877,8 @@ export default function ResultsPhase({
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
 
-          {/* Persistent help trigger — floating ? button */}
+          {/* Persistent help trigger — floating ? button (hidden on mobile) */}
+          {!isMobile && (
           <button
             className="ui-tip ui-tip-left hdr-btn"
             data-tip="Help & shortcuts"
@@ -888,6 +895,7 @@ export default function ResultsPhase({
           >
             <HelpCircle size={16} strokeWidth={1.5} />
           </button>
+          )}
           <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }} modifiers={[anchorToCursor]}>
             {activeDragId ? (() => {
               const q = quotes.find(x => x.id === activeDragId);

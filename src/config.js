@@ -50,9 +50,9 @@ export const DUPE_SIMILARITY_THRESHOLD = 0.55;
 export const QUOTE_TRUNCATE_CHARS  = 180;  // truncate quotes beyond this in table view
 
 // UI thresholds
-export const SWIPE_THRESHOLD_PX    = 80;   // px to trigger swipe action
+export const SWIPE_THRESHOLD_PX    = 60;   // px to trigger swipe action (lowered for mobile)
 export const SWIPE_CANCEL_Y_PX    = 30;   // vertical movement cancels swipe
-export const LONG_PRESS_MS        = 400;  // ms to trigger long-press
+export const LONG_PRESS_MS        = 350;  // ms to trigger long-press (lowered for faster feedback)
 export const LONG_PRESS_MOVE_PX   = 10;   // px movement cancels long-press
 export const INFINITE_SCROLL_PAGE = 100;  // items per page in virtualized list
 export const MOBILE_BREAKPOINT_PX = 640;  // below this: card view, mobile layout

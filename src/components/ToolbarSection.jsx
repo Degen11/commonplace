@@ -31,6 +31,7 @@ export default function ToolbarSection({
   clearFilters,
   resultCount,
   totalCount,
+  isMobile,
 }) {
   const searchInputRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -89,7 +90,7 @@ export default function ToolbarSection({
                 display: "flex", alignItems: "center",
                 border: "1px solid var(--cp-border)", borderRadius: 6,
                 background: "var(--cp-bg-card)", overflow: "hidden",
-                width: 180, transition: "width .15s ease",
+                width: isMobile ? 160 : 180, transition: "width .15s ease",
               }}>
                 <Search size={13} strokeWidth={2} style={{ marginLeft: 8, flexShrink: 0, opacity: 0.4 }} />
                 <input
@@ -105,7 +106,8 @@ export default function ToolbarSection({
                   onBlur={() => { if (!search) setSearchOpen(false); }}
                   placeholder="Search..."
                   style={{
-                    flex: 1, padding: "5px 6px", fontSize: 12, fontFamily: "inherit",
+                    flex: 1, padding: isMobile ? "8px 6px" : "5px 6px",
+                    fontSize: isMobile ? 14 : 12, fontFamily: "inherit",
                     border: "none", outline: "none", background: "transparent",
                     color: "var(--cp-text)", minWidth: 0,
                   }}
@@ -115,7 +117,7 @@ export default function ToolbarSection({
                     onClick={() => setSearch("")}
                     style={{
                       background: "transparent", border: "none",
-                      color: "var(--cp-text-muted)", padding: "4px 6px",
+                      color: "var(--cp-text-muted)", padding: isMobile ? "8px" : "4px 6px",
                       cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0,
                     }}
                   >
@@ -138,11 +140,12 @@ export default function ToolbarSection({
                 onClick={() => setSearchOpen(true)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: "var(--cp-text-muted)", padding: "6px",
+                  color: "var(--cp-text-muted)", padding: isMobile ? "8px" : "6px",
                   display: "flex", alignItems: "center", borderRadius: 6,
+                  minHeight: isMobile ? 40 : undefined,
                 }}
               >
-                <Search size={15} strokeWidth={2} />
+                <Search size={isMobile ? 18 : 15} strokeWidth={2} />
               </button>
             )}
             {hasActiveFilters && (
@@ -169,9 +172,10 @@ export default function ToolbarSection({
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   color: sortBy !== "default" ? "#2563EB" : "var(--cp-text-muted)",
-                  padding: "4px 6px", display: "flex", alignItems: "center", gap: 3, borderRadius: 6,
+                  padding: isMobile ? "8px" : "4px 6px", display: "flex", alignItems: "center", gap: 3, borderRadius: 6,
                   fontWeight: sortBy !== "default" ? 600 : 400,
                   fontSize: 11,
+                  minHeight: isMobile ? 40 : undefined,
                 }}
               >
                 <ArrowUpDown size={14} strokeWidth={2} />

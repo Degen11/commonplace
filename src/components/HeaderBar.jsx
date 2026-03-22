@@ -67,18 +67,18 @@ export default function HeaderBar({
           <>
             <button
               className="hdr-btn"
-              style={{ ...styles.addMoreBtn, padding: "5px 10px" }}
+              style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, display: "inline-flex", alignItems: "center", gap: 4 }}
               onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}
             >
-              <Plus size={14} strokeWidth={2} />
+              <Plus size={15} strokeWidth={2} /> Add
             </button>
           </>
         )}
 
         {/* Overflow / hamburger menu — serves both mobile and desktop */}
         <Menu.Root open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <Menu.Trigger className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: "5px 8px" }}>
-            {isMobile ? <MenuIcon size={16} strokeWidth={1.5} /> : <MoreHorizontal size={16} strokeWidth={1.5} />}
+          <Menu.Trigger className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: isMobile ? "7px 10px" : "5px 8px", minHeight: isMobile ? 40 : undefined }}>
+            {isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <MoreHorizontal size={16} strokeWidth={1.5} />}
           </Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
@@ -87,13 +87,27 @@ export default function HeaderBar({
                 boxShadow: "var(--cp-shadow-md)", border: "1px solid var(--cp-border)",
                 minWidth: 200, padding: 4, animation: "menuIn .14s ease",
               }}>
-                {/* Mobile-only: theme + export grouped here */}
+                {/* Mobile-only: theme + view + export grouped here */}
                 {isMobile && (
                   <>
                     <div style={styles.hdrOverflowSectionLabel}>Actions</div>
                     <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={toggleTheme}>
                       {dark ? <Sun size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : <Moon size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />}
                       {dark ? "Light mode" : "Dark mode"}
+                    </Menu.Item>
+                    <Menu.Separator style={styles.hdrOverflowDivider} />
+                    <div style={styles.hdrOverflowSectionLabel}>Layout</div>
+                    <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && !compact ? { fontWeight: 600, color: "var(--cp-text)" } : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
+                      <List size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                      Table view
+                    </Menu.Item>
+                    <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && compact ? { fontWeight: 600, color: "var(--cp-text)" } : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
+                      <AlignJustify size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                      Compact view
+                    </Menu.Item>
+                    <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "cards" ? { fontWeight: 600, color: "var(--cp-text)" } : {}) }} onClick={() => setView("cards")}>
+                      <LayoutGrid size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                      Card view
                     </Menu.Item>
                     <Menu.Separator style={styles.hdrOverflowDivider} />
                   </>

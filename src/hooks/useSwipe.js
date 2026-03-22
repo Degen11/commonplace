@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDrag } from "@use-gesture/react";
 import { SWIPE_THRESHOLD_PX, SWIPE_CANCEL_Y_PX } from "../config";
 
@@ -7,8 +7,8 @@ export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) 
   // Refs to avoid stale closures in the gesture callback
   const onSwipeLeftRef = useRef(onSwipeLeft);
   const onSwipeRightRef = useRef(onSwipeRight);
-  onSwipeLeftRef.current = onSwipeLeft;
-  onSwipeRightRef.current = onSwipeRight;
+  useEffect(() => { onSwipeLeftRef.current = onSwipeLeft; }, [onSwipeLeft]);
+  useEffect(() => { onSwipeRightRef.current = onSwipeRight; }, [onSwipeRight]);
 
   const bind = useDrag(
     ({ movement: [mx, my], last, cancel, memo = false }) => {

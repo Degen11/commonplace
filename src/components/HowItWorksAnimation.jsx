@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { ClipboardList, Zap, CheckCircle, RefreshCw } from "lucide-react";
 import { CP_ACCENT, FONT_SANS } from "./styles";
 
@@ -168,7 +168,6 @@ const S = {
 export default function HowItWorksAnimation({ active = true }) {
   // 0 = idle, 1 = paste, 2 = identify, 3 = organize, 4 = done
   const [runKey, setRunKey] = useState(0);
-  const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [lineCount, setLineCount] = useState(0);
   const [scanIndex, setScanIndex] = useState(-1); // which line is currently being scanned
@@ -178,12 +177,7 @@ export default function HowItWorksAnimation({ active = true }) {
   const [cardCount, setCardCount] = useState(0);
   const [progress, setProgress] = useState(0);
 
-  // Start only when active becomes true for the first time (or on replay)
-  useEffect(() => {
-    if (active && !started) setStarted(true);
-  }, [active, started]);
-
-  const replay = useCallback(() => {
+  const replay = () => {
     setStep(0);
     setLineCount(0);
     setScanIndex(-1);
@@ -192,12 +186,11 @@ export default function HowItWorksAnimation({ active = true }) {
     setShowCards(false);
     setCardCount(0);
     setProgress(0);
-    setStarted(true);
     setRunKey(k => k + 1);
-  }, []);
+  };
 
   useEffect(() => {
-    if (!started) return;
+    if (!active) return;
     const ts = [];
     const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
 
@@ -252,7 +245,7 @@ export default function HowItWorksAnimation({ active = true }) {
     t(organizeDone, () => setStep(4));
 
     return () => ts.forEach(clearTimeout);
-  }, [runKey, started]);
+  }, [runKey, active]);
 
   const activeStep = step >= 4 ? 3 : step;
   const isDark = step >= 1 && step < 3;

@@ -1,6 +1,6 @@
 import { styles } from "./styles";
 import { getCatColor, CONF_COLORS } from "../data/constants";
-import { useMemo, useEffect } from "react";
+import { useEffect } from "react";
 import AnimatedNumber from "./AnimatedNumber";
 
 import {
@@ -22,7 +22,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
 
-  const stats = useMemo(() => {
+  const stats = (() => {
     if (!quotes.length) return null;
     const uniqueSources = new Set(quotes.map(q => q.source).filter(Boolean)).size;
     const favCount = quotes.filter(q => q.favorite).length;
@@ -33,7 +33,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
     });
     const needsAttention = confCounts.low + unknownCount;
     return { uniqueSources, favCount, confCounts, needsAttention, unknownCount };
-  }, [quotes]);
+  })();
 
   if (!computedStats || !stats || quotes.length < 10) {
     return <EmptyState count={quotes.length} onClose={onClose} />;

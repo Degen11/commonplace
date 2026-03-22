@@ -20,7 +20,6 @@ export default function useAnimatedNumber(target, duration = 300) {
     if (initialMount.current) {
       initialMount.current = false;
       fromRef.current = target;
-      setDisplay(target);
       return;
     }
 

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { styles, FONT_SANS } from "./styles";
 import { getCatColor } from "../data/constants";
 import { CheckCircle, Database, Globe, Sparkles } from "lucide-react";
@@ -45,7 +44,7 @@ export default function ProcessingPhase({
   const total = progress?.total || 0;
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const isComplete = processingDone || progress?.phase === "complete";
-  const reversedFeed = useMemo(() => [...identifiedFeed].reverse(), [identifiedFeed]);
+  const reversedFeed = [...identifiedFeed].reverse();
 
   return (
     <div style={styles.wrap}>

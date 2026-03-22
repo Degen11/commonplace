@@ -27,12 +27,14 @@ export default function useKeyboardShortcuts({
   showToast,
 }) {
   const stateRef = useRef({});
-  stateRef.current = {
-    phase, search, editingId, inlineEdit,
-    selected, confirmClear, confirmBulkDel,
-    showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
-    reviewQueue, selAll, visible, filtered, hasMore, loadMore, onFav, handleDelete, bulkDel,
-  };
+  useEffect(() => {
+    stateRef.current = {
+      phase, search, editingId, inlineEdit,
+      selected, confirmClear, confirmBulkDel,
+      showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
+      reviewQueue, selAll, visible, filtered, hasMore, loadMore, onFav, handleDelete, bulkDel,
+    };
+  });
 
   useEffect(() => {
     const handler = (e) => {

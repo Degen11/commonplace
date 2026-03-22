@@ -1,4 +1,3 @@
-import { memo } from "react";
 
 const highlightStyle = {
   background: "rgba(255, 213, 79, 0.35)",
@@ -53,7 +52,7 @@ const STYLE_MAP = {
   underline: { textDecoration: "underline" },
 };
 
-const HighlightText = memo(function HighlightText({ text, term }) {
+function HighlightText({ text, term }) {
   if (!text) return null;
 
   const segments = parseRichSegments(text);
@@ -73,6 +72,6 @@ const HighlightText = memo(function HighlightText({ text, term }) {
     if (seg.type === "plain") return <span key={i}>{content}</span>;
     return <span key={i} style={STYLE_MAP[seg.type]}>{content}</span>;
   });
-});
+}
 
 export default HighlightText;

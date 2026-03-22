@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin, closestCenter } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { pluralize } from "../utils/helpers";
@@ -15,29 +15,29 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
   const [activeDragId, setActiveDragId] = useState(null);
   const [overDragId, setOverDragId] = useState(null);
 
-  const collisionDetection = useCallback((args) => {
+  const collisionDetection = (args) => {
     const pointerHits = pointerWithin(args);
     const collectionHit = pointerHits.find(c => typeof c.id === "string" && c.id.startsWith("collection:"));
     if (collectionHit) return [collectionHit];
     return closestCenter(args);
-  }, []);
+  };
 
-  const handleDndStart = useCallback(({ active }) => {
+  const handleDndStart = ({ active }) => {
     setActiveDragId(active.id);
-  }, []);
+  };
 
-  const anchorToCursor = useCallback(({ transform, activatorEvent, activeNodeRect }) => {
+  const anchorToCursor = ({ transform, activatorEvent, activeNodeRect }) => {
     if (!activatorEvent || !activeNodeRect) return transform;
     const offsetX = activatorEvent.clientX - activeNodeRect.left;
     const offsetY = activatorEvent.clientY - activeNodeRect.top;
     return { ...transform, x: transform.x + offsetX - 20, y: transform.y + offsetY - 16 };
-  }, []);
+  };
 
-  const handleDndOver = useCallback(({ over }) => {
+  const handleDndOver = ({ over }) => {
     setOverDragId(over?.id ?? null);
-  }, []);
+  };
 
-  const handleDndEnd = useCallback(({ active, over }) => {
+  const handleDndEnd = ({ active, over }) => {
     setActiveDragId(null);
     setOverDragId(null);
     if (!over || active.id === over.id) return;
@@ -61,7 +61,7 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
       if (oldIndex < 0 || newIndex < 0) return prev;
       return arrayMove(prev, oldIndex, newIndex);
     });
-  }, [selected, collections, addToCollection, removeFromCollection, showToast, setQuotes]);
+  };
 
   return {
     sensors,

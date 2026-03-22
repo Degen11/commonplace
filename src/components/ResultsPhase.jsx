@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -226,7 +226,7 @@ export default function ResultsPhase({
   const pendingScrollAdjust = useRef(null);
   const catScrollRef        = useRef(null);
   const headerObsRef        = useRef(null);
-  const headerRef           = useCallback((node) => {
+  const headerRef           = (node) => {
     if (headerObsRef.current) { headerObsRef.current.disconnect(); headerObsRef.current = null; }
     if (node) {
       const obs = new IntersectionObserver(([entry]) => {
@@ -235,7 +235,7 @@ export default function ResultsPhase({
       obs.observe(node);
       headerObsRef.current = obs;
     }
-  }, []);
+  };
   const [toolbarHeight, setToolbarHeight] = useState(44);
 
   // ── Effects ──
@@ -257,11 +257,11 @@ export default function ResultsPhase({
   }, [headerVisible]);
 
   // Preserve scroll position when toggling panels via mini-header
-  const preserveScroll = useCallback(() => {
+  const preserveScroll = () => {
     if (toolbarRef.current && !headerVisible) {
       pendingScrollAdjust.current = toolbarRef.current.getBoundingClientRect().top;
     }
-  }, [headerVisible]);
+  };
 
   useLayoutEffect(() => {
     if (pendingScrollAdjust.current != null && toolbarRef.current) {
@@ -312,14 +312,14 @@ export default function ResultsPhase({
     saveToStorage(LS_SIDEBAR, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
 
-  const dismissKbHint = useCallback(() => {
+  const dismissKbHint = () => {
     setShowKbHint(false);
     try { localStorage.setItem(LS_KB_HINT, "1"); } catch { /* ignore */ }
-  }, []);
+  };
 
   // ── Handlers ──
 
-  const onFav = useCallback(id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)), [setQuotes]);
+  const onFav = id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x));
 
   const handleAddMore = () => {
     if (!addMoreInput.trim()) return;
@@ -328,7 +328,7 @@ export default function ResultsPhase({
     setShowAddMore(false);
   };
 
-  const handleQuickAdd = useCallback((text, source, category, { skipDupeCheck } = {}) => {
+  const handleQuickAdd = (text, source, category, { skipDupeCheck } = {}) => {
     if (!text || !text.trim()) return;
     const addQuote = () => {
       const newQuote = {
@@ -354,9 +354,9 @@ export default function ResultsPhase({
       }
     }
     addQuote();
-  }, [quotes, setQuotes, showToast]);
+  };
 
-  const handleClear = useCallback(() => {
+  const handleClear = () => {
     if (quotes.length > 0) trackDeletion(quotes.map(q => q.id));
     try { window.history.replaceState(null, "", window.location.pathname); } catch {}
     setIsSharedView(false);
@@ -367,8 +367,7 @@ export default function ResultsPhase({
     setConfirmClear(false); setShowAddMore(false); setShowStats(false);
     setCustomCats([]); setActiveCollectionId(null);
     onClearReset();
-  }, [quotes, trackDeletion, setIsSharedView, setQuotes, setCustomCats, setActiveCollectionId,
-      setSelected, setCatFilter, setFavFilter, setSearch, setSortBy, onClearReset]);
+  };
 
   const handleStartReview = () => {
     setSortBy("confidence");
@@ -378,7 +377,7 @@ export default function ResultsPhase({
     startReviewFlow();
   };
 
-  const handleFindDupes = useCallback(() => {
+  const handleFindDupes = () => {
     // Use full collection scope (not filtered by search/category/favorites)
     // so dupe detection covers all quotes in the target
     let target = quotes;
@@ -399,9 +398,9 @@ export default function ResultsPhase({
       return;
     }
     setCollectionDupes(groups);
-  }, [quotes, collections, activeCollectionId, showToast]);
+  };
 
-  const handleDupeDeleteBatch = useCallback((quoteIds) => {
+  const handleDupeDeleteBatch = (quoteIds) => {
     const snapshot = quotes.filter(q => quoteIds.includes(q.id));
     const indices = snapshot.map(q => ({ quote: q, idx: quotes.findIndex(x => x.id === q.id) }));
     trackDeletion(quoteIds);
@@ -422,7 +421,7 @@ export default function ResultsPhase({
         untrackDeletion(quoteIds);
       },
     );
-  }, [quotes, setQuotes, trackDeletion, untrackDeletion, cleanCollectionRefs, showToast]);
+  };
 
   const addCat = () => {
     const sanitized = sanitizeName(newCatName);
@@ -437,7 +436,7 @@ export default function ResultsPhase({
   const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Reflection", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
 
   // AI auto-group: create a collection from a theme
-  const handleAutoGroup = useCallback(async (theme) => {
+  const handleAutoGroup = async (theme) => {
     if (quotes.length === 0) throw new Error("No quotes to group");
     const matchedIds = await autoGroup(theme, quotes);
     if (matchedIds.length === 0) throw new Error("No quotes matched that theme");
@@ -447,19 +446,19 @@ export default function ResultsPhase({
     addToCollection(col.id, matchedIds);
     setActiveCollectionId(col.id);
     showToast(`Created "${col.name}" with ${pluralize(matchedIds.length, "quote")}`, null, null, "success");
-  }, [quotes, autoGroup, createCollection, addToCollection, setActiveCollectionId, showToast]);
+  };
 
   // Compute per-collection quote counts for sidebar
-  const quoteCounts = useMemo(() => {
+  const quoteCounts = (() => {
     const quoteIdSet = new Set(quotes.map(q => q.id));
     const counts = {};
     for (const c of collections) {
       counts[c.id] = c.quoteIds.filter(id => quoteIdSet.has(id)).length;
     }
     return counts;
-  }, [collections, quotes]);
+  })();
 
-  const handleDeleteCollection = useCallback((id) => {
+  const handleDeleteCollection = (id) => {
     const col = collections.find(c => c.id === id);
     const count = quoteCounts[id] || 0;
     const snapshot = col ? { ...col, quoteIds: [...col.quoteIds] } : null;
@@ -479,9 +478,9 @@ export default function ResultsPhase({
         },
       );
     }
-  }, [collections, quoteCounts, activeCollectionId, deleteCollection, restoreCollection, setActiveCollectionId, showToast]);
+  };
 
-  const handleRemoveFromCollection = useCallback((collectionId, quoteIds) => {
+  const handleRemoveFromCollection = (collectionId, quoteIds) => {
     removeFromCollection(collectionId, quoteIds);
     const col = collections.find(c => c.id === collectionId);
     showToast(
@@ -489,9 +488,9 @@ export default function ResultsPhase({
       "Undo",
       () => addToCollection(collectionId, quoteIds),
     );
-  }, [collections, removeFromCollection, addToCollection, showToast]);
+  };
 
-  const handleAddToCollection = useCallback((collectionId, quoteIds) => {
+  const handleAddToCollection = (collectionId, quoteIds) => {
     addToCollection(collectionId, quoteIds);
     const col = collections.find(c => c.id === collectionId);
     showToast(
@@ -499,11 +498,11 @@ export default function ResultsPhase({
       "Undo",
       () => removeFromCollection(collectionId, quoteIds),
     );
-  }, [collections, addToCollection, removeFromCollection, showToast]);
+  };
 
   const showBulkBar = selected.size > 0;
 
-  const actionProps = useMemo(() => ({
+  const actionProps = {
     onFav,
     onDelete:      handleDelete,
     onCopy:        copyQuote,
@@ -515,7 +514,7 @@ export default function ResultsPhase({
     onAddToCollection: handleAddToCollection,
     onRemoveFromCollection: handleRemoveFromCollection,
     activeCollectionId,
-  }), [onFav, handleDelete, copyQuote, reIdentify, setShareImageQuote, copiedId, reidentifyingIds, collections, handleAddToCollection, handleRemoveFromCollection, activeCollectionId]);
+  };
 
   const makeExportDropdown = (triggerStyle, triggerClassName, triggerTip) => (
     <ExportDropdown

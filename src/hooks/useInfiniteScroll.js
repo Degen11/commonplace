@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { INFINITE_SCROLL_PAGE } from "../config";
 
 const PAGE_SIZE = INFINITE_SCROLL_PAGE;
@@ -6,16 +6,18 @@ const PAGE_SIZE = INFINITE_SCROLL_PAGE;
 export default function useInfiniteScroll(filtered, resetKey) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Only reset when the actual filter criteria change, not on every render
-  useEffect(() => {
+  // Reset pagination when filter criteria change
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (prevResetKey !== resetKey) {
+    setPrevResetKey(resetKey);
     setVisibleCount(PAGE_SIZE);
-  }, [resetKey]);
+  }
 
-  const loadMore = useCallback(() => {
+  const loadMore = () => {
     setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filtered.length));
-  }, [filtered.length]);
+  };
 
-  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const visible = filtered.slice(0, visibleCount);
 
   return {
     visible,

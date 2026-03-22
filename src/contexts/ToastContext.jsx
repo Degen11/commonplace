@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 import { Toaster } from "sonner";
 import useToasts from "../hooks/useToasts";
 
@@ -6,7 +6,7 @@ const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
   const { showToast } = useToasts();
-  const value = useMemo(() => ({ showToast }), [showToast]);
+  const value = { showToast };
   return (
     <ToastContext.Provider value={value}>
       {children}

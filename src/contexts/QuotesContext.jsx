@@ -6,7 +6,7 @@
 // - Bridging the store to React context for backward compatibility
 // - Toast notifications that depend on React context (ToastContext)
 
-import { createContext, useContext, useEffect, useMemo, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { DEFAULT_CATEGORIES } from "../data/constants";
 import { useToastContext } from "./ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
@@ -85,7 +85,7 @@ export function QuotesProvider({ children }) {
   const handleCloudData = useQuotesStore(s => s.handleCloudData);
   const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
 
-  const allCats = useMemo(() => [...DEFAULT_CATEGORIES, ...customCats], [customCats]);
+  const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
   // ── Storage limit warning (needs toast) ──
   const storageLimitWarned = useRef(false);
@@ -99,9 +99,9 @@ export function QuotesProvider({ children }) {
   }, [quotes, showToast]);
 
   // ── Cloud sync via useSync (will be replaced by TanStack Query in phase 2) ──
-  const handleSyncError = useCallback((message) => {
+  const handleSyncError = (message) => {
     showToast(message);
-  }, [showToast]);
+  };
 
   const { syncStatus, lastSynced, initialLoading, pull, schedulePush, manualPush, markReady } = useSync({
     onCloudData: handleCloudData,
@@ -205,7 +205,7 @@ export function QuotesProvider({ children }) {
 
   // ── Build context value ──
   // This is the same shape as before so all consumers work unchanged.
-  const value = useMemo(() => ({
+  const value = {
     quotes, setQuotes,
     customCats, setCustomCats,
     columnOrder, setColumnOrder,
@@ -221,9 +221,7 @@ export function QuotesProvider({ children }) {
     addToCollection, removeFromCollection, updateCollectionIcon,
     cleanCollectionRefs,
     manualPush,
-  }), [quotes, customCats, columnOrder, allCats, isSharedView, syncStatus, lastSynced, initialLoading, trackDeletion,
-       collections, activeCollectionId, createCollection, deleteCollection, restoreCollection, renameCollection,
-       addToCollection, removeFromCollection, updateCollectionIcon, untrackDeletion, cleanCollectionRefs, manualPush]);
+  };
 
   return (
     <QuotesContext.Provider value={value}>

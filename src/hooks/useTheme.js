@@ -59,20 +59,64 @@ export default function useTheme() {
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = useCallback((/** @type {MouseEvent|undefined} */ event) => {
     // Cancel any in-flight transition cleanup from a previous toggle
     if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
-    // Add transitioning class for smooth CSS crossfade, then remove after transition
-    const el = document.documentElement;
-    el.classList.add("theme-transitioning");
-    setExplicit(true);
-    setDark(d => !d);
-    // Remove after transition completes (matches .3s in baseCSS)
-    transitionTimerRef.current = setTimeout(() => {
-      el.classList.remove("theme-transitioning");
-      transitionTimerRef.current = null;
-    }, 350);
-  }, []);
+
+    const applyTheme = () => {
+      setExplicit(true);
+      setDark(d => !d);
+    };
+
+    // Try View Transition API for radial wipe effect
+    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // Get click coordinates for the radial origin
+      const x = event?.clientX ?? window.innerWidth / 2;
+      const y = event?.clientY ?? 0;
+      // Calculate the maximum distance from click to any corner
+      const maxDist = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y),
+      );
+
+      const transition = document.startViewTransition(() => {
+        applyTheme();
+        // Flush the class changes synchronously
+        const el = document.documentElement;
+        // The useEffect will handle class toggling, but we need it to flush during the callback
+        // so we also do it here for the view transition snapshot
+        const nextDark = !dark; // since setDark hasn't flushed yet, compute manually
+        el.classList.toggle("dark", nextDark);
+        el.classList.toggle("light", !nextDark);
+      });
+
+      // Animate the new view in with a radial clip-path from click position
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${maxDist}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 500,
+            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            pseudoElement: "::view-transition-new(root)",
+          },
+        );
+      }).catch(() => {}); // Ignore if animation is interrupted
+    } else {
+      // Fallback: CSS crossfade transition (existing behavior)
+      const el = document.documentElement;
+      el.classList.add("theme-transitioning");
+      applyTheme();
+      transitionTimerRef.current = setTimeout(() => {
+        el.classList.remove("theme-transitioning");
+        transitionTimerRef.current = null;
+      }, 350);
+    }
+  }, [dark]);
 
   return { dark, toggleTheme };
 }

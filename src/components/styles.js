@@ -25,7 +25,7 @@ export const baseCSS = `
     --cp-border:#E3E2DE;--cp-border-light:#E8E3DA;--cp-border-dim:#D3D3D0;
     --cp-shadow-card:0 2px 16px rgba(26,24,20,0.06);--cp-shadow-md:0 4px 16px rgba(0,0,0,.1);
     --cp-overlay:rgba(0,0,0,0.4);--cp-toast-bg:#37352F;--cp-toggle-off:#E0DCD4;
-    --cp-mini-bg:rgba(250,248,244,0.88);
+    --cp-mini-bg:rgba(250,248,244,0.72);
     --cp-accent:#3C5775;
     --cp-error-bg:#FEF2F2;--cp-error-border:#FECACA;--cp-error-text:#991B1B;
     --cp-warning-bg:#FFF7ED;--cp-warning-border:#FDBA74;--cp-warning-text:#9A3412;
@@ -48,7 +48,7 @@ export const baseCSS = `
     --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
     --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
     --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
-    --cp-mini-bg:rgba(26,26,26,0.88);
+    --cp-mini-bg:rgba(26,26,26,0.72);
     --cp-accent:#90B4D4;
     --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
     --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
@@ -72,7 +72,7 @@ export const baseCSS = `
       --cp-border:#3A3A3A;--cp-border-light:#343434;--cp-border-dim:#4A4A4A;
       --cp-shadow-card:0 2px 16px rgba(0,0,0,0.3);--cp-shadow-md:0 4px 16px rgba(0,0,0,.3);
       --cp-overlay:rgba(0,0,0,0.6);--cp-toast-bg:#3A3A3A;--cp-toggle-off:#4A4A4A;
-      --cp-mini-bg:rgba(26,26,26,0.88);
+      --cp-mini-bg:rgba(26,26,26,0.72);
       --cp-accent:#90B4D4;
       --cp-error-bg:rgba(127,29,29,0.2);--cp-error-border:rgba(220,38,38,0.3);--cp-error-text:#FCA5A5;
       --cp-warning-bg:rgba(154,52,18,0.15);--cp-warning-border:rgba(234,88,12,0.3);--cp-warning-text:#FDBA74;
@@ -92,10 +92,15 @@ export const baseCSS = `
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text);font-family:'Satoshi',-apple-system,sans-serif}
 
-  /* Smooth theme transition — CSS custom property crossfade */
+  /* Smooth theme transition — CSS custom property crossfade (fallback when View Transitions unavailable) */
   :root{transition:background-color .3s ease,color .3s ease}
   body{transition:background-color .3s ease,color .3s ease}
   .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,background .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
+
+  /* View Transition API — radial wipe for theme toggle */
+  ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+  ::view-transition-old(root){z-index:1}
+  ::view-transition-new(root){z-index:9999}
   ::selection{background:var(--cp-selection-bg)}
   html.dark ::selection{background:var(--cp-selection-bg)}
   @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:var(--cp-selection-bg)}}
@@ -121,6 +126,7 @@ export const baseCSS = `
   @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
   @keyframes completePop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
   @keyframes dropGlow{0%,100%{outline-color:rgba(60,87,117,0.35)}50%{outline-color:rgba(60,87,117,0.8)}}
+  @keyframes miniHeaderIn{from{opacity:0;transform:translateY(-100%);backdrop-filter:blur(0) saturate(100%);-webkit-backdrop-filter:blur(0) saturate(100%)}to{opacity:1;transform:translateY(0);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}}
   .spin{animation:spin 1s linear infinite}
   .copy-push{animation:copyPush .25s ease}
   .share-lift{animation:shareLift .25s ease}
@@ -260,6 +266,10 @@ export const baseCSS = `
   .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled){transform:scale(0.97) !important;transition:transform .1s ease !important}
   .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
 
+  /* List shuffle — triggered on sort/filter change for smooth re-entrance */
+  @keyframes listShuffle{from{opacity:0.4;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .list-shuffle .qrow,.list-shuffle .qcard{animation:listShuffle .25s cubic-bezier(0.16,1,0.3,1) both}
+
   /* Staggered entrance for table rows — uses nth-child for cascade */
   .stagger-in .qrow{animation:staggerIn .2s ease both}
   .stagger-in .qrow:nth-child(1){animation-delay:0s}
@@ -359,8 +369,13 @@ export const baseCSS = `
   html.dark .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(0,0,0,.4)}
   html.dark input,html.dark textarea,html.dark select{background-color:var(--cp-bg-input) !important;color:var(--cp-text) !important}
 
-  /* Toast spring entrance animation */
+  /* Toast spring entrance animation + type-colored left borders */
   [data-sonner-toast][data-mounted="true"]{animation:toastSlideIn .35s cubic-bezier(0.34,1.56,0.64,1) !important}
+  [data-sonner-toast][data-type="success"]{border-left:3px solid #16A34A !important}
+  [data-sonner-toast][data-type="error"]{border-left:3px solid #DC2626 !important}
+  [data-sonner-toast][data-type="info"]{border-left:3px solid #3B82F6 !important}
+  [data-sonner-toast][data-removed="true"]{animation:toastExit .25s cubic-bezier(0.4,0,1,1) forwards !important}
+  @keyframes toastExit{to{opacity:0;transform:translateY(8px) scale(0.95)}}
 
   /* ═══════════ Mobile-first optimizations ═══════════ */
 

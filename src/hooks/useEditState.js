@@ -15,10 +15,12 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
 
   const lastSelectedIndex = useRef(null);
 
-  // ── Clean ghost IDs in selection ──
+  // ── Clean ghost IDs in selection and cancel stale inline edits ──
   useEffect(() => {
-    if (selected.size === 0) return;
     const quoteIds = new Set(quotes.map(q => q.id));
+    if (inlineEdit && !quoteIds.has(inlineEdit.id)) setInlineEdit(null);
+    if (editingId && !quoteIds.has(editingId)) setEditingId(null);
+    if (selected.size === 0) return;
     setSelected(prev => {
       const cleaned = new Set();
       let changed = false;
@@ -31,7 +33,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
       }
       return changed ? cleaned : prev;
     });
-  }, [quotes, selected]);
+  }, [quotes, selected, inlineEdit, editingId]);
 
   // ── Filter reviewQueue when quotes change ──
   useEffect(() => {

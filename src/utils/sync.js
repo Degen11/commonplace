@@ -24,7 +24,7 @@ export function mergeByTimestamp(local, cloud, timestampKey) {
     if (!localItem) {
       missing.push(cloudItem);
       changed = true;
-    } else if ((cloudItem[timestampKey] || 0) > (localItem[timestampKey] || 0)) {
+    } else if ((cloudItem[timestampKey] || 0) >= (localItem[timestampKey] || 0)) {
       localMap.set(cloudItem.id, cloudItem);
       changed = true;
     }

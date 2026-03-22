@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, memo } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, memo } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -311,6 +311,25 @@ export default function TableView({
     const t = setTimeout(() => el.classList.remove("stagger-in"), 500);
     return () => clearTimeout(t);
   }, []);
+
+  // Detect list order changes (sort/filter) and trigger a shuffle animation
+  const listFingerprint = useMemo(
+    () => filtered.slice(0, 8).map(q => q.id).join(","),
+    [filtered],
+  );
+  const prevFingerprintRef = useRef(listFingerprint);
+  useEffect(() => {
+    if (prevFingerprintRef.current === listFingerprint) return;
+    prevFingerprintRef.current = listFingerprint;
+    const el = outerRef.current;
+    if (!el) return;
+    el.classList.remove("list-shuffle");
+    // Force reflow to restart animation
+    void el.offsetWidth;
+    el.classList.add("list-shuffle");
+    const t = setTimeout(() => el.classList.remove("list-shuffle"), 300);
+    return () => clearTimeout(t);
+  }, [listFingerprint]);
 
   const handleColDragStart = (e, colId) => {
     e.stopPropagation();

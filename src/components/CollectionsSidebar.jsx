@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, stagger, useAnimate } from "motion/react";
 import { Popover } from "@base-ui/react/popover";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -9,6 +9,7 @@ import {
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
 } from "lucide-react";
 import { CP_ACCENT, FONT_SANS, styles } from "./styles";
+import AnimatedNumber from "./AnimatedNumber";
 
 // Icon set for the picker
 const ICON_OPTIONS = [
@@ -322,7 +323,7 @@ export default function CollectionsSidebar({
       <motion.div
         key="collapsed"
         initial={{ width: 220, opacity: 0 }}
-        animate={{ width: 48, opacity: 1, transition: { width: { duration: 0.2, ease: "easeOut" }, opacity: { duration: 0.15, delay: 0.1 } } }}
+        animate={{ width: 48, opacity: 1, transition: { width: { type: "spring", stiffness: 400, damping: 30 }, opacity: { duration: 0.15, delay: 0.1 } } }}
         style={{
           flexShrink: 0, paddingRight: 8,
           display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, gap: 8,
@@ -349,7 +350,7 @@ export default function CollectionsSidebar({
             lineHeight: 1.2, textAlign: "center", cursor: "default",
           }}
         >
-          {totalQuotes}
+          <AnimatedNumber value={totalQuotes} />
         </div>
         <button
           onClick={() => setActiveCollectionId(null)}
@@ -387,7 +388,7 @@ export default function CollectionsSidebar({
     <motion.div
       key="expanded"
       initial={isMobileSheet ? false : { width: 48, opacity: 0 }}
-      animate={isMobileSheet ? { opacity: 1 } : { width: 220, opacity: 1, transition: { width: { duration: 0.2, ease: "easeOut" }, opacity: { duration: 0.15, delay: 0.05 } } }}
+      animate={isMobileSheet ? { opacity: 1 } : { width: 220, opacity: 1, transition: { width: { type: "spring", stiffness: 400, damping: 30 }, opacity: { duration: 0.15, delay: 0.05 } } }}
       style={expandedStyle}
     >
       {/* Overview card */}
@@ -406,16 +407,16 @@ export default function CollectionsSidebar({
         </div>
         <div style={styles.sidebarOverviewRow}>
           <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Entries</span>
-          <span style={styles.sidebarOverviewValue}>{totalQuotes}</span>
+          <span style={styles.sidebarOverviewValue}><AnimatedNumber value={totalQuotes} /></span>
         </div>
         <div style={styles.sidebarOverviewRow}>
           <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Globe size={13} strokeWidth={1.5} /> Sources</span>
-          <span style={styles.sidebarOverviewValue}>{uniqueSources || 0}</span>
+          <span style={styles.sidebarOverviewValue}><AnimatedNumber value={uniqueSources || 0} /></span>
         </div>
         {favCount > 0 && (
           <div style={styles.sidebarOverviewRow}>
             <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Star size={13} strokeWidth={1.5} /> Favorites</span>
-            <span style={{ ...styles.sidebarOverviewValue, color: "#D97706" }}>{favCount}</span>
+            <span style={{ ...styles.sidebarOverviewValue, color: "#D97706" }}><AnimatedNumber value={favCount} /></span>
           </div>
         )}
         {onFindDupes && (
@@ -555,7 +556,7 @@ export default function CollectionsSidebar({
         >
           <Library size={15} strokeWidth={1.5} />
           <span style={{ flex: 1 }}>All Quotes</span>
-          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 20, textAlign: "right" }}>{totalQuotes}</span>
+          <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 20, textAlign: "right" }}><AnimatedNumber value={totalQuotes} /></span>
         </button>
       </div>
 
@@ -578,25 +579,31 @@ export default function CollectionsSidebar({
         overflowY: collections.length > 12 ? "auto" : "hidden",
         maxHeight: collections.length > 12 ? 420 : "none",
       }}>
-        {collections.map(c => (
-          <CollectionRow
+        {collections.map((c, i) => (
+          <motion.div
             key={c.id}
-            c={c}
-            isActive={activeCollectionId === c.id}
-            isEditing={editingId === c.id}
-            editName={editName}
-            setEditName={setEditName}
-            handleRename={handleRename}
-            setEditingId={setEditingId}
-            confirmDeleteId={confirmDeleteId}
-            setConfirmDeleteId={setConfirmDeleteId}
-            deleteCollection={deleteCollection}
-            setActiveCollectionId={setActiveCollectionId}
-            iconPickerId={iconPickerId}
-            setIconPickerId={setIconPickerId}
-            updateCollectionIcon={updateCollectionIcon}
-            quoteCounts={quoteCounts}
-          />
+            initial={isMobileSheet ? false : { opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.2, ease: "easeOut" }}
+          >
+            <CollectionRow
+              c={c}
+              isActive={activeCollectionId === c.id}
+              isEditing={editingId === c.id}
+              editName={editName}
+              setEditName={setEditName}
+              handleRename={handleRename}
+              setEditingId={setEditingId}
+              confirmDeleteId={confirmDeleteId}
+              setConfirmDeleteId={setConfirmDeleteId}
+              deleteCollection={deleteCollection}
+              setActiveCollectionId={setActiveCollectionId}
+              iconPickerId={iconPickerId}
+              setIconPickerId={setIconPickerId}
+              updateCollectionIcon={updateCollectionIcon}
+              quoteCounts={quoteCounts}
+            />
+          </motion.div>
         ))}
       </div>
       )}

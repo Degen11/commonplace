@@ -1,6 +1,7 @@
 import { styles } from "./styles";
 import { getCatColor, CONF_COLORS } from "../data/constants";
 import { useMemo, useEffect } from "react";
+import AnimatedNumber from "./AnimatedNumber";
 
 import {
   FileText,
@@ -67,7 +68,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
                 <Icon size={14} color={k.iconColor} style={{ opacity: 0.8 }} />
                 <span style={{ fontSize: 11, color: "var(--cp-text-muted)", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 500 }}>{k.label}</span>
               </div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: k.color, letterSpacing: -0.5, lineHeight: 1 }}>{k.value}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: k.color, letterSpacing: -0.5, lineHeight: 1 }}><AnimatedNumber value={k.value} duration={400} /></div>
             </div>
           );
         })}

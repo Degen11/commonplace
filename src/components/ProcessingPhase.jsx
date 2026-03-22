@@ -4,6 +4,7 @@ import { getCatColor } from "../data/constants";
 import { CheckCircle, Database, Globe, Sparkles } from "lucide-react";
 import Logo from "./Logo";
 import { pluralize } from "../utils/helpers";
+import AnimatedNumber from "./AnimatedNumber";
 
 const statChipStyle = {
   display: "inline-flex", alignItems: "center", gap: 6,
@@ -97,8 +98,8 @@ export default function ProcessingPhase({
         {progress && (
           <div style={styles.procCard}>
             <div style={styles.procTop}>
-              <span style={{ fontWeight: 600 }}>{doneCount} of {total}</span>
-              <span style={{ color: isComplete ? "#059669" : "var(--cp-text-muted)" }}>{pct}%</span>
+              <span style={{ fontWeight: 600 }}><AnimatedNumber value={doneCount} /> of {total}</span>
+              <span style={{ color: isComplete ? "#059669" : "var(--cp-text-muted)" }}><AnimatedNumber value={pct} />%</span>
             </div>
             <div style={styles.track}><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}

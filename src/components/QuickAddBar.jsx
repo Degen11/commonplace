@@ -47,7 +47,6 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
           gap: isMobile ? 10 : 8, padding: isMobile ? "12px 16px" : "10px 16px",
         }}
       >
-        {/* Row 1: Quote text + close */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
           <Plus size={14} strokeWidth={2} style={{ color: "var(--cp-text-muted)", flexShrink: 0 }} />
           <input
@@ -63,45 +62,22 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             }}
             onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
           />
-          {!isMobile && (
-            <input
-              value={source}
-              onChange={e => setSource(e.target.value)}
-              placeholder="Source (optional)"
-              style={{
-                width: 160, padding: "6px 10px", fontSize: 13, fontFamily: "inherit",
-                border: "1px solid var(--cp-border)", borderRadius: 6,
-                background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
-              }}
-              onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
-            />
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--cp-text-muted)", padding: 4, borderRadius: 4, flexShrink: 0,
-            }}
-          >
-            <X size={14} strokeWidth={2} />
-          </button>
         </div>
-        {/* Row 2 on mobile: source + category + add */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, ...(isMobile ? { paddingLeft: 22 } : {}) }}>
-          {isMobile && (
-            <input
-              value={source}
-              onChange={e => setSource(e.target.value)}
-              placeholder="Source (optional)"
-              style={{
-                flex: 1, minWidth: 0, padding: "8px 12px", fontSize: 14, fontFamily: "inherit",
-                border: "1px solid var(--cp-border)", borderRadius: 6,
-                background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
-              }}
-              onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
-            />
-          )}
+          <input
+            value={source}
+            onChange={e => setSource(e.target.value)}
+            placeholder="Source (optional)"
+            style={{
+              width: isMobile ? undefined : 160, flex: isMobile ? 1 : undefined,
+              minWidth: isMobile ? 0 : undefined,
+              padding: isMobile ? "8px 12px" : "6px 10px",
+              fontSize: isMobile ? 14 : 13, fontFamily: "inherit",
+              border: "1px solid var(--cp-border)", borderRadius: 6,
+              background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
+            }}
+            onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
+          />
           <Popover.Root open={showCatPicker} onOpenChange={setShowCatPicker}>
             <Popover.Trigger
               type="button"
@@ -127,7 +103,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
                     background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
                     boxShadow: "var(--cp-shadow-md)", padding: 6,
                     display: "flex", flexWrap: "wrap", gap: 4,
-                    width: isMobile ? "min(280px, 90vw)" : 220,
+                    width: "min(280px, 90vw)",
                     maxHeight: "60vh", overflowY: "auto",
                     animation: "slideD .12s ease",
                   }}
@@ -163,10 +139,20 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
               background: text.trim() ? "var(--cp-accent)" : "var(--cp-bg-tab)",
               color: text.trim() ? "#fff" : "var(--cp-text-muted)",
               border: "none", borderRadius: 6, cursor: text.trim() ? "pointer" : "default",
-              whiteSpace: "nowrap", minHeight: isMobile ? 40 : undefined,
+              whiteSpace: "nowrap",
             }}
           >
             Add
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--cp-text-muted)", padding: 4, borderRadius: 4, flexShrink: 0,
+            }}
+          >
+            <X size={14} strokeWidth={2} />
           </button>
         </div>
       </form>

@@ -485,7 +485,7 @@ export default function ResultsPhase({
         collectionDupes={collectionDupes} setCollectionDupes={setCollectionDupes} handleDupeDeleteBatch={handleDupeDeleteBatch}
       />
 
-      <div style={styles.wrap}>
+      <div className="cp-wrap" style={styles.wrap}>
 
           <NotificationBars
             isSharedView={isSharedView} setIsSharedView={setIsSharedView} quotesLength={quotes.length}
@@ -877,7 +877,7 @@ export default function ResultsPhase({
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
 
-          {/* Persistent help trigger — floating ? button (hidden on mobile) */}
+          {/* Persistent help trigger — floating ? button */}
           {!isMobile && (
           <button
             className="ui-tip ui-tip-left hdr-btn"

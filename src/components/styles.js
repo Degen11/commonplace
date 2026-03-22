@@ -375,7 +375,7 @@ export const baseCSS = `
     .hdr-btn{min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center}
     .view-btn{min-height:36px;min-width:36px}
     .cat-pill{min-height:36px;padding:6px 12px !important}
-    .check-div{min-width:28px;min-height:28px;display:flex;align-items:center;justify-content:center}
+    .check-div{display:flex;align-items:center;justify-content:center}
 
     /* Show overflow menu + edit hints on mobile (no hover) */
     .overflow-btn{opacity:1 !important}
@@ -399,6 +399,9 @@ export const baseCSS = `
 
     /* Tooltips — hide on mobile (they require hover) */
     .ui-tip::after{display:none !important}
+
+    /* Tighter wrap padding on mobile */
+    .cp-wrap{padding-left:16px !important;padding-right:16px !important}
 
     /* Sort dropdown full width on mobile */
     .mobile-sort-drop{left:auto !important;right:0 !important;min-width:180px !important}
@@ -438,7 +441,7 @@ export const syncPillStyles = {
 
 export const styles = {
   // Layout
-  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 max(16px, min(32px, 4vw)) 80px",fontFamily:FONT_SANS,fontSize:14,color:"var(--cp-text)",minHeight:"100vh",background:"var(--cp-bg)"},
+  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:FONT_SANS,fontSize:14,color:"var(--cp-text)",minHeight:"100vh",background:"var(--cp-bg)"},
 
   // Nav
   nav:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"26px 0 22px",borderBottom:"1px solid var(--cp-border-light)"},
@@ -477,7 +480,7 @@ export const styles = {
   dropSub:{fontSize:13,color:"var(--cp-text-muted)"},
   dropFileName:{display:"inline-flex",alignItems:"center",gap:6,marginTop:12,padding:"6px 12px",background:"rgba(34,197,94,0.10)",border:"1px solid rgba(34,197,94,0.20)",borderRadius:6,fontSize:12,color:CLR_GREEN,fontWeight:500},
 
-  bigTextarea:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:4,padding:"16px max(12px, min(16px, 3vw))",fontSize:15,fontFamily:"inherit",color:"var(--cp-text-secondary)",resize:"vertical",minHeight:200,lineHeight:1.7,background:"var(--cp-bg-card)"},
+  bigTextarea:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:4,padding:16,fontSize:14,fontFamily:"inherit",color:"var(--cp-text-secondary)",resize:"vertical",minHeight:240,lineHeight:1.7,background:"var(--cp-bg-card)"},
   inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,flexWrap:"wrap",gap:10},
   processBtn:{padding:"10px 24px",border:"none",borderRadius:4,background:CP_ACCENT,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   tryBtn:{padding:"8px 16px",border:"1px solid var(--cp-border)",borderRadius:4,background:"var(--cp-bg-card)",color:"var(--cp-text-muted)",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
@@ -552,7 +555,7 @@ export const styles = {
   feedItemSrc:{color:"var(--cp-text-muted)",flexShrink:0,maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},
 
   // Results header — #4 tightened padding rhythm
-  header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"24px 0 14px",borderBottom:"1px solid var(--cp-border)",flexWrap:"wrap",gap:10},
+  header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"32px 0 16px",borderBottom:"1px solid var(--cp-border)",flexWrap:"wrap",gap:12},
   title:{fontFamily:FONT_SERIF,fontSize:32,fontWeight:700,letterSpacing:-1,color:"var(--cp-text-secondary)",lineHeight:1},
   sub:{fontSize:13,color:"var(--cp-text-muted)",marginTop:6,letterSpacing:"0.01em"},
   hdrBtn:{padding:"6px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
@@ -712,10 +715,10 @@ export const styles = {
 };
 
 export const cardStyles = {
-  card:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,padding:"14px 16px",transition:"border-color .15s, box-shadow .15s",cursor:"grab"},
+  card:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,padding:16,transition:"border-color .15s, box-shadow .15s",cursor:"grab"},
   top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
-  acts:{display:"flex",gap:4,opacity:0.3,transition:"opacity .15s"},
-  txt:{fontSize:14,lineHeight:1.65,color:"var(--cp-text-secondary)",marginBottom:10,whiteSpace:"pre-wrap"},
+  acts:{display:"flex",gap:2,opacity:0.3,transition:"opacity .15s"},
+  txt:{fontSize:14,lineHeight:1.6,color:"var(--cp-text-secondary)",marginBottom:10,whiteSpace:"pre-wrap"},
   srcRow:{display:"flex",alignItems:"center",gap:6},
-  src:{fontSize:13,color:"var(--cp-text-muted)",lineHeight:1.4},
+  src:{fontSize:12,color:"var(--cp-text-muted)"},
 };

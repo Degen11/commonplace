@@ -2,12 +2,13 @@ import { useEffect } from "react";
 
 /**
  * Locks body scroll while the component is mounted.
- * Compensates for scrollbar width to prevent layout shift.
  * Uses a reference count so nested modals don't unlock prematurely.
- * Handles iOS Safari scroll bounce via position:fixed + scroll offset.
+ * On touch devices, uses position:fixed to prevent iOS Safari scroll bounce.
+ * On desktop, plain overflow:hidden suffices.
  */
 let lockCount = 0;
 let scrollY = 0;
+const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
 export default function useScrollLock() {
   useEffect(() => {
@@ -15,21 +16,24 @@ export default function useScrollLock() {
     if (lockCount === 1) {
       scrollY = window.scrollY;
       document.body.style.overflow = "hidden";
-      // iOS Safari: position:fixed prevents background scroll bounce
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = "0";
-      document.body.style.right = "0";
+      if (isTouchDevice) {
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+      }
     }
     return () => {
       lockCount--;
       if (lockCount === 0) {
         document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.left = "";
-        document.body.style.right = "";
-        window.scrollTo(0, scrollY);
+        if (isTouchDevice) {
+          document.body.style.position = "";
+          document.body.style.top = "";
+          document.body.style.left = "";
+          document.body.style.right = "";
+          window.scrollTo(0, scrollY);
+        }
       }
     };
   }, []);

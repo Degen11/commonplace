@@ -33,10 +33,7 @@ export default function BulkBar({
   };
 
   return (
-    <div className={isMobile ? "bulk-bar-mobile" : ""} style={{
-      ...styles.bulkBar,
-      ...(isMobile ? { flexWrap: "wrap", width: "calc(100vw - 16px)", gap: 6, padding: 10, bottom: 8 } : {}),
-    }}>
+    <div className={isMobile ? "bulk-bar-mobile" : ""} style={styles.bulkBar}>
       {/* ── Count badge ── */}
       <span style={styles.bulkN}>{selected.size} selected</span>
 

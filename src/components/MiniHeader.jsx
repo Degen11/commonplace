@@ -59,10 +59,10 @@ export default function MiniHeader({
             </div>
           )}
           {!isMobile && exportDropdownContent}
-          <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: isMobile ? "6px 12px" : "4px 10px", minHeight: isMobile ? 36 : undefined, display: "inline-flex", alignItems: "center", gap: 3 }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
+          <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: isMobile ? "6px 12px" : "4px 10px", display: "inline-flex", alignItems: "center", gap: 3 }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
           {/* Overflow menu */}
           <Menu.Root>
-            <Menu.Trigger className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: isMobile ? "6px 8px" : "4px 8px", minHeight: isMobile ? 36 : undefined }}>
+            <Menu.Trigger className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: isMobile ? "6px 8px" : "4px 8px" }}>
               <MoreHorizontal size={14} strokeWidth={1.5} />
             </Menu.Trigger>
             <Menu.Portal>

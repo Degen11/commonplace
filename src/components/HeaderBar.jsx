@@ -77,7 +77,7 @@ export default function HeaderBar({
 
         {/* Overflow / hamburger menu — serves both mobile and desktop */}
         <Menu.Root open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <Menu.Trigger className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: isMobile ? "7px 10px" : "5px 8px", minHeight: isMobile ? 40 : undefined }}>
+          <Menu.Trigger className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: isMobile ? "7px 10px" : "5px 8px" }}>
             {isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <MoreHorizontal size={16} strokeWidth={1.5} />}
           </Menu.Trigger>
           <Menu.Portal>

@@ -31,7 +31,7 @@ function isShareHash() {
 function loadDeletedIds() {
   const now = Date.now();
   return loadFromStorage(LS_DELETED_IDS, Array.isArray)
-    .filter(e => e && now - e.deletedAt < TOMBSTONE_TTL_MS);
+    .filter(e => e && typeof e.deletedAt === 'number' && now - e.deletedAt < TOMBSTONE_TTL_MS);
 }
 
 // ── Debounced localStorage persistence ──
@@ -72,7 +72,8 @@ function schedulePersist(state) {
 export const useQuotesStore = create(
   subscribeWithSelector((set, get) => ({
     // ── Core data ──
-    quotes: isShareHash() ? [] : loadFromStorage(LS_QUOTES, a => Array.isArray(a) && a.length > 0),
+    quotes: isShareHash() ? [] : loadFromStorage(LS_QUOTES, a => Array.isArray(a) && a.length > 0)
+      .filter(q => q && typeof q.id === 'string' && typeof q.text === 'string'),
     customCats: isShareHash() ? [] : loadFromStorage(LS_CATS),
     columnOrder: loadFromStorage(
       LS_COL_ORDER,

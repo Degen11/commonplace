@@ -32,7 +32,7 @@ const quoteSchema = z.object({
   confidence: confidence.optional().default('low'),
   favorite: z.boolean().optional().default(false),
   updatedAt: z.number().positive().optional(),
-}).passthrough();
+}).strip();
 
 // Filter-style array: silently drops invalid items (matches original behavior)
 const quotesArray = z.preprocess(
@@ -54,7 +54,7 @@ const deletedIdEntry = z.object({
 const collectionSchema = z.object({
   id: z.string(),
   name: z.string(),
-}).passthrough();
+}).strip();
 
 export const syncPostSchema = z.object({
   device_id: uuidV4,
@@ -103,7 +103,7 @@ export const shareGetSchema = z.object({
 // ── /api/auto-group ──
 
 export const autoGroupSchema = z.object({
-  theme: z.string().min(1).max(200, 'Invalid theme (string, max 200 chars)'),
+  theme: z.string().trim().min(1).max(200, 'Invalid theme (string, max 200 chars)'),
   quotes: z.array(z.string()).min(1).max(500, 'Invalid quotes array (1-500 items)'),
 });
 

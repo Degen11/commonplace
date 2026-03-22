@@ -23,7 +23,7 @@ const FUSE_OPTIONS = {
 const _savedView = loadFromStorage(LS_VIEW, v => v && typeof v === "object", {});
 const _initFilters = loadFromStorage(LS_FILTERS, v => v && typeof v === "object", {});
 
-export const SORT_OPTIONS = [
+const SORT_OPTIONS = [
   { key: "default",    label: "Default order" },
   { key: "confidence", label: "Needs attention first" },
   { key: "alpha",      label: "Alphabetical" },

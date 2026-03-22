@@ -25,8 +25,8 @@ export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) 
 
       if (last) {
         setOffsetX(0);
-        if (dampened < -SWIPE_THRESHOLD_PX && onSwipeLeftRef.current) onSwipeLeftRef.current();
-        else if (dampened > SWIPE_THRESHOLD_PX && onSwipeRightRef.current) onSwipeRightRef.current();
+        if (dampened < -SWIPE_THRESHOLD_PX && onSwipeLeftRef.current) { navigator.vibrate?.(15); onSwipeLeftRef.current(); }
+        else if (dampened > SWIPE_THRESHOLD_PX && onSwipeRightRef.current) { navigator.vibrate?.(15); onSwipeRightRef.current(); }
       } else {
         setOffsetX(dampened);
       }

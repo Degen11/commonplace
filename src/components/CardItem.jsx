@@ -3,11 +3,13 @@ import { useSortable } from "@dnd-kit/sortable";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
 import EditForm from "./EditForm";
+import MobileSheet from "./MobileSheet";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import { FavBtn, OverflowMenu } from "./QuoteActions";
 import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
+import clsx from "clsx";
 import { propsEqual } from "../utils/helpers";
 import { styles, cardStyles } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
@@ -83,7 +85,7 @@ const MemoCardItem = memo(function CardItem({
         </div>
       )}
     <div
-      className={`qcard${stripeLabel ? " ui-tip" : ""}`}
+      className={clsx("qcard", { "ui-tip": stripeLabel })}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...interactionProps}
@@ -108,7 +110,7 @@ const MemoCardItem = memo(function CardItem({
             {isSel && <Check size={isMobile ? 14 : 10} strokeWidth={3} color="#fff" />}
           </div>
           <div style={{ position: "relative" }}>
-            <span className={`inline-cat${isSavedPulse && savedPulseField === "category" ? " save-pulse" : ""}`} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, ...(isMobile ? { padding: "4px 10px", fontSize: 12 } : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
+            <span className={clsx("inline-cat", { "save-pulse": isSavedPulse && savedPulseField === "category" })} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, ...(isMobile ? { padding: "4px 10px", fontSize: 12 } : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
             {isInlineEditing && inlineEditField === "category" && (
               <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
             )}
@@ -124,8 +126,12 @@ const MemoCardItem = memo(function CardItem({
           />
         </div>
       </div>
-      {isEd
-        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard isMobile={isMobile} />
+      {isEd && !isMobile
+        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard isMobile={false} />
+        : isEd && isMobile
+        ? <MobileSheet isOpen onClose={() => setEditingId(null)} snapPoints={[0.6, 0.4]} initialSnap={0}>
+            <EditForm q={q} allCats={allCats} onSave={(...args) => { saveEdit(...args); setEditingId(null); }} onCancel={() => setEditingId(null)} inCard={false} isMobile={true} />
+          </MobileSheet>
         : (
           <>
             <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>
@@ -135,7 +141,7 @@ const MemoCardItem = memo(function CardItem({
               <span style={{ color: "var(--cp-text-faint)" }}>—</span>
               {isInlineEditing && inlineEditField === "source"
                 ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
-                : <><span className={`inline-src${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
+                : <><span className={clsx("inline-src", { "save-pulse": isSavedPulse && savedPulseField === "source" })} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
               }
             </div>
           </>

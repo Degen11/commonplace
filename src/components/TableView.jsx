@@ -8,6 +8,7 @@ import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
 import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
+import clsx from "clsx";
 import { propsEqual } from "../utils/helpers";
 import { styles } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
@@ -81,7 +82,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
               </Menu.Item>
               <Menu.Separator style={styles.overflowMenuDivider} />
               <Menu.Item
-                className={q.favorite ? "overflow-menu-item-fav" : "overflow-menu-item"}
+                className={clsx({ "overflow-menu-item-fav": q.favorite, "overflow-menu-item": !q.favorite })}
                 style={styles.overflowMenuItem}
                 onClick={() => { actionProps.onFav(q.id); }}
               >
@@ -164,7 +165,7 @@ const MemoTableRow = memo(function TableRow({
       }
       case "source":
         return (
-          <div key="source" className={`src-col${isSavedPulse && savedPulseField === "source" ? " save-pulse" : ""}`} style={COL_BASE.source}>
+          <div key="source" className={clsx("src-col", { "save-pulse": isSavedPulse && savedPulseField === "source" })} style={COL_BASE.source}>
             {isInlineEditing && inlineEditField === "source"
               ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
               : <>
@@ -181,7 +182,7 @@ const MemoTableRow = memo(function TableRow({
         );
       case "category":
         return (
-          <div key="category" className={isSavedPulse && savedPulseField === "category" ? "save-pulse" : ""} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
+          <div key="category" className={clsx({ "save-pulse": isSavedPulse && savedPulseField === "category" })} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
             <span
               className="inline-cat"
               style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
@@ -207,7 +208,7 @@ const MemoTableRow = memo(function TableRow({
   return (
     <div
       ref={setNodeRef}
-      className={`qrow${stripeLabel ? " ui-tip" : ""}`}
+      className={clsx("qrow", { "ui-tip": stripeLabel })}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...(isMobile ? longPress : {})}

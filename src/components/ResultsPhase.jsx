@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import useViewPreferences from "../hooks/useViewPreferences";
 import useEditState from "../hooks/useEditState";
@@ -37,9 +38,89 @@ import ExportDropdown from "./ExportDropdown";
 import EmptyState from "./EmptyState";
 import CollectionsSidebar from "./CollectionsSidebar";
 import QuickAddBar from "./QuickAddBar";
+import MobileSheet from "./MobileSheet";
 import { styles } from "./styles";
 
-import { X, HelpCircle } from "lucide-react";
+import { X, HelpCircle, Library } from "lucide-react";
+
+const CARD_HEIGHT_ESTIMATE = 160;
+const CARD_VIRTUALIZER_OVERSCAN = 8;
+
+// Virtualized card list for mobile — single column, window-scrolled
+function MobileCardList({
+  visible, selected, editingId, inlineEdit, deletingId, savedPulse,
+  overDragId, activeDragId, showConfidence, sortBy, allCats, customCats,
+  actionProps, toggleSel, startEditing, startInlineEdit,
+  saveEdit, saveInlineField, setInlineEdit, setEditingId, searchTerm,
+}) {
+  const listRef = useRef(null);
+
+  const virtualizer = useWindowVirtualizer({
+    count: visible.length,
+    estimateSize: () => CARD_HEIGHT_ESTIMATE,
+    overscan: CARD_VIRTUALIZER_OVERSCAN,
+    scrollMargin: listRef.current?.offsetTop ?? 0,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const topPad = virtualItems.length > 0
+    ? virtualItems[0].start - (virtualizer.options.scrollMargin ?? 0)
+    : 0;
+  const bottomPad = virtualItems.length > 0
+    ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
+    : 0;
+
+  return (
+    <div ref={listRef} style={{ paddingTop: 8 }}>
+      {topPad > 0 && <div style={{ height: topPad }} />}
+      {virtualItems.map(virtualRow => {
+        const q = visible[virtualRow.index];
+        const col = getCatColor(q.category, customCats);
+        const isSel = selected.has(q.id);
+        const isEd = editingId === q.id;
+        const needsAtt = q.confidence === "low" || q.category === "Unknown";
+        const isInlineEditing = inlineEdit?.id === q.id;
+        const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+        const isDeleting = deletingId === q.id;
+        const isSavedPulse = savedPulse?.id === q.id;
+        const savedPulseField = isSavedPulse ? savedPulse.field : null;
+        const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
+        return (
+          <div key={q.id} data-index={virtualRow.index} ref={virtualizer.measureElement} style={{ paddingBottom: 12 }}>
+            <CardItem
+              q={q}
+              col={col}
+              isSel={isSel}
+              isEd={isEd}
+              needsAtt={needsAtt}
+              showConfidence={showConfidence}
+              sortBy={sortBy}
+              isMobile={true}
+              isInlineEditing={isInlineEditing}
+              inlineEditField={inlineEditField}
+              isSavedPulse={isSavedPulse}
+              savedPulseField={savedPulseField}
+              allCats={allCats}
+              customCats={customCats}
+              actionProps={actionProps}
+              toggleSel={toggleSel}
+              startEditing={startEditing}
+              startInlineEdit={startInlineEdit}
+              saveEdit={saveEdit}
+              saveInlineField={saveInlineField}
+              setInlineEdit={setInlineEdit}
+              setEditingId={setEditingId}
+              isDeleting={isDeleting}
+              searchTerm={searchTerm}
+              isOverTarget={isOverTarget}
+            />
+          </div>
+        );
+      })}
+      {bottomPad > 0 && <div style={{ height: bottomPad }} />}
+    </div>
+  );
+}
 
 export default function ResultsPhase({
   // From useProcessing (stays in App.jsx)
@@ -129,6 +210,7 @@ export default function ResultsPhase({
   const [showQuickInput, setShowQuickInput]     = useState(false);
   const [collectionDupes, setCollectionDupes]   = useState([]);
   const [shareImageQuote, setShareImageQuote]   = useState(null);
+  const [showMobileCollections, setShowMobileCollections] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem(LS_SIDEBAR) === "1"; } catch { return false; }
   });
@@ -704,7 +786,7 @@ export default function ResultsPhase({
           {/* Main content area with optional sidebar */}
           <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
           <div style={{ display: "flex", gap: 0 }}>
-            {!isMobile && (
+            {!isMobile ? (
             <CollectionsSidebar
                 collections={collections}
                 activeCollectionId={activeCollectionId}
@@ -723,6 +805,33 @@ export default function ResultsPhase({
                 favCount={favCount}
                 toolbarHeight={toolbarHeight}
             />
+            ) : (
+            <MobileSheet
+              isOpen={showMobileCollections}
+              onClose={() => setShowMobileCollections(false)}
+              snapPoints={[0.7, 0.4]}
+              initialSnap={0}
+            >
+              <CollectionsSidebar
+                collections={collections}
+                activeCollectionId={activeCollectionId}
+                setActiveCollectionId={(id) => { setActiveCollectionId(id); setShowMobileCollections(false); }}
+                createCollection={createCollection}
+                deleteCollection={handleDeleteCollection}
+                renameCollection={renameCollection}
+                updateCollectionIcon={updateCollectionIcon}
+                quoteCounts={quoteCounts}
+                totalQuotes={quotes.length}
+                collapsed={false}
+                setCollapsed={() => {}}
+                onAutoGroup={handleAutoGroup}
+                onFindDupes={handleFindDupes}
+                uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
+                favCount={favCount}
+                toolbarHeight={0}
+                isMobileSheet
+              />
+            </MobileSheet>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -787,7 +896,32 @@ export default function ResultsPhase({
             <motion.div key="card-view" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.15 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
             <SectionErrorBoundary name="Card view">
               <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
-              <div style={isMobile ? { display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 } : { columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
+              {isMobile ? (
+                <MobileCardList
+                  visible={visible}
+                  selected={selected}
+                  editingId={editingId}
+                  inlineEdit={inlineEdit}
+                  deletingId={deletingId}
+                  savedPulse={savedPulse}
+                  overDragId={overDragId}
+                  activeDragId={activeDragId}
+                  showConfidence={showConfidence}
+                  sortBy={sortBy}
+                  allCats={allCats}
+                  customCats={customCats}
+                  actionProps={actionProps}
+                  toggleSel={toggleSel}
+                  startEditing={startEditing}
+                  startInlineEdit={startInlineEdit}
+                  saveEdit={saveEdit}
+                  saveInlineField={saveInlineField}
+                  setInlineEdit={setInlineEdit}
+                  setEditingId={setEditingId}
+                  searchTerm={search}
+                />
+              ) : (
+              <div style={{ columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
                 {visible.map((q, i) => {
                   const col = getCatColor(q.category, customCats);
                   const isSel = selected.has(q.id);
@@ -809,7 +943,7 @@ export default function ResultsPhase({
                       needsAtt={needsAtt}
                       showConfidence={showConfidence}
                       sortBy={sortBy}
-                      isMobile={isMobile}
+                      isMobile={false}
                       isInlineEditing={isInlineEditing}
                       inlineEditField={inlineEditField}
                       isSavedPulse={isSavedPulse}
@@ -832,6 +966,7 @@ export default function ResultsPhase({
                   );
                 })}
               </div>
+              )}
               </SortableContext>
             </SectionErrorBoundary>
             </motion.div>
@@ -877,7 +1012,7 @@ export default function ResultsPhase({
             </div>{/* end flex main content */}
           </div>{/* end flex container with sidebar */}
 
-          {/* Persistent help trigger — floating ? button */}
+          {/* Persistent help trigger — floating ? button (desktop only) */}
           {!isMobile && (
           <button
             className="ui-tip ui-tip-left hdr-btn"
@@ -894,6 +1029,32 @@ export default function ResultsPhase({
             }}
           >
             <HelpCircle size={16} strokeWidth={1.5} />
+          </button>
+          )}
+          {/* Mobile collections FAB */}
+          {isMobile && (
+          <button
+            className="mobile-fab"
+            onClick={() => setShowMobileCollections(true)}
+            style={{
+              position: "fixed", bottom: showBulkBar ? 72 : 20, right: 16,
+              width: 44, height: 44, borderRadius: "50%",
+              border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
+              boxShadow: "var(--cp-shadow-md)", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: activeCollectionId ? "var(--cp-accent)" : "var(--cp-text-muted)",
+              zIndex: 59,
+              transition: "bottom .2s ease",
+            }}
+          >
+            <Library size={18} strokeWidth={1.5} />
+            {activeCollectionId && (
+              <span style={{
+                position: "absolute", top: -2, right: -2,
+                width: 8, height: 8, borderRadius: "50%",
+                background: "var(--cp-accent)",
+              }} />
+            )}
           </button>
           )}
           <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }} modifiers={[anchorToCursor]}>

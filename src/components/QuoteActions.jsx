@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Menu } from "@base-ui/react/menu";
+import clsx from "clsx";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles } from "./styles";
 
@@ -24,7 +25,7 @@ export function FavBtn({ q, onFav }) {
         fill={q.favorite ? "#F59E0B" : "none"}
         color={q.favorite ? "#F59E0B" : "currentColor"}
         strokeWidth={1.5}
-        className={animating ? "fav-pop" : ""}
+        className={clsx({ "fav-pop": animating })}
       />
     </button>
   );
@@ -84,7 +85,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                   }
                 }}
               >
-                {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={copyAnim ? "copy-push" : ""} />}
+                {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={clsx({ "copy-push": copyAnim })} />}
                 <span>{localCopied ? "Copied!" : "Copy"}</span>
               </Menu.Item>
               <Menu.Item
@@ -93,7 +94,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                 disabled={isReidentifying}
                 onClick={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
               >
-                <RefreshCw size={14} strokeWidth={1.5} className={isReidentifying ? "spin" : ""} />
+                <RefreshCw size={14} strokeWidth={1.5} className={clsx({ spin: isReidentifying })} />
                 <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
               </Menu.Item>
               <Menu.Item
@@ -106,7 +107,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                   actionProps.onShareImage(q);
                 }}
               >
-                <Share2 size={14} strokeWidth={1.5} className={shareAnim ? "share-lift" : ""} />
+                <Share2 size={14} strokeWidth={1.5} className={clsx({ "share-lift": shareAnim })} />
                 <span>Share</span>
               </Menu.Item>
               {collections.length > 0 && (

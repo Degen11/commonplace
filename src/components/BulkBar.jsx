@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { styles } from "./styles";
 import { X, RefreshCw, FolderMinus, Trash2 } from "lucide-react";
 
@@ -33,7 +34,7 @@ export default function BulkBar({
   };
 
   return (
-    <div className={isMobile ? "bulk-bar-mobile" : ""} style={styles.bulkBar}>
+    <div className={clsx({ "bulk-bar-mobile": isMobile })} style={styles.bulkBar}>
       {/* ── Count badge ── */}
       <span style={styles.bulkN}>{selected.size} selected</span>
 
@@ -69,7 +70,7 @@ export default function BulkBar({
             onClick={onBatchReIdentify}
             disabled={isReidentifying}
           >
-            <RefreshCw size={12} strokeWidth={2} className={isReidentifying ? "spin" : ""} />
+            <RefreshCw size={12} strokeWidth={2} className={clsx({ spin: isReidentifying })} />
             {isReidentifying ? "Re-identifying..." : "Re-identify"}
           </button>
 

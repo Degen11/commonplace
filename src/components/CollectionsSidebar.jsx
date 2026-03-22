@@ -232,6 +232,7 @@ export default function CollectionsSidebar({
   uniqueSources,
   favCount,
   toolbarHeight = 44,
+  isMobileSheet = false,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -316,7 +317,7 @@ export default function CollectionsSidebar({
     setEditName("");
   };
 
-  if (collapsed) {
+  if (collapsed && !isMobileSheet) {
     return (
       <motion.div
         key="collapsed"
@@ -372,23 +373,28 @@ export default function CollectionsSidebar({
     );
   }
 
-  return (
-    <motion.div
-      key="expanded"
-      initial={{ width: 48, opacity: 0 }}
-      animate={{ width: 220, opacity: 1, transition: { width: { duration: 0.2, ease: "easeOut" }, opacity: { duration: 0.15, delay: 0.05 } } }}
-      style={{
+  const expandedStyle = isMobileSheet
+    ? { display: "flex", flexDirection: "column", fontFamily: FONT_SANS, width: "100%" }
+    : {
         flexShrink: 0, padding: "0 12px 0 4px",
         display: "flex", flexDirection: "column",
         fontFamily: FONT_SANS,
         overflow: "visible",
         position: "sticky", top: toolbarHeight, alignSelf: "flex-start",
-      }}
+      };
+
+  return (
+    <motion.div
+      key="expanded"
+      initial={isMobileSheet ? false : { width: 48, opacity: 0 }}
+      animate={isMobileSheet ? { opacity: 1 } : { width: 220, opacity: 1, transition: { width: { duration: 0.2, ease: "easeOut" }, opacity: { duration: 0.15, delay: 0.05 } } }}
+      style={expandedStyle}
     >
       {/* Overview card */}
       <div style={styles.sidebarOverview}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={styles.sidebarOverviewLabel}>Overview</span>
+          {!isMobileSheet && (
           <button
             onClick={() => setCollapsed(true)}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
@@ -396,6 +402,7 @@ export default function CollectionsSidebar({
           >
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
+          )}
         </div>
         <div style={styles.sidebarOverviewRow}>
           <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Entries</span>

@@ -46,7 +46,8 @@ export function InlineCategorySelect({ current, allCats, onSave, onCancel, custo
         position: "absolute", top: "100%", left: 0, zIndex: 100,
         background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
         boxShadow: "var(--cp-shadow-md)", padding: 6,
-        display: "flex", flexWrap: "wrap", gap: 4, width: 220,
+        display: "flex", flexWrap: "wrap", gap: 4, width: "min(220px, 80vw)",
+        maxHeight: "60vh", overflowY: "auto", WebkitOverflowScrolling: "touch",
         animation: "slideD .12s ease",
       }}
     >
@@ -58,7 +59,8 @@ export function InlineCategorySelect({ current, allCats, onSave, onCancel, custo
             ...styles.tag, background: col.bg, color: col.text,
             border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
             cursor: "pointer", fontFamily: "inherit",
-            fontSize: 11, padding: "3px 8px", borderRadius: 4,
+            fontSize: 11, padding: "5px 10px", borderRadius: 4,
+            minHeight: 30,
           }}>
             {c}
           </button>

@@ -57,7 +57,7 @@ const MemoCardItem = memo(function CardItem({
   // Swipe visual hints
   const isSwipingLeft = offsetX < -20;
   const isSwipingRight = offsetX > 20;
-  const swipeProgress = Math.min(Math.abs(offsetX) / 80, 1);
+  const swipeProgress = Math.min(Math.abs(offsetX) / 60, 1);
 
   // On desktop, use dnd-kit listeners on the card; on mobile, use long-press + swipe
   const interactionProps = isMobile
@@ -77,7 +77,7 @@ const MemoCardItem = memo(function CardItem({
           justifyContent: isSwipingLeft ? "flex-end" : "flex-start",
           padding: "0 20px",
           color: isSwipingLeft ? "#DC2626" : "#F59E0B",
-          fontSize: 12, fontWeight: 600, gap: 6, opacity: swipeProgress,
+          fontSize: 13, fontWeight: 600, gap: 6, opacity: swipeProgress,
         }}>
           {isSwipingLeft ? <><Trash2 size={15} /> Delete</> : <><Heart size={15} /> Favorite</>}
         </div>
@@ -104,11 +104,11 @@ const MemoCardItem = memo(function CardItem({
     >
       <div style={cardStyles.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: 15, height: 15, borderRadius: 3 }} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}>
-            {isSel && <Check size={10} strokeWidth={3} color="#fff" />}
+          <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: isMobile ? 22 : 15, height: isMobile ? 22 : 15, borderRadius: isMobile ? 4 : 3 }} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}>
+            {isSel && <Check size={isMobile ? 14 : 10} strokeWidth={3} color="#fff" />}
           </div>
           <div style={{ position: "relative" }}>
-            <span className={`inline-cat${isSavedPulse && savedPulseField === "category" ? " save-pulse" : ""}`} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2 }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
+            <span className={`inline-cat${isSavedPulse && savedPulseField === "category" ? " save-pulse" : ""}`} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, ...(isMobile ? { padding: "4px 10px", fontSize: 12 } : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
             {isInlineEditing && inlineEditField === "category" && (
               <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
             )}
@@ -125,7 +125,7 @@ const MemoCardItem = memo(function CardItem({
         </div>
       </div>
       {isEd
-        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard />
+        ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard isMobile={isMobile} />
         : (
           <>
             <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>

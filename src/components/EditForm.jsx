@@ -40,7 +40,7 @@ function findSuggestion(text, db) {
   return null;
 }
 
-export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
+export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobile }) {
   const [text, setText] = useState(q.text);
   const [source, setSource] = useState(q.source);
   const [category, setCategory] = useState(q.category);
@@ -73,7 +73,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
       onClick={e => e.stopPropagation()}
     >
       <textarea
-        style={{ ...styles.textarea, minHeight: 40, fontSize: 13, padding: 8 }}
+        style={{ ...styles.textarea, minHeight: isMobile ? 100 : 40, fontSize: isMobile ? 15 : 13, padding: isMobile ? 12 : 8, lineHeight: isMobile ? 1.7 : 1.6 }}
         value={text}
         onChange={e => { setText(e.target.value); setDismissed(false); }}
         onKeyDown={e => {
@@ -142,7 +142,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
 
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <input
-          style={styles.editIn}
+          style={{ ...styles.editIn, ...(isMobile ? { fontSize: 14, padding: "8px 10px" } : {}) }}
           value={source}
           onChange={e => setSource(e.target.value)}
           placeholder="Source..."
@@ -152,14 +152,14 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard }) {
           }}
         />
         <select
-          style={styles.editSel}
+          style={{ ...styles.editSel, ...(isMobile ? { fontSize: 14, padding: "8px 10px" } : {}) }}
           value={category}
           onChange={e => setCategory(e.target.value)}
         >
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button style={styles.editSave} onClick={() => onSave(q.id, text, source, category)}>Save</button>
-        <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
+        <button style={{ ...styles.editSave, ...(isMobile ? { padding: "8px 16px", fontSize: 14, minHeight: 40 } : {}) }} onClick={() => onSave(q.id, text, source, category)}>Save</button>
+        <button style={{ ...styles.editCancel, ...(isMobile ? { padding: "8px 12px", fontSize: 14, minHeight: 40 } : {}) }} onClick={onCancel}>Cancel</button>
       </div>
 
     </div>

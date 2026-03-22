@@ -35,8 +35,10 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
     "@babel/eslint-parser": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
+    "@rolldown/plugin-babel": "^0.2.2",
     "@vitejs/plugin-react": "^6.0.1",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^10.1.0",

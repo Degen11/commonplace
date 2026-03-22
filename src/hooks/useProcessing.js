@@ -93,6 +93,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const autoTransitionRef = useRef(null);
   const pendingContinuationRef = useRef(null);
   const abortRef = useRef(null);
+  const appendModeRef = useRef(false);
 
   const mountedRef = useMounted();
   const safeDispatch = useSafeDispatch(dispatch);
@@ -247,6 +248,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   // ── Processing pipeline — orchestrator ──
   const runProcessing = useCallback(async (unique, appendMode, useFormatting = false) => {
+    appendModeRef.current = appendMode;
     if (abortRef.current) abortRef.current.abort();
     const abortController = new AbortController();
     abortRef.current = abortController;
@@ -400,7 +402,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     goPhase("results");
   }, [goPhase, safeDispatch]);
 
-  // Cancel processing: abort in-flight requests and keep already-identified quotes
+  // Cancel processing: abort in-flight requests and flush already-identified quotes
   const cancelProcessing = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -410,10 +412,24 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       clearTimeout(autoTransitionRef.current);
       autoTransitionRef.current = null;
     }
+    // Flush any partially-identified quotes from the feed into the store
+    const feed = stateRef.current.identifiedFeed;
+    if (feed.length > 0) {
+      const partialQuotes = feed
+        .filter(item => item.text && item.text.trim())
+        .map(item => makeQuote(item.text, item.source, item.category, "medium"));
+      if (partialQuotes.length > 0) {
+        if (appendModeRef.current) {
+          setQuotes(prev => [...prev, ...partialQuotes]);
+        } else {
+          setQuotes(partialQuotes);
+        }
+      }
+    }
     safeDispatch({ type: "CANCEL" });
-    // If quotes were already added during processing, go to results; otherwise input
-    goPhase(quotesRef.current.length > 0 ? "results" : "input");
-  }, [goPhase, safeDispatch]);
+    const hasQuotes = quotesRef.current.length > 0;
+    goPhase(hasQuotes ? "results" : "input");
+  }, [goPhase, safeDispatch, setQuotes]);
 
   // Reset processing-specific state (called by handleClear in App)
   const resetProcessingState = useCallback(() => {

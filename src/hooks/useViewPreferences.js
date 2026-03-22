@@ -6,6 +6,13 @@ import { LS_FILTERS, LS_VIEW, LS_SORT, LS_SHOW_CONF, SEARCH_DEBOUNCE_MS, MOBILE_
 import { loadFromStorage, saveToStorage } from "../utils/storage";
 import { countBy } from "../utils/helpers";
 
+// Build a fingerprint string from quote IDs and text/source lengths.
+// Used to avoid rebuilding the Fuse.js index on metadata-only changes
+// (favorite, category, confidence) that don't affect search results.
+function buildFuseFingerprint(quotes) {
+  return quotes.map(q => q.id + q.text.length + (q.source || "").length).join("|");
+}
+
 const FUSE_OPTIONS = {
   keys: ["text", "source"],
   threshold: 0.2,
@@ -92,12 +99,21 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
 
   // ── Fuse.js index for fuzzy search ──
   // Rebuild index only when quote count or content/source text changes,
-  // not on every metadata update (favorite, category, confidence, etc.)
-  const fuseFingerprint = useMemo(
-    () => quotes.map(q => q.id + q.text.length + (q.source || "").length).join("|"),
-    [quotes],
-  );
-  const fuseIndex = useMemo(() => new Fuse(quotes, FUSE_OPTIONS), [fuseFingerprint]); // eslint-disable-line react-hooks/exhaustive-deps
+  // not on every metadata update (favorite, category, confidence, etc.).
+  // Uses a ref to cache the previous fingerprint so metadata-only changes
+  // (favorite, category, confidence) skip the expensive Fuse rebuild.
+  // The filtered memo only uses Fuse for matching IDs, then filters the
+  // current quotes array, so stale object refs in the index are fine.
+  const fuseCache = useRef({ fingerprint: "", index: null });
+  const fuseIndex = useMemo(() => {
+    const fp = buildFuseFingerprint(quotes);
+    if (fp === fuseCache.current.fingerprint && fuseCache.current.index) {
+      return fuseCache.current.index;
+    }
+    const index = new Fuse(quotes, FUSE_OPTIONS);
+    fuseCache.current = { fingerprint: fp, index };
+    return index;
+  }, [quotes]);
 
   // ── Filtering & sorting ──
   const filtered = useMemo(() => {

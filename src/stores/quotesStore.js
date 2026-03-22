@@ -158,28 +158,35 @@ export const useQuotesStore = create(
     // ── Cloud sync merge ──
     handleCloudData: (cloudQuotes, cloudCats, cloudCollections) => {
       const state = get();
+      const tombstoneIds = new Set(state._deletedIds.map(e => e.id));
+
+      // Filter out locally-deleted quotes from incoming cloud data
+      const filteredCloudQuotes = tombstoneIds.size > 0 && cloudQuotes?.length > 0
+        ? cloudQuotes.filter(q => !tombstoneIds.has(q.id))
+        : cloudQuotes;
 
       // First load — no local data
       if (state.initialLoading && state.quotes.length === 0) {
-        set({
-          quotes: cloudQuotes,
-          customCats: cloudCats,
+        const updates = {
+          quotes: filteredCloudQuotes || [],
+          customCats: cloudCats || [],
           initialLoading: false,
-        });
+        };
         if (cloudCollections?.length > 0) {
-          set({ collections: cloudCollections });
+          updates.collections = cloudCollections;
           saveToStorage(LS_COLLECTIONS, cloudCollections);
         }
-        saveToStorage(LS_QUOTES, cloudQuotes);
-        saveToStorage(LS_CATS, cloudCats);
+        set(updates);
+        saveToStorage(LS_QUOTES, updates.quotes);
+        saveToStorage(LS_CATS, updates.customCats);
         return;
       }
 
       // Returning user — merge
       set(state => {
         const updates = {};
-        if (cloudQuotes?.length > 0) {
-          updates.quotes = mergeByTimestamp(state.quotes, cloudQuotes, "updatedAt");
+        if (filteredCloudQuotes?.length > 0) {
+          updates.quotes = mergeByTimestamp(state.quotes, filteredCloudQuotes, "updatedAt");
         }
         if (cloudCats?.length > 0) {
           const catSet = new Set(state.customCats);
@@ -294,19 +301,53 @@ useQuotesStore.subscribe(
 );
 
 // ── Cross-tab sync ──
-// When another tab writes to localStorage, pick up the changes.
+// When another tab writes to localStorage, merge changes into current state
+// instead of blindly overwriting (which would lose in-flight local edits).
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
     try {
       if (e.key === LS_QUOTES && e.newValue) {
         const parsed = JSON.parse(e.newValue);
-        if (Array.isArray(parsed)) useQuotesStore.setState({ quotes: parsed });
+        if (Array.isArray(parsed)) {
+          useQuotesStore.setState(state => ({
+            quotes: mergeByTimestamp(state.quotes, parsed, "updatedAt"),
+          }));
+        }
       } else if (e.key === LS_CATS && e.newValue) {
         const parsed = JSON.parse(e.newValue);
-        if (Array.isArray(parsed)) useQuotesStore.setState({ customCats: parsed });
+        if (Array.isArray(parsed)) {
+          useQuotesStore.setState(state => {
+            const existing = new Set(state.customCats);
+            const incoming = parsed.filter(c => !existing.has(c));
+            return incoming.length > 0
+              ? { customCats: [...state.customCats, ...incoming] }
+              : {};
+          });
+        }
       } else if (e.key === LS_COLLECTIONS && e.newValue) {
         const parsed = JSON.parse(e.newValue);
-        if (Array.isArray(parsed)) useQuotesStore.setState({ collections: parsed });
+        if (Array.isArray(parsed)) {
+          useQuotesStore.setState(state => ({
+            collections: mergeByTimestamp(state.collections, parsed, "createdAt"),
+          }));
+        }
+      } else if (e.key === LS_DELETED_IDS && e.newValue) {
+        const parsed = JSON.parse(e.newValue);
+        if (Array.isArray(parsed)) {
+          useQuotesStore.setState(state => {
+            const existing = new Set(state._deletedIds.map(e => e.id));
+            const incoming = parsed.filter(e => e?.id && !existing.has(e.id));
+            if (incoming.length === 0) return {};
+            const merged = [...state._deletedIds, ...incoming];
+            // Remove quotes that were deleted in other tab
+            const deletedSet = new Set(incoming.map(e => e.id));
+            const quotes = state.quotes.filter(q => !deletedSet.has(q.id));
+            return {
+              _deletedIds: merged,
+              ...(quotes.length !== state.quotes.length ? { quotes } : {}),
+            };
+          });
+        }
       }
     } catch { /* ignore corrupt data */ }
   });

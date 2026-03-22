@@ -97,13 +97,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     return () => window.removeEventListener("resize", h);
   }, [view]);
 
-  // ── Fuse.js index for fuzzy search ──
-  // Rebuild index only when quote count or content/source text changes,
-  // not on every metadata update (favorite, category, confidence, etc.).
-  // Uses a ref to cache the previous fingerprint so metadata-only changes
-  // (favorite, category, confidence) skip the expensive Fuse rebuild.
-  // The filtered memo only uses Fuse for matching IDs, then filters the
-  // current quotes array, so stale object refs in the index are fine.
+  // ── Fuse.js index — skip rebuild when only metadata (fav/cat/confidence) changed ──
   const fuseCache = useRef({ fingerprint: "", index: null });
   const fuseIndex = useMemo(() => {
     const fp = buildFuseFingerprint(quotes);

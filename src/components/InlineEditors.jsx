@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import useMounted from "../hooks/useMounted";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
 import { ChevronDown } from "lucide-react";
@@ -6,11 +7,8 @@ import { ChevronDown } from "lucide-react";
 // ── Inline source text input (shared by TableView and CardItem) ──
 export function InlineSourceInput({ initial, onSave, onCancel, showHint = true }) {
   const [val, setVal] = useState(initial);
-  // Track whether blur was triggered by an intentional user action (Enter/Tab/click-away)
-  // vs. the virtualizer unmounting the row during scroll. When unmounted by the
-  // virtualizer, onBlur fires but we should cancel rather than save partial edits.
-  const unmountingRef = useRef(false);
-  useEffect(() => () => { unmountingRef.current = true; }, []);
+  // Guard against onBlur firing during virtualizer unmount (saves partial edits)
+  const mountedRef = useMounted();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <input
@@ -22,7 +20,7 @@ export function InlineSourceInput({ initial, onSave, onCancel, showHint = true }
           if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
         }}
         onBlur={() => {
-          if (unmountingRef.current) return;
+          if (!mountedRef.current) return;
           if (val !== initial) onSave(val); else onCancel();
         }}
         onClick={e => e.stopPropagation()}

@@ -309,9 +309,10 @@ if (typeof window !== "undefined") {
       if (e.key === LS_QUOTES && e.newValue) {
         const parsed = JSON.parse(e.newValue);
         if (Array.isArray(parsed)) {
-          useQuotesStore.setState(state => ({
-            quotes: mergeByTimestamp(state.quotes, parsed, "updatedAt"),
-          }));
+          useQuotesStore.setState(state => {
+            const merged = mergeByTimestamp(state.quotes, parsed, "updatedAt");
+            return merged !== state.quotes ? { quotes: merged } : {};
+          });
         }
       } else if (e.key === LS_CATS && e.newValue) {
         const parsed = JSON.parse(e.newValue);
@@ -327,20 +328,20 @@ if (typeof window !== "undefined") {
       } else if (e.key === LS_COLLECTIONS && e.newValue) {
         const parsed = JSON.parse(e.newValue);
         if (Array.isArray(parsed)) {
-          useQuotesStore.setState(state => ({
-            collections: mergeByTimestamp(state.collections, parsed, "createdAt"),
-          }));
+          useQuotesStore.setState(state => {
+            const merged = mergeByTimestamp(state.collections, parsed, "createdAt");
+            return merged !== state.collections ? { collections: merged } : {};
+          });
         }
       } else if (e.key === LS_DELETED_IDS && e.newValue) {
         const parsed = JSON.parse(e.newValue);
         if (Array.isArray(parsed)) {
           useQuotesStore.setState(state => {
-            const existing = new Set(state._deletedIds.map(e => e.id));
-            const incoming = parsed.filter(e => e?.id && !existing.has(e.id));
+            const existing = new Set(state._deletedIds.map(entry => entry.id));
+            const incoming = parsed.filter(entry => entry?.id && !existing.has(entry.id));
             if (incoming.length === 0) return {};
             const merged = [...state._deletedIds, ...incoming];
-            // Remove quotes that were deleted in other tab
-            const deletedSet = new Set(incoming.map(e => e.id));
+            const deletedSet = new Set(incoming.map(entry => entry.id));
             const quotes = state.quotes.filter(q => !deletedSet.has(q.id));
             return {
               _deletedIds: merged,

@@ -118,13 +118,11 @@ const TableRow = memo(function TableRow({
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
-  } = useSortable({ id: q.id });
+  } = useSortable({ id: q.id, transition: null });
 
   const sortableStyle = {
     transform: CSS.Transform.toString(transform),
-    transition,
   };
 
   const [expanded, setExpanded] = useState(false);

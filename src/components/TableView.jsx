@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -98,7 +98,11 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
 
 const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
 
-function TableRow({
+// React.memo is required here — the compiler's internal caching does NOT prevent
+// useSortable from being called, which returns new transform/transition values for
+// every row during drag. Without memo, all ~15-30 visible rows re-render per drag
+// frame, causing virtualizer measurement churn and visible table jank.
+const TableRow = memo(function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isDeleting, isSavedPulse, savedPulseField,
@@ -255,7 +259,7 @@ function TableRow({
       />
     </div>
   );
-}
+});
 
 export default function TableView({
   filtered,

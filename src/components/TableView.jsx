@@ -111,6 +111,7 @@ const TableRow = memo(function TableRow({
   toggleSel, setEditingId, setInlineEdit, saveEdit, saveInlineField,
   setOpenMenuId,
   searchTerm,
+  isNewQuote,
 }) {
   const {
     attributes,
@@ -210,7 +211,7 @@ const TableRow = memo(function TableRow({
   return (
     <div
       ref={setNodeRef}
-      className={clsx("qrow", { "ui-tip": stripeLabel })}
+      className={clsx("qrow", { "ui-tip": stripeLabel, "new-quote-pulse": isNewQuote })}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...(isMobile ? longPress : {})}
@@ -285,6 +286,7 @@ export default function TableView({
   deletingId,
   searchTerm,
   toolbarHeight = 44,
+  newQuoteHighlight,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -471,6 +473,7 @@ export default function TableView({
                 saveInlineField={saveInlineField}
                 setOpenMenuId={setOpenMenuId}
                 searchTerm={searchTerm}
+                isNewQuote={newQuoteHighlight === q.id}
               />
             </div>
           );

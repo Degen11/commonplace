@@ -29,6 +29,7 @@ const CardItem = memo(function CardItem({
   isDeleting,
   searchTerm,
   isOverTarget,
+  isNewQuote,
 }) {
   const {
     attributes,
@@ -87,7 +88,7 @@ const CardItem = memo(function CardItem({
         </div>
       )}
     <div
-      className={clsx("qcard", { "ui-tip": stripeLabel })}
+      className={clsx("qcard", { "ui-tip": stripeLabel, "new-quote-pulse": isNewQuote })}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...interactionProps}

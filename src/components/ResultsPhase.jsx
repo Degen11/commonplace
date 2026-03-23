@@ -52,6 +52,7 @@ function MobileCardList({
   overDragId, activeDragId, showConfidence, sortBy, allCats, customCats,
   actionProps, toggleSel, startEditing, startInlineEdit,
   saveEdit, saveInlineField, setInlineEdit, setEditingId, searchTerm,
+  newQuoteHighlight,
 }) {
   const listRef = useRef(null);
   const [scrollMargin, setScrollMargin] = useState(0);
@@ -123,6 +124,7 @@ function MobileCardList({
               isDeleting={isDeleting}
               searchTerm={searchTerm}
               isOverTarget={isOverTarget}
+              isNewQuote={newQuoteHighlight === q.id}
             />
           </div>
         );
@@ -227,6 +229,7 @@ export default function ResultsPhase({
   const [showKbHint, setShowKbHint] = useState(() => {
     try { return !localStorage.getItem(LS_KB_HINT); } catch { return false; }
   });
+  const [newQuoteHighlight, setNewQuoteHighlight] = useState(null);
 
   // ── Refs ──
 
@@ -350,6 +353,8 @@ export default function ResultsPhase({
       setQuotes(p => [newQuote, ...p]);
       setShowAddMore(false);
       showToast("Quote added", null, null, "success");
+      setNewQuoteHighlight(newQuote.id);
+      setTimeout(() => setNewQuoteHighlight(prev => prev === newQuote.id ? null : prev), 1000);
     };
 
     if (!skipDupeCheck) {
@@ -892,6 +897,7 @@ export default function ResultsPhase({
                 deletingId={deletingId}
                 searchTerm={search}
                 toolbarHeight={toolbarHeight}
+                newQuoteHighlight={newQuoteHighlight}
               />
               </SortableContext>
             </SectionErrorBoundary>
@@ -925,6 +931,7 @@ export default function ResultsPhase({
                   setInlineEdit={setInlineEdit}
                   setEditingId={setEditingId}
                   searchTerm={search}
+                  newQuoteHighlight={newQuoteHighlight}
                 />
               ) : (
               <div style={{ columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
@@ -967,6 +974,7 @@ export default function ResultsPhase({
                       isDeleting={isDeleting}
                       searchTerm={search}
                       isOverTarget={isOverTarget}
+                      isNewQuote={newQuoteHighlight === q.id}
                     />
                     </motion.div>
                   );

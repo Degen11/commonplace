@@ -228,6 +228,8 @@ export const baseCSS = `
 
   /* Save pulse for inline edits */
   .save-pulse{animation:savePulse .4s ease}
+  /* Full-row highlight for newly added quotes */
+  .new-quote-pulse{animation:savePulse 1s ease}
 
   /* Header button hover states */
   .hdr-btn{transition:all .15s ease}

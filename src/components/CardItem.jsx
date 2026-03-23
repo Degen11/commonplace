@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import useLongPress from "../hooks/useLongPress";
 import useSwipe from "../hooks/useSwipe";
@@ -16,7 +16,10 @@ import HighlightText from "./HighlightText";
 
 const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
 
-function CardItem({
+// React.memo is required — same reason as TableRow. During drag, overDragId
+// changes re-render every visible card. Without memo, each calls useSortable()
+// which returns new values during an active drag, causing unnecessary work.
+const CardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, showConfidence, sortBy, isMobile,
   isInlineEditing, inlineEditField,
   isSavedPulse, savedPulseField,
@@ -149,6 +152,6 @@ function CardItem({
     </div>
     </div>
   );
-}
+});
 
 export default CardItem;

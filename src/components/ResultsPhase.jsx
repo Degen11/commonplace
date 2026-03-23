@@ -202,6 +202,7 @@ export default function ResultsPhase({
   const {
     sensors, activeDragId, overDragId,
     collisionDetection, handleDndStart, handleDndOver, handleDndEnd, anchorToCursor,
+    dndReorderRef,
   } = useDndQuotes({ selected, collections, addToCollection, removeFromCollection, showToast, setQuotes });
 
   // ── Local state ──
@@ -898,6 +899,7 @@ export default function ResultsPhase({
                 searchTerm={search}
                 toolbarHeight={toolbarHeight}
                 newQuoteHighlight={newQuoteHighlight}
+                dndReorderRef={dndReorderRef}
               />
               </SortableContext>
             </SectionErrorBoundary>

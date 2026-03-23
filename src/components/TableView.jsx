@@ -292,6 +292,7 @@ const TableView = memo(function TableView({
   searchTerm,
   toolbarHeight = 44,
   newQuoteHighlight,
+  dndReorderRef,
 }) {
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
@@ -308,12 +309,19 @@ const TableView = memo(function TableView({
     return () => clearTimeout(t);
   }, []);
 
-  // Detect list order changes (sort/filter) and trigger a shuffle animation
+  // Detect list order changes (sort/filter) and trigger a shuffle animation.
+  // Skip the animation when the change was caused by a DnD reorder — the row
+  // is already in its new position and the shuffle translateY/opacity flash
+  // causes a visible jolt on drop.
   const listFingerprint = filtered.slice(0, 8).map(q => q.id).join(",");
   const prevFingerprintRef = useRef(listFingerprint);
   useEffect(() => {
     if (prevFingerprintRef.current === listFingerprint) return;
     prevFingerprintRef.current = listFingerprint;
+    if (dndReorderRef?.current) {
+      dndReorderRef.current = false;
+      return;
+    }
     const el = outerRef.current;
     if (!el) return;
     el.classList.remove("list-shuffle");
@@ -322,7 +330,7 @@ const TableView = memo(function TableView({
     el.classList.add("list-shuffle");
     const t = setTimeout(() => el.classList.remove("list-shuffle"), 300);
     return () => clearTimeout(t);
-  }, [listFingerprint]);
+  }, [listFingerprint, dndReorderRef]);
 
   const handleColDragStart = (e, colId) => {
     e.stopPropagation();

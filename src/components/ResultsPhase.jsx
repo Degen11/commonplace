@@ -61,9 +61,8 @@ function MobileCardList({
     if (!el) return;
     const update = () => setScrollMargin(el.offsetTop);
     update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   const virtualizer = useWindowVirtualizer({

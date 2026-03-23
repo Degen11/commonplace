@@ -352,15 +352,16 @@ export default function TableView({
   };
 
   // ── Track scroll margin in state so the compiler doesn't see ref reads during render ──
+  // Only update on mount and window resize — NOT on element resize, which fires
+  // during dnd-kit sortable transforms and causes the virtualizer to jump mid-drag.
   const [scrollMargin, setScrollMargin] = useState(0);
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
     const update = () => setScrollMargin(el.offsetTop);
     update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   // ── Window-based virtualizer — only renders rows near the viewport ──

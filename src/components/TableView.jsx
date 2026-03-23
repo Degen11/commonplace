@@ -121,9 +121,12 @@ const TableRow = memo(function TableRow({
     isDragging,
   } = useSortable({ id: q.id, transition: null });
 
-  const sortableStyle = {
-    transform: CSS.Transform.toString(transform),
-  };
+  // Only apply transform to the dragged row itself. Non-dragged rows get shift
+  // transforms from verticalListSortingStrategy that conflict with the
+  // virtualizer's padding-based layout, causing visible table shake.
+  const sortableStyle = isDragging
+    ? { transform: CSS.Transform.toString(transform) }
+    : undefined;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -260,7 +263,11 @@ const TableRow = memo(function TableRow({
   );
 });
 
-export default function TableView({
+// React.memo is required — during drag, onDragOver fires continuously and
+// updates overDragId state in ResultsPhase. TableView doesn't use overDragId
+// but without memo it re-renders on every cursor move, causing the virtualizer
+// to recalculate and measureElement refs to re-fire, producing visible shake.
+const TableView = memo(function TableView({
   filtered,
   selected,
   toggleSel,
@@ -480,4 +487,6 @@ export default function TableView({
       </div>
     </div>
   );
-}
+});
+
+export default TableView;

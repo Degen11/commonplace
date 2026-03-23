@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { X, Check, Eye, Filter } from "lucide-react";
 import { Dialog } from "@base-ui/react/dialog";
 import { styles } from "./styles";
@@ -16,9 +16,9 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
   const [refetching, setRefetching] = useState(false);
 
   // Re-select all lines when preview.lines changes (e.g. after refetch with different mode)
-  const linesRef = useRef(preview.lines);
-  if (preview.lines !== linesRef.current) {
-    linesRef.current = preview.lines;
+  const [prevLines, setPrevLines] = useState(preview.lines);
+  if (preview.lines !== prevLines) {
+    setPrevLines(preview.lines);
     setSelectedLines(new Set(preview.lines?.map((_, i) => i) ?? []));
   }
 

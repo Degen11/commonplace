@@ -16,40 +16,37 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   const lastSelectedIndex = useRef(null);
 
   // ── Cancel stale inline/full edits when target quote is deleted ──
-  useEffect(() => {
-    if (!inlineEdit && !editingId) return;
-    const quoteIds = new Set(quotes.map(q => q.id));
-    if (inlineEdit && !quoteIds.has(inlineEdit.id)) setInlineEdit(null);
-    if (editingId && !quoteIds.has(editingId)) setEditingId(null);
-  }, [quotes, inlineEdit, editingId]);
+  // Uses setState-during-render pattern to avoid cascading effect renders.
+  const quoteIdSet = new Set(quotes.map(q => q.id));
+  if (inlineEdit && !quoteIdSet.has(inlineEdit.id)) {
+    setInlineEdit(null);
+  }
+  if (editingId && !quoteIdSet.has(editingId)) {
+    setEditingId(null);
+  }
 
   // ── Clean ghost IDs in selection ──
-  useEffect(() => {
-    if (selected.size === 0) return;
-    const quoteIds = new Set(quotes.map(q => q.id));
-    setSelected(prev => {
+  if (selected.size > 0) {
+    let hasGhosts = false;
+    for (const id of selected) {
+      if (!quoteIdSet.has(id)) { hasGhosts = true; break; }
+    }
+    if (hasGhosts) {
       const cleaned = new Set();
-      let changed = false;
-      for (const id of prev) {
-        if (quoteIds.has(id)) {
-          cleaned.add(id);
-        } else {
-          changed = true;
-        }
+      for (const id of selected) {
+        if (quoteIdSet.has(id)) cleaned.add(id);
       }
-      return changed ? cleaned : prev;
-    });
-  }, [quotes, selected]);
+      setSelected(cleaned);
+    }
+  }
 
   // ── Filter reviewQueue when quotes change ──
-  useEffect(() => {
-    if (reviewQueue.length === 0) return;
-    const quoteIds = new Set(quotes.map(q => q.id));
-    setReviewQueue(prev => {
-      const f = prev.filter(id => quoteIds.has(id));
-      return f.length !== prev.length ? f : prev;
-    });
-  }, [quotes, reviewQueue]);
+  if (reviewQueue.length > 0) {
+    const filtered = reviewQueue.filter(id => quoteIdSet.has(id));
+    if (filtered.length !== reviewQueue.length) {
+      setReviewQueue(filtered);
+    }
+  }
 
   // ── Selection scope — use a ref so toggleSel always reads the latest
   // scope without needing to be recreated (avoids stale closures). ──

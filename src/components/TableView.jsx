@@ -351,6 +351,18 @@ export default function TableView({
     setDragColOver(null);
   };
 
+  // ── Track scroll margin in state so the compiler doesn't see ref reads during render ──
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const update = () => setScrollMargin(el.offsetTop);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // ── Window-based virtualizer — only renders rows near the viewport ──
   // Uses padding divs (not absolute positioning) so items stay in normal
   // document flow. This keeps dnd-kit's sortable transforms working correctly.
@@ -358,7 +370,7 @@ export default function TableView({
     count: filtered.length,
     estimateSize: () => compact ? ROW_HEIGHT_COMPACT_ESTIMATE : ROW_HEIGHT_ESTIMATE,
     overscan: VIRTUALIZER_OVERSCAN,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin,
   });
 
   const virtualItems = virtualizer.getVirtualItems();

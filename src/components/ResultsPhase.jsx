@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -282,22 +282,22 @@ export default function ResultsPhase({
     pendingScrollAdjust.current = null;
   }, [showStats, showAddMore, view, compact]);
 
-  const updateCatFade = useCallback(() => {
+  const updateCatFade = () => {
     const el = catScrollRef.current;
     if (!el) return;
     setCatFade({
       left: el.scrollLeft > 4,
       right: el.scrollLeft < el.scrollWidth - el.clientWidth - 4,
     });
-  }, []);
+  };
 
   useEffect(() => {
     const t = setTimeout(updateCatFade, 100);
     window.addEventListener("resize", updateCatFade);
     return () => { clearTimeout(t); window.removeEventListener("resize", updateCatFade); };
-  }, [updateCatFade]);
+  });
 
-  useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter, updateCatFade]);
+  useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter]);
 
   useEffect(() => {
     const h = e => {

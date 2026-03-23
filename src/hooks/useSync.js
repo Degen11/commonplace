@@ -141,7 +141,7 @@ export default function useSync({ onCloudData, onSyncError }) {
   });
 
   // Keep mutateRef in sync with latest mutate function
-  mutateRef.current = pushMutation.mutate;
+  useEffect(() => { mutateRef.current = pushMutation.mutate; }, [pushMutation.mutate]);
 
   // ── Debounced push — same API as before ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {

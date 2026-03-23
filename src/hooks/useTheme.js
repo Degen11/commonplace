@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LS_THEME } from "../config";
 
 export default function useTheme() {
@@ -59,7 +59,7 @@ export default function useTheme() {
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  const toggleTheme = useCallback((/** @type {MouseEvent|undefined} */ event) => {
+  const toggleTheme = (/** @type {MouseEvent|undefined} */ event) => {
     // Cancel any in-flight transition cleanup from a previous toggle
     if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
 
@@ -116,7 +116,7 @@ export default function useTheme() {
         transitionTimerRef.current = null;
       }, 350);
     }
-  }, [dark]);
+  };
 
   return { dark, toggleTheme };
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import clsx from "clsx";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
@@ -6,12 +6,12 @@ import { styles } from "./styles";
 
 export function FavBtn({ q, onFav }) {
   const [animating, setAnimating] = useState(false);
-  const handleClick = useCallback((e) => {
+  const handleClick = (e) => {
     e.stopPropagation();
     setAnimating(true);
     onFav(q.id);
     setTimeout(() => setAnimating(false), 350);
-  }, [onFav, q.id]);
+  };
 
   return (
     <button

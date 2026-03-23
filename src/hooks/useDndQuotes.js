@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin, closestCenter } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { pluralize } from "../utils/helpers";
@@ -14,6 +14,7 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
 
   const [activeDragId, setActiveDragId] = useState(null);
   const [overDragId, setOverDragId] = useState(null);
+  const dndReorderRef = useRef(false);
 
   const collisionDetection = (args) => {
     const pointerHits = pointerWithin(args);
@@ -54,7 +55,8 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
       return;
     }
 
-    // Sortable reorder
+    // Sortable reorder — signal to TableView to skip the list-shuffle animation
+    dndReorderRef.current = true;
     setQuotes(prev => {
       const oldIndex = prev.findIndex(q => q.id === active.id);
       const newIndex = prev.findIndex(q => q.id === over.id);
@@ -72,5 +74,6 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
     handleDndOver,
     handleDndEnd,
     anchorToCursor,
+    dndReorderRef,
   };
 }

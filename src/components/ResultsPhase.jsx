@@ -54,12 +54,23 @@ function MobileCardList({
   saveEdit, saveInlineField, setInlineEdit, setEditingId, searchTerm,
 }) {
   const listRef = useRef(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const update = () => setScrollMargin(el.offsetTop);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const virtualizer = useWindowVirtualizer({
     count: visible.length,
     estimateSize: () => CARD_HEIGHT_ESTIMATE,
     overscan: CARD_VIRTUALIZER_OVERSCAN,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -231,6 +242,9 @@ export default function ResultsPhase({
     if (node) {
       const obs = new IntersectionObserver(([entry]) => {
         setHeaderVisible(entry.isIntersecting);
+        // Close dropdowns when scrolling between main/mini header
+        setShowExport(false);
+        setShowSort(false);
       }, { threshold: 0 });
       obs.observe(node);
       headerObsRef.current = obs;
@@ -249,12 +263,6 @@ export default function ResultsPhase({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  // Close dropdowns when scrolling between main/mini header
-  useEffect(() => {
-    setShowExport(false);
-    setShowSort(false);
-  }, [headerVisible]);
 
   // Preserve scroll position when toggling panels via mini-header
   const preserveScroll = () => {

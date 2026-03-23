@@ -35,12 +35,12 @@ export default function ToolbarSection({
   isMobile,
 }) {
   const searchInputRef = useRef(null);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(() => !!search);
 
-  // Keep search open when there's a value
-  useEffect(() => {
-    if (search) setSearchOpen(true);
-  }, [search]);
+  // Keep search open when there's a value — use setState-during-render pattern
+  if (search && !searchOpen) {
+    setSearchOpen(true);
+  }
 
   // Focus input when opening
   useEffect(() => {

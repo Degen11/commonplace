@@ -2,18 +2,18 @@
 
 ## Project overview
 
-Commonplace is a quote collection organizer. Users paste messy text (or import files), and the app identifies sources and categories using a local database of 3,700+ quotes and Claude Haiku AI as a fallback. The result is a searchable, filterable, exportable collection. Live at [commonplace.pro](https://commonplace.pro).
+Commonplace is a quote collection organizer. Users paste messy text (or import files), and the app identifies sources and categories using a local database of 3,700+ quotes and Claude Haiku AI (`claude-haiku-4-5-20251001`) as a fallback. The result is a searchable, filterable, exportable collection. Live at [commonplace.pro](https://commonplace.pro).
 
 ## Tech stack
 
 - **React 19** (no TypeScript — plain JSX/JS throughout)
-- **React Compiler** (`babel-plugin-react-compiler`) — automatic memoization, configured via Vite Babel plugin
+- **React Compiler** (`babel-plugin-react-compiler` pinned at 1.0.0) — automatic memoization, configured via Vite Babel plugin
 - **Vite 8** — dev server and build
 - **Zustand 5** — primary state management (`src/stores/quotesStore.js`)
 - **TanStack React Query 5** — server state / sync mutations
 - **TanStack React Virtual 3** — virtualized list rendering
 - **motion 12** (Framer Motion successor) — animations via `motion/react`
-- **@dnd-kit** — drag-and-drop reordering (core + sortable)
+- **@dnd-kit** — drag-and-drop reordering (`@dnd-kit/core` 6 + `@dnd-kit/sortable` 10)
 - **Fuse.js 7** — fuzzy search
 - **compromise 14** — NLP (proper noun detection in text formatting)
 - **Zod 4** — API request validation (server-side, `api/_schemas.js`)
@@ -24,6 +24,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **vite-plugin-pwa** — service worker / PWA manifest
 - **Vercel** — hosting + serverless functions
 - **Vitest 4** — test runner (configured in `vite.config.js`)
+- **ESLint 10** — flat config (`eslint.config.js`), React Compiler compatibility checks
 
 ## Architecture
 
@@ -33,7 +34,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 api/                          Vercel serverless functions (Node.js)
   _shared.js                  Supabase client, CORS, rate limiting, origin validation, withApiHandler middleware
   _schemas.js                 Zod schemas for all API endpoints
-  identify.js                 POST — proxy to Claude Haiku for quote identification
+  identify.js                 POST — proxy to Claude Haiku (claude-haiku-4-5-20251001) for quote identification
   sync.js                     GET/POST — device-based cloud sync via Supabase
   share.js                    GET/POST — public collection sharing (30-day expiry)
   auto-group.js               POST — AI-powered thematic quote grouping
@@ -70,8 +71,28 @@ src/
     InlineEditors.jsx          Click-to-edit source/category with autocomplete
     CollectionsSidebar.jsx     Collection management sidebar
     OnboardingModal.jsx        First-run 3-step onboarding walkthrough
-    QuoteActions.jsx           Shared action components (FavBtn with pop animation)
+    QuoteActions.jsx           Shared action components (FavBtn, OverflowMenu with pop animation)
     HighlightText.jsx          Search term highlighting in table/card views
+    AddMorePanel.jsx           Panel for adding more quotes from results
+    AnimatedNumber.jsx         Animated number transitions
+    ConfirmModal.jsx           Reusable confirmation dialog
+    CollectionDupeModal.jsx    Collection-level duplicate resolution
+    DupeModal.jsx              Quote duplicate detection modal
+    EmptyState.jsx             Empty state placeholder UI
+    ErrorBoundary.jsx          Top-level React error boundary
+    SectionErrorBoundary.jsx   Section-scoped error boundary
+    ExportDropdown.jsx         Export format menu
+    Footer.jsx                 App footer
+    HowItWorksAnimation.jsx    Onboarding animation sequence
+    Logo.jsx                   Commonplace wordmark
+    MobileSheet.jsx            Mobile bottom sheet overlay
+    ShareImageModal.jsx        Share image preview/download
+    ShortcutsModal.jsx         Keyboard shortcuts reference
+    StatsPanel.jsx             Collection statistics panel
+    StatsOverlay.jsx           Stats overlay display
+    SyncPill.jsx               Cloud sync status indicator
+    ToolbarSection.jsx         Reusable toolbar section wrapper
+    UrlPreviewModal.jsx        URL content preview before import
     styles.js                  All CSS-in-JS style objects + baseCSS (global CSS string)
 
   hooks/
@@ -84,11 +105,11 @@ src/
     useDndQuotes.js            Drag-and-drop state, sensors, and handlers for quote reordering/collection drops
     useInfiniteScroll.js       Pagination — 100 items per page via intersection observer
     useTheme.js                Dark/light theme toggle (CSS custom properties)
-    useFlipPosition.js         Viewport-aware flip positioning for dropdowns
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
     useLongPress.js            Mobile long-press for selection
-    useClickOutside.js         Close dropdowns/popups on outside click
+    useToasts.js               Toast notification management
+    useAnimatedNumber.js       Smooth number transition animations
 
   data/
     constants.js               Categories, colors, confidence levels, example quotes, sanitization
@@ -105,10 +126,14 @@ src/
     storage.js                 loadFromStorage / saveToStorage — safe localStorage JSON read/write with validation
     helpers.js                 Shared utilities: pluralize, groupBy, countBy, Set helpers (addToSet, removeFromSet, etc.)
     sync.js                    mergeByTimestamp — cloud/local merge helper
-    dragGhost.js               Custom drag preview elements
     richTextKeys.js            Key constants for rich text handling
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
+
+  **/__tests__/                Tests colocated with their modules
+    components/TableView.test.js
+    hooks/useProcessing.test.js, useSync.test.js
+    utils/export, helpers, parsers, quotes, smartRestore, storage, sync, textFormatting, uuid
 ```
 
 ### App phases
@@ -164,7 +189,7 @@ User input → smartSplit() → deduplicate against existing
 
 ## Key components
 
-- **`App.jsx`** — Phase orchestrator (~170 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` with `AnimatePresence`.
+- **`App.jsx`** — Phase orchestrator (~220 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` with `AnimatePresence`.
 - **`ResultsPhase.jsx`** — The results phase. Calls `useQuotesContext()` directly. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
 - **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
@@ -180,8 +205,8 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
-npm run test      # vitest run
-npx eslint src/   # Check React Compiler compatibility (react-hooks/refs, purity, etc.)
+npm run test      # vitest run (12 test files across components, hooks, utils)
+npx eslint src/   # Check React Compiler compatibility (requires eslint-plugin-react-hooks installed)
 vercel dev        # Test serverless functions locally
 ```
 
@@ -203,11 +228,9 @@ vercel dev        # Test serverless functions locally
 - **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
-- **Click-outside pattern** — use `useClickOutside(ref, isOpen, onClose)` hook instead of inline `useEffect` with `mousedown` listeners. `OverflowMenu` handles its own click-outside internally
-- **No mount guards needed** — React 18+ removed the "setState on unmounted component" warning. Don't add mount-guard refs or safe-dispatch wrappers. The old `useMounted.js` hook was deleted
+- **No mount guards needed** — React 18+ removed the "setState on unmounted component" warning. Don't add mount-guard refs or safe-dispatch wrappers
 - **React Compiler rules** — the compiler requires code that follows the Rules of React. Key constraints: (1) don't read or write `ref.current` during render — assign refs in `useEffect` or event handlers; (2) don't call `setState` directly inside `useEffect` for derived state — use initializers, direct computation, or the `setState`-during-render pattern (see `useInfiniteScroll.js` for an example); (3) don't create components dynamically during render (e.g., `const Icon = getIcon(name)`) — use `createElement` or pass the component as a prop. Run `npx eslint src/` to check for compiler bailouts
 - **Immutable Set updates** — use `addToSet`, `removeFromSet`, `toggleInSet`, `addAllToSet`, `removeAllFromSet` from `utils/helpers.js` instead of inline `new Set(prev)` + mutate patterns
-- **Flip positioning** — use `useFlipPosition(ref)` from `hooks/useFlipPosition.js` for viewport-aware dropdown positioning instead of manual `getBoundingClientRect` + `useState`
 - **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
 - **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``
@@ -231,10 +254,9 @@ Z.TOAST           2000  Toasts
 
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
-- Comment in `QuotesContext.jsx` line 99 says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
+- Stale comment in `QuotesContext.jsx` (~line 101) says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
 - No TODO/FIXME comments exist in the codebase currently
-- **React Compiler bailouts** — 15 remaining ESLint errors that the compiler can't optimize: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection`, `UrlPreviewModal`, and `useEditState`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization
-- The `similarity()` function in `textFormatting.js` guards against empty word sets (returns 0 early). This was previously a fragile NaN-producing division; the guard was consolidated in a cleanup pass
+- **React Compiler bailouts** — some ESLint errors remain that the compiler can't optimize: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection`, `UrlPreviewModal`, and `useEditState`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization. Note: `eslint-plugin-react-hooks` must be installed separately to run the check (`npx eslint src/`)
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
 - Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof
 
@@ -250,11 +272,9 @@ Z.TOAST           2000  Toasts
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy
-- **The assistant prefill** in `identify.js` (line 95: `{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
+- **The assistant prefill** in `identify.js` (`{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
 - **SSRF protection in `fetch-url.js`** — `isPrivateHostname()` blocks requests to private/internal IPs (RFC1918, loopback, link-local, cloud metadata). Manual redirect following validates each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
 - **OG font pinned version** — `og.js` loads Inter font from jsdelivr with a pinned version (`@5.1.1`). Don't change to `@latest` — unpinned CDN URLs risk breakage from upstream changes
 - **Build chunk splitting** — `vite.config.js` uses a function-based `manualChunks` to split `motion` and `@dnd-kit` into separate chunks. Don't use object-based config (causes circular chunk warnings between dndkit and tanstack)
 - **Onboarding localStorage key** — `LS_ONBOARDED` (`commonplace_onboarded`) tracks whether the user has seen the first-run modal. Don't reset this without user intent
-- **Don't add manual memoization** — no `React.memo`, `useMemo`, or `useCallback` unless the compiler's ESLint rules (`npx eslint src/`) specifically flag a problem that requires it (e.g., unstable function in `useEffect` deps). The React Compiler handles all memoization automatically. Adding manual wrappers is dead code at best, and can interfere with the compiler at worst
-- **Don't read/write refs during render** — the React Compiler requires that `ref.current` is only accessed inside `useEffect`, event handlers, or callbacks. Assign refs in `useEffect(() => { ref.current = value; }, [value])`, not directly in the component body. This is enforced by `react-hooks/refs`
 - **Don't remove `babel-plugin-react-compiler`** from `vite.config.js` — the entire codebase relies on compiler-managed memoization. Removing it would cause performance regressions since manual `memo`/`useCallback`/`useMemo` have been stripped

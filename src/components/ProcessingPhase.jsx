@@ -1,9 +1,45 @@
-import { styles, FONT_SANS } from "./styles";
+import { styles, FONT_SANS, CP_ACCENT } from "./styles";
 import { getCatColor } from "../data/constants";
 import { CheckCircle, Database, Globe, Sparkles } from "lucide-react";
 import Logo from "./Logo";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
+
+const RING_SIZE = 88;
+const RING_STROKE = 5;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+function ProgressRing({ pct, isComplete }) {
+  const offset = RING_CIRCUMFERENCE - (pct / 100) * RING_CIRCUMFERENCE;
+  return (
+    <div style={{ position: "relative", width: RING_SIZE, height: RING_SIZE, marginBottom: 20 }}>
+      <svg width={RING_SIZE} height={RING_SIZE} style={{ transform: "rotate(-90deg)" }}>
+        <circle
+          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
+          fill="none" stroke="var(--cp-border)" strokeWidth={RING_STROKE}
+        />
+        <circle
+          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
+          fill="none"
+          stroke={isComplete ? "#059669" : CP_ACCENT}
+          strokeWidth={RING_STROKE}
+          strokeDasharray={RING_CIRCUMFERENCE}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease" }}
+        />
+      </svg>
+      <span style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 18, fontWeight: 700, fontFamily: FONT_SANS, color: isComplete ? "#059669" : "var(--cp-text-secondary)",
+        letterSpacing: "-0.02em",
+      }}>
+        {pct}%
+      </span>
+    </div>
+  );
+}
 
 const statChipStyle = {
   display: "inline-flex", alignItems: "center", gap: 6,
@@ -90,6 +126,7 @@ export default function ProcessingPhase({
           </>
         ) : (
           <>
+            {total > 0 && <ProgressRing pct={pct} isComplete={false} />}
             <h2 style={styles.procTitle}>Organizing your collection...</h2>
             <p style={styles.procSub}>{phaseSubtitle(progress, doneCount, total)}</p>
           </>

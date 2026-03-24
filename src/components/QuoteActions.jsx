@@ -10,7 +10,7 @@ export function FavBtn({ q, onFav }) {
     e.stopPropagation();
     setAnimating(true);
     onFav(q.id);
-    setTimeout(() => setAnimating(false), 350);
+    setTimeout(() => setAnimating(false), 450);
   };
 
   return (

@@ -31,7 +31,8 @@ export default function MiniHeader({
       background: "var(--cp-mini-bg)", borderBottom: "1px solid var(--cp-border)",
       backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)",
       boxShadow: "0 1px 12px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.04)",
-      animation: "miniHeaderIn .25s cubic-bezier(0.16, 1, 0.3, 1)",
+      transition: "box-shadow 0.3s ease",
+      animation: "miniHeaderIn .4s cubic-bezier(0.16, 1, 0.3, 1)",
     }}>
       <div style={{ maxWidth: 1120, width: "100%", padding: isMobile ? "8px 16px" : "10px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>

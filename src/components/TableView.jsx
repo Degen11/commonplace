@@ -328,7 +328,7 @@ const TableView = memo(function TableView({
     // Force reflow to restart animation
     void el.offsetWidth;
     el.classList.add("list-shuffle");
-    const t = setTimeout(() => el.classList.remove("list-shuffle"), 300);
+    const t = setTimeout(() => el.classList.remove("list-shuffle"), 500);
     return () => clearTimeout(t);
   }, [listFingerprint, dndReorderRef]);
 

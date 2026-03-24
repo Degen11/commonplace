@@ -112,25 +112,28 @@ export const baseCSS = `
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes savePulse{0%{background-color:rgba(5,150,105,0.12);border-radius:4px}100%{background-color:transparent}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-  @keyframes bulkSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+  @keyframes bulkSlideUp{0%{opacity:0;transform:translateY(100%)}60%{opacity:1;transform:translateY(-4px)}80%{transform:translateY(1px)}100%{transform:translateY(0)}}
   @keyframes overlayFade{from{opacity:0}to{opacity:1}}
   @keyframes exitFade{to{opacity:0}}
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes menuIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
   @keyframes modalScaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
   @keyframes backdropBlurIn{from{opacity:0;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}to{opacity:1;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
-  @keyframes toastSlideIn{0%{opacity:0;transform:translateY(16px) scale(0.95)}60%{opacity:1;transform:translateY(-3px) scale(1.01)}100%{opacity:1;transform:translateY(0) scale(1)}}
-  @keyframes copyPush{0%{transform:scale(1)}40%{transform:scale(.82)}100%{transform:scale(1)}}
-  @keyframes favPop{0%{transform:scale(1)}30%{transform:scale(0.8)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+  @keyframes toastSlideIn{0%{opacity:0;transform:translateY(16px) scale(0.92)}40%{opacity:1;transform:translateY(-5px) scale(1.02)}65%{transform:translateY(1px) scale(0.99)}80%{transform:translateY(-1px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes copyPush{0%{transform:scale(1)}30%{transform:scale(.78)}60%{transform:scale(1.08)}80%{transform:scale(.97)}100%{transform:scale(1)}}
+  @keyframes favPop{0%{transform:scale(1)}20%{transform:scale(0.75)}50%{transform:scale(1.18)}70%{transform:scale(0.95)}85%{transform:scale(1.04)}100%{transform:scale(1)}}
   @keyframes exitSlideLeft{to{opacity:0;transform:translateX(-24px)}}
   @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
-  @keyframes completePop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes completePop{0%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1.15)}70%{transform:scale(0.95)}85%{transform:scale(1.04)}100%{transform:scale(1)}}
   @keyframes dropGlow{0%,100%{outline-color:rgba(60,87,117,0.35)}50%{outline-color:rgba(60,87,117,0.8)}}
-  @keyframes miniHeaderIn{from{opacity:0;transform:translateY(-100%);backdrop-filter:blur(0) saturate(100%);-webkit-backdrop-filter:blur(0) saturate(100%)}to{opacity:1;transform:translateY(0);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .skeleton-row{display:flex;align-items:center;padding:12px 0;gap:12px;border-bottom:1px solid var(--cp-border)}
+  .skeleton-bar{border-radius:4px;background:linear-gradient(90deg,var(--cp-border) 25%,var(--cp-bg-hover) 50%,var(--cp-border) 75%);background-size:200% 100%;animation:shimmer 1.8s ease infinite}
+  @keyframes miniHeaderIn{0%{opacity:0;transform:translateY(-100%);backdrop-filter:blur(0) saturate(100%);-webkit-backdrop-filter:blur(0) saturate(100%)}50%{opacity:1;transform:translateY(0);backdrop-filter:blur(4px) saturate(120%);-webkit-backdrop-filter:blur(4px) saturate(120%)}100%{opacity:1;transform:translateY(0);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}}
   .spin{animation:spin 1s linear infinite}
-  .copy-push{animation:copyPush .25s ease}
+  .copy-push{animation:copyPush .35s cubic-bezier(0.34,1.56,0.64,1)}
   .share-lift{animation:shareLift .25s ease}
-  .fav-pop{animation:favPop .35s ease}
+  .fav-pop{animation:favPop .45s cubic-bezier(0.34,1.56,0.64,1)}
   .phase-in{animation:fadeUp .25s ease}.phase-out{opacity:0;transition:opacity .15s ease}
   html{scroll-behavior:smooth;scrollbar-gutter:stable}
   div[style]:focus{outline:none;border-color:transparent}
@@ -268,9 +271,20 @@ export const baseCSS = `
   .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled){transform:scale(0.97) !important;transition:transform .1s ease !important}
   .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
 
-  /* List shuffle — triggered on sort/filter change for smooth re-entrance */
-  @keyframes listShuffle{from{opacity:0.4;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-  .list-shuffle .qrow,.list-shuffle .qcard{animation:listShuffle .25s cubic-bezier(0.16,1,0.3,1) both}
+  /* List shuffle — triggered on sort/filter change for smooth staggered re-entrance */
+  @keyframes listShuffle{from{opacity:0.3;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .list-shuffle .qrow,.list-shuffle .qcard{animation:listShuffle .3s cubic-bezier(0.16,1,0.3,1) both}
+  .list-shuffle .qrow:nth-child(1),.list-shuffle .qcard:nth-child(1){animation-delay:0s}
+  .list-shuffle .qrow:nth-child(2),.list-shuffle .qcard:nth-child(2){animation-delay:.02s}
+  .list-shuffle .qrow:nth-child(3),.list-shuffle .qcard:nth-child(3){animation-delay:.04s}
+  .list-shuffle .qrow:nth-child(4),.list-shuffle .qcard:nth-child(4){animation-delay:.06s}
+  .list-shuffle .qrow:nth-child(5),.list-shuffle .qcard:nth-child(5){animation-delay:.08s}
+  .list-shuffle .qrow:nth-child(6),.list-shuffle .qcard:nth-child(6){animation-delay:.1s}
+  .list-shuffle .qrow:nth-child(7),.list-shuffle .qcard:nth-child(7){animation-delay:.12s}
+  .list-shuffle .qrow:nth-child(8),.list-shuffle .qcard:nth-child(8){animation-delay:.14s}
+  .list-shuffle .qrow:nth-child(9),.list-shuffle .qcard:nth-child(9){animation-delay:.16s}
+  .list-shuffle .qrow:nth-child(10),.list-shuffle .qcard:nth-child(10){animation-delay:.18s}
+  .list-shuffle .qrow:nth-child(n+11),.list-shuffle .qcard:nth-child(n+11){animation-delay:.2s}
 
   /* Staggered entrance for table rows — uses nth-child for cascade */
   .stagger-in .qrow{animation:staggerIn .2s ease both}
@@ -372,7 +386,11 @@ export const baseCSS = `
   html.dark input,html.dark textarea,html.dark select{background-color:var(--cp-bg-input) !important;color:var(--cp-text) !important}
 
   /* Toast spring entrance animation + type-colored left borders */
-  [data-sonner-toast][data-mounted="true"]{animation:toastSlideIn .35s cubic-bezier(0.34,1.56,0.64,1) !important}
+  @keyframes toastIconPop{0%{transform:scale(0);opacity:0}50%{transform:scale(1.2)}70%{transform:scale(0.9)}100%{transform:scale(1);opacity:1}}
+  @keyframes toastContentSlide{0%{opacity:0;transform:translateX(6px)}100%{opacity:1;transform:translateX(0)}}
+  [data-sonner-toast][data-mounted="true"]{animation:toastSlideIn .45s cubic-bezier(0.34,1.56,0.64,1) !important}
+  [data-sonner-toast][data-mounted="true"] [data-icon]{animation:toastIconPop .4s cubic-bezier(0.34,1.56,0.64,1) .05s both !important}
+  [data-sonner-toast][data-mounted="true"] [data-content]{animation:toastContentSlide .3s ease .08s both !important}
   [data-sonner-toast][data-type="success"]{border-left:3px solid #16A34A !important}
   [data-sonner-toast][data-type="error"]{border-left:3px solid #DC2626 !important}
   [data-sonner-toast][data-type="info"]{border-left:3px solid #3B82F6 !important}

@@ -164,6 +164,7 @@ export default function ResultsPhase({
     addToCollection, removeFromCollection, updateCollectionIcon,
     cleanCollectionRefs,
     manualPush,
+    initialLoading,
   } = useQuotesContext();
 
   // ── Hooks owned by ResultsPhase ──
@@ -710,7 +711,7 @@ export default function ResultsPhase({
             <motion.div
               key="bulk-bar"
               initial={{ opacity: 0, y: "100%" }}
-              animate={{ opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+              animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 28, mass: 0.8 } }}
               exit={{ opacity: 0, y: "100%", transition: { duration: 0.15, ease: "easeIn" } }}
               style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 500 }}
             >
@@ -868,6 +869,28 @@ export default function ResultsPhase({
           )}
           </AnimatePresence>
 
+          {/* Skeleton rows during initial cloud pull */}
+          {initialLoading && quotes.length === 0 && (
+            <div style={{ paddingTop: 8 }}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <div key={i} className="skeleton-row" style={{ opacity: 1 - i * 0.1 }}>
+                  <div style={{ width: 20 }} />
+                  <div style={{ width: 16, height: 16 }} className="skeleton-bar" />
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, padding: "0 16px" }}>
+                    <div className="skeleton-bar" style={{ height: 12, width: `${70 + (i % 3) * 10}%`, borderRadius: 4 }} />
+                    <div className="skeleton-bar" style={{ height: 10, width: `${40 + (i % 2) * 20}%`, borderRadius: 4 }} />
+                  </div>
+                  <div style={{ width: 120, display: "flex", alignItems: "center", paddingLeft: 10, borderLeft: "1px solid var(--cp-border-light)" }}>
+                    <div className="skeleton-bar" style={{ height: 10, width: "80%", borderRadius: 4 }} />
+                  </div>
+                  <div style={{ width: 80, display: "flex", alignItems: "center", paddingLeft: 10, borderLeft: "1px solid var(--cp-border-light)" }}>
+                    <div className="skeleton-bar" style={{ height: 20, width: "70%", borderRadius: 4 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* TABLE / CARD VIEW — cross-fade on switch */}
           <AnimatePresence mode="wait" initial={false}>
           {view === "table" && (
@@ -1009,7 +1032,14 @@ export default function ResultsPhase({
     Load more ({remaining} remaining)
   </button>
 )}
+          <AnimatePresence>
           {collectionFiltered.length === 0 && (
+            <motion.div
+              key="empty-state"
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }}
+              exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }}
+            >
             <EmptyState
               catFilter={catFilter} setCatFilter={setCatFilter}
               favFilter={favFilter} setFavFilter={setFavFilter}
@@ -1019,7 +1049,9 @@ export default function ResultsPhase({
               activeCollectionName={activeCollectionId ? collections.find(c => c.id === activeCollectionId)?.name : null}
               onBrowseAll={activeCollectionId ? () => setActiveCollectionId(null) : null}
             />
+            </motion.div>
           )}
+          </AnimatePresence>
 
           <Footer styles={styles} />
 

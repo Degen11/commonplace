@@ -2,7 +2,7 @@ import ShortcutsModal from "./ShortcutsModal";
 import ShareImageModal from "./ShareImageModal";
 import ConfirmModal from "./ConfirmModal";
 import CollectionDupeModal from "./CollectionDupeModal";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { TriangleAlert, Trash2 } from "lucide-react";
 
 /**
  * All modal dialogs used by ResultsPhase, extracted to reduce component size.
@@ -35,7 +35,7 @@ export default function ResultsModals({
 
       {confirmClear && (
         <ConfirmModal
-          icon={<AlertTriangle size={20} color="#EA580C" strokeWidth={2} />}
+          icon={<TriangleAlert size={20} color="#EA580C" strokeWidth={2} />}
           iconColor="#EA580C"
           iconBg="var(--cp-warning-bg)"
           borderColor="#EA580C"

@@ -41,7 +41,7 @@ import QuickAddBar from "./QuickAddBar";
 import MobileSheet from "./MobileSheet";
 import { styles } from "./styles";
 
-import { X, HelpCircle, Library } from "lucide-react";
+import { X, CircleQuestionMark, Library } from "lucide-react";
 
 const CARD_HEIGHT_ESTIMATE = 160;
 const CARD_VIRTUALIZER_OVERSCAN = 8;
@@ -1076,7 +1076,7 @@ export default function ResultsPhase({
               transition: "bottom .2s ease, box-shadow .15s ease",
             }}
           >
-            <HelpCircle size={16} strokeWidth={1.5} />
+            <CircleQuestionMark size={16} strokeWidth={1.5} />
           </button>
           )}
           {/* Mobile collections FAB */}

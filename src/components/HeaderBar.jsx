@@ -5,8 +5,8 @@ import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 
 import {
-  List, AlignJustify, LayoutGrid, Moon, Sun, HelpCircle,
-  MoreHorizontal, BarChart3, Trash2, Gauge, MenuIcon, Plus,
+  List, AlignJustify, LayoutGrid, Moon, Sun, CircleQuestionMark,
+  Ellipsis, ChartColumn, Trash2, Gauge, MenuIcon, Plus,
 } from "lucide-react";
 
 const pillStyles = syncPillStyles.full;
@@ -78,7 +78,7 @@ export default function HeaderBar({
         {/* Overflow / hamburger menu — serves both mobile and desktop */}
         <Menu.Root open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <Menu.Trigger className="ui-tip ui-tip-below hdr-btn" data-tip="More actions" style={{ ...styles.statsBtn, padding: isMobile ? "7px 10px" : "5px 8px" }}>
-            {isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <MoreHorizontal size={16} strokeWidth={1.5} />}
+            {isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <Ellipsis size={16} strokeWidth={1.5} />}
           </Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
@@ -114,7 +114,7 @@ export default function HeaderBar({
                 )}
                 <div style={styles.hdrOverflowSectionLabel}>View</div>
                 <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowStats(s => !s)}>
-                  <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                  <ChartColumn size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                   {showStats ? "Hide full stats" : "Full stats"}
                 </Menu.Item>
                 <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowConfidence(v => !v)}>
@@ -124,7 +124,7 @@ export default function HeaderBar({
                 <Menu.Separator style={styles.hdrOverflowDivider} />
                 <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
                 <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => onShowShortcuts()}>
-                  <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                  <CircleQuestionMark size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                   Keyboard shortcuts
                 </Menu.Item>
                 <Menu.Separator style={styles.hdrOverflowDivider} />

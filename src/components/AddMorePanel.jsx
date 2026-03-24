@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { styles } from "./styles";
-import { Pencil, Bot, FileText, FolderOpen, CheckCircle, Link, Eye } from "lucide-react";
+import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
 export default function AddMorePanel({
@@ -186,7 +186,7 @@ export default function AddMorePanel({
             <div style={{ ...styles.dropSub, fontSize: 12 }}>Supports .txt, .csv, .json, .md — Kindle, Readwise, Notion</div>
             {importedFileName && addMoreInput.trim() && (
               <div style={{ ...styles.dropFileName, marginTop: 8 }}>
-                <CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {smartSplit(addMoreInput.trim()).length} entries loaded
+                <CircleCheckBig size={13} strokeWidth={2} /> {importedFileName} — {smartSplit(addMoreInput.trim()).length} entries loaded
               </div>
             )}
           </div>

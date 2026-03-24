@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import {
   ClipboardCopy, Sparkles, Link, Globe, FileText, Table2, FileDown, Braces,
-  AlertTriangle, Loader,
+  TriangleAlert, Loader,
 } from "lucide-react";
 import {
   exportCSV, exportMD, exportJSON, exportTXT,
@@ -133,7 +133,7 @@ export default function ExportDropdown({
             <Menu.Item className="dd-opt" style={itemStyle} onClick={handleShare}>
               <Link size={14} strokeWidth={1.5} /> Shareable link
             </Menu.Item>
-            {quotes.length > 80 && <span style={styles.expOptNote}><AlertTriangle size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — use public link instead</span>}
+            {quotes.length > 80 && <span style={styles.expOptNote}><TriangleAlert size={11} strokeWidth={2} style={{verticalAlign:"middle", marginRight:3}} /> Links may break above ~80 entries — use public link instead</span>}
             <Menu.Item className="dd-opt" style={{ ...itemStyle, opacity: publishing ? 0.5 : 1 }} closeOnClick={false} disabled={publishing} onClick={handlePublicLink}>
               {publishing ? <Loader size={14} strokeWidth={1.5} className="spin" /> : <Globe size={14} strokeWidth={1.5} />} Public link{publishing ? "..." : ""}<span style={{ fontSize: 10, opacity: 0.5 }}>30 days</span>
             </Menu.Item>

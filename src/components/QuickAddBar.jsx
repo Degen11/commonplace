@@ -4,7 +4,7 @@ import { similarity } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
-import { AlertTriangle, ChevronDown, Plus, X } from "lucide-react";
+import { TriangleAlert, ChevronDown, Plus, X } from "lucide-react";
 
 export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quotes, isMobile }) {
   const textRef = useRef(null);
@@ -163,7 +163,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
           background: "var(--cp-warning-bg)",
           flexWrap: "wrap",
         }}>
-          <AlertTriangle size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+          <TriangleAlert size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, minWidth: 0 }}>
             Similar to: "{dupeMatch.text.length > 60 ? dupeMatch.text.slice(0, 60) + "\u2026" : dupeMatch.text}"
           </span>

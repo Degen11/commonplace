@@ -1,7 +1,7 @@
 import { useState, createElement } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Layers, Keyboard, CheckCircle, ArrowRight } from "lucide-react";
+import { Sparkles, Layers, Keyboard, CircleCheckBig, ArrowRight } from "lucide-react";
 import { LS_ONBOARDED } from "../config";
 import { CP_ACCENT, FONT_SANS } from "./styles";
 
@@ -134,7 +134,7 @@ export default function OnboardingModal() {
                         display: "inline-flex", alignItems: "center", gap: 6,
                       }}
                     >
-                      {isLast ? <><CheckCircle size={14} strokeWidth={2} /> Got it</> : <>Next <ArrowRight size={14} strokeWidth={2} /></>}
+                      {isLast ? <><CircleCheckBig size={14} strokeWidth={2} /> Got it</> : <>Next <ArrowRight size={14} strokeWidth={2} /></>}
                     </button>
                   </div>
                 </div>

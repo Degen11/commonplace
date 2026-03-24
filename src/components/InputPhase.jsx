@@ -9,7 +9,7 @@ import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { EXAMPLE_QUOTES } from "../data/constants";
 import {
   Pencil, Upload, FolderOpen, FileText,
-  AlertTriangle, CheckCircle, ArrowRight, ChevronDown,
+  TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
   Sparkles, PenLine, Download, RefreshCw, Filter, Library,
   Moon, Sun,
 } from "lucide-react";
@@ -754,7 +754,7 @@ export default function InputPhase({
                 <div style={styles.dropSub}>Supports .txt, .csv, .json, .md — Kindle, Readwise, Notion, and more</div>
                 {importedFileName && (
                   <div style={styles.dropFileName}>
-                    <CheckCircle size={13} strokeWidth={2} /> {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded
+                    <CircleCheckBig size={13} strokeWidth={2} /> {importedFileName} — {rawInput ? smartSplit(rawInput).length : 0} entries loaded
                   </div>
                 )}
               </div>
@@ -785,7 +785,7 @@ export default function InputPhase({
                     </span>
                     {count > 50 && (
                       <span style={styles.warnBadge}>
-                        <AlertTriangle size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment
+                        <TriangleAlert size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment
                       </span>
                     )}
                     {hasFancyChars && !formattingEnabled && (

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Globe, Github, X } from "lucide-react";
+import { Globe, X } from "lucide-react";
+import { siGithub } from "simple-icons";
 import { FONT_SANS } from "./styles";
 
 // ── Legal modal ──
@@ -127,7 +128,7 @@ export default function Footer({ styles }) {
           rel="noopener noreferrer"
           style={{ color: "var(--cp-text)", display: "inline-flex", alignItems: "center" }}
         >
-          <Github size={16} strokeWidth={1.5} />
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor"><path d={siGithub.path} /></svg>
         </a>
         <span style={{ color: "var(--cp-border-dim)" }}>&middot;</span>
         <button

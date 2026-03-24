@@ -1,5 +1,5 @@
 import { Menu } from "@base-ui/react/menu";
-import { List, AlignJustify, LayoutGrid, Moon, Sun, MoreHorizontal, BarChart3, HelpCircle, Trash2, Gauge } from "lucide-react";
+import { List, AlignJustify, LayoutGrid, Moon, Sun, Ellipsis, ChartColumn, CircleQuestionMark, Trash2, Gauge } from "lucide-react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
@@ -64,7 +64,7 @@ export default function MiniHeader({
           {/* Overflow menu */}
           <Menu.Root>
             <Menu.Trigger className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: isMobile ? "6px 8px" : "4px 8px" }}>
-              <MoreHorizontal size={14} strokeWidth={1.5} />
+              <Ellipsis size={14} strokeWidth={1.5} />
             </Menu.Trigger>
             <Menu.Portal>
               <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
@@ -85,7 +85,7 @@ export default function MiniHeader({
                   )}
                   <div style={styles.hdrOverflowSectionLabel}>View</div>
                   <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => { preserveScroll(); setShowStats(s => !s); }}>
-                    <BarChart3 size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                    <ChartColumn size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                     {showStats ? "Hide full stats" : "Full stats"}
                   </Menu.Item>
                   <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowConfidence(v => !v)}>
@@ -104,7 +104,7 @@ export default function MiniHeader({
                       <Menu.Separator style={styles.hdrOverflowDivider} />
                       <div style={styles.hdrOverflowSectionLabel}>Preferences</div>
                       <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => onShowShortcuts()}>
-                        <HelpCircle size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
+                        <CircleQuestionMark size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
                         Keyboard shortcuts
                       </Menu.Item>
                     </>

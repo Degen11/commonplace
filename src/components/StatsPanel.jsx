@@ -9,8 +9,8 @@ import {
   Hash,
   Star,
   Tag,
-  BarChart3,
-  AlertCircle,
+  ChartColumn,
+  CircleAlert,
   X
 } from "lucide-react";
 
@@ -98,7 +98,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
       <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3, color: "var(--cp-text-secondary)" }}>
-            <BarChart3 size={13} color="var(--cp-text-muted)" /> Confidence
+            <ChartColumn size={13} color="var(--cp-text-muted)" /> Confidence
           </span>
           <div style={{ display: "flex", gap: 14, fontSize: 12, color: "var(--cp-text-muted)" }}>
             {["high", "medium", "low"].map(level => (
@@ -135,7 +135,7 @@ const EmptyState = ({ count, onClose }) => {
     <div style={styles.statsPanel}>
       <PanelHeader onClose={onClose} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", color: "var(--cp-text-muted)" }}>
-        <BarChart3 size={40} color="var(--cp-text-faint)" style={{ marginBottom: 12, strokeWidth: 1.5 }} />
+        <ChartColumn size={40} color="var(--cp-text-faint)" style={{ marginBottom: 12, strokeWidth: 1.5 }} />
         <div style={{ fontWeight: 500, fontSize: 14, color: "var(--cp-text-muted)", marginBottom: 10, textAlign: "center" }}>
           Add at least 10 entries to unlock insights
         </div>
@@ -206,7 +206,7 @@ const AttentionBanner = ({ count }) => (
     border: "1px solid rgba(234,88,12,0.2)", borderRadius: 6, fontSize: 13,
     color: "#EA580C", display: "flex", alignItems: "center", gap: 8,
   }}>
-    <AlertCircle size={16} color="#EA580C" style={{ flexShrink: 0 }} />
+    <CircleAlert size={16} color="#EA580C" style={{ flexShrink: 0 }} />
     <span>
       <strong style={{ fontWeight: 600 }}>{count}</strong>{" "}
       {count === 1 ? "entry needs" : "entries need"} review

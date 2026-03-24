@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ClipboardList, Zap, CheckCircle, RefreshCw } from "lucide-react";
+import { ClipboardList, Zap, CircleCheckBig, RefreshCw } from "lucide-react";
 import { CP_ACCENT, FONT_SANS } from "./styles";
 
 // ── Data ────────────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ const RESULT_CARDS = [
 const STEPS = [
   { label: "Paste",    Icon: ClipboardList },
   { label: "Identify", Icon: Zap },
-  { label: "Organize", Icon: CheckCircle },
+  { label: "Organize", Icon: CircleCheckBig },
 ];
 
 // ── Styles ──────────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { styles, CP_ACCENT } from "./styles";
-import { X, Search, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { X, Search, ArrowUpDown, TriangleAlert } from "lucide-react";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
 
@@ -183,7 +183,7 @@ export default function ToolbarSection({
                 {sortBy !== "default" && (
                   <span style={{ letterSpacing: sortBy === "alpha" ? 0.5 : 0, display: "inline-flex", alignItems: "center" }}>
                     {SORT_OPTIONS.find(o => o.key === sortBy)?.badge === "alert"
-                      ? <AlertTriangle size={12} strokeWidth={2} />
+                      ? <TriangleAlert size={12} strokeWidth={2} />
                       : SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
                   </span>
                 )}

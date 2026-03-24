@@ -1,6 +1,6 @@
 import { styles, FONT_SANS, CP_ACCENT } from "./styles";
 import { getCatColor } from "../data/constants";
-import { CheckCircle, Database, Globe, Sparkles } from "lucide-react";
+import { CircleCheckBig, Database, Globe, Sparkles } from "lucide-react";
 import Logo from "./Logo";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
@@ -94,7 +94,7 @@ export default function ProcessingPhase({
         {isComplete ? (
           <>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <CheckCircle size={56} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
+              <CircleCheckBig size={56} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
               <h2 style={{ ...styles.procTitle, color: "#059669", fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
               <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>{total} entries organized and ready to explore</p>
             </div>

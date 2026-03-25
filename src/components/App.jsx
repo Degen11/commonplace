@@ -129,7 +129,7 @@ export default function Commonplace() {
 
   // Shared motion variants for phase transitions
   const phaseVariants = {
-    initial: { opacity: 0, y: 8 },
+    initial: { opacity: 0, y: 18 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
     exit: { opacity: 0, transition: { duration: 0.15, ease: "easeIn" } },
   };

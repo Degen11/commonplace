@@ -11,7 +11,7 @@ import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
   Sparkles, PenLine, Download, RefreshCw, Filter, Library,
-  Moon, Sun,
+  Moon, Sun, Loader,
 } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
@@ -823,11 +823,16 @@ export default function InputPhase({
                 )}
                 <button
                   className="proc-btn"
-                  style={{ ...styles.processBtn, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
+                  style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
                   onClick={onProcess}
                   disabled={!rawInput.trim() || isProcessing}
                 >
-                  {isProcessing ? "Processing..." : "Organize my collection \u2192"}
+                  {isProcessing ? (
+                    <>
+                      <Loader size={14} strokeWidth={2} className="spin" />
+                      Processing...
+                    </>
+                  ) : "Organize my collection \u2192"}
                 </button>
               </div>
             </div>

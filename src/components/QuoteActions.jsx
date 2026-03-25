@@ -81,6 +81,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                     setLocalCopied(true);
                     setCopyAnim(true);
                     setTimeout(() => setCopyAnim(false), 350);
+                    setTimeout(() => setLocalCopied(false), 2000);
                     actionProps.onCopy(q);
                   }
                 }}

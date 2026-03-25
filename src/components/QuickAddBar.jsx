@@ -162,6 +162,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
           fontSize: 12, color: "var(--cp-warning-text)",
           background: "var(--cp-warning-bg)",
           flexWrap: "wrap",
+          animation: "slideD .15s ease",
         }}>
           <TriangleAlert size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, minWidth: 0 }}>

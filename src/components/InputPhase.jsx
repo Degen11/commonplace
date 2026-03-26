@@ -555,7 +555,7 @@ function UrlImportPanel({ onLoad }) {
         <button
           onClick={() => handleFetch()}
           disabled={loading || !url.trim()}
-          style={{ padding: "10px 18px", borderRadius: 4, border: "none", background: loading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+          style={{ padding: "10px 18px", borderRadius: 4, border: "none", background: loading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap" }}
         >
           {loading ? "Fetching..." : "Fetch"}
         </button>

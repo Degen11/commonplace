@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 export function InlineSourceInput({ initial, onSave, onCancel, showHint = true }) {
   const [val, setVal] = useState(initial);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, animation: "slideD .12s ease" }}>
       <input
         style={styles.inlineSrcInput}
         value={val}

@@ -113,18 +113,21 @@ export default function ToolbarSection({
                     color: "var(--cp-text)", minWidth: 0,
                   }}
                 />
-                {search && (
-                  <button
-                    onClick={() => setSearch("")}
-                    style={{
-                      background: "transparent", border: "none",
-                      color: "var(--cp-text-muted)", padding: isMobile ? "8px" : "4px 6px",
-                      cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0,
-                    }}
-                  >
-                    <X size={12} strokeWidth={2} />
-                  </button>
-                )}
+                <button
+                  onClick={() => setSearch("")}
+                  style={{
+                    background: "transparent", border: "none",
+                    color: "var(--cp-text-muted)", padding: isMobile ? "8px" : "4px 6px",
+                    cursor: search ? "pointer" : "default",
+                    display: "flex", alignItems: "center", flexShrink: 0,
+                    opacity: search ? 1 : 0, pointerEvents: search ? "auto" : "none",
+                    transition: "opacity .15s ease",
+                  }}
+                  tabIndex={search ? 0 : -1}
+                  aria-label="Clear search"
+                >
+                  <X size={12} strokeWidth={2} />
+                </button>
                 {search && resultCount != null && (
                   <span style={{
                     fontSize: 10, fontWeight: 600, color: "var(--cp-text-muted)",

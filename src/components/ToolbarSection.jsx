@@ -152,7 +152,7 @@ export default function ToolbarSection({
                 <Search size={isMobile ? 18 : 15} strokeWidth={2} />
               </button>
             )}
-            {hasActiveFilters && (
+            {hasActiveFilters && !(search && catFilter === "All" && !favFilter && sortBy === "default") && (
               <button
                 className="reset-btn"
                 onClick={() => { clearFilters(); setShowSort(false); document.activeElement?.blur(); }}

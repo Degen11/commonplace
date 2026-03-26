@@ -2,6 +2,12 @@ export const CP_ACCENT       = "#3C5775";
 export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";
 export const CP_ACCENT_TEXT  = "#2D4259";
 
+// Primary accent at common opacity levels
+export const CP_ACCENT_06 = "rgba(60,87,117,0.06)";
+export const CP_ACCENT_08 = "rgba(60,87,117,0.08)";
+export const CP_ACCENT_10 = "rgba(60,87,117,0.10)";
+export const CP_ACCENT_40 = "rgba(60,87,117,0.40)";
+
 // ── Shared design constants ──
 // Eliminates hardcoded font stacks and color literals across components.
 export const FONT_SANS  = "'Satoshi',-apple-system,sans-serif";
@@ -15,6 +21,7 @@ export const CLR_AMBER   = "#D97706";
 export const CLR_ORANGE  = "#EA580C";
 export const CLR_VIOLET  = "#7C3AED";
 export const CLR_EMERALD = "#059669";
+export const CLR_GRAY    = "#9B9A97";
 
 // z-index scale: 50 pills, 59 overlays, 60 mini-header, 100 dropdowns, 200 tooltips, 500 bulk bar, 1000 modals, 2000 toasts
 export const baseCSS = `

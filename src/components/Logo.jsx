@@ -1,5 +1,7 @@
+import { CP_ACCENT } from "./styles";
+
 // ── Logo — Open book with bookmark ribbon ──
-export default function Logo({ size = 28, color = "#3C5775" }) {
+export default function Logo({ size = 28, color = CP_ACCENT }) {
   return (
     <svg
       width={size}

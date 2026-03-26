@@ -10,6 +10,7 @@ import useDndQuotes from "../hooks/useDndQuotes";
 
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesContext } from "../contexts/QuotesContext";
+import { ResultsProvider, useResultsContext } from "../contexts/ResultsContext";
 
 import { getCatColor, sanitizeName } from "../data/constants";
 import { similarity } from "../utils/textFormatting";
@@ -47,13 +48,14 @@ const CARD_HEIGHT_ESTIMATE = 160;
 const CARD_VIRTUALIZER_OVERSCAN = 8;
 
 // Virtualized card list for mobile — single column, window-scrolled
-function MobileCardList({
-  visible, selected, editingId, inlineEdit, deletingId, savedPulse,
-  overDragId, activeDragId, showConfidence, sortBy, allCats, customCats,
-  actionProps, toggleSel, startEditing, startInlineEdit,
-  saveEdit, saveInlineField, setInlineEdit, setEditingId, searchTerm,
-  newQuoteHighlight,
-}) {
+function MobileCardList({ visible, overDragId, activeDragId }) {
+  const {
+    selected, editingId, inlineEdit, deletingId, savedPulse,
+    showConfidence, sortBy, allCats, customCats,
+    actionProps, toggleSel, startEditing, startInlineEdit,
+    saveEdit, saveInlineField, setInlineEdit, setEditingId,
+    searchTerm, newQuoteHighlight,
+  } = useResultsContext();
   const listRef = useRef(null);
   const [scrollMargin, setScrollMargin] = useState(0);
 
@@ -568,10 +570,42 @@ export default function ResultsPhase({
     showToast,
   });
 
+  // ── Context value for child components ──
+
+  const resultsCtx = {
+    // Edit state
+    editingId, setEditingId,
+    inlineEdit, setInlineEdit,
+    selected, setSelected,
+    savedPulse,
+    toggleSel, selAll,
+    startEditing, startInlineEdit,
+    saveEdit, saveInlineField,
+    bulkEditCat, setBulkEditCat,
+    bulkEditSource, setBulkEditSource,
+    applyBulk, bulkDel,
+    // Action props
+    actionProps,
+    deletingId, copiedId, reidentifyingIds,
+    onAddToCollection: handleAddToCollection,
+    onRemoveFromCollection: handleRemoveFromCollection,
+    batchReIdentify,
+    // View preferences
+    showConfidence, sortBy, compact, view,
+    searchTerm: search,
+    isMobile,
+    // Common data
+    allCats, customCats,
+    columnOrder, setColumnOrder,
+    collections, activeCollectionId,
+    // Highlight
+    newQuoteHighlight,
+  };
+
   // ── Render ──
 
   return (
-    <>
+    <ResultsProvider value={resultsCtx}>
       <ResultsModals
         showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts}
         shareImageQuote={shareImageQuote} setShareImageQuote={setShareImageQuote} showToast={showToast}
@@ -716,22 +750,8 @@ export default function ResultsPhase({
               style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 500 }}
             >
             <BulkBar
-              selected={selected}
-              setSelected={setSelected}
-              bulkEditCat={bulkEditCat}
-              setBulkEditCat={setBulkEditCat}
-              bulkEditSource={bulkEditSource}
-              setBulkEditSource={setBulkEditSource}
-              allCats={allCats}
-              applyBulk={applyBulk}
               onDelete={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}
               onBatchReIdentify={() => batchReIdentify(selected)}
-              isReidentifying={reidentifyingIds.size > 0}
-              collections={collections}
-              onAddToCollection={handleAddToCollection}
-              onRemoveFromCollection={handleRemoveFromCollection}
-              activeCollectionId={activeCollectionId}
-              isMobile={isMobile}
             />
             </motion.div>
           )}
@@ -899,29 +919,7 @@ export default function ResultsPhase({
               <SortableContext items={visible.map(q => q.id)} strategy={verticalListSortingStrategy}>
               <TableView
                 filtered={visible}
-                selected={selected}
-                toggleSel={toggleSel}
-                selAll={selAll}
-                editingId={editingId}
-                setEditingId={setEditingId}
-                inlineEdit={inlineEdit}
-                setInlineEdit={setInlineEdit}
-                saveEdit={saveEdit}
-                saveInlineField={saveInlineField}
-                allCats={allCats}
-                customCats={customCats}
-                actionProps={actionProps}
-                compact={compact}
-                showConfidence={showConfidence}
-                columnOrder={columnOrder}
-                setColumnOrder={setColumnOrder}
-                sortBy={sortBy}
-                isMobile={isMobile}
-                savedPulse={savedPulse}
-                deletingId={deletingId}
-                searchTerm={search}
                 toolbarHeight={toolbarHeight}
-                newQuoteHighlight={newQuoteHighlight}
                 dndReorderRef={dndReorderRef}
               />
               </SortableContext>
@@ -936,27 +934,8 @@ export default function ResultsPhase({
               {isMobile ? (
                 <MobileCardList
                   visible={visible}
-                  selected={selected}
-                  editingId={editingId}
-                  inlineEdit={inlineEdit}
-                  deletingId={deletingId}
-                  savedPulse={savedPulse}
                   overDragId={overDragId}
                   activeDragId={activeDragId}
-                  showConfidence={showConfidence}
-                  sortBy={sortBy}
-                  allCats={allCats}
-                  customCats={customCats}
-                  actionProps={actionProps}
-                  toggleSel={toggleSel}
-                  startEditing={startEditing}
-                  startInlineEdit={startInlineEdit}
-                  saveEdit={saveEdit}
-                  saveInlineField={saveInlineField}
-                  setInlineEdit={setInlineEdit}
-                  setEditingId={setEditingId}
-                  searchTerm={search}
-                  newQuoteHighlight={newQuoteHighlight}
                 />
               ) : (
               <div style={{ columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
@@ -1137,6 +1116,6 @@ export default function ResultsPhase({
           </DragOverlay>
           </DndContext>
         </div>
-    </>
+    </ResultsProvider>
   );
 }

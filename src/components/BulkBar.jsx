@@ -1,26 +1,23 @@
 import clsx from "clsx";
 import { styles } from "./styles";
 import { X, RefreshCw, FolderMinus, Trash2 } from "lucide-react";
+import { useResultsContext } from "../contexts/ResultsContext";
 
 function Divider() {
   return <div style={styles.bulkDivider} />;
 }
 
-export default function BulkBar({
-  selected, setSelected,
-  bulkEditCat, setBulkEditCat,
-  bulkEditSource, setBulkEditSource,
-  allCats,
-  applyBulk,
-  onDelete,
-  onBatchReIdentify,
-  isReidentifying,
-  collections,
-  onAddToCollection,
-  onRemoveFromCollection,
-  activeCollectionId,
-  isMobile,
-}) {
+export default function BulkBar({ onDelete, onBatchReIdentify }) {
+  const {
+    selected, setSelected,
+    bulkEditCat, setBulkEditCat,
+    bulkEditSource, setBulkEditSource,
+    allCats, applyBulk,
+    reidentifyingIds,
+    collections, activeCollectionId, isMobile,
+    onAddToCollection, onRemoveFromCollection,
+  } = useResultsContext();
+  const isReidentifying = reidentifyingIds.size > 0;
   const hasCollections = collections && collections.length > 0;
 
   // Shared inline button style for dark-bg context

@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { styles, CP_ACCENT } from "./styles";
+import { styles, CP_ACCENT, CLR_AMBER, CLR_ORANGE, CLR_BLUE } from "./styles";
 import { X, Search, ArrowUpDown, TriangleAlert } from "lucide-react";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
@@ -57,7 +57,7 @@ export default function ToolbarSection({
               style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
               <div role="button" className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)", ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</div>
               {favCount > 0 && (
-                <div role="button" className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: "#D97706" } : {}) }}>
+                <div role="button" className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
                   ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
                 </div>
               )}
@@ -68,7 +68,7 @@ export default function ToolbarSection({
                 return <div key={c} role="button" className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, borderColor: on ? col.bg : "var(--cp-border)", ...(on ? { background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}><AnimatedNumber value={count} /></span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
-                  {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EA580C", position: "absolute", top: 2, right: 2 }} />}
+                  {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, position: "absolute", top: 2, right: 2 }} />}
                   {customCats.includes(c) && <span title="Remove category" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
                 </div>;
               })}
@@ -172,7 +172,7 @@ export default function ToolbarSection({
                 onClick={() => setShowSort(!showSort)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: sortBy !== "default" ? "#2563EB" : "var(--cp-text-muted)",
+                  color: sortBy !== "default" ? CLR_BLUE : "var(--cp-text-muted)",
                   padding: isMobile ? "8px" : "4px 6px", display: "flex", alignItems: "center", gap: 3, borderRadius: 6,
                   fontWeight: sortBy !== "default" ? 600 : 400,
                   fontSize: 11,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ClipboardList, Zap, CircleCheckBig, RefreshCw } from "lucide-react";
-import { CP_ACCENT, FONT_SANS } from "./styles";
+import { CP_ACCENT, CP_ACCENT_06, CP_ACCENT_08, CP_ACCENT_MUTED, FONT_SANS } from "./styles";
 
 // ── Data ────────────────────────────────────────────────────────────────────
 const RAW_LINES = [
@@ -50,7 +50,7 @@ const S = {
     fontSize: 14,
     fontWeight: active || done ? 600 : 400,
     color: active ? CP_ACCENT : done ? "var(--cp-text)" : "var(--cp-text-faint)",
-    background: active ? "rgba(60,87,117,0.08)" : "transparent",
+    background: active ? CP_ACCENT_08 : "transparent",
     transition: "all 0.4s ease",
     whiteSpace: "nowrap",
   }),
@@ -126,8 +126,8 @@ const S = {
     padding: "8px 12px",
     background: "var(--cp-bg-card)",
     borderRadius: 6,
-    border: "1px solid rgba(60,87,117,0.12)",
-    boxShadow: "0 1px 3px rgba(60,87,117,0.06)",
+    border: `1px solid ${CP_ACCENT_MUTED}`,
+    boxShadow: `0 1px 3px ${CP_ACCENT_06}`,
     opacity: visible ? 1 : 0,
     transform: visible ? "translateY(0)" : "translateY(8px)",
     transition: "opacity 0.4s ease, transform 0.4s ease",

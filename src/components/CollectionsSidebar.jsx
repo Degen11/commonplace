@@ -8,7 +8,7 @@ import {
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
 } from "lucide-react";
-import { CP_ACCENT, FONT_SANS, styles } from "./styles";
+import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_RED, CLR_AMBER } from "./styles";
 import AnimatedNumber from "./AnimatedNumber";
 
 // Icon set for the picker
@@ -103,7 +103,7 @@ function CollectionRow({
       style={{
         display: "flex", alignItems: "center", gap: 6,
         padding: "7px 8px", borderRadius: 6, cursor: "pointer",
-        background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "transparent",
+        background: dragOver ? CP_ACCENT_MUTED : isActive ? "var(--cp-bg-hover)" : "transparent",
         transition: "background .12s, transform .15s ease",
         position: "relative",
         ...(dragOver ? { transform: "scale(1.03)", outline: "2px solid var(--cp-drag-insert)", outlineOffset: -2, animation: "dropGlow .8s ease infinite" } : {}),
@@ -157,7 +157,7 @@ function CollectionRow({
         position: "absolute", right: 0, top: 0, bottom: 0,
         display: "flex", alignItems: "center", gap: 2,
         paddingLeft: 12, paddingRight: 6,
-        background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "var(--cp-bg)",
+        background: dragOver ? CP_ACCENT_MUTED : isActive ? "var(--cp-bg-hover)" : "var(--cp-bg)",
         opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none",
         transition: "opacity .1s",
       }}>
@@ -165,7 +165,7 @@ function CollectionRow({
           <button
             onClick={e => { e.stopPropagation(); deleteCollection(c.id); setConfirmDeleteId(null); }}
             style={{
-              background: "none", border: "none", cursor: "pointer", color: "#DC2626",
+              background: "none", border: "none", cursor: "pointer", color: CLR_RED,
               padding: "2px 4px", fontSize: 11, fontWeight: 600, fontFamily: "inherit",
             }}
           >
@@ -202,7 +202,7 @@ function CollapsedDropTarget({ c, isActive, setActiveCollectionId, Icon }) {
       ref={setNodeRef}
       onClick={() => setActiveCollectionId(c.id)}
       style={{
-        background: dragOver ? "rgba(60,87,117,0.12)" : isActive ? "var(--cp-bg-hover)" : "none",
+        background: dragOver ? CP_ACCENT_MUTED : isActive ? "var(--cp-bg-hover)" : "none",
         border: "none", cursor: "pointer",
         color: isActive ? "var(--cp-accent)" : "var(--cp-text-muted)",
         padding: 6, borderRadius: 6,
@@ -416,7 +416,7 @@ export default function CollectionsSidebar({
         {favCount > 0 && (
           <div style={styles.sidebarOverviewRow}>
             <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Star size={13} strokeWidth={1.5} /> Favorites</span>
-            <span style={{ ...styles.sidebarOverviewValue, color: "#D97706" }}><AnimatedNumber value={favCount} /></span>
+            <span style={{ ...styles.sidebarOverviewValue, color: CLR_AMBER }}><AnimatedNumber value={favCount} /></span>
           </div>
         )}
         {onFindDupes && (
@@ -440,7 +440,7 @@ export default function CollectionsSidebar({
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{
               display: "flex", gap: 0, alignItems: "center",
-              border: `1px solid ${createError ? "#DC2626" : "var(--cp-accent)"}`, borderRadius: 6,
+              border: `1px solid ${createError ? CLR_RED : "var(--cp-accent)"}`, borderRadius: 6,
               background: "var(--cp-bg-card)", overflow: "hidden",
             }}>
               <input
@@ -468,7 +468,7 @@ export default function CollectionsSidebar({
               </button>
             </div>
             {createError && (
-              <span style={{ fontSize: 11, color: "#DC2626", paddingLeft: 2 }}>{createError}</span>
+              <span style={{ fontSize: 11, color: CLR_RED, paddingLeft: 2 }}>{createError}</span>
             )}
           </div>
         ) : (
@@ -489,7 +489,7 @@ export default function CollectionsSidebar({
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <div style={{
                 display: "flex", gap: 0, alignItems: "center",
-                border: `1px solid ${smartGroupError ? "#DC2626" : "var(--cp-accent)"}`,
+                border: `1px solid ${smartGroupError ? CLR_RED : "var(--cp-accent)"}`,
                 borderRadius: 6, background: "var(--cp-bg-card)",
                 opacity: smartGroupLoading ? 0.6 : 1,
                 overflow: "hidden",
@@ -526,7 +526,7 @@ export default function CollectionsSidebar({
                 </button>
               </div>
               {smartGroupError && (
-                <span style={{ fontSize: 11, color: "#DC2626", paddingLeft: 2 }}>{smartGroupError}</span>
+                <span style={{ fontSize: 11, color: CLR_RED, paddingLeft: 2 }}>{smartGroupError}</span>
               )}
             </div>
           ) : (

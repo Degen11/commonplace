@@ -1025,6 +1025,7 @@ export default function ResultsPhase({
               search={search} setSearch={setSearch}
               setSortBy={setSortBy}
               customCats={customCats}
+              totalCount={quotes.length}
               activeCollectionName={activeCollectionId ? collections.find(c => c.id === activeCollectionId)?.name : null}
               onBrowseAll={activeCollectionId ? () => setActiveCollectionId(null) : null}
             />

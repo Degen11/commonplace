@@ -209,7 +209,7 @@ export default function AddMorePanel({
             <button
               onClick={() => handleUrlFetch()}
               disabled={urlLoading || !urlInput.trim()}
-              style={{ padding: "7px 12px", borderRadius: 6, border: "none", background: urlLoading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 12, fontWeight: 600, cursor: urlLoading ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+              style={{ padding: "7px 12px", borderRadius: 6, border: "none", background: urlLoading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 12, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap" }}
             >
               {urlLoading ? "..." : "Fetch"}
             </button>

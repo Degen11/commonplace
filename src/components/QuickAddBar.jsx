@@ -138,7 +138,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
               padding: isMobile ? "8px 18px" : "6px 14px", fontSize: 13, fontWeight: 500, fontFamily: "inherit",
               background: text.trim() ? "var(--cp-accent)" : "var(--cp-bg-tab)",
               color: text.trim() ? "#fff" : "var(--cp-text-muted)",
-              border: "none", borderRadius: 6, cursor: text.trim() ? "pointer" : "default",
+              border: "none", borderRadius: 6,
               whiteSpace: "nowrap",
             }}
           >

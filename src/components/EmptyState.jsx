@@ -1,6 +1,7 @@
-import { X, Library } from "lucide-react";
+import { X, Library, RotateCcw } from "lucide-react";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
+import { pluralize } from "../utils/helpers";
 
 // Inline SVG illustration — empty collection (open folder with documents)
 function EmptyCollectionIllustration() {
@@ -59,6 +60,7 @@ export default function EmptyState({
   search, setSearch,
   setSortBy,
   customCats,
+  totalCount,
   activeCollectionName,
   onBrowseAll,
 }) {
@@ -100,7 +102,9 @@ export default function EmptyState({
             No results found{activeCollectionName ? ` in "${activeCollectionName}"` : ""}
           </p>
           <p style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 16 }}>
-            Try removing a filter to see more entries
+            {totalCount > 0
+              ? `${pluralize(totalCount, "quote")} hidden by current filters`
+              : "Try removing a filter to see more entries"}
           </p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 12 }}>
             {catFilter !== "All" && (
@@ -116,13 +120,16 @@ export default function EmptyState({
                 onClick={() => setFavFilter(false)}>&star; Favorites <X size={10} strokeWidth={2} /></button>
             )}
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", animation: "slideD .2s ease" }}>
             <button className="reset-btn" style={{
-              background: "var(--cp-bg-tab)", border: "none", color: "var(--cp-text-muted)", cursor: "pointer",
-              fontSize: 13, fontFamily: "inherit", fontWeight: 500, padding: "8px 20px",
+              background: "var(--cp-accent)", border: "none", color: "#fff", cursor: "pointer",
+              fontSize: 13, fontFamily: "inherit", fontWeight: 600, padding: "9px 22px",
               borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 6,
             }}
-              onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>Reset all filters</button>
+              onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>
+              <RotateCcw size={13} strokeWidth={2} />
+              Reset all filters
+            </button>
             {onBrowseAll && (
               <button
                 className="hdr-btn"

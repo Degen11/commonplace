@@ -53,7 +53,6 @@ export default function OnboardingModal() {
       popupStyle={{
         background: "var(--cp-bg-card)", borderRadius: 6, padding: 28,
         maxWidth: 420, width: "100%",
-        animation: "modalScaleIn .2s ease-out",
       }}
     >
       <AnimatePresence mode="wait">

@@ -572,7 +572,7 @@ function UrlImportPanel({ onLoad }) {
             style={{
               padding: "3px 10px",
               borderRadius: 50,
-              border: extractMode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
+              border: extractMode === m.value ? `1px solid ${CP_ACCENT}` : "1px solid var(--cp-border)",
               background: extractMode === m.value ? CP_ACCENT_10 : "transparent",
               color: extractMode === m.value ? CP_ACCENT : "var(--cp-text-muted)",
               fontSize: 11,

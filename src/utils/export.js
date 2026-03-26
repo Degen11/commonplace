@@ -31,12 +31,13 @@ function quoteFields(q, colMap) {
 }
 
 // Iterate grouped quotes with per-category and per-quote callbacks.
-function forEachGrouped(quotes, collections, { onCategory, onQuote }) {
+function forEachGrouped(quotes, collections, { onCategory, onQuote, onCategoryEnd }) {
   const colMap = buildCollectionMap(collections);
   const grouped = groupByCategory(quotes);
   Object.entries(grouped).forEach(([cat, qs]) => {
     onCategory(cat);
     qs.forEach(q => onQuote(quoteFields(q, colMap), q));
+    if (onCategoryEnd) onCategoryEnd(cat);
   });
 }
 
@@ -84,8 +85,8 @@ export function exportMD(quotes, collections) {
         ? md += `> \u201C${f.text}\u201D\n> \u2014 *${f.source}*${star}${c}\n\n`
         : md += `- ${f.text} \u2014 ${f.source}${star}${c}\n`;
     },
+    onCategoryEnd() { md += "\n"; },
   });
-  md += "\n";
   download(md, "commonplace-export.md", "text/markdown");
 }
 
@@ -112,8 +113,8 @@ export function exportTXT(quotes, collections) {
       const c = cols ? ` [${cols}]` : "";
       isQuoted ? text += `"${t}" \u2014 ${source}${fav}${c}\n` : text += `${t} \u2014 ${source}${fav}${c}\n`;
     },
+    onCategoryEnd() { text += "\n"; },
   });
-  text += "\n";
   download(text.trim(), "commonplace-export.txt", "text/plain");
 }
 
@@ -142,8 +143,8 @@ export function copyToClipboard(quotes, collections) {
       const c = cols ? ` [${cols}]` : "";
       isQuoted ? text += `"${t}" \u2014 ${source}${fav}${c}\n` : text += `${t} \u2014 ${source}${fav}${c}\n`;
     },
+    onCategoryEnd() { text += "\n"; },
   });
-  text += "\n";
   return navigator.clipboard.writeText(text.trim());
 }
 

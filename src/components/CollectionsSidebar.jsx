@@ -8,7 +8,7 @@ import {
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
 } from "lucide-react";
-import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_RED, CLR_AMBER } from "./styles";
+import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_RED, CLR_AMBER, CLR_GREEN } from "./styles";
 import AnimatedNumber from "./AnimatedNumber";
 
 // Icon set for the picker
@@ -87,7 +87,7 @@ function CollectionRow({
           }}
           autoFocus
         />
-        <button onClick={() => handleRename(c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#16A34A", padding: 2 }}>
+        <button onClick={() => handleRename(c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: CLR_GREEN, padding: 2 }}>
           <Check size={14} strokeWidth={2} />
         </button>
         <button onClick={() => setEditingId(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}>

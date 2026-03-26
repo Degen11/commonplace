@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import useLatestRef from "./useLatestRef";
 
 /**
  * Keyboard shortcuts for the results phase.
@@ -26,14 +27,13 @@ export default function useKeyboardShortcuts({
   lastSelectedIndex,
   showToast,
 }) {
-  const stateRef = useRef({});
-  useEffect(() => {
-    stateRef.current = {
-      phase, search, editingId, inlineEdit,
-      selected, confirmClear, confirmBulkDel,
-      showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
-      reviewQueue, selAll, visible, filtered, hasMore, loadMore, onFav, handleDelete, bulkDel,
-    };
+  // Pack all readable state into a single ref — avoids re-registering the
+  // keydown listener on every state change while keeping reads fresh.
+  const stateRef = useLatestRef({
+    phase, search, editingId, inlineEdit,
+    selected, confirmClear, confirmBulkDel,
+    showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
+    reviewQueue, selAll, visible, filtered, hasMore, loadMore, onFav, handleDelete, bulkDel,
   });
 
   useEffect(() => {

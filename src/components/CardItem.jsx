@@ -10,7 +10,7 @@ import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import clsx from "clsx";
-import { styles, cardStyles } from "./styles";
+import { styles, cardStyles, CP_ACCENT, CLR_RED } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
 
@@ -81,7 +81,7 @@ const CardItem = memo(function CardItem({
           display: "flex", alignItems: "center",
           justifyContent: isSwipingLeft ? "flex-end" : "flex-start",
           padding: "0 20px",
-          color: isSwipingLeft ? "#DC2626" : "#F59E0B",
+          color: isSwipingLeft ? CLR_RED : "#F59E0B",
           fontSize: 13, fontWeight: 600, gap: 6, opacity: swipeProgress,
         }}>
           {isSwipingLeft ? <><Trash2 size={15} /> Delete</> : <><Heart size={15} /> Favorite</>}
@@ -101,7 +101,7 @@ const CardItem = memo(function CardItem({
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
-        ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? "inset 0 2px 0 #3C5775" : null].filter(Boolean).join(", ") || undefined },
+        ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? `inset 0 2px 0 ${CP_ACCENT}` : null].filter(Boolean).join(", ") || undefined },
         ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),
       }}
       onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
-import { styles, CP_ACCENT, FONT_SANS, FONT_SERIF } from "./styles";
+import { styles, CP_ACCENT, CP_ACCENT_06, CP_ACCENT_10, FONT_SANS, FONT_SERIF, CLR_EMERALD } from "./styles";
 import { API_HEADERS } from "../utils/api";
 import { smartSplit, basicFormat } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
@@ -86,7 +86,7 @@ const HP = {
     position: "absolute",
     width: 600,
     height: 300,
-    background: "radial-gradient(ellipse, rgba(60,87,117,0.06) 0%, transparent 70%)",
+    background: `radial-gradient(ellipse, ${CP_ACCENT_06} 0%, transparent 70%)`,
     pointerEvents: "none",
     top: "40%",
     left: "25%",
@@ -474,7 +474,7 @@ function FormattingPreview({ rawInput }) {
           {samples.map((s, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <div style={{ color: "var(--cp-text-muted)", textDecoration: "line-through", opacity: 0.7, lineHeight: 1.4, wordBreak: "break-word" }}>{s.before}</div>
-              <div style={{ color: "#059669", lineHeight: 1.4, wordBreak: "break-word" }}>{s.after}</div>
+              <div style={{ color: CLR_EMERALD, lineHeight: 1.4, wordBreak: "break-word" }}>{s.after}</div>
               {i < samples.length - 1 && <div style={{ borderBottom: "1px solid var(--cp-border-light)", margin: "2px 0" }} />}
             </div>
           ))}
@@ -573,8 +573,8 @@ function UrlImportPanel({ onLoad }) {
               padding: "3px 10px",
               borderRadius: 50,
               border: extractMode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
-              background: extractMode === m.value ? "rgba(60,87,117,0.10)" : "transparent",
-              color: extractMode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-muted)",
+              background: extractMode === m.value ? CP_ACCENT_10 : "transparent",
+              color: extractMode === m.value ? CP_ACCENT : "var(--cp-text-muted)",
               fontSize: 11,
               fontWeight: extractMode === m.value ? 600 : 400,
               cursor: "pointer",

@@ -1,4 +1,4 @@
-import { styles, FONT_SANS, CP_ACCENT } from "./styles";
+import { styles, FONT_SANS, CP_ACCENT, CLR_EMERALD, CLR_BLUE, CLR_VIOLET } from "./styles";
 import { getCatColor } from "../data/constants";
 import { CircleCheckBig, Database, Globe, Sparkles } from "lucide-react";
 import Logo from "./Logo";
@@ -22,7 +22,7 @@ function ProgressRing({ pct, isComplete }) {
         <circle
           cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
           fill="none"
-          stroke={isComplete ? "#059669" : CP_ACCENT}
+          stroke={isComplete ? CLR_EMERALD : CP_ACCENT}
           strokeWidth={RING_STROKE}
           strokeDasharray={RING_CIRCUMFERENCE}
           strokeDashoffset={offset}
@@ -32,7 +32,7 @@ function ProgressRing({ pct, isComplete }) {
       </svg>
       <span style={{
         position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 18, fontWeight: 700, fontFamily: FONT_SANS, color: isComplete ? "#059669" : "var(--cp-text-secondary)",
+        fontSize: 18, fontWeight: 700, fontFamily: FONT_SANS, color: isComplete ? CLR_EMERALD : "var(--cp-text-secondary)",
         letterSpacing: "-0.02em",
       }}>
         {pct}%
@@ -94,8 +94,8 @@ export default function ProcessingPhase({
         {isComplete ? (
           <>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <CircleCheckBig size={56} color="#059669" strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
-              <h2 style={{ ...styles.procTitle, color: "#059669", fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
+              <CircleCheckBig size={56} color={CLR_EMERALD} strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
+              <h2 style={{ ...styles.procTitle, color: CLR_EMERALD, fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
               <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>{total} entries organized and ready to explore</p>
             </div>
             {stats && (
@@ -105,19 +105,19 @@ export default function ProcessingPhase({
               }}>
                 {stats.local > 0 && (
                   <div style={statChipStyle}>
-                    <Database size={13} strokeWidth={1.5} color="#059669" />
+                    <Database size={13} strokeWidth={1.5} color={CLR_EMERALD} />
                     {pluralize(stats.local, "match", "matches")} from local DB
                   </div>
                 )}
                 {stats.lookup > 0 && (
                   <div style={statChipStyle}>
-                    <Globe size={13} strokeWidth={1.5} color="#2563EB" />
+                    <Globe size={13} strokeWidth={1.5} color={CLR_BLUE} />
                     {stats.lookup} found online
                   </div>
                 )}
                 {stats.api > 0 && (
                   <div style={statChipStyle}>
-                    <Sparkles size={13} strokeWidth={1.5} color="#7C3AED" />
+                    <Sparkles size={13} strokeWidth={1.5} color={CLR_VIOLET} />
                     {stats.api} identified by AI
                   </div>
                 )}
@@ -135,9 +135,9 @@ export default function ProcessingPhase({
           <div style={styles.procCard}>
             <div style={styles.procTop}>
               <span style={{ fontWeight: 600 }}><AnimatedNumber value={doneCount} /> of {total}</span>
-              <span style={{ color: isComplete ? "#059669" : "var(--cp-text-muted)" }}><AnimatedNumber value={pct} />%</span>
+              <span style={{ color: isComplete ? CLR_EMERALD : "var(--cp-text-muted)" }}><AnimatedNumber value={pct} />%</span>
             </div>
-            <div style={styles.track}><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: "#059669" } : {}) }} /></div>
+            <div style={styles.track}><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
           </div>
         )}

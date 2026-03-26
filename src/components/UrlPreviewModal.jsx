@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { X, Check, Eye, Filter } from "lucide-react";
 import { Dialog } from "@base-ui/react/dialog";
-import { styles } from "./styles";
+import { styles, CP_ACCENT, CP_ACCENT_10 } from "./styles";
+import ModalShell from "./ModalShell";
 
 const EXTRACT_MODES = [
   { value: "all", label: "Everything", desc: "All text content from the page" },
@@ -48,26 +49,13 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
   const lines = preview.lines;
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <Dialog.Portal>
-        <Dialog.Backdrop
-          style={{
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,.45)",
-            zIndex: 1000,
-            animation: "overlayFade .15s ease-out",
-          }}
-        />
-        <div style={{
-          position: "fixed", inset: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 1000, padding: 20,
-          pointerEvents: "none",
-          animation: "fadeUp .15s ease-out",
-        }}>
-          <Dialog.Popup
-            style={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)", pointerEvents: "auto" }}
-          >
+    <ModalShell
+      onClose={onCancel}
+      backdropBg="rgba(0,0,0,.45)"
+      backdropExtra={{ backdropFilter: "none", WebkitBackdropFilter: "none", animation: "overlayFade .15s ease-out" }}
+      containerExtra={{ animation: "fadeUp .15s ease-out" }}
+      popupStyle={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)" }}
+    >
             {/* Header */}
             <div style={styles.dupeModalHeader}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -99,8 +87,8 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
                       padding: "4px 10px",
                       borderRadius: 50,
                       border: mode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
-                      background: mode === m.value ? "rgba(60,87,117,0.10)" : "var(--cp-bg-card)",
-                      color: mode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-muted)",
+                      background: mode === m.value ? CP_ACCENT_10 : "var(--cp-bg-card)",
+                      color: mode === m.value ? CP_ACCENT : "var(--cp-text-muted)",
                       fontSize: 11,
                       fontWeight: mode === m.value ? 600 : 500,
                       cursor: "pointer",
@@ -186,7 +174,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
                 <span style={{ color: "var(--cp-border-dim)" }}>|</span>
                 <button
                   onClick={selectAll}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-accent, #3C5775)", fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: CP_ACCENT, fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
                 >
                   All
                 </button>
@@ -211,10 +199,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
                 </button>
               </div>
             </div>
-          </Dialog.Popup>
-        </div>
-      </Dialog.Portal>
-    </Dialog.Root>
+    </ModalShell>
   );
 }
 

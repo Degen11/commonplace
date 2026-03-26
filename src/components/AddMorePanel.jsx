@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
-import { styles } from "./styles";
+import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
 import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
@@ -179,7 +179,7 @@ export default function AddMorePanel({
             />
             <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center", marginBottom: 8 }}>
               {isDragOver
-                ? <FolderOpen size={24} color="#2563EB" strokeWidth={1.5} />
+                ? <FolderOpen size={24} color={CLR_BLUE} strokeWidth={1.5} />
                 : <FileText size={24} color="var(--cp-text-muted)" strokeWidth={1.5} />}
             </div>
             <div style={{ ...styles.dropTitle, fontSize: 13 }}>{isDragOver ? "Drop it!" : "Drop a file or click to browse"}</div>
@@ -227,8 +227,8 @@ export default function AddMorePanel({
                   padding: "2px 8px",
                   borderRadius: 50,
                   border: extractMode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
-                  background: extractMode === m.value ? "rgba(60,87,117,0.10)" : "transparent",
-                  color: extractMode === m.value ? "var(--cp-accent, #3C5775)" : "var(--cp-text-faint)",
+                  background: extractMode === m.value ? CP_ACCENT_10 : "transparent",
+                  color: extractMode === m.value ? CP_ACCENT : "var(--cp-text-faint)",
                   fontSize: 10,
                   fontWeight: extractMode === m.value ? 600 : 400,
                   cursor: "pointer",
@@ -241,7 +241,7 @@ export default function AddMorePanel({
             ))}
           </div>
 
-          {urlError && <div style={{ marginTop: 6, fontSize: 11, color: "#DC2626" }}>{urlError}</div>}
+          {urlError && <div style={{ marginTop: 6, fontSize: 11, color: CLR_RED }}>{urlError}</div>}
 
           {addMoreInput.trim() && (
             <>
@@ -254,7 +254,7 @@ export default function AddMorePanel({
                     onClick={() => setShowEntryPreview(p => !p)}
                     style={{
                       background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
-                      fontSize: 11, color: "var(--cp-accent, #3C5775)", fontWeight: 500, padding: "2px 6px",
+                      fontSize: 11, color: CP_ACCENT, fontWeight: 500, padding: "2px 6px",
                       borderRadius: 4, display: "inline-flex", alignItems: "center", gap: 3,
                       transition: "background .12s",
                     }}

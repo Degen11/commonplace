@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { styles } from "./styles";
+import { styles, CLR_RED } from "./styles";
 import { TriangleAlert, Zap, Bot, Globe, CircleX, RefreshCw, Eye, X } from "lucide-react";
 
 // Shared animation variants for notification bars (slide down in, slide up out)
@@ -65,7 +65,7 @@ export default function NotificationBars({
             {stats.lookup > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={13} strokeWidth={2} /> <strong>{stats.lookup}</strong> found online</span></>}
             <span style={styles.statDot} />
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
-            {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4 }}><CircleX size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
+            {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: CLR_RED, display: "inline-flex", alignItems: "center", gap: 4 }}><CircleX size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
             {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
             <button style={styles.statsDismiss} onClick={dismissStats}><X size={14} strokeWidth={2} /></button>
           </div>

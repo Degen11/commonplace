@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import useLatestRef from "./useLatestRef";
 import { fallbackCategory, QUOTED_CATS } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
@@ -14,10 +15,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
 
   const reidentifyAbortRefs  = useRef(new Map());
-  const quotesRef            = useRef(quotes);
-  useEffect(() => { quotesRef.current = quotes; }, [quotes]);
-  const collectionsRef       = useRef(collections);
-  useEffect(() => { collectionsRef.current = collections; }, [collections]);
+  const quotesRef            = useLatestRef(quotes);
+  const collectionsRef       = useLatestRef(collections);
 
   // Abort all in-flight re-identify requests on unmount
   useEffect(() => {

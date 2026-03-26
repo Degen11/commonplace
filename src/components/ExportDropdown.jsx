@@ -8,7 +8,7 @@ import {
   exportCSV, exportMD, exportJSON, exportTXT,
   copyToClipboard, richCopyToClipboard, encodeShareData,
 } from "../utils/export";
-import { styles } from "./styles";
+import { styles, CLR_EMERALD } from "./styles";
 import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH, API_TIMEOUT_MS } from "../config";
 
 const menuPopupStyle = {
@@ -170,7 +170,7 @@ export default function ExportDropdown({
             </>)}
             {selected.size > 0 && (<>
               <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
-              <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#059669", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
+              <div style={{ padding: "6px 12px 4px", fontSize: 11, color: CLR_EMERALD, borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
                 Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
               </div>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel, collections).then(() => showToast(`Copied ${sel.length} selected entries`, null, null, "success")); close(); }}>

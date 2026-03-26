@@ -1,4 +1,5 @@
-import { useReducer, useRef, useEffect } from "react";
+import { useReducer, useRef } from "react";
+import useLatestRef from "./useLatestRef";
 import { buildValidCats, fallbackCategory } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
@@ -94,10 +95,8 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const appendModeRef = useRef(false);
 
   // Refs for latest values — so callbacks never read stale closures
-  const quotesRef = useRef(quotes);
-  useEffect(() => { quotesRef.current = quotes; }, [quotes]);
-  const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
+  const quotesRef = useLatestRef(quotes);
+  const stateRef = useLatestRef(state);
 
   // ── API: batch identification ──
   const identifyBatch = async (items, withFormatting = false, externalSignal) => {

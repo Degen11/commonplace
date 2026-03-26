@@ -9,10 +9,11 @@ import useLongPress from "../hooks/useLongPress";
 import { displayText } from "../utils/export";
 import { getCatColor, CONF_LABELS } from "../data/constants";
 import clsx from "clsx";
-import { styles } from "./styles";
+import { styles, CLR_EMERALD, CP_ACCENT_40 } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis } from "lucide-react";
 import HighlightText from "./HighlightText";
+import { useResultsContext } from "../contexts/ResultsContext";
 
 
 // Column configuration — original flex-based layout
@@ -64,7 +65,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
                 closeOnClick={false}
-                style={{ ...styles.overflowMenuItem, ...(localCopied ? { color: "#059669" } : {}) }}
+                style={{ ...styles.overflowMenuItem, ...(localCopied ? { color: CLR_EMERALD } : {}) }}
                 onClick={() => { if (!localCopied) { setLocalCopied(true); actionProps.onCopy(q); } }}
               >
                 {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
@@ -269,31 +270,19 @@ const TableRow = memo(function TableRow({
 // to recalculate and measureElement refs to re-fire, producing visible shake.
 const TableView = memo(function TableView({
   filtered,
-  selected,
-  toggleSel,
-  selAll,
-  editingId,
-  setEditingId,
-  inlineEdit,
-  setInlineEdit,
-  saveEdit,
-  saveInlineField,
-  allCats,
-  customCats,
-  actionProps,
-  compact,
-  showConfidence,
-  columnOrder,
-  setColumnOrder,
-  sortBy,
-  isMobile,
-  savedPulse,
-  deletingId,
-  searchTerm,
   toolbarHeight = 44,
-  newQuoteHighlight,
   dndReorderRef,
 }) {
+  const {
+    selected, toggleSel, selAll,
+    editingId, setEditingId,
+    inlineEdit, setInlineEdit,
+    saveEdit, saveInlineField,
+    allCats, customCats, actionProps,
+    compact, showConfidence, columnOrder, setColumnOrder,
+    sortBy, isMobile, savedPulse, deletingId,
+    searchTerm, newQuoteHighlight,
+  } = useResultsContext();
   const [dragColId, setDragColId] = useState(null);
   const [dragColOver, setDragColOver] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -428,7 +417,7 @@ const TableView = memo(function TableView({
               style={{
                 ...COL_CONFIG[colKey].style,
                 opacity: dragColId === colKey ? 0.4 : 1,
-                outline: dragColOver === colKey ? "2px dashed rgba(60,87,117,0.4)" : "none",
+                outline: dragColOver === colKey ? `2px dashed ${CP_ACCENT_40}` : "none",
                 outlineOffset: 2,
                 borderRadius: 4,
               }}

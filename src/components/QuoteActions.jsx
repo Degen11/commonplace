@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import clsx from "clsx";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
-import { styles } from "./styles";
+import { styles, CLR_EMERALD } from "./styles";
 
 export function FavBtn({ q, onFav }) {
   const [animating, setAnimating] = useState(false);
@@ -75,7 +75,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
                 closeOnClick={false}
-                style={{ ...menuItemStyle, ...(localCopied ? { color: "#059669" } : {}) }}
+                style={{ ...menuItemStyle, ...(localCopied ? { color: CLR_EMERALD } : {}) }}
                 onClick={() => {
                   if (!localCopied) {
                     setLocalCopied(true);

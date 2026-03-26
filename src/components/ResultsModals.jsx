@@ -3,6 +3,7 @@ import ShareImageModal from "./ShareImageModal";
 import ConfirmModal from "./ConfirmModal";
 import CollectionDupeModal from "./CollectionDupeModal";
 import { TriangleAlert, Trash2 } from "lucide-react";
+import { CLR_ORANGE } from "./styles";
 
 /**
  * All modal dialogs used by ResultsPhase, extracted to reduce component size.
@@ -35,10 +36,10 @@ export default function ResultsModals({
 
       {confirmClear && (
         <ConfirmModal
-          icon={<TriangleAlert size={20} color="#EA580C" strokeWidth={2} />}
-          iconColor="#EA580C"
+          icon={<TriangleAlert size={20} color={CLR_ORANGE} strokeWidth={2} />}
+          iconColor={CLR_ORANGE}
           iconBg="var(--cp-warning-bg)"
-          borderColor="#EA580C"
+          borderColor={CLR_ORANGE}
           title="Start fresh?"
           description={`This will clear all ${quotesLength} entries and remove them from your saved session. This cannot be undone.`}
           cancelLabel="Keep my entries"

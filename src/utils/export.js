@@ -17,6 +17,31 @@ function buildCollectionMap(collections) {
   return map;
 }
 
+// ── Shared formatting helpers ──
+// Each quote in an export has the same derived fields — extract once.
+
+function quoteFields(q, colMap) {
+  return {
+    text: q.text || "",
+    source: q.source || "",
+    fav: q.favorite ? " \u2605" : "",
+    collections: colMap[q.id]?.length ? colMap[q.id].join(", ") : "",
+    isQuoted: QUOTED_CATS.has(q.category),
+  };
+}
+
+// Iterate grouped quotes with per-category and per-quote callbacks.
+function forEachGrouped(quotes, collections, { onCategory, onQuote }) {
+  const colMap = buildCollectionMap(collections);
+  const grouped = groupByCategory(quotes);
+  Object.entries(grouped).forEach(([cat, qs]) => {
+    onCategory(cat);
+    qs.forEach(q => onQuote(quoteFields(q, colMap), q));
+  });
+}
+
+// ── Download helpers ──
+
 export function downloadBlob(blob, name) {
   const u = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -30,6 +55,8 @@ export function downloadBlob(blob, name) {
 function download(content, name, type) {
   downloadBlob(new Blob([content], { type }), name);
 }
+
+// ── Export formats ──
 
 export function exportCSV(quotes, collections) {
   const colMap = buildCollectionMap(collections);
@@ -47,21 +74,18 @@ export function exportCSV(quotes, collections) {
 }
 
 export function exportMD(quotes, collections) {
-  const colMap = buildCollectionMap(collections);
-  const grouped = groupByCategory(quotes);
   let md = "# Commonplace Export\n\n";
-  Object.entries(grouped).forEach(([cat, qs]) => {
-    md += `## ${cat}\n\n`;
-    qs.forEach(q => {
-      const f = q.favorite ? " \u2B50" : "";
-      const t = q.text || ""; const s = q.source || "";
-      const c = colMap[q.id]?.length ? ` \u2014 *${colMap[q.id].join(", ")}*` : "";
-      QUOTED_CATS.has(q.category)
-        ? md += `> \u201C${t}\u201D\n> \u2014 *${s}*${f}${c}\n\n`
-        : md += `- ${t} \u2014 ${s}${f}${c}\n`;
-    });
-    md += "\n";
+  forEachGrouped(quotes, collections, {
+    onCategory(cat) { md += `## ${cat}\n\n`; },
+    onQuote(f) {
+      const c = f.collections ? ` \u2014 *${f.collections}*` : "";
+      const star = f.fav ? " \u2B50" : "";
+      f.isQuoted
+        ? md += `> \u201C${f.text}\u201D\n> \u2014 *${f.source}*${star}${c}\n\n`
+        : md += `- ${f.text} \u2014 ${f.source}${star}${c}\n`;
+    },
   });
+  md += "\n";
   download(md, "commonplace-export.md", "text/markdown");
 }
 
@@ -81,59 +105,45 @@ export function exportJSON(quotes, collections) {
 }
 
 export function exportTXT(quotes, collections) {
-  const colMap = buildCollectionMap(collections);
-  const grouped = groupByCategory(quotes);
   let text = "";
-  Object.entries(grouped).forEach(([cat, qs]) => {
-    text += `${cat.toUpperCase()}\n${"\u2500".repeat(cat.length)}\n\n`;
-    qs.forEach(q => {
-      const f = q.favorite ? " \u2605" : "";
-      const t = q.text || ""; const s = q.source || "";
-      const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
-      QUOTED_CATS.has(q.category)
-        ? text += `"${t}" \u2014 ${s}${f}${c}\n`
-        : text += `${t} \u2014 ${s}${f}${c}\n`;
-    });
-    text += "\n";
+  forEachGrouped(quotes, collections, {
+    onCategory(cat) { text += `${cat.toUpperCase()}\n${"\u2500".repeat(cat.length)}\n\n`; },
+    onQuote({ text: t, source, fav, collections: cols, isQuoted }) {
+      const c = cols ? ` [${cols}]` : "";
+      isQuoted ? text += `"${t}" \u2014 ${source}${fav}${c}\n` : text += `${t} \u2014 ${source}${fav}${c}\n`;
+    },
   });
+  text += "\n";
   download(text.trim(), "commonplace-export.txt", "text/plain");
 }
 
 export function richCopyToClipboard(quotes, collections) {
-  const colMap = buildCollectionMap(collections);
-  const grouped = groupByCategory(quotes);
   let text = "";
-  Object.entries(grouped).forEach(([cat, qs]) => {
-    text += `\u2726 ${cat.toUpperCase()}\n\n`;
-    qs.forEach(q => {
-      const f = q.favorite ? " \u2605" : "";
-      const t = q.text || ""; const s = q.source || "";
-      const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
-      if (QUOTED_CATS.has(q.category)) {
+  forEachGrouped(quotes, collections, {
+    onCategory(cat) { text += `\u2726 ${cat.toUpperCase()}\n\n`; },
+    onQuote({ text: t, source, fav, collections: cols, isQuoted }) {
+      const c = cols ? ` [${cols}]` : "";
+      if (isQuoted) {
         text += `\u201C${t}\u201D\n`;
-        text += `    \u2014 ${s}${f}${c}\n\n`;
+        text += `    \u2014 ${source}${fav}${c}\n\n`;
       } else {
-        text += `${t} \u2014 ${s}${f}${c}\n\n`;
+        text += `${t} \u2014 ${source}${fav}${c}\n\n`;
       }
-    });
+    },
   });
   return navigator.clipboard.writeText(text.trim());
 }
 
 export function copyToClipboard(quotes, collections) {
-  const colMap = buildCollectionMap(collections);
-  const grouped = groupByCategory(quotes);
   let text = "";
-  Object.entries(grouped).forEach(([cat, qs]) => {
-    text += `${cat}\n${"\u2500".repeat(cat.length)}\n`;
-    qs.forEach(q => {
-      const f = q.favorite ? " \u2605" : "";
-      const t = q.text || ""; const s = q.source || "";
-      const c = colMap[q.id]?.length ? ` [${colMap[q.id].join(", ")}]` : "";
-      QUOTED_CATS.has(q.category) ? text += `"${t}" \u2014 ${s}${f}${c}\n` : text += `${t} \u2014 ${s}${f}${c}\n`;
-    });
-    text += "\n";
+  forEachGrouped(quotes, collections, {
+    onCategory(cat) { text += `${cat}\n${"\u2500".repeat(cat.length)}\n`; },
+    onQuote({ text: t, source, fav, collections: cols, isQuoted }) {
+      const c = cols ? ` [${cols}]` : "";
+      isQuoted ? text += `"${t}" \u2014 ${source}${fav}${c}\n` : text += `${t} \u2014 ${source}${fav}${c}\n`;
+    },
   });
+  text += "\n";
   return navigator.clipboard.writeText(text.trim());
 }
 

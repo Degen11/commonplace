@@ -471,13 +471,13 @@ const syncPillBase = {
 export const syncPillStyles = {
   full: {
     syncing: { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
-    synced:  { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: "#16A34A", background: "rgba(34,197,94,0.10)" },
-    error:   { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: "#DC2626", background: "rgba(220,38,38,0.10)" },
+    synced:  { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: CLR_GREEN, background: "rgba(34,197,94,0.10)" },
+    error:   { ...syncPillBase, fontSize: 11, padding: "2px 8px", lineHeight: "16px", color: CLR_RED, background: "rgba(220,38,38,0.10)" },
   },
   mini: {
     syncing: { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: "var(--cp-text-muted)", background: "var(--cp-bg-tab)" },
-    synced:  { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: "#16A34A", background: "rgba(34,197,94,0.10)" },
-    error:   { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: "#DC2626", background: "rgba(220,38,38,0.10)" },
+    synced:  { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: CLR_GREEN, background: "rgba(34,197,94,0.10)" },
+    error:   { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: CLR_RED, background: "rgba(220,38,38,0.10)" },
   },
 };
 
@@ -516,7 +516,7 @@ export const styles = {
 
   // Drop zone
   dropZone:{borderWidth:2,borderStyle:"dashed",borderColor:"var(--cp-border)",borderRadius:6,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"var(--cp-bg-card)"},
-  dropZoneActive:{borderColor:"#2563EB",background:"rgba(59,130,246,0.08)"},
+  dropZoneActive:{borderColor:CLR_BLUE,background:"rgba(59,130,246,0.08)"},
   dropIcon:{fontSize:32,marginBottom:12},
   dropTitle:{fontSize:14,fontWeight:600,color:"var(--cp-text-secondary)",marginBottom:6},
   dropSub:{fontSize:13,color:"var(--cp-text-muted)"},
@@ -602,10 +602,10 @@ export const styles = {
   sub:{fontSize:13,color:"var(--cp-text-muted)",marginTop:6,letterSpacing:"0.01em"},
   hdrBtn:{padding:"6px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   exportBtn:{padding:"6px 14px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:600,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit"},
-  addMoreBtn:{padding:"6px 14px",border:"1px solid #2563EB",borderRadius:6,background:"rgba(59,130,246,0.08)",color:CLR_BLUE,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  addMoreBtn:{padding:"6px 14px",border:`1px solid ${CLR_BLUE}`,borderRadius:6,background:"rgba(59,130,246,0.08)",color:CLR_BLUE,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   startOverBtn:{padding:"6px 14px",border:`1px solid ${CLR_RED}4D`,borderRadius:6,background:"var(--cp-bg-card)",color:CLR_RED,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBtn:{padding:"6px 14px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",color:"var(--cp-text-secondary)",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  statsBtnActive:{border:"1px solid #7C3AED",background:"rgba(124,58,237,0.10)",color:CLR_VIOLET},
+  statsBtnActive:{border:`1px solid ${CLR_VIOLET}`,background:"rgba(124,58,237,0.10)",color:CLR_VIOLET},
 
   // View toggles (table / compact / cards)
   viewTog:{display:"flex",border:"1px solid var(--cp-border)",borderRadius:6,overflow:"hidden"},
@@ -617,25 +617,25 @@ export const styles = {
 
   // Bars
   errorBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(220,38,38,0.08)",border:"1px solid rgba(220,38,38,0.20)",borderRadius:6,margin:"12px 0",fontSize:13,color:CLR_RED,gap:12,flexWrap:"wrap"},
-  retryBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #DC2626",background:"var(--cp-bg-card)",color:CLR_RED,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  retryBtn:{padding:"4px 12px",borderRadius:6,border:`1px solid ${CLR_RED}`,background:"var(--cp-bg-card)",color:CLR_RED,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   statsBar:{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.16)",borderRadius:6,margin:"12px 0",fontSize:13,color:"var(--cp-text-secondary)",flexWrap:"wrap"},
   statDot:{width:4,height:4,borderRadius:"50%",background:"var(--cp-border-dim)"},
   statsDismiss:{background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14,marginLeft:"auto"},
   addMorePanel:{background:"var(--cp-bg-panel)",border:"1px solid var(--cp-border)",borderRadius:6,padding:14,margin:"12px 0"},
   attentionBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(234,88,12,0.08)",border:"1px solid rgba(234,88,12,0.20)",borderRadius:6,margin:"10px 0",fontSize:13,color:CLR_ORANGE,gap:8},
   attentionCount:{fontWeight:700,fontSize:14,color:CLR_ORANGE},
-  attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:"#EA580C",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  attentionBtn:{padding:"5px 14px",borderRadius:6,border:"none",background:CLR_ORANGE,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   attentionDismiss:{background:"none",border:"none",color:CLR_ORANGE,cursor:"pointer",fontSize:18,lineHeight:1,padding:"4px 6px",borderRadius:4,opacity:0.6,transition:"opacity .12s"},
 
   shareBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(59,130,246,0.08)",border:"1px solid rgba(59,130,246,0.16)",borderRadius:6,margin:"12px 0",fontSize:13,color:CLR_BLUE,flexWrap:"wrap",gap:8},
-  shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:"1px solid #2563EB",background:"var(--cp-bg-card)",color:CLR_BLUE,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  shareBannerBtn:{padding:"4px 12px",borderRadius:6,border:`1px solid ${CLR_BLUE}`,background:"var(--cp-bg-card)",color:CLR_BLUE,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
 
   // Stats panel
   statsPanel:{background:"var(--cp-bg-panel)",border:"1px solid var(--cp-border)",borderRadius:6,padding:20,margin:0,animation:"slideD .25s ease",boxShadow:"0 8px 32px rgba(0,0,0,.12)"},
   statsPanelTitle:{fontSize:14,fontWeight:600,color:"var(--cp-text-secondary)",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"},
   statsPanelClose:{background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:16,padding:"0 4px"},
   statsSection:{display:"flex",flexDirection:"column",gap:10},
-  statsSectionTitle:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em",color:"#3C5775",marginBottom:4},
+  statsSectionTitle:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em",color:CP_ACCENT,marginBottom:4},
 
   // Dupe modal — #9 removed shadow (overlay provides depth)
   dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease-out"},

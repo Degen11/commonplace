@@ -86,7 +86,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
                     style={{
                       padding: "4px 10px",
                       borderRadius: 50,
-                      border: mode === m.value ? "1px solid var(--cp-accent, #3C5775)" : "1px solid var(--cp-border)",
+                      border: mode === m.value ? `1px solid ${CP_ACCENT}` : "1px solid var(--cp-border)",
                       background: mode === m.value ? CP_ACCENT_10 : "var(--cp-bg-card)",
                       color: mode === m.value ? CP_ACCENT : "var(--cp-text-muted)",
                       fontSize: 11,

@@ -32,7 +32,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
     });
   };
 
-  const selectAll = () => setSelectedLines(new Set(preview.lines.map((_, i) => i)));
+  const selectAll = () => setSelectedLines(new Set(preview.lines?.map((_, i) => i) ?? []));
   const selectNone = () => setSelectedLines(new Set());
 
   const handleModeChange = async (newMode) => {
@@ -46,7 +46,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
   };
 
   const selectedCount = selectedLines.size;
-  const lines = preview.lines;
+  const lines = preview.lines ?? [];
 
   return (
     <ModalShell

@@ -720,6 +720,7 @@ export default function ResultsPhase({
                 style={{
                   position: "fixed", top: 49, left: 0, right: 0,
                   zIndex: 59, background: "var(--cp-mini-bg)",
+                  backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)",
                   padding: isMobile ? "12px 16px" : "12px 32px", borderBottom: "1px solid var(--cp-border)",
                   boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
                 }}

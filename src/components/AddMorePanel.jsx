@@ -45,6 +45,7 @@ export default function AddMorePanel({
     const file = e.dataTransfer?.files?.[0];
     if (file && onFileImport) {
       onFileImport(file, setAddMoreInput, setImportedFileName);
+      setTab("identify");
     }
   };
 
@@ -52,6 +53,7 @@ export default function AddMorePanel({
     const file = e.target.files?.[0];
     if (file && onFileImport) {
       onFileImport(file, setAddMoreInput, setImportedFileName);
+      setTab("identify");
     }
     e.target.value = "";
   };
@@ -85,6 +87,7 @@ export default function AddMorePanel({
     setAddMoreInput(selectedLines.join("\n"));
     setShowPreviewModal(false);
     setUrlInput("");
+    setTab("identify");
   };
 
   const handlePreviewRefetch = async (newMode) => {

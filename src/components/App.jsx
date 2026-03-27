@@ -11,12 +11,14 @@ import { useQuotesContext } from "../contexts/QuotesContext";
 
 import { sanitizeName } from "../data/constants";
 import { pluralize } from "../utils/helpers";
+import { smartSplit } from "../utils/textFormatting";
 import {
   DRAFT_SAVE_DEBOUNCE_MS,
   LS_DRAFT,
 } from "../config";
 
 import DupeModal from "./DupeModal";
+import EntryReviewModal from "./EntryReviewModal";
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
 import ResultsPhase from "./ResultsPhase";
@@ -100,7 +102,22 @@ export default function Commonplace() {
     }
   }, [quotes, phase, progress]);
 
-  const handleProcess = () => processEntries(rawInput, false, formattingEnabled);
+  const [pendingReview, setPendingReview] = useState(null);
+
+  const handleProcess = () => {
+    const lines = smartSplit(rawInput.trim());
+    if (!lines.length) return;
+    setPendingReview(lines);
+  };
+
+  const handleReviewConfirm = (selectedLines) => {
+    setPendingReview(null);
+    processEntries(rawInput, false, formattingEnabled, selectedLines);
+  };
+
+  const handleReviewCancel = () => {
+    setPendingReview(null);
+  };
 
   const importCollections = (imported) => {
     const existingNames = new Set(collections.map(c => c.name.toLowerCase()));
@@ -146,6 +163,13 @@ export default function Commonplace() {
         setDupeDecision={setDupeDecision}
         onContinue={handleDupesContinue}
       />
+      {pendingReview && (
+        <EntryReviewModal
+          lines={pendingReview}
+          onConfirm={handleReviewConfirm}
+          onCancel={handleReviewCancel}
+        />
+      )}
 
       <AnimatePresence mode="wait">
       {/* ── Input phase ── */}

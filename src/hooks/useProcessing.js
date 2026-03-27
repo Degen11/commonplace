@@ -289,8 +289,8 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     }, PROCESSING_DONE_MS);
   };
 
-  const processEntries = async (inputText, appendMode = false, useFormatting = false) => {
-    const lines = smartSplit(inputText.trim());
+  const processEntries = async (inputText, appendMode = false, useFormatting = false, preSplitLines = null) => {
+    const lines = preSplitLines || smartSplit(inputText.trim());
     if (!lines.length) return;
 
     const parsed = lines.map(l => smartParse(l));

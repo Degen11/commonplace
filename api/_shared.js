@@ -33,14 +33,13 @@ function checkRateLimitInMemory(ip, limit) {
       if (now - entry.start > 60000) rateMap.delete(key);
     }
   }
-  // Hard cap: if still over limit after cleanup, drop oldest entries
+  // Hard cap: if still over limit after cleanup, drop oldest entries.
+  // Collect keys into an array first — deleting from a Map while iterating
+  // its live keys iterator can skip entries or stop early in some engines.
   if (rateMap.size >= RATE_MAP_MAX_SIZE) {
     const toDelete = rateMap.size - RATE_MAP_MAX_SIZE + 1;
-    const keys = rateMap.keys();
-    for (let i = 0; i < toDelete; i++) {
-      const { value } = keys.next();
-      if (value !== undefined) rateMap.delete(value);
-    }
+    const keys = Array.from(rateMap.keys()).slice(0, toDelete);
+    for (const key of keys) rateMap.delete(key);
   }
   const entry = rateMap.get(ip);
   if (!entry || now - entry.start > 60000) {

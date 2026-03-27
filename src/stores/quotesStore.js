@@ -310,8 +310,12 @@ if (typeof window !== "undefined") {
       if (e.key === LS_QUOTES && e.newValue) {
         const parsed = JSON.parse(e.newValue);
         if (Array.isArray(parsed)) {
+          // Apply the same validation as initial load (line 76) — cross-tab
+          // writes can contain malformed entries from bad imports or extensions.
+          const valid = parsed.filter(q => q && typeof q.id === 'string' && typeof q.text === 'string');
+          if (valid.length === 0) return;
           useQuotesStore.setState(state => {
-            const merged = mergeByTimestamp(state.quotes, parsed, "updatedAt");
+            const merged = mergeByTimestamp(state.quotes, valid, "updatedAt");
             return merged !== state.quotes ? { quotes: merged } : {};
           });
         }

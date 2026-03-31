@@ -587,6 +587,7 @@ export default function ResultsPhase({
     // Action props
     actionProps,
     deletingId, copiedId, reidentifyingIds,
+    onFav,
     onAddToCollection: handleAddToCollection,
     onRemoveFromCollection: handleRemoveFromCollection,
     batchReIdentify,

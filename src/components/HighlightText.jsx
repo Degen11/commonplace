@@ -36,11 +36,12 @@ function parseRichSegments(text) {
 function applyHighlight(str, term, keyPrefix) {
   if (!term) return str;
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`(${escaped})`, "gi");
-  const parts = str.split(regex);
+  const splitRegex = new RegExp(`(${escaped})`, "gi");
+  const testRegex = new RegExp(`^${escaped}$`, "i");
+  const parts = str.split(splitRegex);
   if (parts.length === 1) return str;
   return parts.map((part, i) =>
-    regex.test(part)
+    testRegex.test(part)
       ? <mark key={`${keyPrefix}-${i}`} style={highlightStyle}>{part}</mark>
       : part
   );

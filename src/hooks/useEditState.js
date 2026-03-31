@@ -54,9 +54,12 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   const selScopeRef = useRef(selScope);
   useEffect(() => { selScopeRef.current = selScope; }, [selScope]);
 
-  // ── Reset shift-click index when selection scope changes ──
+  // ── Reset selection and shift-click index when selection scope changes ──
+  // Without this, selected IDs from a previous filter remain in the Set
+  // and bulk actions (delete, favorite) would affect invisible quotes.
   useEffect(() => {
     lastSelectedIndex.current = null;
+    setSelected(new Set());
   }, [selScope]);
 
   // ── Helpers ──

@@ -190,9 +190,9 @@ const TableRow = memo(function TableRow({
           <div key="category" className={clsx({ "save-pulse": isSavedPulse && savedPulseField === "category" })} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
             <span
               className="inline-cat"
-              style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: 110, cursor: "pointer" }}
+              style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, overflow: "hidden", textOverflow: "ellipsis", maxWidth: "min(110px, 25vw)", cursor: "pointer" }}
               onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }}
-              title="Click to change category"
+              title={q.category}
             >{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
             {isInlineEditing && inlineEditField === "category" && (
               <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />

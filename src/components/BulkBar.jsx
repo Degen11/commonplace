@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { styles } from "./styles";
-import { X, RefreshCw, FolderMinus, Trash2 } from "lucide-react";
+import { X, RefreshCw, FolderMinus, Trash2, Heart } from "lucide-react";
 import { useResultsContext } from "../contexts/ResultsContext";
 
 function Divider() {
@@ -14,6 +14,7 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
     bulkEditSource, setBulkEditSource,
     allCats, applyBulk,
     reidentifyingIds,
+    onFav,
     collections, activeCollectionId, isMobile,
     onAddToCollection, onRemoveFromCollection,
   } = useResultsContext();
@@ -57,9 +58,18 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
 
       {!isMobile && <Divider />}
 
-      {/* ── Actions group: re-identify + collections ── */}
+      {/* ── Actions group: favorite + re-identify + collections ── */}
       {!isMobile && (
         <div style={styles.bulkGroup}>
+          <button
+            className="ui-tip bulk-fav"
+            data-tip="Toggle favorite on selected"
+            style={btnBase}
+            onClick={() => { for (const id of selected) onFav(id); }}
+          >
+            <Heart size={12} strokeWidth={2} />
+            Favorite
+          </button>
           <button
             className="ui-tip bulk-reidentify"
             data-tip="Re-identify selected with AI"
@@ -110,6 +120,11 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
 
       {/* ── Destructive + dismiss ── */}
       <div style={{ ...styles.bulkGroup, ...(isMobile ? { marginLeft: "auto" } : {}) }}>
+        {isMobile && (
+          <button className="ui-tip bulk-fav" data-tip="Toggle favorite" style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }} onClick={() => { for (const id of selected) onFav(id); }}>
+            <Heart size={13} strokeWidth={2} />
+          </button>
+        )}
         <button className="ui-tip bulk-del" data-tip="Delete selected" style={{ ...styles.bulkDelBtn, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={onDelete}>
           <Trash2 size={13} strokeWidth={2} />
         </button>

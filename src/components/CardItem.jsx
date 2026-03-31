@@ -76,12 +76,12 @@ const CardItem = memo(function CardItem({
         <div style={{
           position: "absolute", inset: 0, borderRadius: 6,
           background: isSwipingLeft
-            ? `rgba(220,38,38,${0.08 + swipeProgress * 0.10})`
-            : `rgba(245,158,11,${0.08 + swipeProgress * 0.10})`,
+            ? "var(--cp-error-bg)"
+            : "var(--cp-warning-bg)",
           display: "flex", alignItems: "center",
           justifyContent: isSwipingLeft ? "flex-end" : "flex-start",
           padding: "0 20px",
-          color: isSwipingLeft ? CLR_RED : "#F59E0B",
+          color: isSwipingLeft ? "var(--cp-error-text)" : "var(--cp-warning-text)",
           fontSize: 13, fontWeight: 600, gap: 6, opacity: swipeProgress,
         }}>
           {isSwipingLeft ? <><Trash2 size={15} /> Delete</> : <><Heart size={15} /> Favorite</>}

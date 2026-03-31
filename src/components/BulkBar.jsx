@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { styles } from "./styles";
-import { X, RefreshCw, FolderMinus, Trash2, Heart } from "lucide-react";
+import { X, RefreshCw, FolderMinus, Trash2, Star } from "lucide-react";
 import { useResultsContext } from "../contexts/ResultsContext";
 
 function Divider() {
@@ -67,7 +67,7 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
             style={btnBase}
             onClick={() => { for (const id of selected) onFav(id); }}
           >
-            <Heart size={12} strokeWidth={2} />
+            <Star size={12} strokeWidth={2} />
             Favorite
           </button>
           <button
@@ -122,7 +122,7 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
       <div style={{ ...styles.bulkGroup, ...(isMobile ? { marginLeft: "auto" } : {}) }}>
         {isMobile && (
           <button className="ui-tip bulk-fav" data-tip="Toggle favorite" style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }} onClick={() => { for (const id of selected) onFav(id); }}>
-            <Heart size={13} strokeWidth={2} />
+            <Star size={13} strokeWidth={2} />
           </button>
         )}
         <button className="ui-tip bulk-del" data-tip="Delete selected" style={{ ...styles.bulkDelBtn, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={onDelete}>

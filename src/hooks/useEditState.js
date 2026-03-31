@@ -3,7 +3,7 @@ import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
 import { toggleInSet, addAllToSet } from "../utils/helpers";
 
-export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
+export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, filterKey, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
   const [selected, setSelected]             = useState(new Set());
@@ -54,13 +54,19 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   const selScopeRef = useRef(selScope);
   useEffect(() => { selScopeRef.current = selScope; }, [selScope]);
 
-  // ── Reset selection and shift-click index when selection scope changes ──
+  // ── Reset selection and shift-click index when filter criteria change ──
   // Without this, selected IDs from a previous filter remain in the Set
   // and bulk actions (delete, favorite) would affect invisible quotes.
+  // Uses filterKey (derived from category/search/sort/collection filters)
+  // so selection only clears on actual filter changes, not data mutations.
+  const prevFilterKey = useRef(filterKey);
   useEffect(() => {
-    lastSelectedIndex.current = null;
-    setSelected(new Set());
-  }, [selScope]);
+    if (prevFilterKey.current !== filterKey) {
+      prevFilterKey.current = filterKey;
+      lastSelectedIndex.current = null;
+      setSelected(new Set());
+    }
+  }, [filterKey]);
 
   // ── Helpers ──
   const startEditing = (id) => {

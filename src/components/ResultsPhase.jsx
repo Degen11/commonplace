@@ -180,7 +180,7 @@ export default function ResultsPhase({
     favFilter, setFavFilter,
     search, setSearch,
     isMobile,
-    filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
+    filtered, collectionFiltered, visible, hasMore, remaining, loadMore, paginationKey,
     cc, favCount, unknownCount,
     hasActiveFilters, hasActiveFilterOrSort, clearFilters, computedStats,
   } = useViewPreferences(quotes, { activeCollectionId, collections });
@@ -200,7 +200,7 @@ export default function ResultsPhase({
     toggleSel, selAll,
     applyBulk, bulkDel,
     startReviewFlow,
-  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
+  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, filterKey: paginationKey, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
 
   const {
     sensors, activeDragId, overDragId,

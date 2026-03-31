@@ -175,7 +175,7 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     favFilter, setFavFilter,
     search, setSearch,
     isMobile,
-    filtered, collectionFiltered, visible, hasMore, remaining, loadMore,
+    filtered, collectionFiltered, visible, hasMore, remaining, loadMore, paginationKey,
     cc, favCount, unknownCount,
     hasActiveFilters, hasActiveFilterOrSort, clearFilters, computedStats,
   };

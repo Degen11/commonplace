@@ -60,6 +60,8 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules/motion/')) return 'motion';
           if (id.includes('node_modules/@dnd-kit/')) return 'dndkit';
+          if (id.includes('node_modules/@base-ui/')) return 'baseui';
+          if (id.includes('node_modules/compromise/')) return 'nlp';
         },
       },
     },

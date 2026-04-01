@@ -98,7 +98,7 @@ export function QuotesProvider({ children }) {
     }
   }, [quotes, showToast]);
 
-  // ── Cloud sync via useSync (will be replaced by TanStack Query in phase 2) ──
+  // ── Cloud sync via useSync (TanStack Query) — state written to Zustand store ──
   const handleSyncError = (message) => {
     showToast(message);
   };

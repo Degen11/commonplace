@@ -1,5 +1,5 @@
 import { Menu } from "@base-ui/react/menu";
-import { List, AlignJustify, LayoutGrid, Moon, Sun, Ellipsis, ChartColumn, CircleQuestionMark, Trash2, Gauge } from "lucide-react";
+import { List, AlignJustify, LayoutGrid, Moon, Sun, Monitor, Ellipsis, ChartColumn, CircleQuestionMark, Trash2, Gauge } from "lucide-react";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
@@ -18,6 +18,7 @@ export default function MiniHeader({
   onManualSync,
   dark,
   toggleTheme,
+  themeMode,
   showConfidence,
   setShowConfidence,
   setConfirmClear,
@@ -43,7 +44,7 @@ export default function MiniHeader({
           <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
           {!isMobile && (
             <button className="hdr-btn" style={{ ...styles.statsBtn, fontSize: 11, padding: "4px 8px" }} onClick={toggleTheme}>
-              {dark ? <Sun size={14} strokeWidth={1.5} /> : <Moon size={14} strokeWidth={1.5} />}
+              {themeMode === "auto" ? <Monitor size={14} strokeWidth={1.5} /> : dark ? <Sun size={14} strokeWidth={1.5} /> : <Moon size={14} strokeWidth={1.5} />}
             </button>
           )}
           {!isMobile && (
@@ -77,8 +78,8 @@ export default function MiniHeader({
                     <>
                       <div style={styles.hdrOverflowSectionLabel}>Actions</div>
                       <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={toggleTheme}>
-                        {dark ? <Sun size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : <Moon size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />}
-                        {dark ? "Light mode" : "Dark mode"}
+                        {themeMode === "auto" ? <Monitor size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : dark ? <Sun size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : <Moon size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />}
+                        {themeMode === "auto" ? "Auto (system)" : dark ? "Light mode" : "Dark mode"}
                       </Menu.Item>
                       <Menu.Separator style={styles.hdrOverflowDivider} />
                     </>

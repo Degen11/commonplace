@@ -7,7 +7,8 @@ import useQuoteActions from "../hooks/useQuoteActions";
 import useTheme from "../hooks/useTheme";
 
 import { useToastContext } from "../contexts/ToastContext";
-import { useQuotesContext } from "../contexts/QuotesContext";
+import { useQuotesStore } from "../stores/quotesStore";
+import { DEFAULT_CATEGORIES } from "../data/constants";
 
 import { sanitizeName } from "../data/constants";
 import { pluralize } from "../utils/helpers";
@@ -27,17 +28,22 @@ import OnboardingModal from "./OnboardingModal";
 
 export default function Commonplace() {
   const { showToast } = useToastContext();
-  const {
-    quotes, setQuotes,
-    customCats, setCustomCats,
-    allCats,
-    initialLoading,
-    trackDeletion, untrackDeletion,
-    collections,
-    createCollection,
-    addToCollection, removeFromCollection, updateCollectionIcon,
-    cleanCollectionRefs,
-  } = useQuotesContext();
+
+  // Direct Zustand subscriptions — each selector triggers re-render only when its slice changes
+  const quotes = useQuotesStore(s => s.quotes);
+  const setQuotes = useQuotesStore(s => s.setQuotes);
+  const customCats = useQuotesStore(s => s.customCats);
+  const setCustomCats = useQuotesStore(s => s.setCustomCats);
+  const initialLoading = useQuotesStore(s => s.initialLoading);
+  const trackDeletion = useQuotesStore(s => s.trackDeletion);
+  const untrackDeletion = useQuotesStore(s => s.untrackDeletion);
+  const collections = useQuotesStore(s => s.collections);
+  const createCollection = useQuotesStore(s => s.createCollection);
+  const addToCollection = useQuotesStore(s => s.addToCollection);
+  const removeFromCollection = useQuotesStore(s => s.removeFromCollection);
+  const updateCollectionIcon = useQuotesStore(s => s.updateCollectionIcon);
+  const cleanCollectionRefs = useQuotesStore(s => s.cleanCollectionRefs);
+  const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
   const [phase, setPhase]         = useState(() => quotes.length > 0 ? "results" : "input");
   const [rawInput, setRawInput]   = useState(() => {
@@ -64,7 +70,7 @@ export default function Commonplace() {
     handleFileImport,
   } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
 
-  const { dark, toggleTheme } = useTheme();
+  const { dark, cycleTheme: toggleTheme, themeMode } = useTheme();
   const [inputTab, setInputTab]               = useState("paste");
   const [isDragOver, setIsDragOver]           = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
@@ -189,6 +195,7 @@ export default function Commonplace() {
             fileInputRef={fileInputRef}
             dark={dark}
             toggleTheme={toggleTheme}
+            themeMode={themeMode}
           />
         </SectionErrorBoundary>
         </motion.div>
@@ -232,6 +239,7 @@ export default function Commonplace() {
             handleFileImport={handleFileImport}
             dark={dark}
             toggleTheme={toggleTheme}
+            themeMode={themeMode}
             importCollections={importCollections}
             onClearReset={clearParentState}
           />

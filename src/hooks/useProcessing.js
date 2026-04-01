@@ -197,26 +197,50 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   };
 
   // Phase 3: Send remaining entries to Claude for AI identification in batches
+  // Uses prefetching: starts the next batch API call while processing current batch results
   const handleApiBatch = async (unique, stillNeedsApi, preAiDone, useFormatting, signal) => {
     const apiResults = new Map();
     let apiFailed = false;
     const failed = [];
+    const totalBatches = Math.ceil(stillNeedsApi.length / API_BATCH_SIZE);
 
+    // Build all batch chunks upfront
+    const batches = [];
     for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
+      batches.push(stillNeedsApi.slice(i, i + API_BATCH_SIZE));
+    }
+
+    // Start first batch
+    let pendingFetch = null;
+    if (batches.length > 0) {
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone, current: `AI identifying batch 1/${totalBatches}...`, phase: "api" } });
+      pendingFetch = identifyBatch(batches[0], useFormatting, signal);
+    }
+
+    for (let b = 0; b < batches.length; b++) {
       if (signal.aborted) return { apiResults, apiFailed, failed };
-      const chunk = stillNeedsApi.slice(i, i + API_BATCH_SIZE);
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + i, current: `AI identifying batch ${Math.floor(i / API_BATCH_SIZE) + 1}/${Math.ceil(stillNeedsApi.length / API_BATCH_SIZE)}...`, phase: "api" } });
+      const chunk = batches[b];
+
       try {
-        const results = await identifyBatch(chunk, useFormatting, signal);
+        // Await the already-started fetch for this batch
+        const results = await pendingFetch;
         if (signal.aborted) return { apiResults, apiFailed, failed };
+
+        // Prefetch next batch while we process current results
+        if (b + 1 < batches.length) {
+          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
+          pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
+        }
+
+        // Process current batch results
         results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
         dispatch({ type: "FEED_APPEND", items: results.map(r => {
           const item = chunk[r.i];
           return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
         }) });
-        // Cache only high-confidence AI results (fire-and-forget)
+        // Cache AI results with known sources (fire-and-forget)
         const cacheItems = results
-          .filter(r => r.source && chunk[r.i] && r.confidence === "high")
+          .filter(r => r.source && r.source !== "Unknown source" && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
           .map(r => ({
             text: chunk[r.i].text, hint: null,
             source: r.source, category: r.category, confidence: r.confidence,
@@ -232,7 +256,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         if (err.name === "AbortError") return { apiResults, apiFailed: true, failed };
         apiFailed = true;
         chunk.forEach(c => failed.push(c));
-        dispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - i} entries affected)` });
+        dispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - b * API_BATCH_SIZE} entries affected)` });
         break;
       }
     }

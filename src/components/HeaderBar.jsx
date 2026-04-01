@@ -5,7 +5,7 @@ import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 
 import {
-  List, AlignJustify, LayoutGrid, Moon, Sun, CircleQuestionMark,
+  List, AlignJustify, LayoutGrid, Moon, Sun, Monitor, CircleQuestionMark,
   Ellipsis, ChartColumn, Trash2, Gauge, MenuIcon, Plus,
 } from "lucide-react";
 
@@ -25,6 +25,7 @@ export default function HeaderBar({
   onManualSync,
   dark,
   toggleTheme,
+  themeMode,
   showConfidence,
   setShowConfidence,
   onShowShortcuts,
@@ -43,8 +44,8 @@ export default function HeaderBar({
         {/* Desktop: show all buttons inline */}
         {!isMobile && (
           <>
-            <button className="ui-tip ui-tip-below hdr-btn" data-tip={dark ? "Light mode" : "Dark mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
-              {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
+            <button className="ui-tip ui-tip-below hdr-btn" data-tip={themeMode === "auto" ? "Auto (system)" : dark ? "Dark mode" : "Light mode"} style={{ ...styles.statsBtn, padding: "5px 8px" }} onClick={toggleTheme}>
+              {themeMode === "auto" ? <Monitor size={16} strokeWidth={1.5} /> : dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
             </button>
             <div style={styles.viewTog}>
               <button className="ui-tip ui-tip-below view-btn" data-tip="Table view" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
@@ -92,8 +93,8 @@ export default function HeaderBar({
                   <>
                     <div style={styles.hdrOverflowSectionLabel}>Actions</div>
                     <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={toggleTheme}>
-                      {dark ? <Sun size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : <Moon size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />}
-                      {dark ? "Light mode" : "Dark mode"}
+                      {themeMode === "auto" ? <Monitor size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : dark ? <Sun size={15} strokeWidth={1.5} color="var(--cp-text-muted)" /> : <Moon size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />}
+                      {themeMode === "auto" ? "Auto (system)" : dark ? "Light mode" : "Dark mode"}
                     </Menu.Item>
                     <Menu.Separator style={styles.hdrOverflowDivider} />
                     <div style={styles.hdrOverflowSectionLabel}>Layout</div>

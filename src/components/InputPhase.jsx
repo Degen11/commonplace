@@ -11,7 +11,7 @@ import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
   Sparkles, PenLine, Download, RefreshCw, Filter, Library,
-  Moon, Sun, Loader,
+  Moon, Sun, Monitor, Loader,
 } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
@@ -617,6 +617,7 @@ export default function InputPhase({
   fileInputRef,
   dark,
   toggleTheme,
+  themeMode,
 }) {
   // Scroll-reveal refs
   const [howRef, howVisible] = useScrollReveal();
@@ -649,11 +650,11 @@ export default function InputPhase({
         <div style={{ marginLeft: "auto" }}>
           <button
             className="ui-tip ui-tip-below hdr-btn"
-            data-tip={dark ? "Light mode" : "Dark mode"}
+            data-tip={themeMode === "auto" ? "Auto (system)" : dark ? "Dark mode" : "Light mode"}
             style={{ ...styles.statsBtn, padding: "5px 8px" }}
             onClick={toggleTheme}
           >
-            {dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
+            {themeMode === "auto" ? <Monitor size={16} strokeWidth={1.5} /> : dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
           </button>
         </div>
       </nav>

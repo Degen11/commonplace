@@ -84,7 +84,7 @@ export default function useSync({ onCloudData, onSyncError }) {
   const markReady = useCallback(() => {
     initialLoadDone.current = true;
     setInitialLoading(false);
-  }, []);
+  }, [setInitialLoading]);
 
   // ── Pull: TanStack Query handles caching and refetching ──
   const pullQuery = useQuery({
@@ -112,7 +112,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     } finally {
       setInitialLoading(false);
     }
-  }, [onCloudData, queryClient]);
+  }, [onCloudData, queryClient, setInitialLoading]);
 
   // ── Push: TanStack Query mutation with exponential backoff ──
   const pushMutation = useMutation({

@@ -8,6 +8,7 @@
 import { useRef, useCallback, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateId } from "../utils/uuid";
+import { useQuotesStore } from "../stores/quotesStore";
 import {
   SYNC_DEBOUNCE_MS, SYNC_MAX_RETRIES, SYNC_INITIAL_DELAY_MS,
   SYNC_ERROR_THROTTLE_MS,
@@ -60,9 +61,13 @@ async function pushSyncData(payload) {
 
 export default function useSync({ onCloudData, onSyncError }) {
   const queryClient = useQueryClient();
-  const [syncStatus, setSyncStatus] = useState("idle");
-  const [lastSynced, setLastSynced] = useState(null);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const setSyncStatus = useQuotesStore(s => s.setSyncStatus);
+  const setLastSynced = useQuotesStore(s => s.setLastSynced);
+  const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
+  // Read from store for return value (consumers now read directly from store)
+  const syncStatus = useQuotesStore(s => s.syncStatus);
+  const lastSynced = useQuotesStore(s => s.lastSynced);
+  const initialLoading = useQuotesStore(s => s.initialLoading);
   const initialLoadDone = useRef(false);
   const pushTimer = useRef(null);
   const lastErrorNotified = useRef(0);
@@ -115,11 +120,12 @@ export default function useSync({ onCloudData, onSyncError }) {
     retry: SYNC_MAX_RETRIES,
     retryDelay: (attempt) => SYNC_INITIAL_DELAY_MS * Math.pow(2, attempt),
     onMutate: () => {
-      setSyncStatus("syncing");
-    },
-    onSuccess: () => {
+      // Optimistic: show "synced" immediately so the UI feels instant
       setSyncStatus("synced");
       setLastSynced(new Date());
+    },
+    onSuccess: () => {
+      // Confirm the optimistic update
       consecutiveFailures.current = 0;
     },
     onError: () => {
@@ -174,6 +180,10 @@ export default function useSync({ onCloudData, onSyncError }) {
     const p = latestPayload.current;
     if (p && mutateRef.current) mutateRef.current(p);
   }, []);
+
+  // Register manualPush in Zustand store so components can access it directly
+  const setManualPush = useQuotesStore(s => s.setManualPush);
+  useEffect(() => { setManualPush(manualPush); }, [manualPush, setManualPush]);
 
   // Sync when coming back online
   useEffect(() => {

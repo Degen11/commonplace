@@ -152,8 +152,8 @@ const TableRow = memo(function TableRow({
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
               : compact
-                ? <p style={{ ...styles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} /></p>
-                : <p style={styles.entryText}>
+                ? <p title={full} style={{ ...styles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} /></p>
+                : <p title={truncatable && !expanded ? full : undefined} style={styles.entryText}>
                     <HighlightText text={shown} term={searchTerm} />
                     {truncatable && (
                       <button

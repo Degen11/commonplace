@@ -9,10 +9,10 @@ import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 import useDndQuotes from "../hooks/useDndQuotes";
 
 import { useToastContext } from "../contexts/ToastContext";
-import { useQuotesContext } from "../contexts/QuotesContext";
+import { useQuotesStore } from "../stores/quotesStore";
 import { ResultsProvider, useResultsContext } from "../contexts/ResultsContext";
 
-import { getCatColor, sanitizeName } from "../data/constants";
+import { getCatColor, sanitizeName, DEFAULT_CATEGORIES } from "../data/constants";
 import { similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
@@ -146,28 +146,39 @@ export default function ResultsPhase({
   handleDelete, copyQuote, reIdentify, batchReIdentify,
   handleFileImport,
   // From useTheme (stays in App.jsx)
-  dark, toggleTheme,
+  dark, toggleTheme, themeMode,
   // Callbacks from App.jsx
   importCollections, onClearReset,
 }) {
   const { showToast } = useToastContext();
-  const {
-    quotes, setQuotes,
-    customCats, setCustomCats,
-    columnOrder, setColumnOrder,
-    allCats,
-    isSharedView, setIsSharedView,
-    syncStatus,
-    lastSynced,
-    trackDeletion, untrackDeletion,
-    collections,
-    activeCollectionId, setActiveCollectionId,
-    createCollection, deleteCollection, restoreCollection, renameCollection,
-    addToCollection, removeFromCollection, updateCollectionIcon,
-    cleanCollectionRefs,
-    manualPush,
-    initialLoading,
-  } = useQuotesContext();
+
+  // Direct Zustand subscriptions — selective re-renders per slice
+  const quotes = useQuotesStore(s => s.quotes);
+  const setQuotes = useQuotesStore(s => s.setQuotes);
+  const customCats = useQuotesStore(s => s.customCats);
+  const setCustomCats = useQuotesStore(s => s.setCustomCats);
+  const columnOrder = useQuotesStore(s => s.columnOrder);
+  const setColumnOrder = useQuotesStore(s => s.setColumnOrder);
+  const isSharedView = useQuotesStore(s => s.isSharedView);
+  const setIsSharedView = useQuotesStore(s => s.setIsSharedView);
+  const syncStatus = useQuotesStore(s => s.syncStatus);
+  const lastSynced = useQuotesStore(s => s.lastSynced);
+  const trackDeletion = useQuotesStore(s => s.trackDeletion);
+  const untrackDeletion = useQuotesStore(s => s.untrackDeletion);
+  const collections = useQuotesStore(s => s.collections);
+  const activeCollectionId = useQuotesStore(s => s.activeCollectionId);
+  const setActiveCollectionId = useQuotesStore(s => s.setActiveCollectionId);
+  const createCollection = useQuotesStore(s => s.createCollection);
+  const deleteCollection = useQuotesStore(s => s.deleteCollection);
+  const restoreCollection = useQuotesStore(s => s.restoreCollection);
+  const renameCollection = useQuotesStore(s => s.renameCollection);
+  const addToCollection = useQuotesStore(s => s.addToCollection);
+  const removeFromCollection = useQuotesStore(s => s.removeFromCollection);
+  const updateCollectionIcon = useQuotesStore(s => s.updateCollectionIcon);
+  const cleanCollectionRefs = useQuotesStore(s => s.cleanCollectionRefs);
+  const initialLoading = useQuotesStore(s => s.initialLoading);
+  const manualPush = useQuotesStore(s => s.manualPush);
+  const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
   // ── Hooks owned by ResultsPhase ──
 
@@ -646,6 +657,7 @@ export default function ResultsPhase({
               onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
+              themeMode={themeMode}
               showConfidence={showConfidence}
               setShowConfidence={setShowConfidence}
               onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
@@ -667,6 +679,7 @@ export default function ResultsPhase({
               onManualSync={manualPush}
               dark={dark}
               toggleTheme={toggleTheme}
+              themeMode={themeMode}
               showConfidence={showConfidence}
               setShowConfidence={setShowConfidence}
               setConfirmClear={setConfirmClear}

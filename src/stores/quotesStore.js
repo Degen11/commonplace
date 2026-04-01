@@ -24,6 +24,7 @@ import { loadFromStorage, saveToStorage } from "../utils/storage";
 // ── Helpers ──
 
 function isShareHash() {
+  if (typeof window === "undefined") return false;
   const hash = window.location.hash.slice(1);
   return hash.startsWith(SHARE_HASH_PREFIX) || hash.startsWith(PUBLIC_HASH_PREFIX);
 }
@@ -133,6 +134,10 @@ export const useQuotesStore = create(
     setSyncStatus: (status) => set({ syncStatus: status }),
     setLastSynced: (date) => set({ lastSynced: date }),
     setInitialLoading: (v) => set({ initialLoading: v }),
+
+    // ── Sync action (set by useSync, consumed by UI) ──
+    manualPush: () => {},
+    setManualPush: (fn) => set({ manualPush: fn }),
 
     // ── Deletion tombstones ──
     trackDeletion: (quoteIds) => {

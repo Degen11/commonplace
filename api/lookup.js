@@ -152,8 +152,8 @@ export default withApiHandler(async (req, res, { supabase }) => {
         category: best.category || inferCategory(best.source),
         confidence: best.confidence || 'medium',
       };
-      // Cache high-confidence results so the same quote doesn't re-hit external APIs
-      if (result.confidence === 'high') {
+      // Cache results so the same quote doesn't re-hit external APIs
+      if (result.confidence === 'high' || result.confidence === 'medium') {
         writeCache(norm, result.source, result.category, result.confidence, supabase);
       }
       return { i, found: true, ...result, platform: best.platform };

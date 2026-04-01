@@ -204,7 +204,8 @@ export function QuotesProvider({ children }) {
   }, [showToast, pull, markReady, setQuotes, setIsSharedView, setInitialLoading]);
 
   // ── Build context value ──
-  // This is the same shape as before so all consumers work unchanged.
+  // Side-effect-only provider. State is consumed directly from Zustand store.
+  // Keeping the context for backward compatibility with any remaining consumers.
   const value = {
     quotes, setQuotes,
     customCats, setCustomCats,

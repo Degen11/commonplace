@@ -1,7 +1,7 @@
 import { CP_ACCENT, CP_ACCENT_06, FONT_SANS, FONT_SERIF } from "./styles";
 
 // ── Timeline data ────────────────────────────────────────────────────────────
-export const TAG_COLORS = {
+const TAG_COLORS = {
   Film:   { bg: "rgba(139,92,246,0.08)",  text: "#7A48CE" },
   Speech: { bg: "rgba(59,130,246,0.08)",  text: "#3967CD" },
   Person: { bg: "rgba(168,85,247,0.08)",  text: "#8B43CC" },

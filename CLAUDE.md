@@ -60,7 +60,9 @@ src/
     ResultsModals.jsx          All modal dialogs for results phase (shortcuts, share image, confirm clear/delete, dupe modal)
     NotificationBars.jsx       Status/notification bars (shared view, API errors, processing stats, attention/review)
     QuickAddBar.jsx            Inline quote add form with dupe detection
-    InputPhase.jsx             Landing page — text input, file import, URL fetch
+    InputPhase.jsx             Landing page — text input, file import, scroll-reveal, formatting preview
+    inputPhaseStyles.js        Homepage-specific styles (HP object), timeline data, reveal transition helper
+    UrlImportPanel.jsx         URL import panel — fetch URL, extraction mode selector, preview modal
     ProcessingPhase.jsx        AI identification progress display
     TableView.jsx              Main table view with inline editing and drag-to-reorder
     CardItem.jsx               Card view (mobile)
@@ -195,7 +197,7 @@ User input → smartSplit() → deduplicate against existing
 - **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Three extracted sub-functions (`handleLocalLookup`, `handleExternalLookup`, `handleApiBatch`) orchestrated by `runProcessing()`. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
-- **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.).
+- **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.). Homepage-specific styles live separately in `inputPhaseStyles.js`.
 - **`_schemas.js`** — Zod schemas for all API endpoints. Server-side validation with filter-style arrays (silently drops invalid items).
 - **`_shared.js`** — Supabase client, rate limiting, CORS, origin validation, and `withApiHandler()` middleware that wraps all API endpoints with shared CORS/auth/rate-limit/content-type handling.
 
@@ -268,7 +270,7 @@ Z.TOAST           2000  Toasts
 - **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update both `index.html` and the CSP
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use
-- **`styles.js` is the only place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`
+- **`styles.js` is the primary place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`. The one exception is `inputPhaseStyles.js`, which holds homepage-specific styles (`HP` object, timeline data, `reveal` helper) extracted from `InputPhase.jsx` to keep it manageable
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy

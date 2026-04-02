@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { styles, CP_ACCENT, CP_ACCENT_TEXT, CP_ACCENT_10 } from "./styles";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, CircleCheckBig } from "lucide-react";
 import ModalShell from "./ModalShell";
 
 export default function CollectionDupeModal(props) {
@@ -22,10 +22,10 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
 
   const allResolved = pending.length === 0;
 
-  // Close after a short delay when all groups are resolved (side-effect in useEffect, not render)
+  // Close after a brief pause when all groups are resolved — gives user time to see completion
   useEffect(() => {
     if (!allResolved) return;
-    const t = setTimeout(onClose, 300);
+    const t = setTimeout(onClose, 800);
     return () => clearTimeout(t);
   }, [allResolved, onClose]);
 
@@ -52,7 +52,19 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     onClose();
   };
 
-  if (allResolved) return null;
+  if (allResolved) return (
+    <ModalShell
+      onClose={onClose}
+      backdropBg="rgba(0,0,0,.45)"
+      popupStyle={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)", padding: "48px 24px", textAlign: "center" }}
+    >
+      <CircleCheckBig size={44} color="#059669" strokeWidth={1.5} style={{ marginBottom: 12, animation: "completePop .4s ease both" }} />
+      <div style={{ fontSize: 16, fontWeight: 600, color: "var(--cp-text)", marginBottom: 4, animation: "fadeUp .25s .1s ease both" }}>All duplicates resolved</div>
+      <div style={{ fontSize: 13, color: "var(--cp-text-muted)", animation: "fadeUp .25s .2s ease both" }}>
+        {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} handled
+      </div>
+    </ModalShell>
+  );
 
   const totalDupeEntries = pending.reduce((sum, { group }) => sum + group.entries.length - 1, 0);
 

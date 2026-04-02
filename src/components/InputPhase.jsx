@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { motion } from "motion/react";
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
@@ -127,10 +128,10 @@ export default function InputPhase({
           FIXED NAV
       ═══════════════════════════════════════════════════════════════════════ */}
       <nav style={HP.nav}>
-        <div style={HP.navBrand}>
+        <motion.div layoutId="app-logo" style={HP.navBrand} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
           <Logo size={24} />
           <span style={HP.navName}>Commonplace</span>
-        </div>
+        </motion.div>
         <div style={{ marginLeft: "auto" }}>
           <button
             className="ui-tip ui-tip-below hdr-btn"
@@ -306,11 +307,13 @@ export default function InputPhase({
                     Try with examples
                   </button>
                 )}
-                <button
+                <motion.button
+                  layoutId="phase-action"
                   className="proc-btn"
                   style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
                   onClick={onProcess}
                   disabled={!rawInput.trim() || isProcessing}
+                  transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.9 }}
                 >
                   {isProcessing ? (
                     <>
@@ -318,7 +321,7 @@ export default function InputPhase({
                       Processing...
                     </>
                   ) : "Organize my collection \u2192"}
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>

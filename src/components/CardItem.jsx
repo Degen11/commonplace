@@ -70,7 +70,7 @@ const CardItem = memo(function CardItem({
     : { ...(isEd || isInlineEditing ? {} : listeners) };
 
   return (
-    <div ref={setNodeRef} style={{ position: "relative", borderRadius: 6, ...(isDragging ? { opacity: 0.35 } : {}) }}>
+    <div ref={setNodeRef} style={{ position: "relative", borderRadius: 6, ...(isDragging ? { opacity: 0.35, transform: "scale(0.97)", filter: "grayscale(0.3)", transition: "opacity .2s, transform .2s, filter .2s" } : {}) }}>
       {/* Swipe hint background — only rendered during active swipe */}
       {(isSwipingLeft || isSwipingRight) && (
         <div style={{

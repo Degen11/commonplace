@@ -226,7 +226,7 @@ const TableRow = memo(function TableRow({
         ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
         ...(stripeColor ? { boxShadow: `inset 3px 0 0 ${stripeColor}` } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
-        ...(isDragging ? { opacity: .4, zIndex: 1 } : {}),
+        ...(isDragging ? { opacity: .35, zIndex: 1, transform: "scale(0.98)", filter: "grayscale(0.3)", transition: "opacity .2s, transform .2s, filter .2s" } : {}),
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(!isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}

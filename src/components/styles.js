@@ -114,30 +114,30 @@ export const baseCSS = `
   textarea:focus,input:focus,select:focus{outline:none}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   @keyframes staggerIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes slideD{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideD{0%{opacity:0;transform:translateY(-6px)}70%{opacity:1;transform:translateY(1px)}100%{opacity:1;transform:translateY(0)}}
   @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes savePulse{0%{background-color:rgba(5,150,105,0.18);border-radius:4px}60%{background-color:rgba(5,150,105,0.06)}100%{background-color:transparent}}
   @keyframes newQuotePulse{0%{background-color:rgba(59,130,246,0.13);transform:scale(1.003)}50%{background-color:rgba(59,130,246,0.06);transform:scale(1)}100%{background-color:transparent;transform:scale(1)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-  @keyframes bulkSlideUp{0%{opacity:0;transform:translateY(100%)}60%{opacity:1;transform:translateY(-4px)}80%{transform:translateY(1px)}100%{transform:translateY(0)}}
+  @keyframes bulkSlideUp{0%{opacity:0;transform:translateY(100%) scale(0.97)}50%{opacity:1;transform:translateY(-5px) scale(1.01)}75%{transform:translateY(1px) scale(1)}100%{transform:translateY(0) scale(1)}}
   @keyframes overlayFade{from{opacity:0}to{opacity:1}}
   @keyframes exitFade{to{opacity:0}}
   @keyframes spin{to{transform:rotate(360deg)}}
-  @keyframes menuIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-  @keyframes modalScaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  @keyframes menuIn{0%{opacity:0;transform:scale(.92) translateY(-2px)}60%{opacity:1;transform:scale(1.01)}100%{opacity:1;transform:scale(1)}}
+  @keyframes modalScaleIn{0%{opacity:0;transform:scale(.94) translateY(8px)}60%{opacity:1;transform:scale(1.01) translateY(-1px)}100%{opacity:1;transform:scale(1) translateY(0)}}
   @keyframes backdropBlurIn{from{opacity:0;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px)}to{opacity:1;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
   @keyframes toastSlideIn{0%{opacity:0;transform:translateY(16px) scale(0.92)}40%{opacity:1;transform:translateY(-5px) scale(1.02)}65%{transform:translateY(1px) scale(0.99)}80%{transform:translateY(-1px) scale(1.005)}100%{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes copyPush{0%{transform:scale(1)}30%{transform:scale(.78)}60%{transform:scale(1.08)}80%{transform:scale(.97)}100%{transform:scale(1)}}
   @keyframes favPop{0%{transform:scale(1)}20%{transform:scale(0.75)}50%{transform:scale(1.18)}70%{transform:scale(0.95)}85%{transform:scale(1.04)}100%{transform:scale(1)}}
-  @keyframes exitSlideLeft{to{opacity:0;transform:translateX(-24px)}}
+  @keyframes exitSlideLeft{0%{opacity:1;transform:translateX(0) scale(1)}60%{opacity:0;transform:translateX(-30px) scale(0.97)}100%{opacity:0;transform:translateX(-30px) scale(0.97);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;border-color:transparent;overflow:hidden}}
   @keyframes shareLift{0%{transform:translateY(0)}40%{transform:translateY(-3px)}100%{transform:translateY(0)}}
-  @keyframes completePop{0%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1.15)}70%{transform:scale(0.95)}85%{transform:scale(1.04)}100%{transform:scale(1)}}
-  @keyframes dropGlow{0%,100%{outline-color:rgba(60,87,117,0.35)}50%{outline-color:rgba(60,87,117,0.8)}}
+  @keyframes completePop{0%{opacity:0;transform:scale(0) rotate(-8deg)}40%{opacity:1;transform:scale(1.18) rotate(2deg)}60%{transform:scale(0.93) rotate(-1deg)}78%{transform:scale(1.05) rotate(0deg)}100%{transform:scale(1) rotate(0deg)}}
+  @keyframes dropGlow{0%,100%{outline-color:rgba(60,87,117,0.35);box-shadow:0 0 0 0 rgba(60,87,117,0)}50%{outline-color:rgba(60,87,117,0.8);box-shadow:0 0 12px 2px rgba(60,87,117,0.12)}}
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
   .skeleton-row{display:flex;align-items:center;padding:12px 0;gap:12px;border-bottom:1px solid var(--cp-border)}
   .skeleton-bar{border-radius:4px;background:linear-gradient(90deg,var(--cp-border) 25%,var(--cp-bg-hover) 50%,var(--cp-border) 75%);background-size:200% 100%;animation:shimmer 1.8s ease infinite}
-  @keyframes miniHeaderIn{0%{opacity:0;transform:translateY(-100%);backdrop-filter:blur(0) saturate(100%);-webkit-backdrop-filter:blur(0) saturate(100%)}50%{opacity:1;transform:translateY(0);backdrop-filter:blur(4px) saturate(120%);-webkit-backdrop-filter:blur(4px) saturate(120%)}100%{opacity:1;transform:translateY(0);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}}
+  @keyframes miniHeaderIn{0%{opacity:0;transform:translateY(-100%);backdrop-filter:blur(0) saturate(100%);-webkit-backdrop-filter:blur(0) saturate(100%)}45%{opacity:1;transform:translateY(2px);backdrop-filter:blur(4px) saturate(120%);-webkit-backdrop-filter:blur(4px) saturate(120%)}70%{transform:translateY(-1px);backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%)}100%{opacity:1;transform:translateY(0);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}}
   .spin{animation:spin 1s linear infinite}
   .copy-push{animation:copyPush .35s cubic-bezier(0.34,1.56,0.64,1)}
   .share-lift{animation:shareLift .25s ease}
@@ -224,9 +224,9 @@ export const baseCSS = `
   .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
   .ui-tip-left::after{left:auto;right:0;transform:none}
 
-  /* Drag insertion indicator */
-  .drag-insert-above{box-shadow:inset 0 2px 0 var(--cp-drag-insert) !important}
-  .drag-insert-below{box-shadow:inset 0 -2px 0 var(--cp-drag-insert) !important}
+  /* Drag insertion indicator — glowing line with spread */
+  .drag-insert-above{box-shadow:inset 0 2px 0 var(--cp-drag-insert), 0 -4px 12px rgba(60,87,117,0.1) !important}
+  .drag-insert-below{box-shadow:inset 0 -2px 0 var(--cp-drag-insert), 0 4px 12px rgba(60,87,117,0.1) !important}
 
   /* Category pills horizontal scroll */
   .cat-scroll::-webkit-scrollbar{display:none}
@@ -280,33 +280,36 @@ export const baseCSS = `
   .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
 
   /* List shuffle — triggered on sort/filter change for smooth staggered re-entrance */
-  @keyframes listShuffle{from{opacity:0.3;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  .list-shuffle .qrow,.list-shuffle .qcard{animation:listShuffle .3s cubic-bezier(0.16,1,0.3,1) both}
+  @keyframes listShuffle{0%{opacity:0.2;transform:translateY(8px) scale(0.99)}100%{opacity:1;transform:translateY(0) scale(1)}}
+  .list-shuffle .qrow,.list-shuffle .qcard{animation:listShuffle .35s cubic-bezier(0.16,1,0.3,1) both}
   .list-shuffle .qrow:nth-child(1),.list-shuffle .qcard:nth-child(1){animation-delay:0s}
-  .list-shuffle .qrow:nth-child(2),.list-shuffle .qcard:nth-child(2){animation-delay:.02s}
-  .list-shuffle .qrow:nth-child(3),.list-shuffle .qcard:nth-child(3){animation-delay:.04s}
-  .list-shuffle .qrow:nth-child(4),.list-shuffle .qcard:nth-child(4){animation-delay:.06s}
-  .list-shuffle .qrow:nth-child(5),.list-shuffle .qcard:nth-child(5){animation-delay:.08s}
-  .list-shuffle .qrow:nth-child(6),.list-shuffle .qcard:nth-child(6){animation-delay:.1s}
-  .list-shuffle .qrow:nth-child(7),.list-shuffle .qcard:nth-child(7){animation-delay:.12s}
-  .list-shuffle .qrow:nth-child(8),.list-shuffle .qcard:nth-child(8){animation-delay:.14s}
-  .list-shuffle .qrow:nth-child(9),.list-shuffle .qcard:nth-child(9){animation-delay:.16s}
-  .list-shuffle .qrow:nth-child(10),.list-shuffle .qcard:nth-child(10){animation-delay:.18s}
-  .list-shuffle .qrow:nth-child(n+11),.list-shuffle .qcard:nth-child(n+11){animation-delay:.2s}
+  .list-shuffle .qrow:nth-child(2),.list-shuffle .qcard:nth-child(2){animation-delay:.025s}
+  .list-shuffle .qrow:nth-child(3),.list-shuffle .qcard:nth-child(3){animation-delay:.05s}
+  .list-shuffle .qrow:nth-child(4),.list-shuffle .qcard:nth-child(4){animation-delay:.075s}
+  .list-shuffle .qrow:nth-child(5),.list-shuffle .qcard:nth-child(5){animation-delay:.1s}
+  .list-shuffle .qrow:nth-child(6),.list-shuffle .qcard:nth-child(6){animation-delay:.125s}
+  .list-shuffle .qrow:nth-child(7),.list-shuffle .qcard:nth-child(7){animation-delay:.15s}
+  .list-shuffle .qrow:nth-child(8),.list-shuffle .qcard:nth-child(8){animation-delay:.175s}
+  .list-shuffle .qrow:nth-child(9),.list-shuffle .qcard:nth-child(9){animation-delay:.2s}
+  .list-shuffle .qrow:nth-child(10),.list-shuffle .qcard:nth-child(10){animation-delay:.225s}
+  .list-shuffle .qrow:nth-child(n+11),.list-shuffle .qcard:nth-child(n+11){animation-delay:.25s}
 
-  /* Staggered entrance for table rows — uses nth-child for cascade */
-  .stagger-in .qrow{animation:staggerIn .2s ease both}
-  .stagger-in .qrow:nth-child(1){animation-delay:0s}
-  .stagger-in .qrow:nth-child(2){animation-delay:.03s}
-  .stagger-in .qrow:nth-child(3){animation-delay:.06s}
-  .stagger-in .qrow:nth-child(4){animation-delay:.09s}
-  .stagger-in .qrow:nth-child(5){animation-delay:.12s}
-  .stagger-in .qrow:nth-child(6){animation-delay:.15s}
-  .stagger-in .qrow:nth-child(7){animation-delay:.18s}
-  .stagger-in .qrow:nth-child(8){animation-delay:.21s}
-  .stagger-in .qrow:nth-child(9){animation-delay:.24s}
-  .stagger-in .qrow:nth-child(10){animation-delay:.27s}
-  .stagger-in .qrow:nth-child(n+11){animation-delay:.3s}
+  /* Staggered entrance for table rows + cards — uses nth-child for cascade */
+  @keyframes staggerEntrance{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .stagger-in .qrow,.stagger-in .qcard{animation:staggerEntrance .35s cubic-bezier(0.16,1,0.3,1) both}
+  .stagger-in .qrow:nth-child(1),.stagger-in .qcard:nth-child(1){animation-delay:0s}
+  .stagger-in .qrow:nth-child(2),.stagger-in .qcard:nth-child(2){animation-delay:.035s}
+  .stagger-in .qrow:nth-child(3),.stagger-in .qcard:nth-child(3){animation-delay:.07s}
+  .stagger-in .qrow:nth-child(4),.stagger-in .qcard:nth-child(4){animation-delay:.105s}
+  .stagger-in .qrow:nth-child(5),.stagger-in .qcard:nth-child(5){animation-delay:.14s}
+  .stagger-in .qrow:nth-child(6),.stagger-in .qcard:nth-child(6){animation-delay:.175s}
+  .stagger-in .qrow:nth-child(7),.stagger-in .qcard:nth-child(7){animation-delay:.21s}
+  .stagger-in .qrow:nth-child(8),.stagger-in .qcard:nth-child(8){animation-delay:.245s}
+  .stagger-in .qrow:nth-child(9),.stagger-in .qcard:nth-child(9){animation-delay:.28s}
+  .stagger-in .qrow:nth-child(10),.stagger-in .qcard:nth-child(10){animation-delay:.315s}
+  .stagger-in .qrow:nth-child(11),.stagger-in .qcard:nth-child(11){animation-delay:.35s}
+  .stagger-in .qrow:nth-child(12),.stagger-in .qcard:nth-child(12){animation-delay:.385s}
+  .stagger-in .qrow:nth-child(n+13),.stagger-in .qcard:nth-child(n+13){animation-delay:.42s}
 
   /* Card hover lift */
   .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}

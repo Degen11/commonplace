@@ -5,7 +5,7 @@ const backdropBase = {
   background: "var(--cp-overlay)",
   backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
   zIndex: 1000,
-  animation: "backdropBlurIn .2s ease-out",
+  animation: "backdropBlurIn .25s ease-out",
 };
 
 const containerBase = {
@@ -13,7 +13,7 @@ const containerBase = {
   display: "flex", alignItems: "center", justifyContent: "center",
   zIndex: 1000, padding: 20,
   pointerEvents: "none",
-  animation: "modalScaleIn .2s ease-out",
+  animation: "modalScaleIn .3s cubic-bezier(0.16,1,0.3,1)",
 };
 
 /**

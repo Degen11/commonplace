@@ -40,8 +40,8 @@ export default function StatsOverlay({
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }}
+        initial={{ opacity: 0, scale: 0.94, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 28, mass: 0.8 } }}
         exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.12, ease: "easeIn" } }}
         style={{ maxWidth: "min(90vw, 720px)", width: "100%" }}
       >

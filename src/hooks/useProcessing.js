@@ -1,4 +1,4 @@
-import { useReducer, useRef } from "react";
+import { useReducer, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
 import { buildValidCats, fallbackCategory } from "../data/constants";
 import {
@@ -93,6 +93,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const pendingContinuationRef = useRef(null);
   const abortRef = useRef(null);
   const appendModeRef = useRef(false);
+
+  // Abort in-flight requests and clear timers on unmount
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+      if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
+    };
+  }, []);
 
   // Refs for latest values — so callbacks never read stale closures
   const quotesRef = useLatestRef(quotes);

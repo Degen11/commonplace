@@ -66,9 +66,8 @@ export default withApiHandler(async (req, res, { supabase }) => {
         updatedAt: data.updated_at,
       });
     } catch (err) {
-      const detail = err?.message || err?.code || 'unknown';
-      console.error('Sync GET error:', detail);
-      return res.status(500).json({ error: 'Failed to load data', detail });
+      console.error('Sync GET error:', err?.message || err?.code || 'unknown');
+      return res.status(500).json({ error: 'Failed to load data' });
     }
   }
 
@@ -113,9 +112,8 @@ export default withApiHandler(async (req, res, { supabase }) => {
 
       return res.status(200).json({ ok: true, count: merged.length, merged: true });
     } catch (err) {
-      const detail = err?.message || err?.code || 'unknown';
-      console.error('Sync POST error:', detail);
-      return res.status(500).json({ error: 'Failed to save data', detail });
+      console.error('Sync POST error:', err?.message || err?.code || 'unknown');
+      return res.status(500).json({ error: 'Failed to save data' });
     }
   }
 

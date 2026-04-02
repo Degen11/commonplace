@@ -95,10 +95,17 @@ export default withApiHandler(async (req, res) => {
       return res.status(400).json({ error: 'URL does not return text content' });
     }
 
-    const text = await response.text();
-    if (text.length > MAX_CONTENT_LENGTH) {
-      return res.status(400).json({ error: 'Page content is too large' });
+    // Stream-read with size cap to prevent memory exhaustion from huge responses
+    const chunks = [];
+    let totalBytes = 0;
+    for await (const chunk of response.body) {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_CONTENT_LENGTH) {
+        return res.status(400).json({ error: 'Page content is too large' });
+      }
+      chunks.push(chunk);
     }
+    const text = Buffer.concat(chunks).toString('utf-8');
 
     // Extract text from HTML based on extractMode
     let extracted;

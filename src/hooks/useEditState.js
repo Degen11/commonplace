@@ -42,9 +42,9 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
 
   // ── Filter reviewQueue when quotes change ──
   if (reviewQueue.length > 0) {
-    const filtered = reviewQueue.filter(id => quoteIdSet.has(id));
-    if (filtered.length !== reviewQueue.length) {
-      setReviewQueue(filtered);
+    const validQueue = reviewQueue.filter(id => quoteIdSet.has(id));
+    if (validQueue.length !== reviewQueue.length) {
+      setReviewQueue(validQueue);
     }
   }
 

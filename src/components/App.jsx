@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -22,7 +22,7 @@ import DupeModal from "./DupeModal";
 import EntryReviewModal from "./EntryReviewModal";
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
-import ResultsPhase from "./ResultsPhase";
+const ResultsPhase = lazy(() => import("./ResultsPhase"));
 import SectionErrorBoundary from "./SectionErrorBoundary";
 import OnboardingModal from "./OnboardingModal";
 
@@ -220,6 +220,7 @@ export default function Commonplace() {
       {/* ── Results phase ── */}
       {phase === "results" && (
         <motion.div key="results" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
+          <Suspense fallback={null}>
           <ResultsPhase
             apiError={apiError}
             failedEntries={failedEntries}
@@ -243,6 +244,7 @@ export default function Commonplace() {
             importCollections={importCollections}
             onClearReset={clearParentState}
           />
+          </Suspense>
         </motion.div>
       )}
       </AnimatePresence>

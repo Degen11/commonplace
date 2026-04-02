@@ -67,10 +67,11 @@ const CUSTOM_PALETTE = [
   { bg: "rgba(234,88,12,0.07)",    text: "#CC5F26" },
 ];
 
-export const getCatColor = (c, customCats) =>
-  CAT_COLORS[c] || (customCats.indexOf(c) >= 0
-    ? CUSTOM_PALETTE[customCats.indexOf(c) % CUSTOM_PALETTE.length]
-    : CAT_COLORS.Unknown);
+export const getCatColor = (c, customCats) => {
+  if (CAT_COLORS[c]) return CAT_COLORS[c];
+  const idx = customCats.indexOf(c);
+  return idx >= 0 ? CUSTOM_PALETTE[idx % CUSTOM_PALETTE.length] : CAT_COLORS.Unknown;
+};
 
 export const CONF_ORDER  = { low: 0, medium: 1, high: 2 };
 export const CONF_COLORS = { high: "#16A34A", medium: "#D97706", low: "#DC2626" };

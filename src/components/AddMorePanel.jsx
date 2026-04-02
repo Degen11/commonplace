@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
-import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye } from "lucide-react";
+import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye, Loader } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
 
 export default function AddMorePanel({
@@ -214,7 +214,7 @@ export default function AddMorePanel({
               disabled={urlLoading || !urlInput.trim()}
               style={{ padding: "7px 12px", borderRadius: 6, border: "none", background: urlLoading ? "var(--cp-border)" : "#2383E2", color: "#fff", fontSize: 12, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap" }}
             >
-              {urlLoading ? "..." : "Fetch"}
+              {urlLoading ? <Loader size={13} strokeWidth={2} className="spin" /> : "Fetch"}
             </button>
           </div>
 

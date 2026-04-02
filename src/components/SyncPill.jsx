@@ -40,6 +40,8 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
 
   const tooltip = isError
     ? "Click to retry"
+    : isSyncing
+    ? "Saving changes\u2026"
     : lastSynced
     ? `Last saved ${formatRelativeTime(lastSynced)}`
     : null;

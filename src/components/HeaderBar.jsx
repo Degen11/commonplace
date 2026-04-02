@@ -59,7 +59,7 @@ export default function HeaderBar({
               </button>
             </div>
             {exportDropdownContent}
-            <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={styles.addMoreBtn} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
+            <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={{ ...styles.addMoreBtn, ...(showAddMore ? { background: "var(--cp-bg-tab)", color: "var(--cp-accent)", borderColor: "var(--cp-accent)" } : {}) }} onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add more</button>
           </>
         )}
 
@@ -68,7 +68,7 @@ export default function HeaderBar({
           <>
             <button
               className="hdr-btn"
-              style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, display: "inline-flex", alignItems: "center", gap: 4 }}
+              style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, display: "inline-flex", alignItems: "center", gap: 4, ...(showAddMore ? { background: "var(--cp-bg-tab)", color: "var(--cp-accent)", borderColor: "var(--cp-accent)" } : {}) }}
               onClick={() => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}
             >
               <Plus size={15} strokeWidth={2} /> Add

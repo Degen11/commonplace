@@ -64,7 +64,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                 padding: "12px 14px", borderRadius: 6,
                 border: "1px solid var(--cp-border)",
                 background: "var(--cp-bg-card)",
-                cursor: generating ? "wait" : "pointer",
+                cursor: generating ? (isGenerating ? "wait" : "not-allowed") : "pointer",
                 opacity: generating && !isGenerating ? 0.5 : 1,
                 transition: "all .15s ease",
                 textAlign: "left",

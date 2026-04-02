@@ -22,9 +22,10 @@ import DupeModal from "./DupeModal";
 import EntryReviewModal from "./EntryReviewModal";
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
-const ResultsPhase = lazy(() => import("./ResultsPhase"));
 import SectionErrorBoundary from "./SectionErrorBoundary";
 import OnboardingModal from "./OnboardingModal";
+
+const ResultsPhase = lazy(() => import("./ResultsPhase"));
 
 export default function Commonplace() {
   const { showToast } = useToastContext();

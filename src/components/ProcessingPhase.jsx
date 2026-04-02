@@ -80,7 +80,7 @@ export default function ProcessingPhase({
   const total = progress?.total || 0;
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const isComplete = processingDone || progress?.phase === "complete";
-  const reversedFeed = [...identifiedFeed].reverse();
+  const reversedFeed = [...identifiedFeed].reverse().slice(0, 8);
 
   return (
     <div style={styles.wrap}>

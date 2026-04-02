@@ -118,6 +118,7 @@ export const baseCSS = `
   @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes savePulse{0%{background-color:rgba(5,150,105,0.12);border-radius:4px}100%{background-color:transparent}}
+  @keyframes newQuotePulse{0%{background-color:rgba(59,130,246,0.13);transform:scale(1.003)}50%{background-color:rgba(59,130,246,0.06);transform:scale(1)}100%{background-color:transparent;transform:scale(1)}}
   @keyframes tpDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   @keyframes bulkSlideUp{0%{opacity:0;transform:translateY(100%)}60%{opacity:1;transform:translateY(-4px)}80%{transform:translateY(1px)}100%{transform:translateY(0)}}
   @keyframes overlayFade{from{opacity:0}to{opacity:1}}
@@ -239,7 +240,7 @@ export const baseCSS = `
   /* Save pulse for inline edits */
   .save-pulse{animation:savePulse .4s ease}
   /* Full-row highlight for newly added quotes */
-  .new-quote-pulse{animation:savePulse 1s ease}
+  .new-quote-pulse{animation:newQuotePulse 1.5s ease}
 
   /* Header button hover states */
   .hdr-btn{transition:all .15s ease}
@@ -517,7 +518,7 @@ export const styles = {
 
   // Drop zone
   dropZone:{borderWidth:2,borderStyle:"dashed",borderColor:"var(--cp-border)",borderRadius:6,padding:"40px 24px",textAlign:"center",cursor:"pointer",background:"var(--cp-bg-card)"},
-  dropZoneActive:{borderColor:CLR_BLUE,background:"rgba(59,130,246,0.08)"},
+  dropZoneActive:{borderColor:CLR_BLUE,background:"rgba(59,130,246,0.08)",transform:"scale(1.01)",boxShadow:"0 4px 20px rgba(59,130,246,0.15)",transition:"all .2s ease"},
   dropIcon:{fontSize:32,marginBottom:12},
   dropTitle:{fontSize:14,fontWeight:600,color:"var(--cp-text-secondary)",marginBottom:6},
   dropSub:{fontSize:13,color:"var(--cp-text-muted)"},

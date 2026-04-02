@@ -57,7 +57,32 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
     searchTerm, newQuoteHighlight,
   } = useResultsContext();
   const listRef = useRef(null);
+  const outerRef = useRef(null);
   const [scrollMargin, setScrollMargin] = useState(0);
+
+  // Stagger-in animation on initial mount
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    el.classList.add("stagger-in");
+    const t = setTimeout(() => el.classList.remove("stagger-in"), 600);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Detect list changes and trigger shuffle animation
+  const cardFingerprint = visible.slice(0, 8).map(q => q.id).join(",");
+  const prevCardFingerprintRef = useRef(cardFingerprint);
+  useEffect(() => {
+    if (prevCardFingerprintRef.current === cardFingerprint) return;
+    prevCardFingerprintRef.current = cardFingerprint;
+    const el = outerRef.current;
+    if (!el) return;
+    el.classList.remove("list-shuffle");
+    void el.offsetWidth;
+    el.classList.add("list-shuffle");
+    const t = setTimeout(() => el.classList.remove("list-shuffle"), 500);
+    return () => clearTimeout(t);
+  }, [cardFingerprint]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -84,7 +109,8 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
     : 0;
 
   return (
-    <div ref={listRef} style={{ paddingTop: 8 }}>
+    <div ref={outerRef} style={{ paddingTop: 8 }}>
+      <div ref={listRef}>
       {topPad > 0 && <div style={{ height: topPad }} />}
       {virtualItems.map(virtualRow => {
         const q = visible[virtualRow.index];
@@ -132,6 +158,7 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
         );
       })}
       {bottomPad > 0 && <div style={{ height: bottomPad }} />}
+      </div>
     </div>
   );
 }
@@ -1100,28 +1127,35 @@ export default function ResultsPhase({
             )}
           </button>
           )}
-          <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }} modifiers={[anchorToCursor]}>
+          <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }} modifiers={[anchorToCursor]}>
             {activeDragId ? (() => {
               const q = quotes.find(x => x.id === activeDragId);
               if (!q) return null;
               const count = selected.has(activeDragId) && selected.size > 1 ? selected.size : 1;
               const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
               return (
-                <div style={{ position: "relative", transform: "scale(1.03) rotate(-1.5deg)", transition: "transform .15s ease" }}>
+                <div style={{
+                  position: "relative",
+                  transform: "scale(1.04) rotate(-2deg)",
+                  transition: "transform .2s cubic-bezier(0.16, 1, 0.3, 1)",
+                  filter: "drop-shadow(0 12px 28px rgba(0,0,0,0.18)) drop-shadow(0 4px 10px rgba(0,0,0,0.1))",
+                }}>
                   {count > 1 && (
                     <span style={{
-                      position: "absolute", top: -8, left: -8, zIndex: 1,
+                      position: "absolute", top: -10, left: -10, zIndex: 1,
                       background: "var(--cp-accent)", color: "#fff",
                       fontSize: 11, fontWeight: 700, lineHeight: 1,
-                      padding: "3px 7px", borderRadius: 6,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+                      padding: "4px 8px", borderRadius: 6,
+                      boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+                      animation: "completePop .3s cubic-bezier(0.16, 1, 0.3, 1) both",
                     }}>{count}</span>
                   )}
                   <div style={{
-                    background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)",
-                    borderRadius: 6, padding: "8px 14px", fontSize: 13,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)",
-                    maxWidth: 320, opacity: 0.95,
+                    background: "var(--cp-bg-card)",
+                    border: "1px solid var(--cp-accent)",
+                    borderRadius: 6, padding: "10px 16px", fontSize: 13,
+                    boxShadow: "0 0 0 2px rgba(60,87,117,0.1)",
+                    maxWidth: 320,
                     color: "var(--cp-text)",
                   }}>
                     {preview}

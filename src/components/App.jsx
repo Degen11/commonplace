@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useProcessing from "../hooks/useProcessing";
@@ -151,11 +151,11 @@ export default function Commonplace() {
     resetProcessingState();
   };
 
-  // Shared motion variants for phase transitions
+  // Shared motion variants for phase transitions — spring entry, quick ease exit
   const phaseVariants = {
-    initial: { opacity: 0, y: 18 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
-    exit: { opacity: 0, transition: { duration: 0.15, ease: "easeIn" } },
+    initial: { opacity: 0, y: 20, scale: 0.99 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 380, damping: 30, mass: 0.8 } },
+    exit: { opacity: 0, y: -8, scale: 0.99, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
   return (
@@ -178,6 +178,7 @@ export default function Commonplace() {
         />
       )}
 
+      <LayoutGroup>
       <AnimatePresence mode="wait">
       {/* ── Input phase ── */}
       {phase === "input" && (
@@ -249,6 +250,7 @@ export default function Commonplace() {
         </motion.div>
       )}
       </AnimatePresence>
+      </LayoutGroup>
     </>
   );
 }

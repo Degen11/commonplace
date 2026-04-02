@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import { Menu } from "@base-ui/react/menu";
 import Logo from "./Logo";
 import SyncPill from "./SyncPill";
@@ -34,10 +35,10 @@ export default function HeaderBar({
 
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
-      <h1 style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}>
+      <motion.h1 layoutId="app-logo" style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
         <Logo size={28} />
         Commonplace
-      </h1>
+      </motion.h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
 

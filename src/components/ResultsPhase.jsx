@@ -545,12 +545,21 @@ export default function ResultsPhase({
   };
 
   const handleAddToCollection = (collectionId, quoteIds) => {
-    addToCollection(collectionId, quoteIds);
+    const { added, skipped } = addToCollection(collectionId, quoteIds);
     const col = collections.find(c => c.id === collectionId);
+    const name = col?.name || "collection";
+    const parts = [];
+    if (skipped > 0) parts.push(`${pluralize(skipped, "quote")} already in "${name}"`);
+    if (added > 0) parts.push(`${added} added`);
+    const msg = skipped > 0 && added === 0
+      ? `${pluralize(skipped, "quote")} already in "${name}"`
+      : skipped > 0
+        ? `${parts.join(", ")}`
+        : `Added ${pluralize(added, "quote")} to "${name}"`;
     showToast(
-      `Added ${pluralize(quoteIds.length, "quote")} to "${col?.name || "collection"}"`,
-      "Undo",
-      () => removeFromCollection(collectionId, quoteIds),
+      msg,
+      added > 0 ? "Undo" : undefined,
+      added > 0 ? () => removeFromCollection(collectionId, quoteIds) : undefined,
     );
   };
 

@@ -249,15 +249,20 @@ export const useQuotesStore = create(
     },
 
     addToCollection: (collectionId, quoteIds) => {
-      set(state => ({
-        collections: state.collections.map(c => {
-          if (c.id !== collectionId) return c;
-          const existing = new Set(c.quoteIds);
-          const newIds = quoteIds.filter(id => !existing.has(id));
-          if (newIds.length === 0) return c;
-          return { ...c, quoteIds: [...c.quoteIds, ...newIds] };
-        }),
-      }));
+      const col = get().collections.find(c => c.id === collectionId);
+      const existing = new Set(col?.quoteIds);
+      const newIds = quoteIds.filter(id => !existing.has(id));
+      const added = newIds.length;
+      const skipped = quoteIds.length - added;
+      if (added > 0) {
+        set(state => ({
+          collections: state.collections.map(c => {
+            if (c.id !== collectionId) return c;
+            return { ...c, quoteIds: [...c.quoteIds, ...newIds] };
+          }),
+        }));
+      }
+      return { added, skipped };
     },
 
     removeFromCollection: (collectionId, quoteIds) => {

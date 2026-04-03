@@ -49,9 +49,17 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
       const ids = selected.has(active.id) && selected.size > 1
         ? [...selected]
         : [active.id];
-      addToCollection(collectionId, ids);
+      const { added, skipped } = addToCollection(collectionId, ids);
       const col = collections.find(c => c.id === collectionId);
-      if (col) showToast(`Added ${pluralize(ids.length, "quote")} to "${col.name}"`, "Undo", () => removeFromCollection(collectionId, ids), "success");
+      if (col) {
+        const name = col.name;
+        const msg = skipped > 0 && added === 0
+          ? `${pluralize(skipped, "quote")} already in "${name}"`
+          : skipped > 0
+            ? `${pluralize(skipped, "quote")} already in "${name}", ${added} added`
+            : `Added ${pluralize(added, "quote")} to "${name}"`;
+        showToast(msg, added > 0 ? "Undo" : undefined, added > 0 ? () => removeFromCollection(collectionId, ids) : undefined, "success");
+      }
       return;
     }
 

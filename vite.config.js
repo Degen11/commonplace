@@ -3,12 +3,18 @@ import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { VitePWA } from 'vite-plugin-pwa'
+import sentryVitePlugin from '@sentry/vite-plugin'
 
 export default defineConfig({
   plugins: [
     react(),
     babel({
       presets: [reactCompilerPreset()],
+    }),
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
     }),
     VitePWA({
       registerType: 'autoUpdate',
@@ -54,7 +60,7 @@ export default defineConfig({
     }),
   ],
   build: {
-    sourcemap: false,
+    sourcemap: true,
     rolldownOptions: {
       output: {
         manualChunks(id) {

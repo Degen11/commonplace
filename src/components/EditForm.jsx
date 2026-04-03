@@ -155,8 +155,8 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
         >
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button style={{ ...styles.editSave, ...(isMobile ? { padding: "8px 16px", fontSize: 14, minHeight: 40 } : {}) }} onClick={() => onSave(q.id, text, source, category)}>Save</button>
-        <button style={{ ...styles.editCancel, ...(isMobile ? { padding: "8px 12px", fontSize: 14, minHeight: 40 } : {}) }} onClick={onCancel}>Cancel</button>
+        <button className="edit-save" style={{ ...styles.editSave, ...(isMobile ? { padding: "8px 16px", fontSize: 14, minHeight: 40 } : {}) }} onClick={() => onSave(q.id, text, source, category)}>Save</button>
+        <button className="edit-cancel" style={{ ...styles.editCancel, ...(isMobile ? { padding: "8px 12px", fontSize: 14, minHeight: 40 } : {}) }} onClick={onCancel}>Cancel</button>
       </div>
 
     </div>

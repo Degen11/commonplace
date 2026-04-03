@@ -23,7 +23,7 @@ export function InlineSourceInput({ initial, onSave, onCancel, showHint = true }
         onFocus={e => e.target.select()}
         autoFocus
       />
-      {showHint && <span style={{ fontSize: 10, color: "var(--cp-text-faint)", userSelect: "none" }}>Enter to save · Esc to cancel</span>}
+      {showHint && <span style={{ fontSize: 10, color: "var(--cp-text-faint)", userSelect: "none", animation: "fadeUp .15s ease .05s both" }}>Enter to save · Esc to cancel</span>}
     </div>
   );
 }

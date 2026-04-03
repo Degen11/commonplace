@@ -254,10 +254,24 @@ export const baseCSS = `
   .load-more-btn{transition:all .15s ease}
   .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}
 
+  /* Edit form button hovers */
+  .edit-save{transition:opacity .12s ease}
+  .edit-save:hover{opacity:.85}
+  .edit-cancel{transition:color .12s ease}
+  .edit-cancel:hover{color:var(--cp-text-secondary) !important}
+  .qa-submit:not(:disabled){transition:opacity .12s ease}
+  .qa-submit:not(:disabled):hover{opacity:.85}
+
   /* Confirm modal button hovers */
   .confirm-cancel:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
   .confirm-yes:hover{opacity:.9}
   .dismiss-link:hover{opacity:.7}
+
+  /* Empty state / toolbar — reset and filter chip hover */
+  .reset-btn{transition:opacity .12s ease}
+  .reset-btn:hover{opacity:.85}
+  .filter-chip{transition:background .12s ease,border-color .12s ease}
+  .filter-chip:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
 
   /* Action button hover — driven by --hover-color custom property */
   .act-btn:hover{color:var(--hover-color) !important}
@@ -276,7 +290,7 @@ export const baseCSS = `
   .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
 
   /* Button press feedback — subtle scale on mousedown */
-  .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled){transform:scale(0.97) !important;transition:transform .1s ease !important}
+  .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled),.reset-btn:active,.filter-chip:active,.edit-save:active,.edit-cancel:active,.qa-submit:active:not(:disabled),.attention-dismiss:active{transform:scale(0.97) !important;transition:transform .1s ease !important}
   .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
 
   /* List shuffle — triggered on sort/filter change for smooth staggered re-entrance */

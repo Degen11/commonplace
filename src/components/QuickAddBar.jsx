@@ -133,6 +133,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
           </Popover.Root>
           <button
             type="submit"
+            className="qa-submit"
             disabled={!text.trim()}
             style={{
               padding: isMobile ? "8px 18px" : "6px 14px", fontSize: 13, fontWeight: 500, fontFamily: "inherit",

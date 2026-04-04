@@ -333,6 +333,8 @@ export default function CollectionsSidebar({
       >
         <button
           onClick={() => setCollapsed(false)}
+          aria-expanded={false}
+          aria-label="Expand sidebar"
           style={{
             background: "none", border: "none", cursor: "pointer",
             color: "var(--cp-text-muted)", padding: 4, borderRadius: 4,
@@ -398,6 +400,8 @@ export default function CollectionsSidebar({
           {!isMobileSheet && (
           <button
             onClick={() => setCollapsed(true)}
+            aria-expanded={true}
+            aria-label="Collapse sidebar"
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
             title="Collapse sidebar"
           >

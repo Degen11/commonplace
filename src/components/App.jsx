@@ -18,14 +18,14 @@ import {
   LS_DRAFT,
 } from "../config";
 
-import DupeModal from "./DupeModal";
-import EntryReviewModal from "./EntryReviewModal";
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
 import SectionErrorBoundary from "./SectionErrorBoundary";
-import OnboardingModal from "./OnboardingModal";
 
 const ResultsPhase = lazy(() => import("./ResultsPhase"));
+const OnboardingModal = lazy(() => import("./OnboardingModal"));
+const DupeModal = lazy(() => import("./DupeModal"));
+const EntryReviewModal = lazy(() => import("./EntryReviewModal"));
 
 export default function Commonplace() {
   const { showToast } = useToastContext();
@@ -159,24 +159,26 @@ export default function Commonplace() {
   };
 
   return (
-    <>
+    <main>
       <Analytics />
       <SpeedInsights />
 
-      <OnboardingModal />
-      <DupeModal
-        pendingDupes={pendingDupes}
-        dupeDecisions={dupeDecisions}
-        setDupeDecision={setDupeDecision}
-        onContinue={handleDupesContinue}
-      />
-      {pendingReview && (
-        <EntryReviewModal
-          lines={pendingReview}
-          onConfirm={handleReviewConfirm}
-          onCancel={handleReviewCancel}
+      <Suspense fallback={null}>
+        <OnboardingModal />
+        <DupeModal
+          pendingDupes={pendingDupes}
+          dupeDecisions={dupeDecisions}
+          setDupeDecision={setDupeDecision}
+          onContinue={handleDupesContinue}
         />
-      )}
+        {pendingReview && (
+          <EntryReviewModal
+            lines={pendingReview}
+            onConfirm={handleReviewConfirm}
+            onCancel={handleReviewCancel}
+          />
+        )}
+      </Suspense>
 
       <LayoutGroup>
       <AnimatePresence mode="wait">
@@ -251,6 +253,6 @@ export default function Commonplace() {
       )}
       </AnimatePresence>
       </LayoutGroup>
-    </>
+    </main>
   );
 }

@@ -105,7 +105,7 @@ export default function useSync({ onCloudData, onSyncError }) {
       }
       initialLoadDone.current = true;
     } catch {
-      // Silent fail — localStorage is the primary store
+      setSyncStatus("error");
     } finally {
       setInitialLoading(false);
     }

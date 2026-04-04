@@ -1,13 +1,12 @@
-// ── QuotesContext — thin bridge over Zustand store ──
-// Preserves the useQuotesContext() API so all consumers work unchanged.
-// State, persistence, cross-tab sync, and collection helpers now live in
-// the Zustand store (src/stores/quotesStore.js). This file handles:
-// - Mount-time side effects (shared links, initial cloud pull)
-// - Bridging the store to React context for backward compatibility
-// - Toast notifications that depend on React context (ToastContext)
+// ── QuotesContext — side-effects-only provider ──
+// All state is consumed directly from the Zustand store (useQuotesStore).
+// This file handles mount-time side effects only:
+//   - Shared / public link decoding
+//   - Initial cloud pull via useSync
+//   - Debounced push to Supabase on state changes
+//   - Storage limit toast (needs ToastContext)
 
-import { createContext, useContext, useEffect, useRef } from "react";
-import { DEFAULT_CATEGORIES } from "../data/constants";
+import { useEffect, useRef } from "react";
 import { useToastContext } from "./ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
 import useSync from "../hooks/useSync";
@@ -15,12 +14,10 @@ import { generateId } from "../utils/uuid";
 import { fetchWithTimeout } from "../utils/api";
 import {
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
-  API_TIMEOUT_MS, STORAGE_WARN_BYTES,
+  API_TIMEOUT_MS,
   LS_QUOTES, LS_CATS,
   SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
 } from "../config";
-
-const QuotesContext = createContext(null);
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -58,34 +55,15 @@ export function safeDecodeShareData(hash) {
 export function QuotesProvider({ children }) {
   const { showToast } = useToastContext();
 
-  // ── Pull state from Zustand store ──
+  // ── State needed for side effects ──
   const quotes = useQuotesStore(s => s.quotes);
   const customCats = useQuotesStore(s => s.customCats);
   const collections = useQuotesStore(s => s.collections);
-  const columnOrder = useQuotesStore(s => s.columnOrder);
-  const activeCollectionId = useQuotesStore(s => s.activeCollectionId);
   const isSharedView = useQuotesStore(s => s.isSharedView);
-
-  // ── Pull actions from store (stable references — no useCallback needed) ──
   const setQuotes = useQuotesStore(s => s.setQuotes);
-  const setCustomCats = useQuotesStore(s => s.setCustomCats);
-  const setColumnOrder = useQuotesStore(s => s.setColumnOrder);
-  const setActiveCollectionId = useQuotesStore(s => s.setActiveCollectionId);
   const setIsSharedView = useQuotesStore(s => s.setIsSharedView);
-  const trackDeletion = useQuotesStore(s => s.trackDeletion);
-  const untrackDeletion = useQuotesStore(s => s.untrackDeletion);
-  const createCollection = useQuotesStore(s => s.createCollection);
-  const deleteCollection = useQuotesStore(s => s.deleteCollection);
-  const restoreCollection = useQuotesStore(s => s.restoreCollection);
-  const renameCollection = useQuotesStore(s => s.renameCollection);
-  const addToCollection = useQuotesStore(s => s.addToCollection);
-  const removeFromCollection = useQuotesStore(s => s.removeFromCollection);
-  const updateCollectionIcon = useQuotesStore(s => s.updateCollectionIcon);
-  const cleanCollectionRefs = useQuotesStore(s => s.cleanCollectionRefs);
-  const handleCloudData = useQuotesStore(s => s.handleCloudData);
   const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
-
-  const allCats = [...DEFAULT_CATEGORIES, ...customCats];
+  const handleCloudData = useQuotesStore(s => s.handleCloudData);
 
   // ── Storage limit warning (needs toast) ──
   const storageLimitWarned = useRef(false);
@@ -99,13 +77,9 @@ export function QuotesProvider({ children }) {
   }, [quotes, showToast]);
 
   // ── Cloud sync via useSync (TanStack Query) — state written to Zustand store ──
-  const handleSyncError = (message) => {
-    showToast(message);
-  };
-
-  const { syncStatus, lastSynced, initialLoading, pull, schedulePush, manualPush, markReady } = useSync({
+  const { pull, schedulePush, markReady } = useSync({
     onCloudData: handleCloudData,
-    onSyncError: handleSyncError,
+    onSyncError: (message) => showToast(message),
   });
 
   // ── Push to Supabase whenever quotes/categories change ──
@@ -129,7 +103,7 @@ export function QuotesProvider({ children }) {
         setInitialLoading(false);
         return;
       }
-      showToast("This shared link couldn't be loaded \u2014 it may be corrupted.", null, null, "error");
+      showToast("This shared link couldn\u2019t be loaded \u2014 it may be corrupted.", null, null, "error");
       try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
     }
 
@@ -172,7 +146,7 @@ export function QuotesProvider({ children }) {
               ? "Shared collection not found."
               : err.message === "empty"
               ? "This shared collection is empty."
-              : "Couldn't load this shared collection.";
+              : "Couldn\u2019t load this shared collection.";
             showToast(msg, null, null, "error");
             try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
             markReady();
@@ -195,7 +169,7 @@ export function QuotesProvider({ children }) {
         }
       }
     } catch {
-      showToast("Saved session couldn't be loaded. Starting fresh.", null, null, "error");
+      showToast("Saved session couldn\u2019t be loaded. Starting fresh.", null, null, "error");
       try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch { /* ignore */ }
     }
 
@@ -203,36 +177,5 @@ export function QuotesProvider({ children }) {
     pull();
   }, [showToast, pull, markReady, setQuotes, setIsSharedView, setInitialLoading]);
 
-  // ── Build context value ──
-  // Side-effect-only provider. State is consumed directly from Zustand store.
-  // Keeping the context for backward compatibility with any remaining consumers.
-  const value = {
-    quotes, setQuotes,
-    customCats, setCustomCats,
-    columnOrder, setColumnOrder,
-    allCats,
-    isSharedView, setIsSharedView,
-    syncStatus,
-    lastSynced,
-    initialLoading,
-    trackDeletion, untrackDeletion,
-    collections,
-    activeCollectionId, setActiveCollectionId,
-    createCollection, deleteCollection, restoreCollection, renameCollection,
-    addToCollection, removeFromCollection, updateCollectionIcon,
-    cleanCollectionRefs,
-    manualPush,
-  };
-
-  return (
-    <QuotesContext.Provider value={value}>
-      {children}
-    </QuotesContext.Provider>
-  );
-}
-
-export function useQuotesContext() {
-  const ctx = useContext(QuotesContext);
-  if (!ctx) throw new Error("useQuotesContext must be used within QuotesProvider");
-  return ctx;
+  return children;
 }

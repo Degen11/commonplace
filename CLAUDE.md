@@ -51,7 +51,7 @@ src/
     quotesStore.js             Zustand store — quotes, collections, column order, deletion tombstones
 
   contexts/
-    QuotesContext.jsx           Thin bridge over Zustand — handles mount-time side effects (share links, cloud pull)
+    QuotesContext.jsx           Side-effects-only provider — share link decoding, cloud pull/push scheduling, storage toast
     ToastContext.jsx            Toast notification queue
 
   components/
@@ -169,7 +169,7 @@ User input → smartSplit() → deduplicate against existing
 - Sync state: `syncStatus`, `lastSynced`, `initialLoading`
 - Deletion tombstones: `_deletedIds[]` (expire after 7 days)
 
-**QuotesContext** (`src/contexts/QuotesContext.jsx`) wraps the Zustand store for backward compatibility. It handles mount-time effects (shared link decoding, initial cloud pull) and bridges the store to `useQuotesContext()`. All consumers use `useQuotesContext()` — they don't access the Zustand store directly.
+**QuotesContext** (`src/contexts/QuotesContext.jsx`) is a side-effects-only provider — no context value is provided. It handles mount-time effects: shared link decoding, initial cloud pull, debounced push scheduling, and storage limit toasts (which require `ToastContext`). All components read state directly from `useQuotesStore()`.
 
 **Local hook state** — each feature hook manages its own state:
 - `useProcessing` — useReducer state machine (idle → dupes → processing → done). Initialized in App.jsx (spans phases)
@@ -192,9 +192,9 @@ User input → smartSplit() → deduplicate against existing
 ## Key components
 
 - **`App.jsx`** — Phase orchestrator (~220 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` with `AnimatePresence`.
-- **`ResultsPhase.jsx`** — The results phase. Calls `useQuotesContext()` directly. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
+- **`ResultsPhase.jsx`** — The results phase. Reads state directly from `useQuotesStore`. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
-- **`QuotesContext.jsx`** — Mount-time bootstrapping: decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, bridges Zustand to React context.
+- **`QuotesContext.jsx`** — Side-effects-only provider. Decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, schedules debounced push to Supabase. Provides no context value — it just renders `children`.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Three extracted sub-functions (`handleLocalLookup`, `handleExternalLookup`, `handleApiBatch`) orchestrated by `runProcessing()`. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
 - **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.). Homepage-specific styles live separately in `inputPhaseStyles.js`.
@@ -259,8 +259,6 @@ Z.TOAST           2000  Toasts
 ## Known issues and rough edges
 
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
-- The Zustand migration is partial — `QuotesContext.jsx` still exists as a bridge layer. Components use `useQuotesContext()` rather than subscribing to the Zustand store directly, so they don't get selective re-render benefits yet
-- Stale comment in `QuotesContext.jsx` (~line 101) says sync "will be replaced by TanStack Query in phase 2" — the `useSync` hook already uses TanStack Query, but the context bridge remains
 - No TODO/FIXME comments exist in the codebase currently
 - **React Compiler bailouts** — some ESLint errors remain that the compiler can't optimize: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection`, `UrlPreviewModal`, and `useEditState`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization. Note: `eslint-plugin-react-hooks` must be installed separately to run the check (`npx eslint src/`)
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
@@ -268,7 +266,6 @@ Z.TOAST           2000  Toasts
 
 ## What to avoid
 
-- **Don't bypass QuotesContext** — even though Zustand is the real store, all components read from `useQuotesContext()`. Adding direct Zustand subscriptions would create two competing data paths
 - **Don't change localStorage keys** — they're defined in `config.js` and used by both the store and the sync system. Changing them breaks existing users' data
 - **Don't modify `_shared.js` ALLOWED_ORIGINS** without also updating the CSP header in `vercel.json` — they must stay in sync
 - **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update both `index.html` and the CSP

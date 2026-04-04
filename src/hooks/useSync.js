@@ -2,8 +2,9 @@
 // Replaces hand-rolled retry/backoff/debounce/ref patterns with
 // TanStack Query's built-in mutation retry and query caching.
 //
-// External API is unchanged: { syncStatus, lastSynced, initialLoading,
-// pull, schedulePush, manualPush, markReady }
+// External API: { deviceId, pull, schedulePush, manualPush, markReady }
+// syncStatus, lastSynced, initialLoading are written directly to the Zustand
+// store — consumers read them via useQuotesStore.
 
 import { useRef, useCallback, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,10 +65,6 @@ export default function useSync({ onCloudData, onSyncError }) {
   const setSyncStatus = useQuotesStore(s => s.setSyncStatus);
   const setLastSynced = useQuotesStore(s => s.setLastSynced);
   const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
-  // Read from store for return value (consumers now read directly from store)
-  const syncStatus = useQuotesStore(s => s.syncStatus);
-  const lastSynced = useQuotesStore(s => s.lastSynced);
-  const initialLoading = useQuotesStore(s => s.initialLoading);
   const initialLoadDone = useRef(false);
   const pushTimer = useRef(null);
   const lastErrorNotified = useRef(0);
@@ -205,9 +202,6 @@ export default function useSync({ onCloudData, onSyncError }) {
 
   return {
     deviceId,
-    syncStatus,
-    lastSynced,
-    initialLoading,
     pull,
     schedulePush,
     manualPush,

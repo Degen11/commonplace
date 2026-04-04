@@ -456,7 +456,8 @@ export default function ResultsPhase({
 
   const handleDupeDeleteBatch = (quoteIds) => {
     const snapshot = quotes.filter(q => quoteIds.includes(q.id));
-    const indices = snapshot.map(q => ({ quote: q, idx: quotes.findIndex(x => x.id === q.id) }));
+    const idToIdx = new Map(quotes.map((q, i) => [q.id, i]));
+    const indices = snapshot.map(q => ({ quote: q, idx: idToIdx.get(q.id) ?? -1 }));
     trackDeletion(quoteIds);
     const idSet = new Set(quoteIds);
     setQuotes(prev => prev.filter(q => !idSet.has(q.id)));

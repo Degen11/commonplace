@@ -34,6 +34,12 @@ const style = document.createElement('style')
 style.textContent = baseCSS
 document.head.appendChild(style)
 
+// Catch unhandled promise rejections (e.g. failed fetches, async errors)
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason?.name === 'AbortError') return;
+  console.error('[Commonplace] Unhandled rejection:', event.reason);
+})
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>

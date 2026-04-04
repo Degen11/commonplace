@@ -327,7 +327,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     deletingId,
     copiedId,
     reidentifyingIds,
-    handleDelete, copyQuote, shareAsImage, reIdentify, batchReIdentify,
+    handleDelete, copyQuote, reIdentify, batchReIdentify,
     handleFileImport,
   };
 }

@@ -9,8 +9,6 @@ import useTheme from "../hooks/useTheme";
 import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
 import { DEFAULT_CATEGORIES } from "../data/constants";
-
-import { sanitizeName } from "../data/constants";
 import { pluralize } from "../utils/helpers";
 import { smartSplit } from "../utils/textFormatting";
 import {

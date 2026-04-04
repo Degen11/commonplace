@@ -15,8 +15,7 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-
 
 // ── Supabase client (lazy, per-request) ──
 export function getSupabase() {
-  const key = process.env.SUPABASE_SECRET_KEY
-    || process.env.VITE_SUPABASE_ANON_KEY_COMMONPLACE;
+  const key = process.env.SUPABASE_SECRET_KEY;
   if (!key) return null;
   return createClient(SUPABASE_URL, key);
 }

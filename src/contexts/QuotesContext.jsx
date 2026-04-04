@@ -101,6 +101,9 @@ export function QuotesProvider({ children }) {
         setQuotes(decoded);
         setIsSharedView(true);
         setInitialLoading(false);
+        document.title = `Shared Collection (${decoded.length} quotes) — Commonplace`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute("content", `A shared collection of ${decoded.length} quotes — Commonplace`);
         return;
       }
       showToast("This shared link couldn\u2019t be loaded \u2014 it may be corrupted.", null, null, "error");
@@ -136,6 +139,9 @@ export function QuotesProvider({ children }) {
             setIsSharedView(true);
             setInitialLoading(false);
             if (data.title) {
+              document.title = `${data.title} — Commonplace`;
+              const metaDesc = document.querySelector('meta[name="description"]');
+              if (metaDesc) metaDesc.setAttribute("content", `Shared collection: "${data.title}" (${reconstructed.length} quotes) — Commonplace`);
               showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
             }
           } catch (err) {

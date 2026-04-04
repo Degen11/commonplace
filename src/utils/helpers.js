@@ -54,27 +54,3 @@ export function addAllToSet(set, items) { const s = new Set(set); for (const i o
 
 /** Return a new Set with all `items` removed. */
 export function removeAllFromSet(set, items) { const s = new Set(set); for (const i of items) s.delete(i); return s; }
-
-/**
- * Create a shallow props equality comparator for React.memo.
- * Compares only the listed keys, returning true if all are ===.
- *
- * Usage: memo(Component, propsEqual("q", "isSel", "isEd", ...))
- *
- * For props that need custom comparison (e.g. checking a Map/Set for a
- * specific key), pass a tuple: ["actionProps", (prev, next) => ...]
- */
-export function propsEqual(...keys) {
-  return (prev, next) => {
-    for (const key of keys) {
-      if (typeof key === "string") {
-        if (prev[key] !== next[key]) return false;
-      } else {
-        // Custom comparator tuple: [propName, (prev, next) => boolean]
-        const [, comparator] = key;
-        if (!comparator(prev, next)) return false;
-      }
-    }
-    return true;
-  };
-}

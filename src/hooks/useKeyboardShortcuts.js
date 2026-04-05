@@ -45,7 +45,7 @@ export default function useKeyboardShortcuts({
       if (s.phase !== "results" && e.key !== "Escape") return;
 
       // Block navigation/action shortcuts when modals or inline edits are active
-      const modalOpen = s.showShortcuts || s.showStats || s.showAddMore || s.confirmClear || s.confirmBulkDel;
+      const modalOpen = s.showShortcuts || s.showStats || s.showAddMore || s.confirmClear || s.confirmBulkDel || s.showExport || s.showSort;
       const isEditing = s.editingId || s.inlineEdit;
 
       if (e.key === "Escape") {
@@ -148,7 +148,7 @@ export default function useKeyboardShortcuts({
 
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [showToast, setEditingId, setSelected, setReviewQueue, setSearch,
+  }, [stateRef, showToast, setEditingId, setSelected, setReviewQueue, setSearch,
       setConfirmBulkDel, setConfirmClear, setShowExport, setShowSort,
       setShowShortcuts, setShowQuickInput, lastSelectedIndex]);
 }

@@ -10,9 +10,6 @@ export const ALLOWED_ORIGINS = [
   'http://localhost:3000',
 ];
 
-// UUID v4 validation
-export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 // ── Supabase client (lazy, per-request) ──
 export function getSupabase() {
   const key = process.env.SUPABASE_SECRET_KEY;

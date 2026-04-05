@@ -109,7 +109,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     } finally {
       setInitialLoading(false);
     }
-  }, [onCloudData, queryClient, setInitialLoading]);
+  }, [onCloudData, queryClient, setSyncStatus, setInitialLoading]);
 
   // ── Push: TanStack Query mutation with exponential backoff ──
   const pushMutation = useMutation({

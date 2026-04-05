@@ -18,9 +18,9 @@ function generateShareId() {
 export default withApiHandler(async (req, res, { supabase }) => {
   // ── GET: Fetch a shared collection ──
   if (req.method === 'GET') {
-    const { ok, error: idError } = parseBody(shareGetSchema, req.query);
+    const { ok, data: parsed, error: idError } = parseBody(shareGetSchema, req.query);
     if (!ok) return res.status(400).json({ error: 'Invalid share ID' });
-    const { id } = req.query;
+    const { id } = parsed;
 
     try {
       const { data, error } = await supabase

@@ -59,14 +59,14 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   // and bulk actions (delete, favorite) would affect invisible quotes.
   // Uses filterKey (derived from category/search/sort/collection filters)
   // so selection only clears on actual filter changes, not data mutations.
-  const prevFilterKey = useRef(filterKey);
-  useEffect(() => {
-    if (prevFilterKey.current !== filterKey) {
-      prevFilterKey.current = filterKey;
-      lastSelectedIndex.current = null;
-      setSelected(new Set());
-    }
-  }, [filterKey]);
+  // Uses setState-during-render pattern to avoid cascading effect renders.
+  // prevFilterKey is tracked via useState (not useRef) so the comparison
+  // doesn't violate the React Compiler's no-ref-during-render rule.
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (prevFilterKey !== filterKey) {
+    setPrevFilterKey(filterKey);
+    setSelected(new Set());
+  }
 
   // ── Helpers ──
   const startEditing = (id) => {
@@ -205,7 +205,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   };
 
   const startReviewFlow = () => {
-    const attentionIds = quotes
+    const attentionIds = filtered
       .filter(q => q.confidence === "low" || q.category === "Unknown")
       .sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0))
       .map(q => q.id);

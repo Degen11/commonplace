@@ -1003,7 +1003,7 @@ export default function ResultsPhase({
                   const savedPulseField = isSavedPulse ? savedPulse.field : null;
                   const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
                   return (
-                    <motion.div key={q.id} style={{ breakInside: "avoid", marginBottom: 12 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.6) }}>
+                    <motion.div key={q.id} className="qcard-wrap" style={{ breakInside: "avoid", marginBottom: 12 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.6) }}>
                     <CardItem
                       q={q}
                       col={col}

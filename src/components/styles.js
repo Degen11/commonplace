@@ -225,9 +225,9 @@ export const baseCSS = `
   .ui-tip-left::after{left:auto;right:0;transform:none}
   /* Allow tooltip pseudo-elements to escape overflow:hidden animation wrappers */
   .notif-bar-wrapper:has(.ui-tip:hover){overflow:visible!important}
-  /* Fade-in uses a delay; fade-out is instant to avoid overflow:hidden clipping artifact on mouse leave */
-  .notif-bar-wrapper .ui-tip::after{transition:opacity .12s ease .15s}
-  .notif-bar-wrapper .ui-tip:hover::after{transition:opacity 0s}
+  /* Fade-out is instant (base = after-change on mouse-leave) to avoid overflow:hidden clipping artifact */
+  .notif-bar-wrapper .ui-tip::after{transition:opacity 0s}
+  .notif-bar-wrapper .ui-tip:hover::after{transition:opacity .12s ease .15s}
 
   /* Drag insertion indicator — glowing line with spread */
   .drag-insert-above{box-shadow:inset 0 2px 0 var(--cp-drag-insert), 0 -4px 12px rgba(60,87,117,0.1) !important}

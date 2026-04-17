@@ -332,7 +332,7 @@ export const baseCSS = `
 
   /* Card hover lift */
   .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}
-  .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
+  .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--card-stripe,0 0 0 0 transparent),var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
 
   /* Disabled cursor + smooth opacity transition */
   button:disabled{cursor:not-allowed !important}

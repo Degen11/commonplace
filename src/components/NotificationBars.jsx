@@ -38,7 +38,7 @@ export default function NotificationBars({
   return (
     <AnimatePresence initial={false}>
       {isSharedView && (
-        <motion.div key="shared" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+        <motion.div key="shared" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.shareBanner, margin: 0 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({quotesLength} entries)</span>
             <button style={styles.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", window.location.pathname); } catch {} }}>Make it yours</button>
@@ -47,7 +47,7 @@ export default function NotificationBars({
       )}
 
       {apiError && (
-        <motion.div key="error" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+        <motion.div key="error" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.errorBar, margin: 0 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><TriangleAlert size={14} strokeWidth={2} /> {apiError}</span>
             <div style={{ display: "flex", gap: 8 }}>
@@ -59,7 +59,7 @@ export default function NotificationBars({
       )}
 
       {stats && (
-        <motion.div key="stats" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+        <motion.div key="stats" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.statsBar, margin: 0 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Zap size={13} strokeWidth={2} /> <strong>{stats.local}</strong> matched locally</span>
             {stats.lookup > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={13} strokeWidth={2} /> <strong>{stats.lookup}</strong> found online</span></>}
@@ -73,7 +73,7 @@ export default function NotificationBars({
       )}
 
       {showReview && (
-        <motion.div key="review" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+        <motion.div key="review" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.attentionBar, margin: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={styles.attentionCount}>{reviewQueue.length}</span>
@@ -85,15 +85,15 @@ export default function NotificationBars({
       )}
 
       {showAttention && (
-        <motion.div key="attention" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+        <motion.div key="attention" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.attentionBar, margin: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={styles.attentionCount}>{unknownCount}</span>
               <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button className="ui-tip" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
-              <button className="ui-tip attention-dismiss" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
+              <button className="ui-tip ui-tip-left" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
+              <button className="ui-tip ui-tip-left attention-dismiss" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
             </div>
           </div>
         </motion.div>

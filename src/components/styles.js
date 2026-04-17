@@ -333,9 +333,9 @@ export const baseCSS = `
   /* Card hover lift */
   .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}
   .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--card-stripe,0 0 0 0 transparent),var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
-  /* Lift the hovered card-grid wrapper so its tooltip renders above sibling cards' stacking contexts */
+  /* Lift the hovered card-grid wrapper above sibling cards AND sticky category bar (z-index:50) so the tooltip escapes cleanly */
   .qcard-wrap{position:relative}
-  .qcard-wrap:has(.qcard:hover){z-index:10}
+  .qcard-wrap:has(.qcard:hover){z-index:100}
 
   /* Disabled cursor + smooth opacity transition */
   button:disabled{cursor:not-allowed !important}

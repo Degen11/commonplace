@@ -88,7 +88,7 @@ const CardItem = memo(function CardItem({
         </div>
       )}
     <div
-      className={clsx("qcard", { "ui-tip": stripeLabel, "new-quote-pulse": isNewQuote })}
+      className={clsx("qcard", { "ui-tip ui-tip-below": stripeLabel, "new-quote-pulse": isNewQuote })}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...interactionProps}
@@ -101,6 +101,7 @@ const CardItem = memo(function CardItem({
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
+        '--card-stripe': stripeColor ? `inset 3px 0 0 ${stripeColor}` : undefined,
         ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? `inset 0 2px 0 ${CP_ACCENT}` : null].filter(Boolean).join(", ") || undefined },
         ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),
       }}

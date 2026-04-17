@@ -88,7 +88,7 @@ const CardItem = memo(function CardItem({
         </div>
       )}
     <div
-      className={clsx("qcard", { "ui-tip ui-tip-below": stripeLabel, "new-quote-pulse": isNewQuote })}
+      className={clsx("qcard", { "ui-tip": stripeLabel, "new-quote-pulse": isNewQuote })}
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...interactionProps}

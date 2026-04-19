@@ -3805,6 +3805,19 @@ const LOCAL_DB = [...LOCAL_DB_RAW];
 const LOCAL_MAP = new Map();
 LOCAL_DB.forEach(q => LOCAL_MAP.set(q.t, q));
 
+// Precomputed per-entry word sets (words length > 2) — built once at module init
+const ENTRY_WORDSETS = new Map();
+// Inverted word index: word → entries containing that word
+const WORD_INDEX = new Map();
+LOCAL_DB.forEach(entry => {
+  const wordSet = new Set(entry.t.split(" ").filter(w => w.length > 2));
+  ENTRY_WORDSETS.set(entry, wordSet);
+  wordSet.forEach(w => {
+    if (!WORD_INDEX.has(w)) WORD_INDEX.set(w, []);
+    WORD_INDEX.get(w).push(entry);
+  });
+});
+
 function normalizeForLookup(s) {
   return (s || "")
     .normalize("NFKD")
@@ -3825,6 +3838,7 @@ export function localLookup(text, hint, options = {}) {
     let bestHigh = null;
     let bestMed = null;
 
+    // Substring matching — linear scan with native string ops
     for (const entry of LOCAL_DB) {
       if (norm.includes(entry.t) && entry.t.length > 15) {
         if (!bestHigh || entry.t.length > bestHigh.t.length) bestHigh = entry;
@@ -3837,17 +3851,24 @@ export function localLookup(text, hint, options = {}) {
     if (bestHigh) return { source: bestHigh.s, category: bestHigh.c, confidence: "high", local: true };
     if (bestMed) return { source: bestMed.s, category: bestMed.c, confidence: "medium", local: true };
 
-    // Word-overlap fuzzy match — catches paraphrases and reworded quotes
-    const normWords = new Set(norm.split(" ").filter(w => w.length > 2));
-    if (normWords.size >= 4) {
+    // Word-overlap fuzzy match — uses inverted index to skip non-overlapping entries
+    const normWordSet = new Set(norm.split(" ").filter(w => w.length > 2));
+    if (normWordSet.size >= 4) {
+      // Gather only entries sharing ≥1 word with the input via the prebuilt index
+      const candidateSet = new Set();
+      normWordSet.forEach(w => {
+        const entries = WORD_INDEX.get(w);
+        if (entries) entries.forEach(e => candidateSet.add(e));
+      });
+
       let bestOverlap = null;
       let bestScore = 0;
-      for (const entry of LOCAL_DB) {
-        const entryWords = new Set(entry.t.split(" ").filter(w => w.length > 2));
+      for (const entry of candidateSet) {
+        const entryWords = ENTRY_WORDSETS.get(entry);
         if (entryWords.size < 4) continue;
         let overlap = 0;
-        normWords.forEach(w => { if (entryWords.has(w)) overlap++; });
-        const score = (overlap * 2) / (normWords.size + entryWords.size);
+        normWordSet.forEach(w => { if (entryWords.has(w)) overlap++; });
+        const score = (overlap * 2) / (normWordSet.size + entryWords.size);
         if (score > bestScore) { bestScore = score; bestOverlap = entry; }
       }
       if (bestScore >= 0.7) return { source: bestOverlap.s, category: bestOverlap.c, confidence: "high", local: true };

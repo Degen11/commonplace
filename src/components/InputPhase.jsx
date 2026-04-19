@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { API_HEADERS } from "../utils/api";
 import { motion } from "motion/react";
 import Logo from "./Logo";
 import HowItWorksAnimation from "./HowItWorksAnimation";
@@ -109,6 +110,22 @@ export default function InputPhase({
   const [timelineRef, timelineVisible] = useScrollReveal(0.1);
   const [featuresRef, featuresVisible] = useScrollReveal();
   const [ctaRef, ctaVisible] = useScrollReveal();
+
+  // Pre-warm the /api/identify serverless function on first keystroke.
+  // The rejected request still causes the function to initialize (cold-start eliminated).
+  const prewarmedRef = useRef(false);
+  useEffect(() => {
+    if (!rawInput.trim() || prewarmedRef.current) return;
+    prewarmedRef.current = true;
+    const schedule = window.requestIdleCallback ?? ((cb) => setTimeout(cb, 200));
+    schedule(() => {
+      fetch("/api/identify", {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({ messages: [], formatting: false }),
+      }).catch(() => {});
+    });
+  }, [rawInput]);
 
   const handleDropZone = (e) => {
     e.preventDefault();

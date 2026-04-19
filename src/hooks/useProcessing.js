@@ -229,9 +229,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       if (signal.aborted) return { apiResults, apiFailed, failed };
       const chunk = batches[b];
 
+      let results;
       try {
         // Await the already-started fetch for this batch
-        const results = await pendingFetch;
+        results = await pendingFetch;
         if (signal.aborted) return { apiResults, apiFailed, failed };
 
         // Prefetch next batch while we process current results
@@ -239,33 +240,53 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
           dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
           pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
         }
-
-        // Process current batch results
-        results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-        dispatch({ type: "FEED_APPEND", items: results.map(r => {
-          const item = chunk[r.i];
-          return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
-        }) });
-        // Cache AI results with known sources (fire-and-forget)
-        const cacheItems = results
-          .filter(r => r.source && r.source !== "Unknown source" && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
-          .map(r => ({
-            text: chunk[r.i].text, hint: null,
-            source: r.source, category: r.category, confidence: r.confidence,
-          }));
-        if (cacheItems.length > 0) {
-          fetch("/api/cache", {
-            method: "POST",
-            headers: API_HEADERS,
-            body: JSON.stringify({ items: cacheItems }),
-          }).catch(() => {});
-        }
       } catch (err) {
         if (err.name === "AbortError") return { apiResults, apiFailed: true, failed };
-        apiFailed = true;
-        chunk.forEach(c => failed.push(c));
-        dispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${stillNeedsApi.length - b * API_BATCH_SIZE} entries affected)` });
-        break;
+
+        // Retry this batch once before marking items as failed
+        let didRetry = false;
+        if (!signal.aborted) {
+          try {
+            results = await identifyBatch(chunk, useFormatting, signal);
+            didRetry = true;
+          } catch (retryErr) {
+            if (retryErr.name === "AbortError") return { apiResults, apiFailed: true, failed };
+            // Both attempts failed — mark only these items as failed, then continue
+            apiFailed = true;
+            chunk.forEach(c => failed.push(c));
+            const n = chunk.length;
+            dispatch({ type: "API_ERROR", error: describeApiError(retryErr) + ` (${n} ${n === 1 ? "entry" : "entries"} affected)` });
+          }
+        }
+
+        // Start next batch fetch even after retry failure so remaining batches proceed
+        if (b + 1 < batches.length && !signal.aborted) {
+          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
+          pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
+        }
+
+        if (!didRetry) continue;
+      }
+
+      // Process current batch results
+      results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
+      dispatch({ type: "FEED_APPEND", items: results.map(r => {
+        const item = chunk[r.i];
+        return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
+      }) });
+      // Cache AI results with known sources (fire-and-forget)
+      const cacheItems = results
+        .filter(r => r.source && r.source !== "Unknown source" && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
+        .map(r => ({
+          text: chunk[r.i].text, hint: null,
+          source: r.source, category: r.category, confidence: r.confidence,
+        }));
+      if (cacheItems.length > 0) {
+        fetch("/api/cache", {
+          method: "POST",
+          headers: API_HEADERS,
+          body: JSON.stringify({ items: cacheItems }),
+        }).catch(() => {});
       }
     }
 

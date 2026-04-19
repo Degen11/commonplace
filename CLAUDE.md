@@ -207,7 +207,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
-npm run test      # vitest run (12 test files across components, hooks, utils)
+npm run test      # vitest run (25 test files, 301 tests across components, hooks, utils)
 npx eslint src/   # Check React Compiler compatibility (requires eslint-plugin-react-hooks installed)
 vercel dev        # Test serverless functions locally
 ```
@@ -261,6 +261,8 @@ Z.TOAST           2000  Toasts
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - No TODO/FIXME comments exist in the codebase currently
 - **React Compiler bailouts** — some code paths skip compiler optimization: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection` and `UrlPreviewModal`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization. ESLint currently reports **zero errors and zero warnings** (`npx eslint src/`). Note: `eslint-plugin-react-hooks` must be installed separately to run the check
+- **API batch retry** — `useProcessing.js` retries each failed batch exactly once. On retry failure the batch's items are added to `failedEntries` with a count-specific error message and processing continues to the next batch (no early exit). This is intentional: a single-batch failure should never prevent other batches from completing
+- **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty messages array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
 - Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof
 

@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { styles } from "./styles";
-import { X, RefreshCw, FolderMinus, Trash2, Star } from "lucide-react";
+import { X, RefreshCw, FolderMinus, Trash2, Star, Copy } from "lucide-react";
 import { useResultsContext } from "../contexts/ResultsContext";
 
 function Divider() {
@@ -17,6 +17,7 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
     onFav,
     collections, activeCollectionId, isMobile,
     onAddToCollection, onRemoveFromCollection,
+    onBulkCopy,
   } = useResultsContext();
   const isReidentifying = reidentifyingIds.size > 0;
   const hasCollections = collections && collections.length > 0;
@@ -69,6 +70,15 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
           >
             <Star size={12} strokeWidth={2} />
             Favorite
+          </button>
+          <button
+            className="ui-tip bulk-copy"
+            data-tip="Copy selected to clipboard"
+            style={btnBase}
+            onClick={onBulkCopy}
+          >
+            <Copy size={12} strokeWidth={2} />
+            Copy
           </button>
           <button
             className="ui-tip bulk-reidentify"

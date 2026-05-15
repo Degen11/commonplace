@@ -22,6 +22,7 @@ import {
 } from "../config";
 import { pluralize } from "../utils/helpers";
 import { saveToStorage } from "../utils/storage";
+import { displayText } from "../utils/export";
 
 import ResultsModals from "./ResultsModals";
 import NotificationBars from "./NotificationBars";
@@ -564,6 +565,14 @@ export default function ResultsPhase({
     );
   };
 
+  const handleBulkCopy = () => {
+    const selectedQuotes = quotes.filter(q => selected.has(q.id));
+    const text = selectedQuotes.map(q => `${displayText(q)} — ${q.source}`).join("\n\n");
+    navigator.clipboard.writeText(text)
+      .then(() => showToast(`Copied ${pluralize(selectedQuotes.length, "quote")}`, null, null, "success"))
+      .catch(() => showToast("Couldn’t copy — try manually.", null, null, "error"));
+  };
+
   const showBulkBar = selected.size > 0;
 
   const actionProps = {
@@ -638,6 +647,7 @@ export default function ResultsPhase({
     onFav,
     onAddToCollection: handleAddToCollection,
     onRemoveFromCollection: handleRemoveFromCollection,
+    onBulkCopy: handleBulkCopy,
     batchReIdentify,
     // View preferences
     showConfidence, sortBy, compact, view,
@@ -759,6 +769,7 @@ export default function ResultsPhase({
                     onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
                     allCats={allCats}
                     onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
+                    existingCount={quotes.length}
                   />
                 </div>
               </motion.div>
@@ -785,6 +796,7 @@ export default function ResultsPhase({
                     onQuickAdd={handleQuickAdd}
                     onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
                     onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
+                    existingCount={quotes.length}
                   />
                 </div>
               </motion.div>

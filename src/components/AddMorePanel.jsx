@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
+import { pluralize } from "../utils/helpers";
 import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
 import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye, Loader } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
@@ -14,6 +15,7 @@ export default function AddMorePanel({
   onCancel,
   allCats,
   onFileImport,
+  existingCount = 0,
 }) {
   const [tab, setTab] = useState("identify");
   const [quickText, setQuickText] = useState("");
@@ -154,7 +156,7 @@ export default function AddMorePanel({
                 Clean up formatting
               </label>
               <span style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
-                {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : "These will be added to your existing collection"}
+                {addMoreInput.trim() ? `${smartSplit(addMoreInput.trim()).length} entries` : `Adding to your ${pluralize(existingCount, "quote")}`}
               </span>
             </div>
             <div style={{ display: "flex", gap: 6 }}>

@@ -7,7 +7,7 @@ import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
 import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } from "../config";
 import { describeApiError } from "../utils/apiErrors";
-import { addToSet, removeFromSet, addAllToSet, removeAllFromSet } from "../utils/helpers";
+import { addToSet, removeFromSet, addAllToSet, removeAllFromSet, pluralize } from "../utils/helpers";
 
 export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
   const [deletingId, setDeletingId]             = useState(null);
@@ -314,9 +314,9 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       setImportedFileName(file.name);
       const count = smartSplit(content).length;
       let msg = formatLabel
-        ? `Loaded ${count} entries from ${file.name} (${formatLabel})`
-        : `Loaded ${count} entries from ${file.name}`;
-      if (skippedCount > 0) msg += ` \u00b7 ${skippedCount} skipped`;
+        ? `Loaded ${pluralize(count, "quote")} from ${file.name} (${formatLabel})`
+        : `Loaded ${pluralize(count, "quote")} from ${file.name}`;
+      if (skippedCount > 0) msg += ` \u00b7 ${pluralize(skippedCount, "line")} skipped`;
       showToast(msg, null, null, "success");
     };
     reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.", null, null, "error");

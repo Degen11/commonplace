@@ -41,6 +41,7 @@ import EmptyState from "./EmptyState";
 import CollectionsSidebar from "./CollectionsSidebar";
 import QuickAddBar from "./QuickAddBar";
 import MobileSheet from "./MobileSheet";
+import ScrollTopButton from "./ScrollTopButton";
 import { styles } from "./styles";
 
 import { X, CircleQuestionMark, Library } from "lucide-react";
@@ -1123,6 +1124,8 @@ export default function ResultsPhase({
             <CircleQuestionMark size={16} strokeWidth={1.5} />
           </button>
           )}
+          {/* Scroll-to-top — fades in past ~600px (bottom-left to clear right-side controls) */}
+          <ScrollTopButton isMobile={isMobile} bottomOffset={showBulkBar ? 72 : 20} />
           {/* Mobile collections FAB */}
           {isMobile && (
           <button

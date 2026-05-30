@@ -9,6 +9,7 @@ import {
   copyToClipboard, richCopyToClipboard, encodeShareData,
 } from "../utils/export";
 import { styles, CLR_EMERALD } from "./styles";
+import { pluralize } from "../utils/helpers";
 import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH, API_TIMEOUT_MS } from "../config";
 
 const menuPopupStyle = {
@@ -67,14 +68,14 @@ export default function ExportDropdown({
     navigator.clipboard.writeText(url).then(() => {
       if (url.length <= SHARE_URL_WARN_LENGTH) showToast("Shareable link copied to clipboard!", null, null, "success");
     }).catch(() => {
-      showToast("Couldn't copy \u2014 try manually copying from the address bar.", null, null, "error");
-      window.location.hash = `s=${encoded}`;
+      showToast("Couldn't copy the link to your clipboard.", "Retry", handleShare, "error");
     });
   };
 
   const handlePublicLink = () => {
     if (publishing) return;
     setPublishing(true);
+    const toastId = showToast("Creating share link\u2026", null, null, "loading");
     const minimal = quotes.map(q => [q.text || "", q.source || "", q.category || "", q.favorite ? 1 : 0]);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
@@ -92,16 +93,15 @@ export default function ExportDropdown({
       .then(data => {
         const url = `${window.location.origin}${window.location.pathname}#p=${data.id}`;
         navigator.clipboard.writeText(url)
-          .then(() => showToast(`Public link copied! Expires in 30 days (${data.count} entries).`, null, null, "success"))
-          .catch(() => showToast(`Public link created: ${url}`, null, null, "success"));
+          .then(() => showToast(`Public link copied! Expires in 30 days (${pluralize(data.count, "quote")}).`, null, null, "success", { id: toastId }))
+          .catch(() => showToast(`Public link created: ${url}`, null, null, "success", { id: toastId }));
         close();
       })
       .catch(err => {
-        if (err.name === "AbortError") {
-          showToast("Request timed out \u2014 try again.", null, null, "error");
-        } else {
-          showToast(err.message || "Couldn't create public link.", null, null, "error");
-        }
+        const msg = err.name === "AbortError"
+          ? "Request timed out \u2014 couldn't create public link."
+          : (err.message || "Couldn't create public link.");
+        showToast(msg, "Retry", handlePublicLink, "error", { id: toastId });
       })
       .finally(() => {
         clearTimeout(timeout);
@@ -124,10 +124,10 @@ export default function ExportDropdown({
             <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
               Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
             </div>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyToClipboard(quotes, collections).then(() => showToast("Copied to clipboard!", null, null, "success")); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyToClipboard(quotes, collections).then(() => showToast(`Copied ${pluralize(quotes.length, "quote")} to clipboard`, null, null, "success")); close(); }}>
               <ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard
             </Menu.Item>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { richCopyToClipboard(quotes, collections).then(() => showToast("Rich text copied \u2014 paste into Notion, Notes, etc.", null, null, "success")); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { richCopyToClipboard(quotes, collections).then(() => showToast(`Rich text copied (${pluralize(quotes.length, "quote")}) \u2014 paste into Notion, Notes, etc.`, null, null, "success")); close(); }}>
               <Sparkles size={14} strokeWidth={1.5} /> Rich copy
             </Menu.Item>
             <Menu.Item className="dd-opt" style={itemStyle} onClick={handleShare}>
@@ -138,16 +138,16 @@ export default function ExportDropdown({
               {publishing ? <Loader size={14} strokeWidth={1.5} className="spin" /> : <Globe size={14} strokeWidth={1.5} />} Public link{publishing ? "..." : ""}<span style={{ fontSize: 10, opacity: 0.5 }}>30 days</span>
             </Menu.Item>
             <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportTXT(quotes, collections); showToast("Exported as TXT", null, null, "success"); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportTXT(quotes, collections); showToast(`Exported ${pluralize(quotes.length, "quote")} as TXT`, null, null, "success"); close(); }}>
               <FileText size={14} strokeWidth={1.5} /> Plain text
             </Menu.Item>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportCSV(quotes, collections); showToast("Exported as CSV", null, null, "success"); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportCSV(quotes, collections); showToast(`Exported ${pluralize(quotes.length, "quote")} as CSV`, null, null, "success"); close(); }}>
               <Table2 size={14} strokeWidth={1.5} /> CSV
             </Menu.Item>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportMD(quotes, collections); showToast("Exported as Markdown", null, null, "success"); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportMD(quotes, collections); showToast(`Exported ${pluralize(quotes.length, "quote")} as Markdown`, null, null, "success"); close(); }}>
               <FileDown size={14} strokeWidth={1.5} /> Markdown
             </Menu.Item>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportJSON(quotes, collections); showToast("Exported as JSON", null, null, "success"); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportJSON(quotes, collections); showToast(`Exported ${pluralize(quotes.length, "quote")} as JSON`, null, null, "success"); close(); }}>
               <Braces size={14} strokeWidth={1.5} /> JSON
             </Menu.Item>
             {hasActiveFilters && (<>
@@ -155,16 +155,16 @@ export default function ExportDropdown({
               <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
                 Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
               </div>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyToClipboard(filtered, collections).then(() => showToast(`Copied ${filtered.length} filtered entries`, null, null, "success")); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyToClipboard(filtered, collections).then(() => showToast(`Copied ${pluralize(filtered.length, "filtered quote")}`, null, null, "success")); close(); }}>
                 <ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered
               </Menu.Item>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportTXT(filtered, collections); showToast(`Exported ${filtered.length} as TXT`, null, null, "success"); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportTXT(filtered, collections); showToast(`Exported ${pluralize(filtered.length, "quote")} as TXT`, null, null, "success"); close(); }}>
                 <FileText size={14} strokeWidth={1.5} /> Filtered TXT
               </Menu.Item>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportCSV(filtered, collections); showToast(`Exported ${filtered.length} as CSV`, null, null, "success"); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportCSV(filtered, collections); showToast(`Exported ${pluralize(filtered.length, "quote")} as CSV`, null, null, "success"); close(); }}>
                 <Table2 size={14} strokeWidth={1.5} /> Filtered CSV
               </Menu.Item>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportMD(filtered, collections); showToast(`Exported ${filtered.length} as Markdown`, null, null, "success"); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportMD(filtered, collections); showToast(`Exported ${pluralize(filtered.length, "quote")} as Markdown`, null, null, "success"); close(); }}>
                 <FileDown size={14} strokeWidth={1.5} /> Filtered MD
               </Menu.Item>
             </>)}
@@ -173,16 +173,16 @@ export default function ExportDropdown({
               <div style={{ padding: "6px 12px 4px", fontSize: 11, color: CLR_EMERALD, borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
                 Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
               </div>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel, collections).then(() => showToast(`Copied ${sel.length} selected entries`, null, null, "success")); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel, collections).then(() => showToast(`Copied ${pluralize(sel.length, "selected quote")}`, null, null, "success")); close(); }}>
                 <ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected
               </Menu.Item>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel, collections); showToast(`Exported ${sel.length} as CSV`, null, null, "success"); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel, collections); showToast(`Exported ${pluralize(sel.length, "quote")} as CSV`, null, null, "success"); close(); }}>
                 <Table2 size={14} strokeWidth={1.5} /> Selected CSV
               </Menu.Item>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel, collections); showToast(`Exported ${sel.length} as Markdown`, null, null, "success"); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportMD(sel, collections); showToast(`Exported ${pluralize(sel.length, "quote")} as Markdown`, null, null, "success"); close(); }}>
                 <FileDown size={14} strokeWidth={1.5} /> Selected MD
               </Menu.Item>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel, collections); showToast(`Exported ${sel.length} as JSON`, null, null, "success"); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel, collections); showToast(`Exported ${pluralize(sel.length, "quote")} as JSON`, null, null, "success"); close(); }}>
                 {"{ }"} Selected JSON
               </Menu.Item>
             </>)}

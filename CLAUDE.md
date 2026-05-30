@@ -92,6 +92,7 @@ src/
     ShortcutsModal.jsx         Keyboard shortcuts reference
     StatsPanel.jsx             Collection statistics panel
     StatsOverlay.jsx           Stats overlay display
+    ScrollTopButton.jsx        Floating "back to top" button (fades in past ~600px scroll, bottom-left)
     SyncPill.jsx               Cloud sync status indicator
     ToolbarSection.jsx         Reusable toolbar section wrapper
     UrlPreviewModal.jsx        URL content preview before import
@@ -110,7 +111,7 @@ src/
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
     useLongPress.js            Mobile long-press for selection
-    useToasts.js               Toast notification management
+    useToasts.js               Toast notification management (variants: info/success/error/loading; accepts an `extra` opts arg, e.g. `{ id }` to update a toast in place)
     useAnimatedNumber.js       Smooth number transition animations
 
   data/

@@ -140,7 +140,7 @@ export default function HeaderBar({
           </Menu.Portal>
         </Menu.Root>
 
-        {/* Desktop-only export dropdown (mobile gets it via hamburger) */}
+        {/* Mobile-only export dropdown (desktop renders it inline in the toolbar above) */}
         {isMobile && exportDropdownContent}
       </div>
     </div>

@@ -273,13 +273,17 @@ export default function CollectionsSidebar({
     return () => document.removeEventListener("mousedown", handler);
   }, [isCreating, isSmartGrouping, smartGroupLoading]);
 
-  // Reset input fields when sidebar collapses
-  useEffect(() => {
+  // Reset input fields when sidebar collapses. Uses the setState-during-render
+  // pattern (keyed on prevCollapsed) instead of a setState-in-effect to avoid a
+  // cascading re-render and keep the component React Compiler-compatible.
+  const [prevCollapsed, setPrevCollapsed] = useState(collapsed);
+  if (prevCollapsed !== collapsed) {
+    setPrevCollapsed(collapsed);
     if (collapsed) {
       setIsCreating(false); setNewName(""); setCreateError(null);
       setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null);
     }
-  }, [collapsed]);
+  }
 
   const handleSmartGroup = async () => {
     const theme = smartTheme.trim();

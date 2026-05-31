@@ -95,6 +95,11 @@ export default withApiHandler(async (req, res) => {
       return res.status(400).json({ error: 'URL does not return text content' });
     }
 
+    // Some responses (e.g. 204 No Content) have no body to stream
+    if (!response.body) {
+      return res.status(400).json({ error: 'URL returned no content' });
+    }
+
     // Stream-read with size cap to prevent memory exhaustion from huge responses
     const chunks = [];
     let totalBytes = 0;

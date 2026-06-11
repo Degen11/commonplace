@@ -7,21 +7,26 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 ## Tech stack
 
 - **React 19** (no TypeScript — plain JSX/JS throughout)
-- **React Compiler** (`babel-plugin-react-compiler` pinned at 1.0.0) — automatic memoization, configured via Vite Babel plugin
-- **Vite 8** — dev server and build
+- **React Compiler** (`babel-plugin-react-compiler` pinned at 1.0.0) — automatic memoization, wired up in `vite.config.js` via `@rolldown/plugin-babel` with `reactCompilerPreset` from `@vitejs/plugin-react`
+- **Vite 8** (rolldown-based) — dev server and build
 - **Zustand 5** — primary state management (`src/stores/quotesStore.js`)
 - **TanStack React Query 5** — server state / sync mutations
 - **TanStack React Virtual 3** — virtualized list rendering
 - **motion 12** (Framer Motion successor) — animations via `motion/react`
+- **@base-ui/react 1** — headless Dialog (`ModalShell`), Menu (`QuoteActions`, `MiniHeader`), Popover (`QuickAddBar`, `CollectionsSidebar`) — provides focus traps, dismiss behavior, and ARIA semantics
 - **@dnd-kit** — drag-and-drop reordering (`@dnd-kit/core` 6 + `@dnd-kit/sortable` 10)
+- **@use-gesture/react 10** — touch gesture bindings (`useSwipe`, `useLongPress`)
+- **react-modal-sheet 5** — mobile bottom sheet (`MobileSheet.jsx`)
 - **Fuse.js 7** — fuzzy search
 - **compromise 14** — NLP (proper noun detection in text formatting)
+- **clsx 2** — conditional className composition
 - **Zod 4** — API request validation (server-side, `api/_schemas.js`)
-- **satori + @resvg/resvg-js** — share image generation (server-side SVG → PNG)
+- **satori + @resvg/resvg-js** — share image generation (server-side SVG → PNG); resvg also powers `scripts/generate-icons.mjs`
 - **sonner 2** — toast notifications
 - **lucide-react** — icons
 - **@supabase/supabase-js 2** — database client (server-side only)
-- **vite-plugin-pwa** — service worker / PWA manifest
+- **@vercel/analytics + @vercel/speed-insights** — rendered in `App.jsx`
+- **vite-plugin-pwa** — service worker / PWA manifest (precaches app shell + icons, runtime-caches Google Fonts and Fontshare)
 - **Vercel** — hosting + serverless functions
 - **Vitest 4** — test runner (configured in `vite.config.js`)
 - **ESLint 10** — flat config (`eslint.config.js`), React Compiler compatibility checks
@@ -31,6 +36,14 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 ### Directory layout
 
 ```
+public/                       Static assets
+  favicon.svg                 Source artwork for all app icons
+  favicon.ico, *.png          Generated icons — regenerate via `npm run icons`, don't hand-edit
+  robots.txt, sitemap.xml     SEO files
+
+scripts/
+  generate-icons.mjs          Renders favicon.svg → PNG/ICO app icons (uses @resvg/resvg-js)
+
 api/                          Vercel serverless functions (Node.js)
   _shared.js                  Supabase client, CORS, rate limiting, origin validation, withApiHandler middleware
   _schemas.js                 Zod schemas for all API endpoints
@@ -78,6 +91,8 @@ src/
     AddMorePanel.jsx           Panel for adding more quotes from results
     AnimatedNumber.jsx         Animated number transitions
     ConfirmModal.jsx           Reusable confirmation dialog
+    ModalShell.jsx             Shared modal wrapper — Base UI Dialog root/portal/backdrop boilerplate
+    EntryReviewModal.jsx       Pre-processing review of split entries before identification
     CollectionDupeModal.jsx    Collection-level duplicate resolution
     DupeModal.jsx              Quote duplicate detection modal
     EmptyState.jsx             Empty state placeholder UI
@@ -113,6 +128,7 @@ src/
     useLongPress.js            Mobile long-press for selection
     useToasts.js               Toast notification management (variants: info/success/error/loading; accepts an `extra` opts arg, e.g. `{ id }` to update a toast in place)
     useAnimatedNumber.js       Smooth number transition animations
+    useLatestRef.js            Ref kept in sync with latest value (compiler-safe stale-closure helper)
 
   data/
     constants.js               Categories, colors, confidence levels, example quotes, sanitization
@@ -133,10 +149,11 @@ src/
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
 
-  **/__tests__/                Tests colocated with their modules
-    components/TableView.test.js
-    hooks/useProcessing.test.js, useSync.test.js
-    utils/export, helpers, parsers, quotes, smartRestore, storage, sync, textFormatting, uuid
+  **/__tests__/                Tests colocated with their modules (25 files, 301 tests)
+    components/                App, AddMorePanel, CollectionDupeModal, HeaderBar, InputPhase,
+                               ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
+    hooks/                     processingErrors, useEditState, useProcessing, useQuoteActions, useSync
+    utils/                     export, helpers, parsers, quotes, smartRestore, storage, sync, textFormatting, uuid
 ```
 
 ### App phases
@@ -179,7 +196,7 @@ User input → smartSplit() → deduplicate against existing
 - `useQuoteActions` — delete/copy/re-identify animations. Initialized in App.jsx (handleFileImport used by InputPhase)
 - `useKeyboardShortcuts` — results-only keyboard handler. Initialized in ResultsPhase
 
-**Pattern: refs for async safety** — `useRef` holds latest state values for use in long-running async callbacks (retries, debounced saves). Ref assignments are done in `useEffect` (not during render) to stay compatible with the React Compiler. This pattern persists in hooks like `useProcessing`, `useQuoteActions`, and `useKeyboardShortcuts`.
+**Pattern: refs for async safety** — `useRef` holds latest state values for use in long-running async callbacks (retries, debounced saves). Ref assignments are done in `useEffect` (not during render) to stay compatible with the React Compiler. `hooks/useLatestRef.js` encapsulates this; the pattern appears in hooks like `useProcessing`, `useQuoteActions`, and `useKeyboardShortcuts`.
 
 ## Data persistence
 
@@ -192,7 +209,7 @@ User input → smartSplit() → deduplicate against existing
 
 ## Key components
 
-- **`App.jsx`** — Phase orchestrator (~220 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` with `AnimatePresence`.
+- **`App.jsx`** — Phase orchestrator (~260 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` inside `MotionConfig reducedMotion="user"` → `LayoutGroup` → `AnimatePresence`.
 - **`ResultsPhase.jsx`** — The results phase. Reads state directly from `useQuotesStore`. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
 - **`QuotesContext.jsx`** — Side-effects-only provider. Decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, schedules debounced push to Supabase. Provides no context value — it just renders `children`.
@@ -209,6 +226,7 @@ npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
 npm run test      # vitest run (25 test files, 301 tests across components, hooks, utils)
+npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npx eslint src/   # Check React Compiler compatibility (requires eslint-plugin-react-hooks installed)
 vercel dev        # Test serverless functions locally
 ```
@@ -217,6 +235,12 @@ vercel dev        # Test serverless functions locally
 
 - **No TypeScript** — entire codebase is plain JavaScript with JSX
 - **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`) injected via `<style>` tag in `main.jsx`
+- **`color-scheme`** — declared in `baseCSS` (`:root` light, `html.dark` + media-query fallback dark) and as a `<meta>` in `index.html`. This is what makes native UI (select popups, scrollbars, autofill, carets) follow the theme — keep it when touching theme CSS
+- **Reduced motion** — two layers: `MotionConfig reducedMotion="user"` in `App.jsx` disables motion/react transforms, and a `@media(prefers-reduced-motion:reduce)` block at the end of `baseCSS` collapses CSS animations/transitions to .01ms (not 0, so `animationend`/`transitionend` listeners still fire). New animations are covered automatically — don't add per-component reduced-motion checks
+- **Tooltips** — use the `.ui-tip` class with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. Icon-only controls also need `aria-label` (the CSS-pseudo-element tooltip is not a reliable accessible name). Exception: inside clip containers where the tooltip would be cut off (e.g. the horizontally scrolling `.cat-scroll`), native `title` + `aria-label` is acceptable. The `.sidebar-rail:has(.ui-tip:hover)` rule lets collapsed-sidebar tooltips escape its `overflow:hidden`
+- **Native `<select>` styling** — selects spread `SELECT_RESET` (in `styles.js`, also exported as `styles.selectReset`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
+- **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
+- **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle
 - **Fonts** — `FONT_SANS` is Satoshi (via Fontshare CDN), `FONT_SERIF` is Playfair Display (Google Fonts). Playfair is used only for the "Commonplace" wordmark (logo); all other headings and UI text use Satoshi. Don't introduce new fonts or expand Playfair usage beyond the logo
 - **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, pills, checkboxes, menu items). `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
 - **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
@@ -271,7 +295,9 @@ Z.TOAST           2000  Toasts
 
 - **Don't change localStorage keys** — they're defined in `config.js` and used by both the store and the sync system. Changing them breaks existing users' data
 - **Don't modify `_shared.js` ALLOWED_ORIGINS** without also updating the CSP header in `vercel.json` — they must stay in sync
-- **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update both `index.html` and the CSP
+- **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update `index.html`, the CSP, **and** the Workbox `runtimeCaching` entries in `vite.config.js` (Fontshare is cached there so Satoshi works offline — don't remove those entries)
+- **App icons are generated** — `public/favicon.ico`, `apple-touch-icon.png`, and `icon-*.png` come from `npm run icons` (renders `favicon.svg`). Don't hand-edit the PNGs; if the SVG artwork changes, re-run the script (it depends on favicon.svg's structure — 32×32 viewBox, background `<rect>` first)
+- **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use. The module builds `ENTRY_WORDSETS` and `WORD_INDEX` at init time (once); the word-overlap path in `localLookup` uses these to avoid scanning all 3,700 entries — don't remove them
 - **`serialize-javascript` npm override** — `package.json` has an `overrides` entry pinning `serialize-javascript` to `^7.0.5` to resolve a high-severity vulnerability in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain. Don't remove it; doing so re-introduces the vulnerability

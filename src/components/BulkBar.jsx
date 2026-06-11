@@ -108,8 +108,8 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
               className="ui-tip"
               data-tip="Add selected to collection"
               style={{
-                ...btnBase, padding: "5px 24px 5px 8px",
-                background: "var(--cp-bulk-input-bg)",
+                ...btnBase, ...styles.selectReset, padding: "5px 24px 5px 8px",
+                backgroundColor: "var(--cp-bulk-input-bg)",
               }}
               value=""
               onChange={e => {

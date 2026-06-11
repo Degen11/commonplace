@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { LS_THEME } from "../config";
+import { LS_THEME, THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "../config";
 
 export default function useTheme() {
   const transitionTimerRef = useRef(null);
@@ -35,6 +35,15 @@ export default function useTheme() {
       }
     } catch {}
   }, [dark, explicit]);
+
+  // Keep the browser chrome (mobile address bar) in sync with the effective theme.
+  // index.html ships two media-scoped theme-color metas for pre-JS paint; setting both
+  // to the effective color makes whichever one the browser picks correct after an
+  // explicit in-app toggle. `dark` already tracks system changes in auto mode.
+  useEffect(() => {
+    const color = dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT;
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", color));
+  }, [dark]);
 
   // Listen for system preference changes and follow them when no explicit choice
   useEffect(() => {

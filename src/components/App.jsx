@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import useProcessing from "../hooks/useProcessing";
@@ -178,6 +178,8 @@ export default function Commonplace() {
         )}
       </Suspense>
 
+      {/* reducedMotion="user" — disables motion/react transforms when the OS requests reduced motion */}
+      <MotionConfig reducedMotion="user">
       <LayoutGroup>
       <AnimatePresence mode="wait">
       {/* ── Input phase ── */}
@@ -251,6 +253,7 @@ export default function Commonplace() {
       )}
       </AnimatePresence>
       </LayoutGroup>
+      </MotionConfig>
     </main>
   );
 }

@@ -149,7 +149,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
           }}
         />
         <select
-          style={{ ...styles.editSel, ...(isMobile ? { fontSize: 14, padding: "8px 10px" } : {}) }}
+          style={{ ...styles.editSel, ...(isMobile ? { fontSize: 14, padding: "8px 26px 8px 10px" } : {}) }}
           value={category}
           onChange={e => setCategory(e.target.value)}
         >

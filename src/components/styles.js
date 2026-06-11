@@ -26,6 +26,7 @@ export const CLR_GRAY    = "#9B9A97";
 // z-index scale: 50 pills, 59 overlays, 60 mini-header, 100 dropdowns, 200 tooltips, 500 bulk bar, 1000 modals, 2000 toasts
 export const baseCSS = `
   :root{
+    color-scheme:light;
     --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-bg-panel:#FAFAFA;--cp-bg-hover:rgba(55,53,47,0.05);
     --cp-bg-tab:#F0EDE6;--cp-bg-input:#FFFFFF;--cp-bg-selected:#F0F7FF;--cp-bg-attention:rgba(234,88,12,0.06);--cp-bg-fav:#FFFDF5;--cp-fav-accent:#F59E0B;
     --cp-text:#1A1814;--cp-text-secondary:#37352F;--cp-text-muted:#9B9A97;--cp-text-faint:#C8C4BC;
@@ -49,6 +50,7 @@ export const baseCSS = `
     --cp-selection-bg:rgba(60,87,117,0.18);
   }
   html.dark{
+    color-scheme:dark;
     --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
     --cp-bg-tab:#2E2E2E;--cp-bg-input:#2A2A2A;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(234,88,12,0.07);--cp-bg-fav:rgba(250,204,21,0.06);--cp-fav-accent:rgba(250,204,21,0.4);
     --cp-text:#E8E8E8;--cp-text-secondary:#CCCCCC;--cp-text-muted:#9A9A9A;--cp-text-faint:#7A7A7A;
@@ -73,6 +75,7 @@ export const baseCSS = `
   }
   @media(prefers-color-scheme:dark){
     html:not(.light){
+      color-scheme:dark;
       --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-bg-panel:#222222;--cp-bg-hover:rgba(255,255,255,0.06);
       --cp-bg-tab:#2E2E2E;--cp-bg-input:#2A2A2A;--cp-bg-selected:rgba(35,131,226,0.15);--cp-bg-attention:rgba(234,88,12,0.07);--cp-bg-fav:rgba(250,204,21,0.06);--cp-fav-accent:rgba(250,204,21,0.4);
       --cp-text:#E8E8E8;--cp-text-secondary:#CCCCCC;--cp-text-muted:#9A9A9A;--cp-text-faint:#7A7A7A;
@@ -144,6 +147,9 @@ export const baseCSS = `
   .fav-pop{animation:favPop .45s cubic-bezier(0.34,1.56,0.64,1)}
   .phase-in{animation:fadeUp .25s ease}.phase-out{opacity:0;transition:opacity .15s ease}
   html{scroll-behavior:smooth;scrollbar-gutter:stable}
+  /* Themed scrollbars — standard properties only (Chrome 121+, Firefox; Safari keeps native overlay).
+     Avoids ::-webkit-scrollbar, which disables macOS overlay scrollbars. */
+  *{scrollbar-width:thin;scrollbar-color:var(--cp-border-dim) transparent}
   div[style]:focus{outline:none;border-color:transparent}
 
   /* Base UI — Menu item highlight on hover/keyboard navigation */
@@ -223,6 +229,9 @@ export const baseCSS = `
   .ui-tip:active::after{opacity:0;transition:none}
   .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
   .ui-tip-left::after{left:auto;right:0;transform:none}
+  .ui-tip-right::after{left:calc(100% + 6px);right:auto;bottom:auto;top:50%;transform:translateY(-50%)}
+  /* Collapsed sidebar rail clips during its width animation; let tooltips escape while hovered */
+  .sidebar-rail:has(.ui-tip:hover){overflow:visible!important}
   /* Allow tooltip pseudo-elements to escape overflow:hidden animation wrappers */
   .notif-bar-wrapper:has(.ui-tip:hover){overflow:visible!important}
   /* Fade-out is instant (base = after-change on mouse-leave) to avoid overflow:hidden clipping artifact */
@@ -484,6 +493,14 @@ export const baseCSS = `
   @media(max-width:375px){
     .cat-pill{font-size:11px !important;padding:5px 8px !important;min-height:32px}
   }
+
+  /* Reduced motion — collapse all CSS animations/transitions to near-instant.
+     .01ms (not 0) so animationend/transitionend listeners still fire.
+     motion/react springs are handled separately via MotionConfig in App.jsx. */
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;transition-delay:0s !important}
+    html{scroll-behavior:auto}
+  }
 `;
 
 // ── Shared sync status pill — used by both HeaderBar and MiniHeader ──
@@ -506,6 +523,15 @@ export const syncPillStyles = {
     synced:  { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: CLR_GREEN, background: "rgba(34,197,94,0.10)" },
     error:   { ...syncPillBase, fontSize: 10, padding: "1px 6px", lineHeight: "14px", color: CLR_RED, background: "rgba(220,38,38,0.10)" },
   },
+};
+
+// Custom chevron for native <select>s — replaces the platform arrow so selects match
+// the designed dropdowns. #9B9A97 ≈ --cp-text-muted in both themes. Callers must
+// reserve right padding (≥24px) for the chevron.
+const SELECT_CHEVRON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B9A97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+const SELECT_RESET = {
+  appearance:"none", WebkitAppearance:"none", cursor:"pointer",
+  backgroundImage:SELECT_CHEVRON, backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center", backgroundSize:12,
 };
 
 export const styles = {
@@ -676,7 +702,7 @@ export const styles = {
   bulkN:{fontSize:12,fontWeight:600,color:"var(--cp-bulk-badge-text)",whiteSpace:"nowrap",background:"var(--cp-bulk-badge)",padding:"5px 12px",borderRadius:4,lineHeight:1,letterSpacing:0.2},
   bulkDivider:{width:1,height:20,background:"var(--cp-bulk-divider)",margin:"0 10px",flexShrink:0},
   bulkGroup:{display:"flex",gap:5,alignItems:"center",whiteSpace:"nowrap"},
-  bulkSel:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 24px 5px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
+  bulkSel:{...SELECT_RESET,border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 24px 5px 8px",fontSize:12,fontFamily:"inherit",backgroundColor:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
   bulkIn:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:120,background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
   bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:"#fff",color:CP_ACCENT,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
   bulkDelBtn:{padding:"5px 10px",borderRadius:6,border:"1px solid rgba(235,87,87,0.4)",background:"transparent",color:"#F87171",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",justifyContent:"center"},
@@ -756,7 +782,8 @@ export const styles = {
   // Edit form
   textarea:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:6,padding:10,fontSize:14,fontFamily:"inherit",color:"var(--cp-text-secondary)",resize:"vertical",minHeight:60,lineHeight:1.6,background:"var(--cp-bg-card)",transition:"border-color .15s ease, box-shadow .15s ease"},
   editIn:{flex:1,minWidth:100,border:`1px solid ${CP_ACCENT}`,borderRadius:6,padding:"4px 8px",fontSize:12,fontFamily:"inherit",transition:"border-color .15s ease, box-shadow .15s ease"},
-  editSel:{border:"1px solid var(--cp-border)",borderRadius:6,padding:"4px 8px",fontSize:12,fontFamily:"inherit",background:"var(--cp-bg-card)",transition:"border-color .15s ease, box-shadow .15s ease"},
+  selectReset:SELECT_RESET,
+  editSel:{...SELECT_RESET,border:"1px solid var(--cp-border)",borderRadius:6,padding:"4px 26px 4px 8px",fontSize:12,fontFamily:"inherit",backgroundColor:"var(--cp-bg-card)",color:"var(--cp-text)",transition:"border-color .15s ease, box-shadow .15s ease"},
   editSave:{padding:"4px 12px",borderRadius:6,border:"none",background:CP_ACCENT,color:"#fff",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   editCancel:{padding:"4px 8px",borderRadius:6,border:"none",background:"transparent",color:"var(--cp-text-muted)",fontSize:12,cursor:"pointer",fontFamily:"inherit"},
 

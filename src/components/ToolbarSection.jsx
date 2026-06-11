@@ -69,7 +69,8 @@ export default function ToolbarSection({
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}><AnimatedNumber value={count} /></span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, position: "absolute", top: 2, right: 2 }} />}
-                  {customCats.includes(c) && <span title="Remove category" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
+                  {/* native title (not .ui-tip): inside the .cat-scroll clip container, a custom tooltip would be cut off */}
+                  {customCats.includes(c) && <span title="Remove category" aria-label={`Remove ${c} category`} role="button" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
                 </button>;
               })}
               {showNewCat ? (
@@ -77,7 +78,7 @@ export default function ToolbarSection({
                   <input style={styles.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
                   <button style={styles.newCatSv} onClick={addCat}>Add</button>
                 </div>
-              ) : <button title="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+              ) : <button title="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
             </div>
             {/* Fade overlays — scoped to scroll container */}
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />

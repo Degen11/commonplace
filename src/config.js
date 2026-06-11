@@ -57,6 +57,11 @@ export const LONG_PRESS_MOVE_PX   = 10;   // px movement cancels long-press
 export const INFINITE_SCROLL_PAGE = 100;  // items per page in virtualized list
 export const MOBILE_BREAKPOINT_PX = 640;  // below this: card view, mobile layout
 
+// Theme — browser chrome colors. Must match the theme-color metas in index.html,
+// the PWA manifest theme_color in vite.config.js, and --cp-bg in styles.js.
+export const THEME_COLOR_LIGHT = "#FAF8F4";
+export const THEME_COLOR_DARK  = "#1A1A1A";
+
 // Share link hash prefixes
 export const SHARE_HASH_PREFIX  = "s=";  // base64-encoded share data
 export const PUBLIC_HASH_PREFIX = "p=";  // public collection link

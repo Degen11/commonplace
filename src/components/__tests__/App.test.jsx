@@ -26,6 +26,7 @@ vi.mock("motion/react", async () => {
     }),
     AnimatePresence: ({ children, mode }) => children ?? null,
     LayoutGroup: ({ children }) => children ?? null,
+    MotionConfig: ({ children }) => children ?? null,
   };
 });
 

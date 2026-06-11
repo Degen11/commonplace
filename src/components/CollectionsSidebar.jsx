@@ -46,6 +46,9 @@ function IconPickerGrid({ current, onSelect, onClose }) {
   return ICON_OPTIONS.map(({ name, Component }) => (
     <button
       key={name}
+      className="ui-tip"
+      data-tip={name}
+      aria-label={name}
       onClick={() => { onSelect(name); onClose(); }}
       style={{
         background: current === name ? "var(--cp-bg-hover)" : "transparent",
@@ -55,7 +58,6 @@ function IconPickerGrid({ current, onSelect, onClose }) {
         color: current === name ? "var(--cp-accent)" : "var(--cp-text-muted)",
         transition: "all .1s",
       }}
-      title={name}
     >
       <Component size={16} strokeWidth={1.5} />
     </button>
@@ -115,9 +117,11 @@ function CollectionRow({
       <Popover.Root open={iconPickerId === c.id} onOpenChange={(open) => { if (!open) setIconPickerId(null); }}>
         <Popover.Trigger
           render={<span />}
+          className="ui-tip"
+          data-tip="Change icon"
+          aria-label="Change icon"
           style={{ display: "flex", alignItems: "center", flexShrink: 0, cursor: "pointer" }}
           onClick={e => { e.stopPropagation(); setIconPickerId(prev => prev === c.id ? null : c.id); }}
-          title="Change icon"
         >
           {createElement(icon, { size: 14, strokeWidth: 1.5, color: isActive ? "var(--cp-accent)" : "var(--cp-text-muted)" })}
         </Popover.Trigger>
@@ -174,16 +178,20 @@ function CollectionRow({
         ) : (
           <>
             <button
+              className="ui-tip ui-tip-left"
+              data-tip="Rename"
+              aria-label="Rename collection"
               onClick={e => { e.stopPropagation(); setEditingId(c.id); setEditName(c.name); }}
               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}
-              title="Rename"
             >
               <Pencil size={12} strokeWidth={1.5} />
             </button>
             <button
+              className="ui-tip ui-tip-left"
+              data-tip="Delete"
+              aria-label="Delete collection"
               onClick={e => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}
-              title="Delete"
             >
               <Trash2 size={12} strokeWidth={1.5} />
             </button>
@@ -200,6 +208,9 @@ function CollapsedDropTarget({ c, isActive, setActiveCollectionId, Icon }) {
   return (
     <button
       ref={setNodeRef}
+      className="ui-tip ui-tip-right"
+      data-tip={c.name}
+      aria-label={c.name}
       onClick={() => setActiveCollectionId(c.id)}
       style={{
         background: dragOver ? CP_ACCENT_MUTED : isActive ? "var(--cp-bg-hover)" : "none",
@@ -209,7 +220,6 @@ function CollapsedDropTarget({ c, isActive, setActiveCollectionId, Icon }) {
         transition: "transform .15s ease",
         ...(dragOver ? { transform: "scale(1.1)", outline: "2px solid var(--cp-drag-insert)", outlineOffset: -2, animation: "dropGlow .8s ease infinite" } : {}),
       }}
-      title={c.name}
     >
       <Icon size={16} strokeWidth={1.5} />
     </button>
@@ -326,6 +336,7 @@ export default function CollectionsSidebar({
     return (
       <motion.div
         key="collapsed"
+        className="sidebar-rail"
         initial={{ width: 220, opacity: 0 }}
         animate={{ width: 48, opacity: 1, transition: { width: { type: "spring", stiffness: 400, damping: 30 }, opacity: { duration: 0.15, delay: 0.1 } } }}
         style={{
@@ -336,6 +347,8 @@ export default function CollectionsSidebar({
         }}
       >
         <button
+          className="ui-tip ui-tip-right"
+          data-tip="Expand sidebar"
           onClick={() => setCollapsed(false)}
           aria-expanded={false}
           aria-label="Expand sidebar"
@@ -343,13 +356,13 @@ export default function CollectionsSidebar({
             background: "none", border: "none", cursor: "pointer",
             color: "var(--cp-text-muted)", padding: 4, borderRadius: 4,
           }}
-          title="Expand sidebar"
         >
           <ChevronRight size={16} strokeWidth={2} />
         </button>
         {/* Collapsed entry count badge */}
         <div
-          title={`${totalQuotes} entries`}
+          className="ui-tip ui-tip-right"
+          data-tip={`${totalQuotes} entries`}
           style={{
             fontSize: 10, fontWeight: 700, color: "var(--cp-text-muted)",
             background: "var(--cp-bg-tab)", borderRadius: 4, padding: "2px 5px",
@@ -359,6 +372,9 @@ export default function CollectionsSidebar({
           <AnimatedNumber value={totalQuotes} />
         </div>
         <button
+          className="ui-tip ui-tip-right"
+          data-tip="All quotes"
+          aria-label="All quotes"
           onClick={() => setActiveCollectionId(null)}
           style={{
             background: activeCollectionId === null ? "var(--cp-bg-hover)" : "none",
@@ -366,7 +382,6 @@ export default function CollectionsSidebar({
             color: activeCollectionId === null ? "var(--cp-accent)" : "var(--cp-text-muted)",
             padding: 6, borderRadius: 6,
           }}
-          title="All quotes"
         >
           <Library size={16} strokeWidth={1.5} />
         </button>
@@ -403,11 +418,12 @@ export default function CollectionsSidebar({
           <span style={styles.sidebarOverviewLabel}>Overview</span>
           {!isMobileSheet && (
           <button
+            className="ui-tip ui-tip-below"
+            data-tip="Collapse sidebar"
             onClick={() => setCollapsed(true)}
             aria-expanded={true}
             aria-label="Collapse sidebar"
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
-            title="Collapse sidebar"
           >
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
@@ -579,12 +595,12 @@ export default function CollectionsSidebar({
         </div>
       )}
 
-      {/* Collections list — only scroll vertically when many items */}
+      {/* Collections list — overflow:visible when short so row tooltips can escape; clips only when scrollable */}
       {collections.length > 0 && (
       <div style={{
         padding: "0 8px 8px 4px",
-        overflowX: "hidden",
-        overflowY: collections.length > 12 ? "auto" : "hidden",
+        overflowX: collections.length > 12 ? "hidden" : "visible",
+        overflowY: collections.length > 12 ? "auto" : "visible",
         maxHeight: collections.length > 12 ? 420 : "none",
       }}>
         {collections.map((c, i) => (

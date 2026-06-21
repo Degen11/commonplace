@@ -152,6 +152,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
           style={{ ...styles.editSel, ...(isMobile ? { fontSize: 14, padding: "8px 26px 8px 10px" } : {}) }}
           value={category}
           onChange={e => setCategory(e.target.value)}
+          onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onCancel(); } }}
         >
           {allCats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>

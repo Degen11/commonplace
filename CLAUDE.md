@@ -76,7 +76,7 @@ src/
     InputPhase.jsx             Landing page — text input, file import, scroll-reveal, formatting preview
     inputPhaseStyles.js        Homepage-specific styles (HP object), timeline data, reveal transition helper
     UrlImportPanel.jsx         URL import panel — fetch URL, extraction mode selector, preview modal
-    ProcessingPhase.jsx        AI identification progress display
+    ProcessingPhase.jsx        AI identification progress display (ring, per-phase subtitle, elapsed time + ETA on long jobs)
     TableView.jsx              Main table view with inline editing and drag-to-reorder
     CardItem.jsx               Card view (mobile)
     HeaderBar.jsx              Top toolbar — search, filters, view toggles, sync pill
@@ -149,7 +149,7 @@ src/
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
 
-  **/__tests__/                Tests colocated with their modules (25 files, 301 tests)
+  **/__tests__/                Tests colocated with their modules (25 files, 314 tests)
     components/                App, AddMorePanel, CollectionDupeModal, HeaderBar, InputPhase,
                                ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useProcessing, useQuoteActions, useSync
@@ -225,7 +225,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
-npm run test      # vitest run (25 test files, 301 tests across components, hooks, utils)
+npm run test      # vitest run (25 test files, 314 tests across components, hooks, utils)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npx eslint src/   # Check React Compiler compatibility (requires eslint-plugin-react-hooks installed)
 vercel dev        # Test serverless functions locally

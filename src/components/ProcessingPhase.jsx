@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { styles, FONT_SANS, CP_ACCENT, CLR_EMERALD, CLR_BLUE, CLR_VIOLET } from "./styles";
 import { getCatColor } from "../data/constants";
@@ -50,6 +51,36 @@ const statChipStyle = {
   fontFamily: FONT_SANS,
 };
 
+// Format an elapsed duration: "12s" under a minute, "1:05" at/above.
+export function formatElapsed(totalSeconds) {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, "0")}`;
+}
+
+// Format an estimated remaining duration: "~8s left" or "~2m left".
+export function formatEta(totalSeconds) {
+  const s = Math.max(1, Math.round(totalSeconds));
+  if (s < 60) return `~${s}s left`;
+  return `~${Math.ceil(s / 60)}m left`;
+}
+
+// Estimate remaining seconds from a baseline sample captured at the start of the
+// (slow) AI phase, so the instant local-DB match jump never skews the rate.
+// Returns null until there's enough signal to be trustworthy — better to show
+// nothing than a misleading number.
+export function estimateRemaining({ now, sample, done, total }) {
+  if (!sample || done <= sample.done || done >= total) return null;
+  const elapsed = (now - sample.t) / 1000;
+  if (elapsed < 2) return null; // need a couple seconds of data first
+  const rate = (done - sample.done) / elapsed; // items per second
+  if (!(rate > 0)) return null;
+  const remaining = (total - done) / rate;
+  if (!Number.isFinite(remaining) || remaining < 1 || remaining > 3600) return null;
+  return remaining;
+}
+
 function phaseSubtitle(progress, doneCount, total) {
   if (!progress) return "Preparing\u2026";
   const remaining = total - doneCount;
@@ -82,6 +113,32 @@ export default function ProcessingPhase({
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const isComplete = processingDone || progress?.phase === "complete";
   const reversedFeed = [...identifiedFeed].reverse().slice(0, 8);
+
+  // ── Elapsed / ETA tracking ──
+  // startTime: captured at mount (processing start). now: ticks every second
+  // while running. apiSample: a { t, done } baseline taken when the slow AI
+  // phase begins, used to estimate throughput without the local-match jump.
+  const [startTime] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  const [apiSample, setApiSample] = useState(null);
+
+  useEffect(() => {
+    if (isComplete) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isComplete]);
+
+  // Capture the AI-phase baseline once, the moment we enter it, using the
+  // ticking `now` clock (setState-during-render pattern — see useInfiniteScroll.js).
+  if (progress?.phase === "api" && apiSample == null) {
+    setApiSample({ t: now, done: doneCount });
+  }
+
+  const elapsedSec = Math.floor((now - startTime) / 1000);
+  const etaSec = !isComplete && progress?.phase === "api"
+    ? estimateRemaining({ now, sample: apiSample, done: doneCount, total })
+    : null;
+  const showTimeRow = !isComplete && progress && elapsedSec >= 1;
 
   return (
     <div style={styles.wrap}>
@@ -144,6 +201,16 @@ export default function ProcessingPhase({
             </div>
             <div style={styles.track}><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
+            {showTimeRow && (
+              <div style={{
+                display: "flex", justifyContent: "space-between", marginTop: 8,
+                fontSize: 11, color: "var(--cp-text-faint)",
+                fontVariantNumeric: "tabular-nums", letterSpacing: "0.01em",
+              }}>
+                <span>Elapsed {formatElapsed(elapsedSec)}</span>
+                {etaSec != null && <span>{formatEta(etaSec)}</span>}
+              </div>
+            )}
           </div>
         )}
         {!isComplete && (

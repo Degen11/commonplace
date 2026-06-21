@@ -217,7 +217,7 @@ const TableRow = memo(function TableRow({
       data-id={q.id}
       {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...(isMobile ? longPress : {})}
-      {...(isEd || isInlineEditing ? {} : listeners)}
+      {...(isMobile || isEd || isInlineEditing ? {} : listeners)}
       {...attributes}
       style={{
         ...sortableStyle,
@@ -228,7 +228,7 @@ const TableRow = memo(function TableRow({
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .35, zIndex: 1, transform: "scale(0.98)", filter: "grayscale(0.3)", transition: "opacity .2s, transform .2s, filter .2s" } : {}),
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
-        ...(!isEd && !isInlineEditing ? { touchAction: "none" } : {}),
+        ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
     >
       <div
@@ -393,9 +393,17 @@ const TableView = memo(function TableView({
   const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
 
   return (
-    <div ref={outerRef} style={{ overflowX: "visible" }}>
+    <div
+      ref={outerRef}
+      style={
+        isMobile
+          ? { overflowX: "auto", WebkitOverflowScrolling: "touch" }
+          : { overflowX: "visible" }
+      }
+    >
+    <div style={isMobile ? { minWidth: 560 } : undefined}>
       {filtered.length > 0 && (
-        <div style={{ ...styles.tHead, top: toolbarHeight }}>
+        <div style={{ ...styles.tHead, ...(isMobile ? { position: "static" } : { top: toolbarHeight }) }}>
           <div style={{ width: 20, flexShrink: 0 }} />
           <div className="ui-tip ui-tip-below" data-tip="Select all" style={{ ...styles.chkW, ...(allSelected ? { opacity: 1 } : {}) }}>
             <div
@@ -482,6 +490,7 @@ const TableView = memo(function TableView({
         })}
         {bottomPad > 0 && <div style={{ height: bottomPad }} />}
       </div>
+    </div>
     </div>
   );
 });

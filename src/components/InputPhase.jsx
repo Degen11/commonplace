@@ -295,8 +295,8 @@ export default function InputPhase({
                       <span
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11,
-                          color: "#0369A1", background: "#EFF6FF", padding: "3px 8px", borderRadius: 50,
-                          fontWeight: 500, cursor: "pointer", border: "1px solid #DBEAFE",
+                          color: "var(--cp-accent)", background: "var(--cp-bg-selected)", padding: "3px 8px", borderRadius: 50,
+                          fontWeight: 500, cursor: "pointer", border: "1px solid var(--cp-border)",
                         }}
                         onClick={() => setFormattingEnabled(true)}
                       >

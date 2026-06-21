@@ -1,9 +1,6 @@
 
-const highlightStyle = {
-  background: "rgba(255, 213, 79, 0.35)",
-  borderRadius: 2,
-  padding: "0 1px",
-};
+// Search-term highlight. Styling lives in baseCSS (.cp-hl) so it can adapt to
+// dark mode — the default UA <mark> color doesn't track `color-scheme` reliably.
 
 // Regex to match rich text markers: **bold**, *italic*, __underline__
 // Order matters: ** and __ before * to avoid partial matches
@@ -42,7 +39,7 @@ function applyHighlight(str, term, keyPrefix) {
   if (parts.length === 1) return str;
   return parts.map((part, i) =>
     testRegex.test(part)
-      ? <mark key={`${keyPrefix}-${i}`} style={highlightStyle}>{part}</mark>
+      ? <mark key={`${keyPrefix}-${i}`} className="cp-hl">{part}</mark>
       : part
   );
 }

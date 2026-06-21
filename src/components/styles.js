@@ -114,6 +114,9 @@ export const baseCSS = `
   ::selection{background:var(--cp-selection-bg)}
   html.dark ::selection{background:var(--cp-selection-bg)}
   @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:var(--cp-selection-bg)}}
+  .cp-hl{background:rgba(255,213,79,0.35);color:inherit;border-radius:2px;padding:0 1px}
+  html.dark .cp-hl{background:rgba(250,204,21,0.32);color:#FDE68A}
+  @media(prefers-color-scheme:dark){html:not(.light) .cp-hl{background:rgba(250,204,21,0.32);color:#FDE68A}}
   textarea:focus,input:focus,select:focus{outline:none}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   @keyframes staggerIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}

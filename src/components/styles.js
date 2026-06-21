@@ -450,10 +450,15 @@ export const baseCSS = `
 
   /* Mobile touch targets — enforce 44px minimum */
   @media(max-width:640px){
-    .hdr-btn{min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center}
-    .view-btn{min-height:36px;min-width:36px}
+    .hdr-btn{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+    .view-btn{min-height:44px;min-width:44px}
     .cat-pill{min-height:36px;padding:6px 12px !important}
     .check-div{display:flex;align-items:center;justify-content:center}
+    .act-btn{min-height:44px;min-width:44px}
+    .add-cat-btn{min-height:40px !important;min-width:40px !important}
+
+    /* Prevent iOS auto-zoom on focus — form controls must be >=16px */
+    input,select,textarea{font-size:16px !important}
 
     /* Show overflow menu + edit hints on mobile (no hover) */
     .overflow-btn{opacity:1 !important}
@@ -709,7 +714,7 @@ export const styles = {
   bulkX:{background:"none",border:"none",color:"var(--cp-bulk-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",padding:4,borderRadius:6},
 
   // Header overflow menu
-  hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,maxWidth:"calc(100vw - 24px)",zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
   hdrOverflowItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
   hdrOverflowDivider:{height:1,background:"var(--cp-border)",margin:"4px 0"},
   hdrOverflowSectionLabel:{padding:"6px 12px 2px",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em",color:"var(--cp-text-faint)"},

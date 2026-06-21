@@ -78,7 +78,7 @@ export default function ToolbarSection({
                   <input style={styles.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
                   <button style={styles.newCatSv} onClick={addCat}>Add</button>
                 </div>
-              ) : <button title="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+              ) : <button className="add-cat-btn" title="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
             </div>
             {/* Fade overlays — scoped to scroll container */}
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />

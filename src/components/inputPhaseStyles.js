@@ -39,7 +39,7 @@ export const TIMELINE_MOMENTS = [
 export const HP = {
   // Hero — split layout
   hero: {
-    minHeight: "100vh",
+    minHeight: "100dvh",
     display: "grid",
     gridTemplateColumns: "5fr 7fr",
     alignItems: "center",

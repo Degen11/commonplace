@@ -27,9 +27,7 @@ export default function MobileSheet({ isOpen, onClose, children, snapPoints, ini
           }} />
         </Sheet.Header>
         <Sheet.Content style={{ padding: "0 16px 16px", overflow: "auto" }}>
-          <Sheet.Scroller>
-            {children}
-          </Sheet.Scroller>
+          {children}
         </Sheet.Content>
       </Sheet.Container>
       <Sheet.Backdrop onTap={onClose} style={{ background: "var(--cp-overlay)" }} />

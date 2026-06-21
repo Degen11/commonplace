@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
@@ -87,11 +87,18 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   }, [search]);
 
   // ── Responsive ──
+  // Track the previous mobile state so we only auto-switch table→cards when the
+  // viewport actually CROSSES the breakpoint (desktop→mobile). On mobile, the
+  // browser address bar showing/hiding during vertical scroll fires `resize`
+  // (height change only) — without this guard that would force table view back
+  // to cards on every scroll.
+  const wasMobileRef = useRef(window.innerWidth < MOBILE_BREAKPOINT_PX);
   useEffect(() => {
     const h = () => {
       const m = window.innerWidth < MOBILE_BREAKPOINT_PX;
       setIsMobile(m);
-      if (m && view === "table") setView("cards");
+      if (m && !wasMobileRef.current && view === "table") setView("cards");
+      wasMobileRef.current = m;
     };
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);

@@ -139,7 +139,7 @@ export default function InputPhase({
   };
 
   return (
-    <div style={{ background: "var(--cp-bg)", minHeight: "100vh", fontFamily: FONT_SANS }}>
+    <div style={{ background: "var(--cp-bg)", minHeight: "100dvh", fontFamily: FONT_SANS }}>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           FIXED NAV

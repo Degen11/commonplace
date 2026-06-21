@@ -4,13 +4,19 @@ import { Sheet } from "react-modal-sheet";
 // Desktop rendering is unchanged — this component is only
 // rendered inside `isMobile` conditional paths.
 
-export default function MobileSheet({ isOpen, onClose, children, snapPoints, initialSnap = 0 }) {
+export default function MobileSheet({ isOpen, onClose, children, snapPoints, initialSnap = 0, detent = "content" }) {
+  // react-modal-sheet v5 requires snapPoints to be ascending and include
+  // 0 (closed) and 1 (open). Only forward them when valid; otherwise let the
+  // `detent` (default "content") size the sheet to its content height.
+  const snapProps = Array.isArray(snapPoints) && snapPoints.length > 0
+    ? { snapPoints, initialSnap }
+    : {};
   return (
     <Sheet
       isOpen={isOpen}
       onClose={onClose}
-      snapPoints={snapPoints}
-      initialSnap={initialSnap}
+      detent={detent}
+      {...snapProps}
       tweenConfig={{ ease: "easeOut", duration: 0.25 }}
     >
       <Sheet.Container style={{

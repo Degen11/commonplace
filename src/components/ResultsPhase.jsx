@@ -907,8 +907,6 @@ export default function ResultsPhase({
             <MobileSheet
               isOpen={showMobileCollections}
               onClose={() => setShowMobileCollections(false)}
-              snapPoints={[0.7, 0.4]}
-              initialSnap={0}
             >
               <CollectionsSidebar
                 collections={collections}

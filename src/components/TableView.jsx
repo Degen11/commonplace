@@ -397,7 +397,11 @@ const TableView = memo(function TableView({
       ref={outerRef}
       style={
         isMobile
-          ? { overflowX: "auto", WebkitOverflowScrolling: "touch" }
+          ? // overflowY must be "hidden" (not the default "visible", which CSS
+            // coerces to "auto" when the other axis is "auto") so the container
+            // scrolls only horizontally and vertical touch gestures scroll the
+            // page. Height is auto, so "hidden" never actually clips rows.
+            { overflowX: "auto", overflowY: "hidden", WebkitOverflowScrolling: "touch" }
           : { overflowX: "visible" }
       }
     >

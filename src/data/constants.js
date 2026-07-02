@@ -31,6 +31,12 @@ export const VIBE_TAGS = [
 export const DEFAULT_CATEGORIES = [...SOURCE_CATEGORIES, ...VIBE_TAGS, "Unknown"];
 export const QUOTED_CATS = new Set(["Film","TV","Book","Music","Game","Speech","Person"]);
 
+// Fallback values when identification can't determine source/category.
+// useProcessing filters cache candidates by comparing against UNKNOWN_SOURCE,
+// so every producer of quote objects must use these exact strings.
+export const UNKNOWN_SOURCE    = "Unknown source";
+export const FALLBACK_CATEGORY = "Reflection";
+
 export const CAT_COLORS = {
   // Source categories — desaturated (text blended ~25% toward neutral gray)
   Film:         { bg: "rgba(139,92,246,0.08)",   text: "#7A48CE" },   // violet
@@ -109,5 +115,5 @@ export function fallbackCategory(category, allCats) {
     const valid = allCats ? buildValidCats(allCats) : new Set([...SOURCE_CATEGORIES, ...VIBE_TAGS]);
     if (valid.has(category)) return category;
   }
-  return "Reflection";
+  return FALLBACK_CATEGORY;
 }

@@ -37,3 +37,47 @@ export function saveToStorage(key, value) {
     return false;
   }
 }
+
+/**
+ * Read a raw string value from localStorage (no JSON parsing).
+ * For legacy string-valued keys (theme, sort, flags, draft text) whose
+ * stored format predates the JSON helpers and must not change.
+ *
+ * @param {string} key - localStorage key
+ * @param {string|null} [fallback] - returned when missing or on error
+ */
+export function loadString(key, fallback = null) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw != null) return raw;
+  } catch { /* security/quota — fall through */ }
+  return fallback;
+}
+
+/**
+ * Write a raw string value to localStorage (no JSON stringification).
+ * Silently swallows quota/security errors — Supabase is the backup.
+ *
+ * @param {string} key - localStorage key
+ * @param {string} value - string to store
+ * @returns {boolean} true if write succeeded
+ */
+export function saveString(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Remove one or more keys from localStorage, ignoring errors.
+ *
+ * @param {...string} keys - localStorage keys to remove
+ */
+export function removeFromStorage(...keys) {
+  try {
+    for (const key of keys) localStorage.removeItem(key);
+  } catch { /* ignore */ }
+}

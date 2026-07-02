@@ -19,7 +19,7 @@ import {
   PERSIST_DEBOUNCE_MS,
   SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
 } from "../config";
-import { loadFromStorage, saveToStorage } from "../utils/storage";
+import { loadFromStorage, saveToStorage, saveString, removeFromStorage } from "../utils/storage";
 
 // ── Helpers ──
 
@@ -46,24 +46,24 @@ function schedulePersist(state) {
   if (persistTimer) clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
     if (state.isSharedView) return;
-    try {
-      if (state.quotes.length === 0) {
-        // Clear stored quotes so they don't resurrect on next load
-        localStorage.removeItem(LS_QUOTES);
-        localStorage.removeItem(LS_CATS);
-        return;
-      }
-      const quotesJson = JSON.stringify(state.quotes);
-      const catsJson = JSON.stringify(state.customCats);
+    if (state.quotes.length === 0) {
+      // Clear stored quotes so they don't resurrect on next load
+      removeFromStorage(LS_QUOTES, LS_CATS);
+      return;
+    }
+    // Pre-serialize (rather than saveToStorage) so the size check and the
+    // written value share one stringify pass
+    const quotesJson = JSON.stringify(state.quotes);
+    const catsJson = JSON.stringify(state.customCats);
 
-      // Warn if approaching localStorage limits
-      if (quotesJson.length + catsJson.length > STORAGE_WARN_BYTES) {
-        useQuotesStore.setState({ _storageLimitHit: true });
-      }
+    // Warn if approaching localStorage limits
+    if (quotesJson.length + catsJson.length > STORAGE_WARN_BYTES) {
+      useQuotesStore.setState({ _storageLimitHit: true });
+    }
 
-      localStorage.setItem(LS_QUOTES, quotesJson);
-      localStorage.setItem(LS_CATS, catsJson);
-    } catch { /* localStorage full — Supabase is the backup */ }
+    // saveString swallows quota errors — Supabase is the backup
+    saveString(LS_QUOTES, quotesJson);
+    saveString(LS_CATS, catsJson);
   }, PERSIST_DEBOUNCE_MS);
 }
 

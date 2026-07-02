@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
-import { fallbackCategory, QUOTED_CATS } from "../data/constants";
+import { fallbackCategory, QUOTED_CATS, UNKNOWN_SOURCE } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
@@ -128,7 +128,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       if (results.length > 0) {
         const r = results[0];
-        const newSource = r.source || "Unknown source";
+        const newSource = r.source || UNKNOWN_SOURCE;
         const newCategory = fallbackCategory(r.category, allCats);
         const snapshot = { ...q };
         setQuotes(prev => prev.map(x => x.id === q.id ? {
@@ -201,7 +201,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
             results.forEach(r => {
               const q = chunk[r.i];
               if (!q) return;
-              const newSource = r.source || "Unknown source";
+              const newSource = r.source || UNKNOWN_SOURCE;
               const newCategory = fallbackCategory(r.category, allCats);
               setQuotes(prev => prev.map(x => x.id === q.id ? {
                 ...x, source: newSource, category: newCategory,

@@ -2,6 +2,7 @@
 
 import { generateId } from "./uuid";
 import { normalize, similarity } from "./textFormatting";
+import { UNKNOWN_SOURCE, FALLBACK_CATEGORY } from "../data/constants";
 
 /**
  * Create a quote object with consistent shape.
@@ -11,8 +12,8 @@ export function makeQuote(text, source, category, confidence) {
   return {
     id: generateId(),
     text,
-    source: source || "Unknown source",
-    category: category || "Reflection",
+    source: source || UNKNOWN_SOURCE,
+    category: category || FALLBACK_CATEGORY,
     confidence: confidence || "low",
     favorite: false,
     updatedAt: Date.now(),

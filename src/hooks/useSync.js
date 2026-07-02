@@ -12,21 +12,16 @@ import { generateId } from "../utils/uuid";
 import { useQuotesStore } from "../stores/quotesStore";
 import {
   SYNC_DEBOUNCE_MS, SYNC_MAX_RETRIES, SYNC_INITIAL_DELAY_MS,
-  SYNC_ERROR_THROTTLE_MS,
+  SYNC_ERROR_THROTTLE_MS, LS_DEVICE_ID,
 } from "../config";
-
-const LS_DEVICE_ID = "commonplace_device_id";
+import { loadString, saveString } from "../utils/storage";
 
 function getOrCreateDeviceId() {
-  try {
-    let id = localStorage.getItem(LS_DEVICE_ID);
-    if (id) return id;
-    id = generateId();
-    localStorage.setItem(LS_DEVICE_ID, id);
-    return id;
-  } catch {
-    return null;
-  }
+  const existing = loadString(LS_DEVICE_ID);
+  if (existing) return existing;
+  const id = generateId();
+  // If the write fails (private mode, quota), sync is disabled for the session
+  return saveString(LS_DEVICE_ID, id) ? id : null;
 }
 
 const deviceId = getOrCreateDeviceId();
@@ -130,6 +125,10 @@ export default function useSync({ onCloudData, onSyncError }) {
     },
   });
 
+  // mutate is a stable reference in TanStack Query v5 (the mutation object is not) —
+  // destructure it so the callbacks below can list it as a dep without churning
+  const { mutate: pushMutate } = pushMutation;
+
   // ── Debounced push — same API as before ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
     // Always capture latest data
@@ -150,17 +149,17 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!deviceId) return;
       const p = latestPayload.current;
       if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      pushMutation.mutate(p);
+      pushMutate(p);
     }, SYNC_DEBOUNCE_MS);
-  }, []);
+  }, [pushMutate]);
 
   // Manual sync — push immediately with fresh retries
   const manualPush = useCallback(() => {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     consecutiveFailures.current = 0;
     const p = latestPayload.current;
-    if (p) pushMutation.mutate(p);
-  }, []);
+    if (p) pushMutate(p);
+  }, [pushMutate]);
 
   // Register manualPush in Zustand store so components can access it directly
   const setManualPush = useQuotesStore(s => s.setManualPush);
@@ -170,12 +169,12 @@ export default function useSync({ onCloudData, onSyncError }) {
   useEffect(() => {
     const handleOnline = () => {
       if (latestPayload.current && initialLoadDone.current) {
-        pushMutation.mutate(latestPayload.current);
+        pushMutate(latestPayload.current);
       }
     };
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, []);
+  }, [pushMutate]);
 
   // Cleanup timers on unmount
   useEffect(() => {

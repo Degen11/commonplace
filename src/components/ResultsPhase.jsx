@@ -12,7 +12,7 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
 import { ResultsProvider, useResultsContext } from "../contexts/ResultsContext";
 
-import { getCatColor, sanitizeName, DEFAULT_CATEGORIES } from "../data/constants";
+import { getCatColor, sanitizeName, DEFAULT_CATEGORIES, UNKNOWN_SOURCE, FALLBACK_CATEGORY } from "../data/constants";
 import { similarity } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
@@ -21,7 +21,7 @@ import {
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
 } from "../config";
 import { pluralize } from "../utils/helpers";
-import { saveToStorage } from "../utils/storage";
+import { loadString, saveString, removeFromStorage } from "../utils/storage";
 import { displayText } from "../utils/export";
 
 import ResultsModals from "./ResultsModals";
@@ -267,12 +267,8 @@ export default function ResultsPhase({
   const [collectionDupes, setCollectionDupes]   = useState([]);
   const [shareImageQuote, setShareImageQuote]   = useState(null);
   const [showMobileCollections, setShowMobileCollections] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try { return localStorage.getItem(LS_SIDEBAR) === "1"; } catch { return false; }
-  });
-  const [showKbHint, setShowKbHint] = useState(() => {
-    try { return !localStorage.getItem(LS_KB_HINT); } catch { return false; }
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => loadString(LS_SIDEBAR) === "1");
+  const [showKbHint, setShowKbHint] = useState(() => !loadString(LS_KB_HINT));
   const [newQuoteHighlight, setNewQuoteHighlight] = useState(null);
 
   // ── Refs ──
@@ -363,12 +359,14 @@ export default function ResultsPhase({
 
   // Persist sidebar collapsed state
   useEffect(() => {
-    saveToStorage(LS_SIDEBAR, sidebarCollapsed ? "1" : "0");
+    // saveString (not saveToStorage): the initializer reads this raw with === "1",
+    // so the value must be stored unquoted
+    saveString(LS_SIDEBAR, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
 
   const dismissKbHint = () => {
     setShowKbHint(false);
-    try { localStorage.setItem(LS_KB_HINT, "1"); } catch { /* ignore */ }
+    saveString(LS_KB_HINT, "1");
   };
 
   // ── Handlers ──
@@ -388,8 +386,8 @@ export default function ResultsPhase({
       const newQuote = {
         id: generateId(),
         text,
-        source: source || "Unknown source",
-        category: category || "Reflection",
+        source: source || UNKNOWN_SOURCE,
+        category: category || FALLBACK_CATEGORY,
         confidence: "high",
         favorite: false,
         updatedAt: Date.now(),
@@ -416,7 +414,7 @@ export default function ResultsPhase({
     if (quotes.length > 0) trackDeletion(quotes.map(q => q.id));
     try { window.history.replaceState(null, "", window.location.pathname); } catch {}
     setIsSharedView(false);
-    try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); localStorage.removeItem(LS_FILTERS); localStorage.removeItem(LS_DRAFT); } catch {}
+    removeFromStorage(LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT);
     setQuotes([]);
     setSelected(new Set());
     setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default");
@@ -490,7 +488,7 @@ export default function ResultsPhase({
     setNewCatName("");
     setShowNewCat(false);
   };
-  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: "Reflection", updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
+  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: FALLBACK_CATEGORY, updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
 
   // AI auto-group: create a collection from a theme
   const handleAutoGroup = async (theme) => {

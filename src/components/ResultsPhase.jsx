@@ -51,6 +51,10 @@ const CARD_VIRTUALIZER_OVERSCAN = 8;
 
 // Virtualized card list for mobile — single column, window-scrolled
 function MobileCardList({ visible, overDragId, activeDragId }) {
+  // Opt out of React Compiler memoization — same reason as TableView: the
+  // TanStack virtualizer is a stable mutable instance and compiler-cached
+  // getVirtualItems() results go stale on remount-after-view-switch.
+  "use no memo";
   const {
     selected, editingId, inlineEdit, deletingId, savedPulse,
     showConfidence, sortBy, allCats, customCats,

@@ -342,7 +342,7 @@ export default function ResultsPhase({
     const t = setTimeout(updateCatFade, 100);
     window.addEventListener("resize", updateCatFade);
     return () => { clearTimeout(t); window.removeEventListener("resize", updateCatFade); };
-  });
+  }, []);
 
   useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter]);
 

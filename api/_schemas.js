@@ -143,7 +143,7 @@ export const lookupSchema = z.object({
 export function parseBody(schema, body) {
   const result = schema.safeParse(body);
   if (!result.success) {
-    const first = result.error.errors[0];
+    const first = result.error.issues[0];
     return { ok: false, error: first.message };
   }
   return { ok: true, data: result.data };

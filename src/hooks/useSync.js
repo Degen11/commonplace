@@ -7,7 +7,7 @@
 // store — consumers read them via useQuotesStore.
 
 import { useRef, useCallback, useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateId } from "../utils/uuid";
 import { useQuotesStore } from "../stores/quotesStore";
 import {
@@ -74,23 +74,10 @@ export default function useSync({ onCloudData, onSyncError }) {
   // TanStack Query handles retries, but the mutation function needs current data.
   const latestPayload = useRef(null);
 
-  // Stable ref for mutate — useMutation returns a new object each render,
-  // so depending on pushMutation in useCallback deps causes infinite re-renders.
-  const mutateRef = useRef(null);
-
   const markReady = useCallback(() => {
     initialLoadDone.current = true;
     setInitialLoading(false);
   }, [setInitialLoading]);
-
-  // ── Pull: TanStack Query handles caching and refetching ──
-  const pullQuery = useQuery({
-    queryKey: ["sync", "pull"],
-    queryFn: fetchSyncData,
-    enabled: false, // Manual trigger only — we control when to pull
-    staleTime: 30_000,
-    retry: 1,
-  });
 
   const pull = useCallback(async () => {
     if (!deviceId) return;
@@ -143,9 +130,6 @@ export default function useSync({ onCloudData, onSyncError }) {
     },
   });
 
-  // Keep mutateRef in sync with latest mutate function
-  useEffect(() => { mutateRef.current = pushMutation.mutate; }, [pushMutation.mutate]);
-
   // ── Debounced push — same API as before ──
   const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
     // Always capture latest data
@@ -166,7 +150,7 @@ export default function useSync({ onCloudData, onSyncError }) {
       if (!deviceId) return;
       const p = latestPayload.current;
       if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      if (mutateRef.current) mutateRef.current(p);
+      pushMutation.mutate(p);
     }, SYNC_DEBOUNCE_MS);
   }, []);
 
@@ -175,7 +159,7 @@ export default function useSync({ onCloudData, onSyncError }) {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     consecutiveFailures.current = 0;
     const p = latestPayload.current;
-    if (p && mutateRef.current) mutateRef.current(p);
+    if (p) pushMutation.mutate(p);
   }, []);
 
   // Register manualPush in Zustand store so components can access it directly
@@ -185,8 +169,8 @@ export default function useSync({ onCloudData, onSyncError }) {
   // Sync when coming back online
   useEffect(() => {
     const handleOnline = () => {
-      if (latestPayload.current && initialLoadDone.current && mutateRef.current) {
-        mutateRef.current(latestPayload.current);
+      if (latestPayload.current && initialLoadDone.current) {
+        pushMutation.mutate(latestPayload.current);
       }
     };
     window.addEventListener("online", handleOnline);

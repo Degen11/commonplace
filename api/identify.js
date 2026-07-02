@@ -1,4 +1,4 @@
-import { withApiHandler, ANTHROPIC, RATE_LIMITS } from './_shared.js';
+import { withApiHandler, callAnthropic, ANTHROPIC, RATE_LIMITS } from './_shared.js';
 import { identifySchema, parseBody } from './_schemas.js';
 
 // ── Server-side system prompt (never exposed to client) ──
@@ -76,44 +76,18 @@ export default withApiHandler(async (req, res) => {
     ],
   };
 
-  try {
-    const response = await fetch(ANTHROPIC.URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': ANTHROPIC.VERSION,
-      },
-      body: JSON.stringify(safeBody),
-    });
+  const result = await callAnthropic(safeBody);
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
 
-    if (!response.ok) {
-      console.error('Anthropic API error:', response.status);
-      if (response.status === 429) {
-        return res.status(429).json({ error: 'AI rate limit reached. Please wait a moment and try again.' });
-      }
-      if (response.status === 401) {
-        return res.status(502).json({ error: 'AI authentication failed. Please contact support.' });
-      }
-      if (response.status === 529 || response.status === 503) {
-        return res.status(503).json({ error: 'AI service is overloaded. Please try again shortly.' });
-      }
-      return res.status(502).json({ error: 'AI service temporarily unavailable. Please try again.' });
-    }
+  const data = result.data;
 
-    const data = await response.json();
-
-    // Validate response structure before proxying to client
-    if (!data.content || !Array.isArray(data.content) || !data.content[0]?.text) {
-      console.error('Anthropic returned unexpected structure:', JSON.stringify(data).slice(0, 200));
-      return res.status(502).json({ error: 'AI returned an unexpected response format. Please try again.' });
-    }
-
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error('API proxy error:', error?.message || 'unknown');
-    return res.status(500).json({ error: 'Failed to reach AI service' });
+  // Validate response structure before proxying to client
+  if (!data.content || !Array.isArray(data.content) || !data.content[0]?.text) {
+    console.error('Anthropic returned unexpected structure:', JSON.stringify(data).slice(0, 200));
+    return res.status(502).json({ error: 'AI returned an unexpected response format. Please try again.' });
   }
+
+  return res.status(200).json(data);
 }, {
   rateLimit: RATE_LIMITS.IDENTIFY,
   requireAnthropicKey: true,

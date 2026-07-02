@@ -227,7 +227,7 @@ npm run build     # Production build to dist/
 npm run preview   # Preview production build
 npm run test      # vitest run (25 test files, 314 tests across components, hooks, utils)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
-npx eslint src/   # Check React Compiler compatibility (requires eslint-plugin-react-hooks installed)
+npm run lint      # eslint src/ api/ — React Compiler compatibility + serverless correctness rules
 vercel dev        # Test serverless functions locally
 ```
 
@@ -260,7 +260,7 @@ vercel dev        # Test serverless functions locally
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
 - **No mount guards needed** — React 18+ removed the "setState on unmounted component" warning. Don't add mount-guard refs or safe-dispatch wrappers
-- **React Compiler rules** — the compiler requires code that follows the Rules of React. Key constraints: (1) don't read or write `ref.current` during render — assign refs in `useEffect` or event handlers; (2) don't call `setState` directly inside `useEffect` for derived state — use initializers, direct computation, or the `setState`-during-render pattern (see `useInfiniteScroll.js` for an example); (3) don't create components dynamically during render (e.g., `const Icon = getIcon(name)`) — use `createElement` or pass the component as a prop. Run `npx eslint src/` to check for compiler bailouts
+- **React Compiler rules** — the compiler requires code that follows the Rules of React. Key constraints: (1) don't read or write `ref.current` during render — assign refs in `useEffect` or event handlers; (2) don't call `setState` directly inside `useEffect` for derived state — use initializers, direct computation, or the `setState`-during-render pattern (see `useInfiniteScroll.js` for an example); (3) don't create components dynamically during render (e.g., `const Icon = getIcon(name)`) — use `createElement` or pass the component as a prop. Run `npm run lint` to check for compiler bailouts
 - **Immutable Set updates** — use `addToSet`, `removeFromSet`, `toggleInSet`, `addAllToSet`, `removeAllFromSet` from `utils/helpers.js` instead of inline `new Set(prev)` + mutate patterns
 - **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
@@ -285,7 +285,7 @@ Z.TOAST           2000  Toasts
 
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - No TODO/FIXME comments exist in the codebase currently
-- **React Compiler bailouts** — some code paths skip compiler optimization: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection` and `UrlPreviewModal`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization. ESLint currently reports **zero errors and zero warnings** (`npx eslint src/`). Note: `eslint-plugin-react-hooks` must be installed separately to run the check
+- **React Compiler bailouts** — some code paths skip compiler optimization: `listRef.current` reads inside `useWindowVirtualizer()` in `ResultsPhase.jsx` and `TableView.jsx` (TanStack Virtual API constraint, requires ref access during render for scroll margin), plus minor derived-state patterns in `ToolbarSection` and `UrlPreviewModal`. These are functional and don't cause bugs — they just mean those specific code paths skip compiler optimization. ESLint currently reports **zero errors and zero warnings** (`npm run lint`, covering `src/` and `api/`). Note: `eslint-plugin-react-hooks` must be installed separately to run the check
 - **API batch retry** — `useProcessing.js` retries each failed batch exactly once. On retry failure the batch's items are added to `failedEntries` with a count-specific error message and processing continues to the next batch (no early exit). This is intentional: a single-batch failure should never prevent other batches from completing
 - **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty messages array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect

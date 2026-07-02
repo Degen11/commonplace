@@ -1,4 +1,4 @@
-import { withApiHandler, ANTHROPIC, RATE_LIMITS } from './_shared.js';
+import { withApiHandler, callAnthropic, ANTHROPIC, RATE_LIMITS } from './_shared.js';
 import { autoGroupSchema, parseBody } from './_schemas.js';
 
 const SYSTEM_PROMPT = `You filter quotes by theme. Given a theme and numbered quotes, return a JSON array of matching indices. Example: [0,3,7]
@@ -32,46 +32,24 @@ export default withApiHandler(async (req, res) => {
     messages: [{ role: 'user', content: userContent }],
   };
 
+  const result = await callAnthropic(safeBody);
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+
+  const text = (result.data.content || []).map(x => x.text || '').join('');
+  const raw = text.replace(/```json|```/g, '').trim();
+
+  let indices;
   try {
-    const response = await fetch(ANTHROPIC.URL, {
-      method: 'POST',
-      signal: AbortSignal.timeout(30_000),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': ANTHROPIC.VERSION,
-      },
-      body: JSON.stringify(safeBody),
-    });
-
-    if (!response.ok) {
-      console.error('Anthropic API error:', response.status);
-      return res.status(502).json({ error: 'AI service temporarily unavailable. Please try again.' });
-    }
-
-    const data = await response.json();
-    const text = (data.content || []).map(x => x.text || '').join('');
-    const raw = text.replace(/```json|```/g, '').trim();
-
-    let indices;
-    try {
-      indices = JSON.parse(raw);
-    } catch {
-      return res.status(502).json({ error: 'AI returned invalid response. Please try again.' });
-    }
-
-    if (!Array.isArray(indices) || !indices.every(i => Number.isInteger(i) && i >= 0 && i < quotes.length)) {
-      return res.status(502).json({ error: 'AI returned invalid indices. Please try again.' });
-    }
-
-    return res.status(200).json({ indices });
-  } catch (error) {
-    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
-      return res.status(504).json({ error: 'AI service took too long. Please try again.' });
-    }
-    console.error('Auto-group API error:', error?.message || 'unknown');
-    return res.status(500).json({ error: 'Failed to reach AI service' });
+    indices = JSON.parse(raw);
+  } catch {
+    return res.status(502).json({ error: 'AI returned invalid response. Please try again.' });
   }
+
+  if (!Array.isArray(indices) || !indices.every(i => Number.isInteger(i) && i >= 0 && i < quotes.length)) {
+    return res.status(502).json({ error: 'AI returned invalid indices. Please try again.' });
+  }
+
+  return res.status(200).json({ indices });
 }, {
   rateLimit: RATE_LIMITS.AUTO_GROUP,
   requireAnthropicKey: true,

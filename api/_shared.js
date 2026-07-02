@@ -105,7 +105,56 @@ export const ANTHROPIC = {
   URL: 'https://api.anthropic.com/v1/messages',
   MODEL: 'claude-haiku-4-5-20251001',
   VERSION: '2023-06-01',
+  TIMEOUT_MS: 30_000,
 };
+
+// ── Anthropic API call helper ──
+// Shared scaffolding for endpoints that proxy to Claude: headers, timeout,
+// and upstream-error → client-response mapping.
+// Returns { ok: true, data } on success, or { ok: false, status, error }
+// where status/error are ready to send to the client.
+export async function callAnthropic(payload, { timeoutMs = ANTHROPIC.TIMEOUT_MS } = {}) {
+  let response;
+  try {
+    response = await fetch(ANTHROPIC.URL, {
+      method: 'POST',
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': ANTHROPIC.VERSION,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      return { ok: false, status: 504, error: 'AI service took too long. Please try again.' };
+    }
+    console.error('Anthropic fetch error:', error?.message || 'unknown');
+    return { ok: false, status: 500, error: ERROR_MESSAGES.AI_UNREACHABLE };
+  }
+
+  if (!response.ok) {
+    console.error('Anthropic API error:', response.status);
+    if (response.status === 429) {
+      return { ok: false, status: 429, error: 'AI rate limit reached. Please wait a moment and try again.' };
+    }
+    if (response.status === 401) {
+      return { ok: false, status: 502, error: 'AI authentication failed. Please contact support.' };
+    }
+    if (response.status === 529 || response.status === 503) {
+      return { ok: false, status: 503, error: 'AI service is overloaded. Please try again shortly.' };
+    }
+    return { ok: false, status: 502, error: 'AI service temporarily unavailable. Please try again.' };
+  }
+
+  try {
+    return { ok: true, data: await response.json() };
+  } catch {
+    console.error('Anthropic returned a non-JSON response');
+    return { ok: false, status: 502, error: 'AI returned an unexpected response format. Please try again.' };
+  }
+}
 
 // ── Per-endpoint rate limits (requests per minute) ──
 export const RATE_LIMITS = {
@@ -203,8 +252,7 @@ export function withApiHandler(handler, {
 
     if (rateLimit) {
       const ip = getClientIp(req);
-      const sb = supabase || getSupabase();
-      if (!(await checkRateLimit(ip, rateLimit, sb))) {
+      if (!(await checkRateLimit(ip, rateLimit, supabase))) {
         return res.status(429).json({ error: ERROR_MESSAGES.RATE_LIMITED });
       }
     }

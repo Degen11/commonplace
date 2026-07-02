@@ -12,9 +12,10 @@ import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
   Sparkles, PenLine, Download, RefreshCw, Library,
-  Moon, Sun, Monitor, Loader,
+  Loader,
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
+import { ThemeToggleButton } from "./HeaderControls";
 import { HP, TIMELINE_MOMENTS, reveal } from "./inputPhaseStyles";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
@@ -150,14 +151,7 @@ export default function InputPhase({
           <span style={HP.navName}>Commonplace</span>
         </motion.div>
         <div style={{ marginLeft: "auto" }}>
-          <button
-            className="ui-tip ui-tip-below hdr-btn"
-            data-tip={themeMode === "auto" ? "Auto (system)" : dark ? "Dark mode" : "Light mode"}
-            style={{ ...styles.statsBtn, padding: "5px 8px" }}
-            onClick={toggleTheme}
-          >
-            {themeMode === "auto" ? <Monitor size={16} strokeWidth={1.5} /> : dark ? <Sun size={16} strokeWidth={1.5} /> : <Moon size={16} strokeWidth={1.5} />}
-          </button>
+          <ThemeToggleButton dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
         </div>
       </nav>
 

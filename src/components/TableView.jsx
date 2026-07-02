@@ -273,6 +273,11 @@ const TableView = memo(function TableView({
   toolbarHeight = 44,
   dndReorderRef,
 }) {
+  // Opt out of React Compiler memoization: the TanStack virtualizer is a
+  // stable mutable instance, so compiler-cached getVirtualItems() results go
+  // stale when the virtualizer re-renders without a compiler-visible dep
+  // change (e.g. cards→table view switch left the table empty until resize).
+  "use no memo";
   const {
     selected, toggleSel, selAll,
     editingId, setEditingId,

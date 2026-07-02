@@ -9,7 +9,7 @@ import nlp from "compromise";
 // Unambiguous contractions — the un-apostrophed form isn't a real word.
 // These are safe to restore without NLP context.
 const UNAMBIGUOUS_CONTRACTIONS = [
-  [/\b(don|won|can|couldn|shouldn|wouldn|didn|isn|aren|wasn|weren|hasn|haven|hadn|mustn|needn|ain)t\b/gi, "$1't"],
+  [/\b(don|won|can|couldn|shouldn|wouldn|didn|doesn|isn|aren|wasn|weren|hasn|haven|hadn|mustn|needn|ain)t\b/gi, "$1't"],
   [/\b(we|you|they|could|should|would|might)ve\b/gi, "$1've"],
   [/\bive\b/gi, "I've"],
   [/\b(you|they)re\b/gi, "$1're"],

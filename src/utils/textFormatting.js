@@ -111,29 +111,6 @@ export function basicFormat(text) {
   // Use compromise NLP for intelligent text formatting (pronoun "I", proper nouns)
   t = nlpFormat(t);
 
-  // Case-insensitive contraction fixes — preserves original capitalization
-  const fixContraction = (re, fixed) => {
-    t = t.replace(re, m => m[0] === m[0].toUpperCase() ? fixed.charAt(0).toUpperCase() + fixed.slice(1) : fixed);
-  };
-  fixContraction(/\bcant\b/gi, "can't");
-  fixContraction(/\bdont\b/gi, "don't");
-  fixContraction(/\bwont\b/gi, "won't");
-  fixContraction(/\bdidnt\b/gi, "didn't");
-  fixContraction(/\bdoesnt\b/gi, "doesn't");
-  fixContraction(/\bwouldnt\b/gi, "wouldn't");
-  fixContraction(/\bcouldnt\b/gi, "couldn't");
-  fixContraction(/\bshouldnt\b/gi, "shouldn't");
-  fixContraction(/\bisnt\b/gi, "isn't");
-  fixContraction(/\barent\b/gi, "aren't");
-  fixContraction(/\bwasnt\b/gi, "wasn't");
-  fixContraction(/\bwerent\b/gi, "weren't");
-  fixContraction(/\bhasnt\b/gi, "hasn't");
-  fixContraction(/\bhavent\b/gi, "haven't");
-  fixContraction(/\bhadnt\b/gi, "hadn't");
-  fixContraction(/\bthats\b/gi, "that's");
-  fixContraction(/\bwhats\b/gi, "what's");
-  fixContraction(/\bwhos\b/gi, "who's");
-
   for (const { re, right } of MISSPELLING_PATTERNS) {
     re.lastIndex = 0;
     t = t.replace(re, (match) =>

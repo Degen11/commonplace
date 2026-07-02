@@ -18,6 +18,7 @@ import {
   LS_QUOTES, LS_CATS,
   SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
 } from "../config";
+import { loadString, removeFromStorage } from "../utils/storage";
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -164,19 +165,21 @@ export function QuotesProvider({ children }) {
     }
 
     // 2. If quotes were loaded synchronously from localStorage, mark ready
-    try {
-      const saved = localStorage.getItem(LS_QUOTES);
-      if (saved) {
+    // (raw read + local JSON.parse so corrupt data can be detected and toasted,
+    // unlike loadFromStorage which silently falls back)
+    const saved = loadString(LS_QUOTES);
+    if (saved) {
+      try {
         const q = JSON.parse(saved);
         if (q?.length > 0) {
           markReady();
           pull();
           return;
         }
+      } catch {
+        showToast("Saved session couldn\u2019t be loaded. Starting fresh.", null, null, "error");
+        removeFromStorage(LS_QUOTES, LS_CATS);
       }
-    } catch {
-      showToast("Saved session couldn\u2019t be loaded. Starting fresh.", null, null, "error");
-      try { localStorage.removeItem(LS_QUOTES); localStorage.removeItem(LS_CATS); } catch { /* ignore */ }
     }
 
     // 3. No local data — pull from Supabase

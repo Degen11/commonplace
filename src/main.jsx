@@ -6,6 +6,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './contexts/ToastContext'
 import { QuotesProvider } from './contexts/QuotesContext'
 import { baseCSS } from './components/styles'
+import { LS_THEME } from './config'
+import { loadString } from './utils/storage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,16 +20,14 @@ const queryClient = new QueryClient({
 })
 
 // Apply theme immediately to prevent flash of wrong theme
-try {
-  const saved = localStorage.getItem("commonplace_theme");
-  if (saved === "dark") {
-    document.documentElement.classList.add("dark");
-  } else if (saved === "light") {
-    // Explicit light choice — add "light" class so CSS media-query dark fallback is overridden
-    document.documentElement.classList.add("light");
-  }
-  // When no saved preference, the CSS @media(prefers-color-scheme:dark) handles it automatically
-} catch {}
+const savedTheme = loadString(LS_THEME);
+if (savedTheme === "dark") {
+  document.documentElement.classList.add("dark");
+} else if (savedTheme === "light") {
+  // Explicit light choice — add "light" class so CSS media-query dark fallback is overridden
+  document.documentElement.classList.add("light");
+}
+// When no saved preference, the CSS @media(prefers-color-scheme:dark) handles it automatically
 
 // Inject global CSS once at app root (was previously injected 3x via <style> tags)
 const style = document.createElement('style')

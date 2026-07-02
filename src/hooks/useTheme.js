@@ -1,24 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { LS_THEME, THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "../config";
+import { loadString, saveString, removeFromStorage } from "../utils/storage";
 
 export default function useTheme() {
   const transitionTimerRef = useRef(null);
   const [dark, setDark] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_THEME);
-      if (saved === "dark") return true;
-      if (saved === "light") return false;
-    } catch {}
+    const saved = loadString(LS_THEME);
+    if (saved === "dark") return true;
+    if (saved === "light") return false;
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   });
 
   // Track whether the user explicitly chose a theme (vs auto-detected from system)
   const [explicit, setExplicit] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_THEME);
-      return saved === "dark" || saved === "light";
-    } catch {}
-    return false;
+    const saved = loadString(LS_THEME);
+    return saved === "dark" || saved === "light";
   });
 
   useEffect(() => {
@@ -26,14 +22,12 @@ export default function useTheme() {
     el.classList.toggle("dark", dark);
     // "light" class overrides the CSS @media(prefers-color-scheme:dark) fallback
     el.classList.toggle("light", explicit && !dark);
-    try {
-      if (explicit) {
-        localStorage.setItem(LS_THEME, dark ? "dark" : "light");
-      } else {
-        // Remove stored preference so system preference is always followed
-        localStorage.removeItem(LS_THEME);
-      }
-    } catch {}
+    if (explicit) {
+      saveString(LS_THEME, dark ? "dark" : "light");
+    } else {
+      // Remove stored preference so system preference is always followed
+      removeFromStorage(LS_THEME);
+    }
   }, [dark, explicit]);
 
   // Keep the browser chrome (mobile address bar) in sync with the effective theme.

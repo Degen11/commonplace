@@ -10,6 +10,7 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
 import { DEFAULT_CATEGORIES } from "../data/constants";
 import { pluralize } from "../utils/helpers";
+import { loadString, saveString, removeFromStorage } from "../utils/storage";
 import { smartSplit } from "../utils/textFormatting";
 import {
   DRAFT_SAVE_DEBOUNCE_MS,
@@ -45,9 +46,7 @@ export default function Commonplace() {
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
   const [phase, setPhase]         = useState(() => quotes.length > 0 ? "results" : "input");
-  const [rawInput, setRawInput]   = useState(() => {
-    try { return localStorage.getItem(LS_DRAFT) || ""; } catch(e) { return ""; }
-  });
+  const [rawInput, setRawInput]   = useState(() => loadString(LS_DRAFT, ""));
 
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase: setPhase });
   const {
@@ -88,10 +87,8 @@ export default function Commonplace() {
   // Auto-save raw input draft
   useEffect(() => {
     const t = setTimeout(() => {
-      try {
-        if (rawInput.trim()) localStorage.setItem(LS_DRAFT, rawInput);
-        else localStorage.removeItem(LS_DRAFT);
-      } catch(e) {}
+      if (rawInput.trim()) saveString(LS_DRAFT, rawInput);
+      else removeFromStorage(LS_DRAFT);
     }, DRAFT_SAVE_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [rawInput]);

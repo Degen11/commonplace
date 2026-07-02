@@ -3,7 +3,7 @@ import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
 import { LS_FILTERS, LS_VIEW, LS_SORT, LS_SHOW_CONF, SEARCH_DEBOUNCE_MS, MOBILE_BREAKPOINT_PX } from "../config";
-import { loadFromStorage, saveToStorage } from "../utils/storage";
+import { loadFromStorage, saveToStorage, loadString, saveString } from "../utils/storage";
 import { countBy } from "../utils/helpers";
 
 // Build a fingerprint string from quote IDs and text/source lengths.
@@ -48,18 +48,14 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   const [search, setSearch]                   = useState(_initFilters.search || "");
   const [debouncedSearch, setDebouncedSearch] = useState(_initFilters.search || "");
   const [sortBy, setSortBy] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_SORT);
-      if (saved && SORT_OPTIONS.some(o => o.key === saved)) return saved;
-    } catch { /* ignore */ }
+    const saved = loadString(LS_SORT);
+    if (saved && SORT_OPTIONS.some(o => o.key === saved)) return saved;
     return "default";
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT_PX);
   const [showConfidence, setShowConfidence] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LS_SHOW_CONF);
-      if (saved !== null) return saved === "true";
-    } catch { /* ignore */ }
+    const saved = loadString(LS_SHOW_CONF);
+    if (saved !== null) return saved === "true";
     return true;
   });
 
@@ -69,11 +65,11 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   }, [view, compact]);
 
   useEffect(() => {
-    try { localStorage.setItem(LS_SORT, sortBy); } catch { /* ignore */ }
+    saveString(LS_SORT, sortBy);
   }, [sortBy]);
 
   useEffect(() => {
-    try { localStorage.setItem(LS_SHOW_CONF, String(showConfidence)); } catch { /* ignore */ }
+    saveString(LS_SHOW_CONF, String(showConfidence));
   }, [showConfidence]);
 
   useEffect(() => {

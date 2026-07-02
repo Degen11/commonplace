@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { pluralize } from "../utils/helpers";
+import { FALLBACK_CATEGORY } from "../data/constants";
 import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
 import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye, Loader } from "lucide-react";
 import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
@@ -20,7 +21,7 @@ export default function AddMorePanel({
   const [tab, setTab] = useState("identify");
   const [quickText, setQuickText] = useState("");
   const [quickSource, setQuickSource] = useState("");
-  const [quickCategory, setQuickCategory] = useState("Reflection");
+  const [quickCategory, setQuickCategory] = useState(FALLBACK_CATEGORY);
   const [isDragOver, setIsDragOver] = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
   const [urlInput, setUrlInput] = useState("");
@@ -38,7 +39,7 @@ export default function AddMorePanel({
     onQuickAdd(quickText.trim(), quickSource.trim(), quickCategory);
     setQuickText("");
     setQuickSource("");
-    setQuickCategory("Reflection");
+    setQuickCategory(FALLBACK_CATEGORY);
   };
 
   const handleDrop = (e) => {

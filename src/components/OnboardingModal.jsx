@@ -3,6 +3,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, Layers, Keyboard, CircleCheckBig, ArrowRight } from "lucide-react";
 import { LS_ONBOARDED } from "../config";
+import { loadString, saveString } from "../utils/storage";
 import { CP_ACCENT, FONT_SANS } from "./styles";
 import ModalShell from "./ModalShell";
 
@@ -26,14 +27,12 @@ const STEPS = [
 ];
 
 export default function OnboardingModal() {
-  const [show, setShow] = useState(() => {
-    try { return !localStorage.getItem(LS_ONBOARDED); } catch { return false; }
-  });
+  const [show, setShow] = useState(() => !loadString(LS_ONBOARDED));
   const [step, setStep] = useState(0);
 
   const dismiss = () => {
     setShow(false);
-    try { localStorage.setItem(LS_ONBOARDED, "1"); } catch { /* ignore */ }
+    saveString(LS_ONBOARDED, "1");
   };
 
   const next = () => {

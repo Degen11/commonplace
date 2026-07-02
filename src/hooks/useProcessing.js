@@ -1,11 +1,12 @@
 import { useReducer, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
-import { buildValidCats, fallbackCategory } from "../data/constants";
+import { buildValidCats, fallbackCategory, UNKNOWN_SOURCE } from "../data/constants";
 import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
 import { makeQuote } from "../utils/quotes";
+import { removeFromStorage } from "../utils/storage";
 import { fetchWithTimeout, API_HEADERS } from "../utils/api";
 import { describeApiError } from "../utils/apiErrors";
 import {
@@ -272,11 +273,11 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
       dispatch({ type: "FEED_APPEND", items: results.map(r => {
         const item = chunk[r.i];
-        return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || "Unknown source", category: fallbackCategory(r.category, allCats) };
+        return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || UNKNOWN_SOURCE, category: fallbackCategory(r.category, allCats) };
       }) });
       // Cache AI results with known sources (fire-and-forget)
       const cacheItems = results
-        .filter(r => r.source && r.source !== "Unknown source" && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
+        .filter(r => r.source && r.source !== UNKNOWN_SOURCE && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
         .map(r => ({
           text: chunk[r.i].text, hint: null,
           source: r.source, category: r.category, confidence: r.confidence,
@@ -331,7 +332,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
     appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
     dispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
-    try { localStorage.removeItem(LS_DRAFT); } catch {}
+    removeFromStorage(LS_DRAFT);
     // Auto-transition after processing completes
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
     autoTransitionRef.current = setTimeout(() => {

@@ -197,7 +197,7 @@ function extractQuotes(html) {
 
 function extractMainContent(html) {
   // Remove non-content elements
-  let t = html
+  const t = html
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<head[\s\S]*?<\/head>/gi, '')

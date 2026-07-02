@@ -1,4 +1,4 @@
-import { withApiHandler, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
+import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { syncPostSchema, uuidV4, parseBody } from './_schemas.js';
 
 // ── Merge quotes by ID: union both sets, keep newer for conflicts ──
@@ -34,7 +34,7 @@ function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
 export default withApiHandler(async (req, res, { supabase }) => {
   // ── GET: Fetch quotes for a device ──
   if (req.method === 'GET') {
-    const { ok, error: idError } = parseBody(uuidV4, req.query.device_id);
+    const { ok } = parseBody(uuidV4, req.query.device_id);
     if (!ok) return res.status(400).json({ error: 'Invalid device_id' });
     const deviceId = req.query.device_id;
 
@@ -72,12 +72,9 @@ export default withApiHandler(async (req, res, { supabase }) => {
   }
 
   // ── POST: Save quotes for a device ──
+  // (Content-Type enforcement comes from requireJson in the middleware,
+  // which skips GET automatically)
   if (req.method === 'POST') {
-    const ct = req.headers['content-type'] || '';
-    if (!ct.includes('application/json')) {
-      return res.status(415).json({ error: ERROR_MESSAGES.INVALID_CONTENT_TYPE });
-    }
-
     const { ok, data: parsed, error: validationError } = parseBody(syncPostSchema, req.body);
     if (!ok) return res.status(400).json({ error: validationError });
 
@@ -116,11 +113,9 @@ export default withApiHandler(async (req, res, { supabase }) => {
       return res.status(500).json({ error: 'Failed to save data' });
     }
   }
-
-  return res.status(405).json({ error: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
 }, {
   methods: ['GET', 'POST'],
-  requireJson: false,
+  requireJson: true,
   rateLimit: RATE_LIMITS.SYNC,
   requireSupabase: true,
 });

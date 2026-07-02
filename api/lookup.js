@@ -69,19 +69,22 @@ async function searchOpenLibrary(hint) {
 }
 
 // ── Supabase quote cache ──
-async function checkCache(normalizedText, supabase) {
-  if (!supabase) return null;
+// One batched query for all quotes in the request (up to 20) instead of
+// one round trip per quote. Returns Map<normalized_text, cache row>.
+async function checkCacheBatch(normalizedTexts, supabase) {
+  if (!supabase || normalizedTexts.length === 0) return new Map();
   try {
     const { data, error } = await supabase
       .from('quote_cache')
-      .select('source, category, confidence')
-      .eq('normalized_text', normalizedText)
-      .limit(1)
-      .maybeSingle();
-    if (error || !data) return null;
-    return data;
+      .select('normalized_text, source, category, confidence')
+      .in('normalized_text', normalizedTexts);
+    if (error || !data) return new Map();
+    return new Map(data.map(r => [
+      r.normalized_text,
+      { source: r.source, category: r.category, confidence: r.confidence },
+    ]));
   } catch {
-    return null;
+    return new Map();
   }
 }
 
@@ -126,14 +129,16 @@ export default withApiHandler(async (req, res, { supabase }) => {
   const { ok, data: body, error: validationError } = parseBody(lookupSchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
+  // 1. Check cache for all quotes in one query
+  const norms = body.quotes.map(q => (q.text ? normalizeForCache(q.text) : null));
+  const cacheHits = await checkCacheBatch(norms.filter(Boolean), supabase);
+
   const results = await Promise.all(body.quotes.map(async (q, i) => {
     const { text, hint } = q;
     if (!text) return { i, found: false };
 
-    const norm = normalizeForCache(text);
-
-    // 1. Check cache first
-    const cached = await checkCache(norm, supabase);
+    const norm = norms[i];
+    const cached = cacheHits.get(norm);
     if (cached) {
       return { i, found: true, ...cached, platform: 'cache' };
     }
@@ -165,5 +170,4 @@ export default withApiHandler(async (req, res, { supabase }) => {
   return res.status(200).json({ results });
 }, {
   rateLimit: RATE_LIMITS.LOOKUP,
-  requireJson: false,
 });

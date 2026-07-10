@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { styles, FONT_SANS, CP_ACCENT, CLR_EMERALD, CLR_BLUE, CLR_VIOLET } from "./styles";
+import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_BLUE, CLR_VIOLET } from "./styles";
 import { getCatColor } from "../data/constants";
-import { CircleCheckBig, Database, Globe, Sparkles } from "lucide-react";
+import { ArrowRight, CircleCheckBig, Database, Globe, Sparkles, TriangleAlert } from "lucide-react";
 import Logo from "./Logo";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
@@ -105,6 +105,7 @@ export default function ProcessingPhase({
   identifiedFeed,
   customCats,
   onCancel,
+  onSkipToResults,
   processingDone,
   stats,
 }) {
@@ -154,7 +155,11 @@ export default function ProcessingPhase({
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <CircleCheckBig size={56} color={CLR_EMERALD} strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
               <h2 style={{ ...styles.procTitle, color: CLR_EMERALD, fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
-              <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>{total} entries organized and ready to explore</p>
+              <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>
+                {stats?.failed > 0
+                  ? `${total - stats.failed} of ${pluralize(total, "entry", "entries")} organized`
+                  : `${pluralize(total, "entry", "entries")} organized and ready to explore`}
+              </p>
             </div>
             {stats && (
               <div style={{
@@ -177,6 +182,12 @@ export default function ProcessingPhase({
                   <div style={statChipStyle}>
                     <Sparkles size={13} strokeWidth={1.5} color={CLR_VIOLET} />
                     {stats.api} identified by AI
+                  </div>
+                )}
+                {stats.failed > 0 && (
+                  <div style={{ ...statChipStyle, color: CLR_AMBER, borderColor: "rgba(217,119,6,0.3)" }}>
+                    <TriangleAlert size={13} strokeWidth={1.5} color={CLR_AMBER} />
+                    {stats.failed} couldn&rsquo;t be identified &mdash; retry from results
                   </div>
                 )}
               </div>
@@ -213,7 +224,16 @@ export default function ProcessingPhase({
             )}
           </div>
         )}
-        {!isComplete && (
+        {isComplete && onSkipToResults ? (
+          <div style={{ marginTop: 20, width: "100%", maxWidth: 480, textAlign: "center", animation: "fadeUp .35s .45s ease both" }}>
+            <button
+              style={{ ...styles.processBtn, display: "inline-flex", alignItems: "center", gap: 6 }}
+              onClick={onSkipToResults}
+            >
+              View results <ArrowRight size={14} strokeWidth={2} />
+            </button>
+          </div>
+        ) : !isComplete && (
           <div style={{ marginTop: 20, borderTop: "1px solid var(--cp-border)", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
             <button
               style={{ ...styles.hdrBtn, padding: "8px 20px", fontSize: 13 }}

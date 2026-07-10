@@ -135,6 +135,15 @@ export default function InputPhase({
     if (file) onFileImport(file);
   };
 
+  // File drops on the paste textarea route to the importer instead of the
+  // browser default (which navigates away). Text drags keep native behavior.
+  const isFileDrag = (e) => e.dataTransfer.types.includes("Files");
+  const pasteDropHandlers = {
+    onDragOver: (e) => { if (isFileDrag(e)) { e.preventDefault(); setIsDragOver(true); } },
+    onDragLeave: () => setIsDragOver(false),
+    onDrop: (e) => { if (isFileDrag(e)) handleDropZone(e); },
+  };
+
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
@@ -214,10 +223,14 @@ export default function InputPhase({
 
             {inputTab === "paste" && (
               <textarea
-                style={styles.bigTextarea}
+                style={{
+                  ...styles.bigTextarea,
+                  ...(isDragOver ? { borderColor: CP_ACCENT, boxShadow: `0 0 0 3px ${CP_ACCENT}22`, background: "var(--cp-bg-selected)" } : {}),
+                }}
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
                 onKeyDown={e => handleRichTextShortcut(e, rawInput, setRawInput)}
+                {...pasteDropHandlers}
                 placeholder={
                   "Paste everything here \u2014 one per line, messy is fine:\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
                 }

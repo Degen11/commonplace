@@ -57,6 +57,14 @@ function download(content, name, type) {
   downloadBlob(new Blob([content], { type }), name);
 }
 
+// Dated filename (commonplace-export-2026-07-10.csv) so repeat exports don't collide.
+// Local date, not toISOString() — UTC would mislabel evening exports west of Greenwich.
+export function exportFilename(ext) {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `commonplace-export-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.${ext}`;
+}
+
 // ── Export formats ──
 
 export function exportCSV(quotes, collections) {
@@ -71,7 +79,7 @@ export function exportCSV(quotes, collections) {
     esc((colMap[q.id] || []).join(", ")),
   ]));
   // UTF-8 BOM ensures spreadsheet apps detect encoding correctly
-  download("\uFEFF" + rows.map(r => r.join(",")).join("\n"), "commonplace-export.csv", "text/csv;charset=utf-8");
+  download("\uFEFF" + rows.map(r => r.join(",")).join("\n"), exportFilename("csv"), "text/csv;charset=utf-8");
 }
 
 export function exportMD(quotes, collections) {
@@ -87,7 +95,7 @@ export function exportMD(quotes, collections) {
     },
     onCategoryEnd() { md += "\n"; },
   });
-  download(md, "commonplace-export.md", "text/markdown");
+  download(md, exportFilename("md"), "text/markdown");
 }
 
 export function exportJSON(quotes, collections) {
@@ -102,7 +110,7 @@ export function exportJSON(quotes, collections) {
   if (collections?.length > 0) {
     data.collections = collections.map(c => ({ id: c.id, name: c.name, icon: c.icon || null, quoteIds: c.quoteIds }));
   }
-  download(JSON.stringify(data, null, 2), "commonplace-export.json", "application/json");
+  download(JSON.stringify(data, null, 2), exportFilename("json"), "application/json");
 }
 
 export function exportTXT(quotes, collections) {
@@ -115,7 +123,7 @@ export function exportTXT(quotes, collections) {
     },
     onCategoryEnd() { text += "\n"; },
   });
-  download(text.trim(), "commonplace-export.txt", "text/plain");
+  download(text.trim(), exportFilename("txt"), "text/plain");
 }
 
 export function richCopyToClipboard(quotes, collections) {

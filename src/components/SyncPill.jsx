@@ -27,7 +27,7 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
 
   const style = {
     ...baseStyle,
-    ...(isError ? { cursor: "pointer" } : {}),
+    ...(isError ? { cursor: "pointer", border: "none" } : {}),
     position: "relative",
     display: "inline-flex",
     alignItems: "center",
@@ -46,12 +46,19 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
     ? `Last saved ${formatRelativeTime(lastSynced)}`
     : null;
 
+  // Error state renders a real <button> so retry is reachable by keyboard and
+  // announced by screen readers; passive states stay a non-interactive <span>.
+  const Pill = isError ? "button" : "span";
+
   return (
-    <span
+    <Pill
       style={style}
+      {...(isError ? { type: "button", "aria-label": "Sync failed — retry" } : {})}
       onClick={isError ? onManualSync : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
     >
       {isError && <RefreshCw size={10} strokeWidth={2} />}
       {label}
@@ -75,6 +82,6 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
           {tooltip}
         </span>
       )}
-    </span>
+    </Pill>
   );
 }

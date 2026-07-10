@@ -56,7 +56,7 @@ export default function Commonplace() {
     pendingDupes, dupeDecisions, setDupeDecision,
     formattingEnabled, setFormattingEnabled,
     processEntries, handleDupesContinue, retryFailed,
-    identifyBatch, autoGroup, cancelProcessing, resetProcessingState,
+    identifyBatch, autoGroup, skipToResults, cancelProcessing, resetProcessingState,
     dismissApiError, dismissStats,
   } = processing;
 
@@ -92,6 +92,15 @@ export default function Commonplace() {
     }, DRAFT_SAVE_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [rawInput]);
+
+  // Warn before leaving mid-identification — a refresh discards in-flight progress.
+  // Only while actively processing; the completion screen doesn't need a guard.
+  useEffect(() => {
+    if (phase !== "processing" || processingDone) return undefined;
+    const warn = (e) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [phase, processingDone]);
 
   useEffect(() => {
     const baseTitle = "Commonplace";
@@ -212,6 +221,7 @@ export default function Commonplace() {
             customCats={customCats}
             processingDone={processingDone}
             onCancel={cancelProcessing}
+            onSkipToResults={skipToResults}
             stats={stats}
           />
         </SectionErrorBoundary>

@@ -55,6 +55,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
         <Menu.Trigger
           className="overflow-btn act-btn"
           style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
+          aria-label="Row actions"
           onClick={e => e.stopPropagation()}
         >
           <Ellipsis size={16} strokeWidth={2} />
@@ -231,8 +232,10 @@ const TableRow = memo(function TableRow({
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
       }}
     >
+      {/* Decorative — the dnd-kit listeners live on the row itself */}
       <div
         className="drag-handle"
+        aria-hidden="true"
         style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "grab" }}
       >
         <GripVertical size={14} strokeWidth={1.5} />
@@ -430,7 +433,8 @@ const TableView = memo(function TableView({
           {columnOrder.map(colKey => (
             <div
               key={colKey}
-              className="col-drag-header"
+              className="col-drag-header ui-tip ui-tip-below"
+              data-tip="Drag to reorder columns"
               style={{
                 ...COL_CONFIG[colKey].style,
                 opacity: dragColId === colKey ? 0.4 : 1,

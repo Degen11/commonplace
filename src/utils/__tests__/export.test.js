@@ -1,5 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { displayText, encodeShareData } from "../export";
+import { displayText, encodeShareData, exportFilename } from "../export";
+
+describe("exportFilename", () => {
+  it("defaults to the 'export' label", () => {
+    expect(exportFilename("csv")).toMatch(/^commonplace-export-\d{4}-\d{2}-\d{2}\.csv$/);
+  });
+
+  it("uses a custom label to distinguish variants (e.g. anki)", () => {
+    expect(exportFilename("csv", "anki")).toMatch(/^commonplace-anki-\d{4}-\d{2}-\d{2}\.csv$/);
+  });
+});
 
 describe("displayText", () => {
   it("wraps quoted categories in smart quotes", () => {

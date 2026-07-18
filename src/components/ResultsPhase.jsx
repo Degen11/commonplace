@@ -22,7 +22,7 @@ import {
 } from "../config";
 import { pluralize } from "../utils/helpers";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
-import { displayText, exportJSON } from "../utils/export";
+import { displayText, exportJSON, exportCSV } from "../utils/export";
 
 import ResultsModals from "./ResultsModals";
 import NotificationBars from "./NotificationBars";
@@ -615,10 +615,23 @@ export default function ResultsPhase({
     activeCollectionId,
   };
 
+  const handleExportCollection = (collectionId) => {
+    const col = collections.find(c => c.id === collectionId);
+    if (!col) return;
+    const idSet = new Set(col.quoteIds);
+    const colQuotes = quotes.filter(q => idSet.has(q.id));
+    if (colQuotes.length === 0) {
+      showToast("This collection is empty.", null, null, "error");
+      return;
+    }
+    exportCSV(colQuotes, collections);
+    showToast(`Exported ${pluralize(colQuotes.length, "quote")} from "${col.name}" as CSV`, null, null, "success");
+  };
+
   const makeExportDropdown = (triggerStyle, triggerClassName, triggerTip) => (
     <ExportDropdown
       quotes={quotes}
-      filtered={filtered}
+      filtered={collectionFiltered}
       selected={selected}
       hasActiveFilters={hasActiveFilters}
       showToast={showToast}
@@ -937,6 +950,7 @@ export default function ResultsPhase({
                 uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
                 favCount={favCount}
                 toolbarHeight={toolbarHeight}
+                onExportCollection={handleExportCollection}
             />
             ) : (
             <MobileSheet
@@ -961,6 +975,7 @@ export default function ResultsPhase({
                 favCount={favCount}
                 toolbarHeight={0}
                 isMobileSheet
+                onExportCollection={handleExportCollection}
               />
             </MobileSheet>
             )}

@@ -151,11 +151,12 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
   };
 
-  const hasActiveFilters = catFilter !== "All" || search;
+  const hasActiveFilters = catFilter !== "All" || favFilter || search;
   const hasActiveFilterOrSort = hasActiveFilters || sortBy !== "default";
 
   const clearFilters = () => {
     setCatFilter("All");
+    setFavFilter(false);
     setSearch("");
     setSortBy("default");
   };

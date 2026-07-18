@@ -59,10 +59,11 @@ function download(content, name, type) {
 
 // Dated filename (commonplace-export-2026-07-10.csv) so repeat exports don't collide.
 // Local date, not toISOString() — UTC would mislabel evening exports west of Greenwich.
-export function exportFilename(ext) {
+// `label` distinguishes variants (e.g. "anki") so they don't clobber the plain export.
+export function exportFilename(ext, label = "export") {
   const d = new Date();
   const pad = n => String(n).padStart(2, "0");
-  return `commonplace-export-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.${ext}`;
+  return `commonplace-${label}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.${ext}`;
 }
 
 // ── Export formats ──
@@ -111,6 +112,14 @@ export function exportJSON(quotes, collections) {
     data.collections = collections.map(c => ({ id: c.id, name: c.name, icon: c.icon || null, quoteIds: c.quoteIds }));
   }
   download(JSON.stringify(data, null, 2), exportFilename("json"), "application/json");
+}
+
+// Two-column CSV for Anki flashcard import: front = quote, back = source.
+// No header row (Anki would import it as a card). Quoted fields + UTF-8 BOM.
+export function exportAnki(quotes) {
+  const esc = s => `"${(s || "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+  const rows = quotes.map(q => [esc(displayText(q)), esc(q.source)].join(","));
+  download("\uFEFF" + rows.join("\r\n"), exportFilename("csv", "anki"), "text/csv;charset=utf-8");
 }
 
 export function exportTXT(quotes, collections) {

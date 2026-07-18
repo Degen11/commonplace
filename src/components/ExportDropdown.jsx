@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import {
   ClipboardCopy, Sparkles, Link, Globe, FileText, Table2, FileDown, Braces,
-  TriangleAlert, Loader,
+  TriangleAlert, Loader, Layers,
 } from "lucide-react";
 import {
-  exportCSV, exportMD, exportJSON, exportTXT,
+  exportCSV, exportMD, exportJSON, exportTXT, exportAnki,
   copyToClipboard, richCopyToClipboard, encodeShareData,
 } from "../utils/export";
 import { styles, CLR_EMERALD } from "./styles";
@@ -150,6 +150,9 @@ export default function ExportDropdown({
             <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportJSON(quotes, collections); showToast(`Exported ${pluralize(quotes.length, "quote")} as JSON`, null, null, "success"); close(); }}>
               <Braces size={14} strokeWidth={1.5} /> JSON
             </Menu.Item>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportAnki(quotes); showToast(`Exported ${pluralize(quotes.length, "quote")} as Anki cards`, null, null, "success"); close(); }}>
+              <Layers size={14} strokeWidth={1.5} /> Anki flashcards
+            </Menu.Item>
             {hasActiveFilters && (<>
               <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
               <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
@@ -166,6 +169,9 @@ export default function ExportDropdown({
               </Menu.Item>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportMD(filtered, collections); showToast(`Exported ${pluralize(filtered.length, "quote")} as Markdown`, null, null, "success"); close(); }}>
                 <FileDown size={14} strokeWidth={1.5} /> Filtered MD
+              </Menu.Item>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportAnki(filtered); showToast(`Exported ${pluralize(filtered.length, "quote")} as Anki cards`, null, null, "success"); close(); }}>
+                <Layers size={14} strokeWidth={1.5} /> Filtered Anki
               </Menu.Item>
             </>)}
             {selected.size > 0 && (<>
@@ -184,6 +190,9 @@ export default function ExportDropdown({
               </Menu.Item>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportJSON(sel, collections); showToast(`Exported ${pluralize(sel.length, "quote")} as JSON`, null, null, "success"); close(); }}>
                 {"{ }"} Selected JSON
+              </Menu.Item>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportAnki(sel); showToast(`Exported ${pluralize(sel.length, "quote")} as Anki cards`, null, null, "success"); close(); }}>
+                <Layers size={14} strokeWidth={1.5} /> Selected Anki
               </Menu.Item>
             </>)}
           </Menu.Popup>

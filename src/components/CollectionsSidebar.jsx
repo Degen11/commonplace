@@ -6,7 +6,7 @@ import {
   Plus, Trash2, ChevronLeft, ChevronRight, Library, Pencil, Check, X,
   FolderOpen, Heart, Bookmark, Star, Flame, Zap, Lightbulb, BookOpen,
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
-  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy,
+  Quote, Compass, Crown, Gem, Wand2, Loader2, Copy, Download,
 } from "lucide-react";
 import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_RED, CLR_AMBER, CLR_GREEN } from "./styles";
 import AnimatedNumber from "./AnimatedNumber";
@@ -69,6 +69,7 @@ function CollectionRow({
   c, isActive, isEditing, editName, setEditName, handleRename, setEditingId,
   confirmDeleteId, setConfirmDeleteId, deleteCollection, setActiveCollectionId,
   iconPickerId, setIconPickerId, updateCollectionIcon, quoteCounts,
+  onExportCollection,
 }) {
   const count = quoteCounts[c.id] || 0;
   const icon = getIcon(c.icon);
@@ -177,6 +178,17 @@ function CollectionRow({
           </button>
         ) : (
           <>
+            {onExportCollection && count > 0 && (
+              <button
+                className="ui-tip ui-tip-left"
+                data-tip="Export as CSV"
+                aria-label={`Export ${c.name} as CSV`}
+                onClick={e => { e.stopPropagation(); onExportCollection(c.id); }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}
+              >
+                <Download size={12} strokeWidth={1.5} />
+              </button>
+            )}
             <button
               className="ui-tip ui-tip-left"
               data-tip="Rename"
@@ -244,6 +256,7 @@ export default function CollectionsSidebar({
   favCount,
   toolbarHeight = 44,
   isMobileSheet = false,
+  onExportCollection,
 }) {
   const [newName, setNewName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -626,6 +639,7 @@ export default function CollectionsSidebar({
               setIconPickerId={setIconPickerId}
               updateCollectionIcon={updateCollectionIcon}
               quoteCounts={quoteCounts}
+              onExportCollection={onExportCollection}
             />
           </motion.div>
         ))}

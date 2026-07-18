@@ -12,6 +12,8 @@ export default function ConfirmModal({
   confirmLabel,
   onCancel,
   onConfirm,
+  secondaryLabel,
+  onSecondary,
 }) {
   return (
     <ModalShell
@@ -25,9 +27,14 @@ export default function ConfirmModal({
         <Dialog.Title render={<p />} style={{ fontSize: 15, fontWeight: 600 }}>{title}</Dialog.Title>
       </div>
       <Dialog.Description style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 20, lineHeight: 1.5 }}>{description}</Dialog.Description>
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onCancel}>{cancelLabel}</button>
-        <button className="confirm-yes" style={styles.confirmYes} onClick={onConfirm}>{confirmLabel}</button>
+      <div style={{ display: "flex", gap: 8, justifyContent: secondaryLabel ? "space-between" : "flex-end", alignItems: "center" }}>
+        {secondaryLabel && (
+          <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 14px" }} onClick={onSecondary}>{secondaryLabel}</button>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onCancel}>{cancelLabel}</button>
+          <button className="confirm-yes" style={styles.confirmYes} onClick={onConfirm}>{confirmLabel}</button>
+        </div>
       </div>
     </ModalShell>
   );

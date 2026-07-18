@@ -25,6 +25,7 @@ export default function HeaderBar({
   syncStatus,
   lastSynced,
   onManualSync,
+  onOpenSync,
   dark,
   toggleTheme,
   themeMode,
@@ -44,7 +45,7 @@ export default function HeaderBar({
         Commonplace
       </motion.h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-        <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
+        <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} onOpenSync={onOpenSync} pillStyles={pillStyles} />
 
         {/* Desktop: show all buttons inline */}
         {!isMobile && (

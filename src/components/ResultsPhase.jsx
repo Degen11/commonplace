@@ -22,7 +22,7 @@ import {
 } from "../config";
 import { pluralize } from "../utils/helpers";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
-import { displayText } from "../utils/export";
+import { displayText, exportJSON } from "../utils/export";
 
 import ResultsModals from "./ResultsModals";
 import NotificationBars from "./NotificationBars";
@@ -41,6 +41,7 @@ import EmptyState from "./EmptyState";
 import CollectionsSidebar from "./CollectionsSidebar";
 import QuickAddBar from "./QuickAddBar";
 import MobileSheet from "./MobileSheet";
+import DeviceLinkModal from "./DeviceLinkModal";
 import ScrollTopButton from "./ScrollTopButton";
 import { styles } from "./styles";
 
@@ -271,6 +272,7 @@ export default function ResultsPhase({
   const [collectionDupes, setCollectionDupes]   = useState([]);
   const [shareImageQuote, setShareImageQuote]   = useState(null);
   const [showMobileCollections, setShowMobileCollections] = useState(false);
+  const [showSync, setShowSync]                 = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => loadString(LS_SIDEBAR) === "1");
   const [showKbHint, setShowKbHint] = useState(() => !loadString(LS_KB_HINT));
   const [newQuoteHighlight, setNewQuoteHighlight] = useState(null);
@@ -414,8 +416,21 @@ export default function ResultsPhase({
     addQuote();
   };
 
+  // Export a JSON backup before clearing — offered as the "Export first" action
+  // in the confirm modal. Keeps the modal open so the user still confirms the clear.
+  const handleExportBeforeClear = () => {
+    if (quotes.length === 0) return;
+    exportJSON(quotes, collections);
+    showToast("Backup exported — safe to clear now.", null, null, "success");
+  };
+
   const handleClear = () => {
-    if (quotes.length > 0) trackDeletion(quotes.map(q => q.id));
+    // Snapshot for undo. Clear-all previously had no undo AND tombstoned every
+    // quote (deleting the cloud copy too), so a misclick was unrecoverable.
+    const quotesSnapshot = quotes;
+    const catsSnapshot = customCats;
+    const clearedIds = quotes.map(q => q.id);
+    if (clearedIds.length > 0) trackDeletion(clearedIds);
     try { window.history.replaceState(null, "", window.location.pathname); } catch {}
     setIsSharedView(false);
     removeFromStorage(LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT);
@@ -425,6 +440,17 @@ export default function ResultsPhase({
     setConfirmClear(false); setShowAddMore(false); setShowStats(false);
     setCustomCats([]); setActiveCollectionId(null);
     onClearReset();
+    if (quotesSnapshot.length > 0) {
+      showToast(
+        `Cleared ${pluralize(quotesSnapshot.length, "entry", "entries")}`,
+        "Undo",
+        () => {
+          setQuotes(quotesSnapshot);
+          setCustomCats(catsSnapshot);
+          untrackDeletion(clearedIds);
+        },
+      );
+    }
   };
 
   const handleStartReview = () => {
@@ -671,10 +697,19 @@ export default function ResultsPhase({
       <ResultsModals
         showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts}
         shareImageQuote={shareImageQuote} setShareImageQuote={setShareImageQuote} showToast={showToast}
-        confirmClear={confirmClear} setConfirmClear={setConfirmClear} handleClear={handleClear} quotesLength={quotes.length}
+        confirmClear={confirmClear} setConfirmClear={setConfirmClear} handleClear={handleClear} quotesLength={quotes.length} onExportBeforeClear={handleExportBeforeClear}
         confirmBulkDel={confirmBulkDel} setConfirmBulkDel={setConfirmBulkDel} bulkDel={bulkDel} selectedSize={selected.size}
         collectionDupes={collectionDupes} setCollectionDupes={setCollectionDupes} handleDupeDeleteBatch={handleDupeDeleteBatch}
       />
+
+      {showSync && (
+        <DeviceLinkModal
+          onClose={() => setShowSync(false)}
+          syncStatus={syncStatus}
+          onRetry={manualPush}
+          showToast={showToast}
+        />
+      )}
 
       <div className="cp-wrap" style={styles.wrap}>
 
@@ -705,6 +740,7 @@ export default function ResultsPhase({
               syncStatus={syncStatus}
               lastSynced={lastSynced}
               onManualSync={manualPush}
+              onOpenSync={() => setShowSync(true)}
               dark={dark}
               toggleTheme={toggleTheme}
               themeMode={themeMode}
@@ -727,6 +763,7 @@ export default function ResultsPhase({
               syncStatus={syncStatus}
               lastSynced={lastSynced}
               onManualSync={manualPush}
+              onOpenSync={() => setShowSync(true)}
               dark={dark}
               toggleTheme={toggleTheme}
               themeMode={themeMode}
@@ -1132,7 +1169,11 @@ export default function ResultsPhase({
             className="mobile-fab"
             onClick={() => setShowMobileCollections(true)}
             style={{
-              position: "fixed", bottom: showBulkBar ? 72 : 20, right: 16,
+              position: "fixed",
+              // env() folds in the home-bar inset; kept inline (not a stylesheet
+              // !important rule) so the bulk-bar offset can still win.
+              bottom: `calc(${showBulkBar ? 72 : 20}px + env(safe-area-inset-bottom))`,
+              right: 16,
               width: 44, height: 44, borderRadius: "50%",
               border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
               boxShadow: "var(--cp-shadow-md)", cursor: "pointer",

@@ -101,6 +101,9 @@ const CardItem = memo(function CardItem({
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
         ...(!isMobile && !isEd && !isInlineEditing ? { touchAction: "none" } : {}),
+        // Horizontal swipe-to-action needs pan-y so the browser keeps vertical
+        // scroll but yields horizontal movement to @use-gesture (no scroll jitter).
+        ...(swipeEnabled ? { touchAction: "pan-y" } : {}),
         '--card-stripe': stripeColor ? `inset 3px 0 0 ${stripeColor}` : undefined,
         ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? `inset 0 2px 0 ${CP_ACCENT}` : null].filter(Boolean).join(", ") || undefined },
         ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),

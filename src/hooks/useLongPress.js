@@ -13,14 +13,18 @@ export default function useLongPress(onLongPress, ms = LONG_PRESS_MS) {
   const movedRef = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
   const startTime = useRef(0);
+  // Set when the long-press callback fires, consumed by the follow-up click.
+  const firedRef = useRef(false);
 
   const onTouchStart = (e) => {
     movedRef.current = false;
+    firedRef.current = false;
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
     startTime.current = performance.now();
     timerRef.current = setTimeout(() => {
       if (!movedRef.current) {
+        firedRef.current = true;
         navigator.vibrate?.(10);
         onLongPress();
       }
@@ -59,11 +63,22 @@ export default function useLongPress(onLongPress, ms = LONG_PRESS_MS) {
     }
   };
 
+  // Mobile fires a synthetic click after a stationary long-press; without this
+  // it lands on the underlying onClick (e.g. opening the editor) right after the
+  // press already toggled selection. Swallow that one click in the capture phase.
+  const onClickCapture = (e) => {
+    if (firedRef.current) {
+      firedRef.current = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
-  return { onTouchStart, onTouchMove, onTouchEnd };
+  return { onTouchStart, onTouchMove, onTouchEnd, onClickCapture };
 }

@@ -1,5 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { smartRestore, nlpFormat } from "../smartRestore";
+import { describe, it, expect, beforeAll } from "vitest";
+import { smartRestore, nlpFormat, initNlp } from "../smartRestore";
+
+// compromise is now lazy-loaded (see initNlp). Load it once so the POS-based
+// disambiguation paths (e.g. "its" → "it's") are exercised, matching production
+// where initNlp() runs at the start of the identification pipeline.
+beforeAll(() => initNlp());
 
 describe("smartRestore", () => {
   it("returns empty/null input unchanged", () => {

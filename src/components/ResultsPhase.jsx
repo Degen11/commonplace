@@ -280,7 +280,6 @@ export default function ResultsPhase({
   // ── Refs ──
 
   const addMoreRef          = useRef(null);
-  const sortRef             = useRef(null);
   const toolbarRef          = useRef(null);
   const pendingScrollAdjust = useRef(null);
   const catScrollRef        = useRef(null);
@@ -350,8 +349,6 @@ export default function ResultsPhase({
 
   useEffect(() => {
     const h = e => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) setShowSort(false);
-
       if (editingId) {
         const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
         if (!clickedInside) {
@@ -889,7 +886,6 @@ export default function ResultsPhase({
               setSortBy={setSortBy}
               showSort={showSort}
               setShowSort={setShowSort}
-              sortRef={sortRef}
               hasActiveFilters={hasActiveFilterOrSort}
               clearFilters={clearFilters}
               resultCount={collectionFiltered.length}

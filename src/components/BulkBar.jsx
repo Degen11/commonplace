@@ -131,14 +131,14 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
       {/* ── Destructive + dismiss ── */}
       <div style={{ ...styles.bulkGroup, ...(isMobile ? { marginLeft: "auto" } : {}) }}>
         {isMobile && (
-          <button className="ui-tip bulk-fav" data-tip="Toggle favorite" style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }} onClick={() => { for (const id of selected) onFav(id); }}>
+          <button className="ui-tip bulk-fav" data-tip="Toggle favorite" aria-label="Toggle favorite on selected" style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }} onClick={() => { for (const id of selected) onFav(id); }}>
             <Star size={13} strokeWidth={2} />
           </button>
         )}
-        <button className="ui-tip bulk-del" data-tip="Delete selected" style={{ ...styles.bulkDelBtn, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={onDelete}>
+        <button className="ui-tip bulk-del" data-tip="Delete selected" aria-label="Delete selected" style={{ ...styles.bulkDelBtn, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={onDelete}>
           <Trash2 size={13} strokeWidth={2} />
         </button>
-        <button className="ui-tip" data-tip="Clear selection" style={{ ...styles.bulkX, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={() => setSelected(new Set())}>
+        <button className="ui-tip" data-tip="Clear selection" aria-label="Clear selection" style={{ ...styles.bulkX, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={() => setSelected(new Set())}>
           <X size={14} strokeWidth={2} />
         </button>
       </div>

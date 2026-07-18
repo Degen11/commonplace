@@ -64,6 +64,8 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
   return (
     <Pill
       style={style}
+      aria-live="polite"
+      aria-atomic="true"
       {...(interactive ? { type: "button", "aria-label": ariaLabel } : {})}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}

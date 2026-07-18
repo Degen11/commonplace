@@ -4,6 +4,7 @@ import ConfirmModal from "./ConfirmModal";
 import CollectionDupeModal from "./CollectionDupeModal";
 import { TriangleAlert, Trash2 } from "lucide-react";
 import { CLR_ORANGE } from "./styles";
+import { pluralize } from "../utils/helpers";
 
 /**
  * All modal dialogs used by ResultsPhase, extracted to reduce component size.
@@ -57,10 +58,10 @@ export default function ResultsModals({
           iconColor="#EB5757"
           iconBg="var(--cp-error-bg)"
           borderColor="#EB5757"
-          title={`Delete ${selectedSize} entries?`}
-          description={`This will remove ${selectedSize} selected entries. You can undo immediately after.`}
+          title={`Delete ${pluralize(selectedSize, "entry", "entries")}?`}
+          description={`This will remove the ${pluralize(selectedSize, "selected entry", "selected entries")}. You can undo immediately after.`}
           cancelLabel="Keep entries"
-          confirmLabel={`Delete ${selectedSize} entries`}
+          confirmLabel={`Delete ${pluralize(selectedSize, "entry", "entries")}`}
           onCancel={() => setConfirmBulkDel(false)}
           onConfirm={bulkDel}
         />

@@ -195,6 +195,7 @@ export const baseCSS = `
   .drag-handle:active{cursor:grabbing}
   .qrow:hover .drag-handle{opacity:0.5}
   .qrow:hover .drag-handle:hover{opacity:1}
+  .qrow:focus-within .drag-handle,.drag-handle:focus-visible{opacity:1}
 
   /* Inline edit affordances */
   .inline-src{cursor:text !important;transition:color .12s}
@@ -297,6 +298,9 @@ export const baseCSS = `
   .overflow-btn{opacity:0;transition:opacity .12s ease}
   .qrow:hover .overflow-btn{opacity:1}
   .qcard:hover .overflow-btn{opacity:1}
+  /* Keyboard reveal: without this, tabbing lands a focus ring on an invisible button */
+  .overflow-btn:focus-visible{opacity:1}
+  .qrow:focus-within .overflow-btn,.qcard:focus-within .overflow-btn{opacity:1}
   .overflow-menu-item svg{transition:color .15s ease}
   .overflow-menu-item:hover{background:var(--cp-bg-hover) !important}
   .overflow-copy:hover svg{color:#2383E2 !important}
@@ -738,7 +742,6 @@ export const styles = {
   srchIn:{width:"100%",border:"1px solid var(--cp-border)",borderRadius:6,padding:"7px 28px 7px 32px",fontSize:12,fontFamily:"inherit",color:"var(--cp-text-secondary)",background:"var(--cp-bg-card)"},
   clrBtn:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:12},
   sortBtn:{display:"flex",alignItems:"center",padding:"7px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",minWidth:180},
-  sortDrop:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:220,zIndex:100,padding:4,transition:"opacity .15s ease, transform .15s ease"},
   sortOpt:{display:"block",width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"8px 12px",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit"},
   sortOptOn:{background:"var(--cp-bg-hover)",fontWeight:600},
 

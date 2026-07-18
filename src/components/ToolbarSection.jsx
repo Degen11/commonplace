@@ -1,7 +1,9 @@
 import { useRef, useEffect, useState } from "react";
+import { Menu } from "@base-ui/react/menu";
 import { styles, CP_ACCENT, CLR_AMBER, CLR_ORANGE, CLR_BLUE } from "./styles";
 import { X, Search, ArrowUpDown, TriangleAlert } from "lucide-react";
 import { pluralize } from "../utils/helpers";
+import { Z } from "../data/constants";
 import AnimatedNumber from "./AnimatedNumber";
 
 const SORT_OPTIONS = [
@@ -27,7 +29,6 @@ export default function ToolbarSection({
   search, setSearch,
   sortBy, setSortBy,
   showSort, setShowSort,
-  sortRef,
   hasActiveFilters,
   clearFilters,
   resultCount,
@@ -47,6 +48,15 @@ export default function ToolbarSection({
     if (searchOpen && searchInputRef.current) searchInputRef.current.focus();
   }, [searchOpen]);
 
+  // The "/" keyboard shortcut lives in useKeyboardShortcuts, which can't focus the
+  // search input while it's collapsed (unmounted). It dispatches this event instead;
+  // opening mounts the input and the focus effect above then focuses it.
+  useEffect(() => {
+    const open = () => setSearchOpen(true);
+    window.addEventListener("cp:focus-search", open);
+    return () => window.removeEventListener("cp:focus-search", open);
+  }, []);
+
   return (
     <>
       <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
@@ -55,9 +65,9 @@ export default function ToolbarSection({
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
             <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
               style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button className="cat-pill" onClick={() => setCatFilter("All")} style={{ ...styles.catPill, borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)", ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+              <button className="cat-pill" aria-pressed={catFilter === "All" && !favFilter} onClick={() => setCatFilter("All")} style={{ ...styles.catPill, borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)", ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
               {favCount > 0 && (
-                <button className="cat-pill" onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
+                <button className="cat-pill" aria-pressed={favFilter} onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
                   ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
                 </button>
               )}
@@ -65,7 +75,7 @@ export default function ToolbarSection({
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
                 const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <button key={c} className="cat-pill" onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, borderColor: on ? col.bg : "var(--cp-border)", ...(on ? { background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                return <button key={c} className="cat-pill" aria-pressed={on} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, borderColor: on ? col.bg : "var(--cp-border)", ...(on ? { background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}><AnimatedNumber value={count} /></span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, position: "absolute", top: 2, right: 2 }} />}
@@ -141,7 +151,8 @@ export default function ToolbarSection({
             ) : (
               <button
                 className="ui-tip ui-tip-below"
-                data-tip="Search (/) "
+                data-tip="Search (/)"
+                aria-label="Search"
                 onClick={() => setSearchOpen(true)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
@@ -169,11 +180,13 @@ export default function ToolbarSection({
                 Clear
               </button>
             )}
-            <div ref={sortRef} style={{ position: "relative" }}>
-              <button
+            {/* Base UI Menu — gives keyboard nav, focus return, Escape/outside-click,
+                aria-expanded/haspopup, and unmounting (options aren't focusable when closed). */}
+            <Menu.Root open={showSort} onOpenChange={setShowSort}>
+              <Menu.Trigger
                 className="ui-tip ui-tip-below"
                 data-tip="Sort order"
-                onClick={() => setShowSort(!showSort)}
+                aria-label="Sort order"
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   color: sortBy !== "default" ? CLR_BLUE : "var(--cp-text-muted)",
@@ -191,21 +204,20 @@ export default function ToolbarSection({
                       : SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
                   </span>
                 )}
-              </button>
-              <div style={{
-                ...styles.sortDrop, right: 0, left: "auto", minWidth: 200,
-                opacity: showSort ? 1 : 0,
-                transform: showSort ? "translateY(0)" : "translateY(-4px)",
-                pointerEvents: showSort ? "auto" : "none",
-              }}>
-                {SORT_OPTIONS.map(o => (
-                  <button key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
-                    onClick={() => { setSortBy(o.key); setShowSort(false); }}>
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+              </Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
+                  <Menu.Popup style={{ background: "var(--cp-bg-card)", borderRadius: 6, boxShadow: "var(--cp-shadow-md)", border: "1px solid var(--cp-border)", minWidth: 200, padding: 4, animation: "menuIn .14s ease" }}>
+                    {SORT_OPTIONS.map(o => (
+                      <Menu.Item key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
+                        onClick={() => setSortBy(o.key)}>
+                        {o.label}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
           </div>
         </div>
       </div>

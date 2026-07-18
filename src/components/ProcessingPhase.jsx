@@ -201,7 +201,7 @@ export default function ProcessingPhase({
               </motion.div>
             )}
             <h2 style={styles.procTitle}>Organizing your collection...</h2>
-            <p style={styles.procSub}>{phaseSubtitle(progress, doneCount, total)}</p>
+            <p style={styles.procSub} role="status">{phaseSubtitle(progress, doneCount, total)}</p>
           </>
         )}
         {progress && (
@@ -210,7 +210,7 @@ export default function ProcessingPhase({
               <span style={{ fontWeight: 600 }}><AnimatedNumber value={doneCount} /> of {total}</span>
               <span style={{ color: isComplete ? CLR_EMERALD : "var(--cp-text-muted)" }}><AnimatedNumber value={pct} />%</span>
             </div>
-            <div style={styles.track}><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
+            <div style={styles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Identification progress"><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
             {showTimeRow && (
               <div style={{

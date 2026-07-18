@@ -113,7 +113,17 @@ const CardItem = memo(function CardItem({
     >
       <div style={cardStyles.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div className="check-div" style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: isMobile ? 22 : 15, height: isMobile ? 22 : 15, borderRadius: isMobile ? 4 : 3 }} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }} onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}>
+          <div
+            className="check-div"
+            style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: isMobile ? 22 : 15, height: isMobile ? 22 : 15, borderRadius: isMobile ? 4 : 3 }}
+            role="checkbox"
+            aria-checked={isSel}
+            aria-label="Select quote"
+            tabIndex={0}
+            onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
+            onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
+            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggleSel(q.id, e.shiftKey); } }}
+          >
             {isSel && <Check size={isMobile ? 14 : 10} strokeWidth={3} color="#fff" />}
           </div>
           <div style={{ position: "relative" }}>

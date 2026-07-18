@@ -93,7 +93,10 @@ export default function useKeyboardShortcuts({
       if (e.key === "/") {
         e.preventDefault();
         const searchInput = document.querySelector("[data-search-input]");
+        // The search box collapses to an icon when empty — the input isn't mounted.
+        // Ask the toolbar to open it; ToolbarSection's focus effect then focuses it.
         if (searchInput) searchInput.focus();
+        else window.dispatchEvent(new CustomEvent("cp:focus-search"));
         return;
       }
 

@@ -12,7 +12,7 @@ import { CLR_ORANGE } from "./styles";
 export default function ResultsModals({
   showShortcuts, setShowShortcuts,
   shareImageQuote, setShareImageQuote, showToast,
-  confirmClear, setConfirmClear, handleClear, quotesLength,
+  confirmClear, setConfirmClear, handleClear, quotesLength, onExportBeforeClear,
   confirmBulkDel, setConfirmBulkDel, bulkDel, selectedSize,
   collectionDupes, setCollectionDupes, handleDupeDeleteBatch,
 }) {
@@ -41,11 +41,13 @@ export default function ResultsModals({
           iconBg="var(--cp-warning-bg)"
           borderColor={CLR_ORANGE}
           title="Start fresh?"
-          description={`This will clear all ${quotesLength} entries and remove them from your saved session. This cannot be undone.`}
+          description={`This will clear all ${quotesLength} entries from this session. You can undo right after, but exporting a backup first is safest.`}
           cancelLabel="Keep my entries"
           confirmLabel="Clear everything"
           onCancel={() => setConfirmClear(false)}
           onConfirm={handleClear}
+          secondaryLabel="Export first"
+          onSecondary={onExportBeforeClear}
         />
       )}
 

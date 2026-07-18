@@ -20,6 +20,7 @@ export default function MiniHeader({
   syncStatus,
   lastSynced,
   onManualSync,
+  onOpenSync,
   dark,
   toggleTheme,
   themeMode,
@@ -45,7 +46,7 @@ export default function MiniHeader({
           {!isMobile && <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "var(--cp-text-secondary)" }}>Commonplace</span>}
         </span>
         <div style={{ display: "flex", gap: isMobile ? 4 : 6, alignItems: "center" }}>
-          <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} pillStyles={pillStyles} />
+          <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} onOpenSync={onOpenSync} pillStyles={pillStyles} />
           {!isMobile && (
             <ThemeToggleButton dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} withTip={false} iconSize={14} style={{ fontSize: 11, padding: "4px 8px" }} />
           )}

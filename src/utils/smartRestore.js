@@ -1,10 +1,26 @@
-import nlp from "compromise";
-
 /**
  * Smart text restoration from normalized (lowercase, no punctuation) text.
  * Uses compromise NLP for pronoun "I" capitalization, contraction restoration,
  * and proper noun detection — replacing fragile regex-only approaches.
  */
+
+// compromise is ~354KB (138KB gzip) — roughly 40% of the initial JS payload if
+// imported statically. It's only needed during the identification pipeline, so we
+// lazy-load it via initNlp() (called at the start of processing and pre-warmed on
+// idle in main.jsx). Until it resolves, the NLP-only steps below are skipped and
+// the regex passes handle the common cases.
+let nlp = null;
+let nlpPromise = null;
+
+export function initNlp() {
+  if (nlp) return Promise.resolve();
+  if (!nlpPromise) {
+    nlpPromise = import("compromise")
+      .then((mod) => { nlp = mod.default || mod; })
+      .catch(() => { nlpPromise = null; });
+  }
+  return nlpPromise;
+}
 
 // Unambiguous contractions — the un-apostrophed form isn't a real word.
 // These are safe to restore without NLP context.
@@ -27,6 +43,7 @@ const UNAMBIGUOUS_CONTRACTIONS = [
  * "its color" → stays "its" (its + noun = possessive)
  */
 function disambiguateContractions(text) {
+  if (!nlp) return text; // NLP not loaded yet — regex passes already ran
   const doc = nlp(text);
   const terms = doc.json()[0]?.terms;
   if (!terms || terms.length < 2) return text;
@@ -142,19 +159,22 @@ export function nlpFormat(text) {
   // 3. Disambiguate ambiguous contractions using POS context
   t = disambiguateContractions(t);
 
-  // 4. Use compromise to find and capitalize proper nouns (Person, Place, Organization)
-  const doc = nlp(t);
-  const people = doc.people().out("array");
-  const places = doc.places().out("array");
+  // 4. Use compromise to find and capitalize proper nouns (Person, Place, Organization).
+  //    Skipped until compromise is loaded (see initNlp) — the regex passes above still run.
+  if (nlp) {
+    const doc = nlp(t);
+    const people = doc.people().out("array");
+    const places = doc.places().out("array");
 
-  for (const name of [...people, ...places]) {
-    if (!name) continue;
-    const words = name.split(/\s+/);
-    for (const word of words) {
-      if (word.length < 2) continue;
-      const lower = word.toLowerCase();
-      const re = new RegExp("\\b" + lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g");
-      t = t.replace(re, word.charAt(0).toUpperCase() + word.slice(1));
+    for (const name of [...people, ...places]) {
+      if (!name) continue;
+      const words = name.split(/\s+/);
+      for (const word of words) {
+        if (word.length < 2) continue;
+        const lower = word.toLowerCase();
+        const re = new RegExp("\\b" + lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g");
+        t = t.replace(re, word.charAt(0).toUpperCase() + word.slice(1));
+      }
     }
   }
 

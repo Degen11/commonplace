@@ -5,6 +5,7 @@ import {
   normalize, similarity, smartParse, smartSplit, basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
+import { initNlp } from "../utils/smartRestore";
 import { makeQuote } from "../utils/quotes";
 import { removeFromStorage } from "../utils/storage";
 import { fetchWithTimeout, API_HEADERS } from "../utils/api";
@@ -301,6 +302,11 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const abortController = new AbortController();
     abortRef.current = abortController;
     const signal = abortController.signal;
+
+    // Kick off the compromise (NLP) load in parallel with the local-DB import.
+    // Only formatting paths need it, so only block on it when useFormatting is set.
+    const nlpReady = initNlp();
+    if (useFormatting) await nlpReady;
 
     const { localMatches, needsApi } = await handleLocalLookup(unique, useFormatting);
     if (signal.aborted) return;

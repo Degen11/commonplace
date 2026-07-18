@@ -4,13 +4,24 @@ import { Sheet } from "react-modal-sheet";
 // Desktop rendering is unchanged — this component is only
 // rendered inside `isMobile` conditional paths.
 
+// react-modal-sheet v5 requires snapPoints to be ascending and include 0 (closed)
+// and 1 (fully open). Callers can pass them in any order (e.g. legacy v3 descending
+// `[0.6, 0.4]`) with `initialSnap` indexing their own array — we normalize to a valid
+// ascending array and remap initialSnap to the fraction the caller wanted to rest at.
+function buildSnapProps(snapPoints, initialSnap) {
+  if (!Array.isArray(snapPoints) || snapPoints.length === 0) return null;
+  const partials = snapPoints.filter(n => typeof n === "number" && n > 0 && n < 1);
+  const desired = snapPoints[initialSnap] ?? partials[partials.length - 1];
+  const ascending = [...new Set([0, ...partials, 1])].sort((a, b) => a - b);
+  if (ascending.length < 2) return null;
+  const idx = ascending.indexOf(desired);
+  return { snapPoints: ascending, initialSnap: idx < 0 ? ascending.length - 1 : idx };
+}
+
 export default function MobileSheet({ isOpen, onClose, children, snapPoints, initialSnap = 0, detent = "content" }) {
-  // react-modal-sheet v5 requires snapPoints to be ascending and include
-  // 0 (closed) and 1 (open). Only forward them when valid; otherwise let the
-  // `detent` (default "content") size the sheet to its content height.
-  const snapProps = Array.isArray(snapPoints) && snapPoints.length > 0
-    ? { snapPoints, initialSnap }
-    : {};
+  // When no valid snapPoints are given, let `detent` (default "content") size the
+  // sheet to its content height.
+  const snapProps = buildSnapProps(snapPoints, initialSnap) || {};
   return (
     <Sheet
       isOpen={isOpen}

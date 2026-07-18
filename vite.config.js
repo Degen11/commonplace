@@ -14,7 +14,24 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // These chunks are intentionally lazy-loaded (localQuotes ~477KB, compromise
+        // NLP ~354KB, and the results-phase bundle). Precaching them would re-download
+        // ~1.1MB on every service-worker install/deploy and undo the lazy-load benefit.
+        // The runtimeCaching entry below still caches them (CacheFirst) after first use,
+        // so returning/offline users keep them.
+        globIgnores: ['**/localQuotes-*.js', '**/nlp-*.js', '**/ResultsPhase-*.js'],
         runtimeCaching: [
+          {
+            // Same-origin app chunks — cache on first use so offline still works
+            // without bloating the precache manifest. Hashed filenames make CacheFirst safe.
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\/assets\/.*\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'app-lazy-chunks',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',

@@ -12,7 +12,7 @@ function formatRelativeTime(date) {
   return `${hours}h ago`;
 }
 
-export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillStyles }) {
+export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenSync, pillStyles }) {
   const [hovered, setHovered] = useState(false);
 
   if (syncStatus === "idle") return null;
@@ -21,13 +21,19 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
   const isSyncing = syncStatus === "syncing";
   const isSynced = syncStatus === "synced";
 
+  // Clicking the pill opens the sync panel (device linking + retry) when available;
+  // otherwise the error pill falls back to an immediate retry.
+  const onClick = onOpenSync || (isError ? onManualSync : undefined);
+  const interactive = !!onClick;
+
   const baseStyle = isSyncing ? pillStyles.syncing
     : isSynced ? pillStyles.synced
     : pillStyles.error;
 
   const style = {
     ...baseStyle,
-    ...(isError ? { cursor: "pointer", border: "none" } : {}),
+    ...(interactive ? { cursor: "pointer" } : {}),
+    ...(isError ? { border: "none" } : {}),
     position: "relative",
     display: "inline-flex",
     alignItems: "center",
@@ -38,7 +44,9 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
     : isError ? "Sync error"
     : "Saved";
 
-  const tooltip = isError
+  const tooltip = onOpenSync
+    ? (isError ? "Sync failed — open sync options" : "Cloud sync — link a device")
+    : isError
     ? "Click to retry"
     : isSyncing
     ? "Saving changes\u2026"
@@ -46,15 +54,18 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, pillSty
     ? `Last saved ${formatRelativeTime(lastSynced)}`
     : null;
 
-  // Error state renders a real <button> so retry is reachable by keyboard and
-  // announced by screen readers; passive states stay a non-interactive <span>.
-  const Pill = isError ? "button" : "span";
+  // Interactive states render a real <button> so the action is reachable by
+  // keyboard and announced by screen readers; otherwise stay a plain <span>.
+  const Pill = interactive ? "button" : "span";
+  const ariaLabel = onOpenSync
+    ? (isError ? "Sync failed — open cloud sync options" : "Cloud sync options")
+    : "Sync failed — retry";
 
   return (
     <Pill
       style={style}
-      {...(isError ? { type: "button", "aria-label": "Sync failed — retry" } : {})}
-      onClick={isError ? onManualSync : undefined}
+      {...(interactive ? { type: "button", "aria-label": ariaLabel } : {})}
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}

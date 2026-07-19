@@ -287,7 +287,7 @@ export default function InputPhase({
                 const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
                 const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
                 return (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
                     <span style={styles.entryMeta}>
                       {count > 0
                         ? <>{count} {count === 1 ? "entry" : "entries"} detected<span style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
@@ -314,7 +314,7 @@ export default function InputPhase({
                       className="ui-tip ui-tip-below"
                       data-tip="Normalize quotes, dashes, and whitespace"
                       style={styles.fmtToggleWrap}
-                      onClick={() => setFormattingEnabled((p) => !p)}
+                      onClick={() => setFormattingEnabled(!formattingEnabled)}
                     >
                       <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
                         <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
@@ -325,7 +325,7 @@ export default function InputPhase({
                   </div>
                 );
               })()}
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
                 {!rawInput.trim() && inputTab === "paste" && (
                   <button className="try-btn" style={styles.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
                     Try with examples

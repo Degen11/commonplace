@@ -108,9 +108,10 @@ export const baseCSS = `
   .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,background .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
 
   /* View Transition API — radial wipe for theme toggle */
-  ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
-  ::view-transition-old(root){z-index:1}
-  ::view-transition-new(root){z-index:9999}
+  @keyframes cpThemeReveal{from{clip-path:circle(0 at var(--vt-x,50%) var(--vt-y,0))}to{clip-path:circle(var(--vt-r,150%) at var(--vt-x,50%) var(--vt-y,0))}}
+  ::view-transition-old(root),::view-transition-new(root){mix-blend-mode:normal}
+  ::view-transition-old(root){animation:none;z-index:1}
+  ::view-transition-new(root){animation:cpThemeReveal .45s cubic-bezier(0.4,0,0.2,1);z-index:9999}
   ::selection{background:var(--cp-selection-bg)}
   html.dark ::selection{background:var(--cp-selection-bg)}
   @media(prefers-color-scheme:dark){html:not(.light) ::selection{background:var(--cp-selection-bg)}}

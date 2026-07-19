@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 import { LS_THEME, THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "../config";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
 
@@ -65,6 +66,7 @@ export default function useTheme() {
   // Shared view transition helper — applies a theme change with radial wipe or CSS fallback
   const applyWithTransition = (event, applyFn, nextDark) => {
     if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    const el = document.documentElement;
 
     if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const x = event?.clientX ?? window.innerWidth / 2;
@@ -73,32 +75,27 @@ export default function useTheme() {
         Math.max(x, window.innerWidth - x),
         Math.max(y, window.innerHeight - y),
       );
+      // The reveal is driven by a CSS keyframe on ::view-transition-new(root)
+      // (see baseCSS `cpThemeReveal`), parameterized by these custom properties.
+      // A CSS animation is attached to the pseudo from its first frame, so the
+      // circle starts fully clipped — no flash of the un-clipped snapshot, and no
+      // WAAPI-in-.ready.then() race.
+      el.style.setProperty("--vt-x", `${x}px`);
+      el.style.setProperty("--vt-y", `${y}px`);
+      el.style.setProperty("--vt-r", `${maxDist}px`);
 
-      const transition = document.startViewTransition(() => {
-        applyFn();
-        // Flush class changes synchronously for the view transition snapshot
-        const el = document.documentElement;
+      document.startViewTransition(() => {
+        // flushSync commits the React re-render synchronously BEFORE the browser
+        // snapshots ::view-transition-new. Without it, the setState in applyFn()
+        // commits partway through the animation and blocks the main thread — the
+        // "pause when the circle is halfway". It also guarantees the snapshot is
+        // complete (no half-rendered content inside the reveal). The class toggle
+        // drives the CSS-variable colors for the snapshot.
+        flushSync(() => applyFn());
         el.classList.toggle("dark", nextDark);
         el.classList.toggle("light", !nextDark);
       });
-
-      transition.ready.then(() => {
-        document.documentElement.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${maxDist}px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 500,
-            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-            pseudoElement: "::view-transition-new(root)",
-          },
-        );
-      }).catch(() => {});
     } else {
-      const el = document.documentElement;
       el.classList.add("theme-transitioning");
       applyFn();
       transitionTimerRef.current = setTimeout(() => {

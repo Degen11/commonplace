@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import { LS_THEME, THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "../config";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
 
@@ -63,79 +62,47 @@ export default function useTheme() {
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  // Shared view transition helper — applies a theme change with radial wipe or CSS fallback
-  const applyWithTransition = (event, applyFn, nextDark) => {
+  // Apply a theme change wrapped in a brief, lightweight color crossfade.
+  // The `.theme-transitioning` class (see baseCSS) puts a short background/color/
+  // border transition on every element, so when applyFn() flips the html.dark
+  // class the CSS-variable colors interpolate. This is deliberately NOT the
+  // View Transitions circle: that snapshots the whole page, which stalls on large
+  // pages/slower hardware — the crossfade is cheap and smooth everywhere.
+  const applyWithTransition = (applyFn) => {
     if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     const el = document.documentElement;
-
-    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const x = event?.clientX ?? window.innerWidth / 2;
-      const y = event?.clientY ?? 0;
-      const maxDist = Math.hypot(
-        Math.max(x, window.innerWidth - x),
-        Math.max(y, window.innerHeight - y),
-      );
-      // The reveal is driven by a CSS keyframe on ::view-transition-new(root)
-      // (see baseCSS `cpThemeReveal`), parameterized by these custom properties.
-      // A CSS animation is attached to the pseudo from its first frame, so the
-      // circle starts fully clipped — no flash of the un-clipped snapshot, and no
-      // WAAPI-in-.ready.then() race.
-      el.style.setProperty("--vt-x", `${x}px`);
-      el.style.setProperty("--vt-y", `${y}px`);
-      el.style.setProperty("--vt-r", `${maxDist}px`);
-
-      document.startViewTransition(() => {
-        // flushSync commits the React re-render synchronously BEFORE the browser
-        // snapshots ::view-transition-new. Without it, the setState in applyFn()
-        // commits partway through the animation and blocks the main thread — the
-        // "pause when the circle is halfway". It also guarantees the snapshot is
-        // complete (no half-rendered content inside the reveal). The class toggle
-        // drives the CSS-variable colors for the snapshot.
-        flushSync(() => applyFn());
-        el.classList.toggle("dark", nextDark);
-        el.classList.toggle("light", !nextDark);
-      });
-    } else {
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       el.classList.add("theme-transitioning");
-      applyFn();
       transitionTimerRef.current = setTimeout(() => {
         el.classList.remove("theme-transitioning");
         transitionTimerRef.current = null;
       }, 350);
     }
+    applyFn();
   };
 
-  const toggleTheme = (/** @type {MouseEvent|undefined} */ event) => {
-    applyWithTransition(
-      event,
-      () => { setExplicit(true); setDark(d => !d); },
-      !dark,
-    );
+  const toggleTheme = () => {
+    applyWithTransition(() => { setExplicit(true); setDark(d => !d); });
   };
 
   // Reset to auto (follow system preference)
   const setAutoTheme = () => {
-    setExplicit(false);
-    setDark(window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false);
+    applyWithTransition(() => {
+      setExplicit(false);
+      setDark(window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false);
+    });
   };
 
   // Cycle: light (explicit) → dark (explicit) → auto → ...
-  const cycleTheme = (event) => {
+  const cycleTheme = () => {
     if (explicit && dark) {
-      // dark (explicit) → auto
-      setAutoTheme();
+      setAutoTheme();                       // dark (explicit) → auto
     } else if (explicit && !dark) {
-      // light (explicit) → dark (explicit)
-      toggleTheme(event);
+      toggleTheme();                        // light (explicit) → dark (explicit)
+    } else if (dark) {
+      applyWithTransition(() => { setExplicit(true); setDark(false); }); // auto-dark → explicit light
     } else {
-      // auto → explicit (opposite of current system theme)
-      if (dark) {
-        // Currently auto-dark → explicit light
-        applyWithTransition(event, () => { setExplicit(true); setDark(false); }, false);
-      } else {
-        // Currently auto-light → explicit dark
-        toggleTheme(event);
-      }
+      toggleTheme();                        // auto-light → explicit dark
     }
   };
 

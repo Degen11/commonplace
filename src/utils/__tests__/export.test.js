@@ -1,5 +1,35 @@
-import { describe, it, expect } from "vitest";
-import { displayText, encodeShareData, exportFilename } from "../export";
+// @vitest-environment jsdom
+import { describe, it, expect, vi } from "vitest";
+import { displayText, encodeShareData, exportFilename, exportAnki } from "../export";
+
+describe("exportAnki", () => {
+  it("writes a two-column CSV (front=quote, back=source), no header row, UTF-8 BOM", () => {
+    // Capture the string handed to Blob without relying on jsdom's URL.createObjectURL.
+    const origBlob = global.Blob;
+    const origCreate = URL.createObjectURL;
+    const origRevoke = URL.revokeObjectURL;
+    let parts;
+    global.Blob = vi.fn(function (p) { parts = p; });
+    URL.createObjectURL = vi.fn(() => "blob:x");
+    URL.revokeObjectURL = vi.fn();
+    try {
+      exportAnki([
+        { text: "Stay hungry", source: "Steve Jobs", category: "Speech" }, // quoted category
+        { text: "Be kind", source: "Unknown", category: "Reflection" },      // non-quoted
+      ]);
+      const content = parts[0];
+      expect(content.charCodeAt(0)).toBe(0xFEFF); // BOM
+      const lines = content.slice(1).split("\r\n");
+      expect(lines).toHaveLength(2); // no header row, no trailing newline
+      expect(lines[0]).toBe('"“Stay hungry”","Steve Jobs"'); // smart-quoted front
+      expect(lines[1]).toBe('"Be kind","Unknown"');
+    } finally {
+      global.Blob = origBlob;
+      URL.createObjectURL = origCreate;
+      URL.revokeObjectURL = origRevoke;
+    }
+  });
+});
 
 describe("exportFilename", () => {
   it("defaults to the 'export' label", () => {

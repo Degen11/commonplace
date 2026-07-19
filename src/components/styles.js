@@ -537,8 +537,9 @@ export const syncPillStyles = {
 };
 
 // Custom chevron for native <select>s — replaces the platform arrow so selects match
-// the designed dropdowns. #9B9A97 ≈ --cp-text-muted in both themes. Callers must
-// reserve right padding (≥24px) for the chevron.
+// the designed dropdowns. #9B9A97 is a neutral mid-gray that reads acceptably on both
+// themes (close to dark --cp-text-muted #9A9A9A; light muted is now #767470). Callers
+// must reserve right padding (≥24px) for the chevron.
 const SELECT_CHEVRON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B9A97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
 const SELECT_RESET = {
   appearance:"none", WebkitAppearance:"none", cursor:"pointer",

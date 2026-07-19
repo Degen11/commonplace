@@ -1,7 +1,7 @@
 // ── Quote object helpers ──
 
 import { generateId } from "./uuid";
-import { normalize, similarity } from "./textFormatting";
+import { makeSimilarityKey, similarityFromKeys } from "./textFormatting";
 import { UNKNOWN_SOURCE, FALLBACK_CATEGORY } from "../data/constants";
 
 /**
@@ -29,13 +29,18 @@ export function makeQuote(text, source, category, confidence) {
  * @returns {Array} array of { entries, minScore, maxScore } groups, sorted by maxScore desc
  */
 export function findDuplicateGroups(quotes, threshold) {
-  const norms = quotes.map(q => ({
-    id: q.id,
-    text: q.text,
-    source: q.source,
-    category: q.category,
-    norm: normalize(q.text),
-  }));
+  // Precompute { norm, words } once per quote — reused across all O(n²) pairs.
+  const norms = quotes.map(q => {
+    const key = makeSimilarityKey(q.text);
+    return {
+      id: q.id,
+      text: q.text,
+      source: q.source,
+      category: q.category,
+      norm: key.norm,
+      words: key.words,
+    };
+  });
 
   // Union-find
   const parent = norms.map((_, i) => i);
@@ -48,7 +53,7 @@ export function findDuplicateGroups(quotes, threshold) {
 
   for (let i = 0; i < norms.length; i++) {
     for (let j = i + 1; j < norms.length; j++) {
-      const score = similarity(norms[i].norm, norms[j].norm);
+      const score = similarityFromKeys(norms[i], norms[j], threshold);
       if (score > threshold) {
         union(i, j);
         scores.set(`${i}:${j}`, score);

@@ -2,7 +2,7 @@ import { useReducer, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
 import { buildValidCats, fallbackCategory, UNKNOWN_SOURCE } from "../data/constants";
 import {
-  normalize, similarity, smartParse, smartSplit, basicFormat,
+  makeSimilarityKey, similarityFromKeys, smartParse, smartSplit, basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
 import { initNlp } from "../utils/smartRestore";
@@ -359,21 +359,26 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const seen = [];
     const seenExact = new Map();
     const addSeen = (entry) => { seen.push(entry); seenExact.set(entry.norm, entry); };
+    // Store the precomputed word Set alongside each seen entry so the fuzzy
+    // comparison below never rebuilds it — the seen list is scanned once per
+    // incoming entry (O(new × existing)).
+    const makeSeen = (text, source) => { const k = makeSimilarityKey(text); return { norm: k.norm, words: k.words, text, source }; };
     if (appendMode) {
-      for (const q of quotesRef.current) addSeen({ norm: normalize(q.text), text: q.text, source: q.source });
+      for (const q of quotesRef.current) addSeen(makeSeen(q.text, q.source));
     }
     if (appendMode && pendingContinuationRef.current) {
       for (const p of pendingContinuationRef.current.unique) {
-        addSeen({ norm: normalize(p.text), text: p.text, source: p.hint });
+        addSeen(makeSeen(p.text, p.hint));
       }
     }
     const nearDupes = [];
 
     parsed.forEach(p => {
-      const norm = normalize(p.text);
+      const key = makeSimilarityKey(p.text);
+      const norm = key.norm;
       let match = seenExact.get(norm);
       if (!match) {
-        match = seen.find(s => similarity(s.norm, norm) > DUPE_SIMILARITY_THRESHOLD);
+        match = seen.find(s => similarityFromKeys(s, key, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
       }
 
       if (match) {
@@ -384,7 +389,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         });
       } else {
         unique.push(p);
-        addSeen({ norm, text: p.text, source: p.hint });
+        addSeen({ norm, words: key.words, text: p.text, source: p.hint });
       }
     });
 

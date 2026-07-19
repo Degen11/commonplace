@@ -158,18 +158,40 @@ function wordSet(normalized) {
   );
 }
 
-export function similarity(a, b) {
-  const na = normalize(a), nb = normalize(b);
+// Precompute the normalized string + word Set once so it can be reused across
+// many comparisons. Dupe detection is O(n²) in pairs — without this, each pair
+// re-runs normalize() (NFKD + 3 Unicode-property passes) and rebuilds both Sets.
+export function makeSimilarityKey(s) {
+  const norm = normalize(s);
+  return { norm, words: wordSet(norm) };
+}
+
+// Dice-coefficient similarity from two precomputed keys ({ norm, words }).
+// When `threshold` is provided, a cheap upper-bound on the coefficient lets us
+// skip the Set intersection for pairs that can't possibly exceed it.
+export function similarityFromKeys(a, b, threshold) {
+  const na = a.norm, nb = b.norm;
   if (!na || !nb) return 0;
   if (na === nb) return 1;
   if (na.includes(nb) || nb.includes(na)) return 0.9;
 
-  const wa = wordSet(na), wb = wordSet(nb);
-  if (!wa.size || !wb.size) return 0;
+  const wa = a.words, wb = b.words;
+  const sa = wa.size, sb = wb.size;
+  if (!sa || !sb) return 0;
 
+  // Max achievable Dice = 2·min(sa,sb)/(sa+sb). If that can't beat the
+  // threshold, the real score can't either — skip the intersection.
+  if (threshold != null && (2 * Math.min(sa, sb)) / (sa + sb) <= threshold) return 0;
+
+  // Iterate the smaller Set for the intersection.
+  const [small, large] = sa <= sb ? [wa, wb] : [wb, wa];
   let overlap = 0;
-  wa.forEach(w => { if (wb.has(w)) overlap++; });
-  return (overlap * 2) / (wa.size + wb.size);
+  small.forEach(w => { if (large.has(w)) overlap++; });
+  return (overlap * 2) / (sa + sb);
+}
+
+export function similarity(a, b) {
+  return similarityFromKeys(makeSimilarityKey(a), makeSimilarityKey(b));
 }
 
 export function smartParse(line) {

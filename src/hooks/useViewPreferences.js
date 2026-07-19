@@ -72,9 +72,12 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     saveString(LS_SHOW_CONF, String(showConfidence));
   }, [showConfidence]);
 
+  // Persist on the debounced search, not the raw value — otherwise every
+  // keystroke does a synchronous JSON.stringify + setItem (and fires the
+  // cross-tab storage listener), defeating the search debounce below.
   useEffect(() => {
-    saveToStorage(LS_FILTERS, { cat: catFilter, fav: favFilter, search });
-  }, [catFilter, favFilter, search]);
+    saveToStorage(LS_FILTERS, { cat: catFilter, fav: favFilter, search: debouncedSearch });
+  }, [catFilter, favFilter, debouncedSearch]);
 
   // ── Search debounce ──
   useEffect(() => {
@@ -161,14 +164,22 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     setSortBy("default");
   };
 
-  const computedStats = (() => {
+  // Computed on demand (only when the stats panel is open) instead of eagerly on
+  // every quotes change — a full sort + countBy on every favorite toggle / edit /
+  // sync merge was wasted work while the panel was closed. Single-pass min/max
+  // replaces the O(n log n) sort for shortest/longest.
+  const getComputedStats = () => {
     if (quotes.length === 0) return null;
     const srcCount = countBy(quotes, "source");
     const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const sorted   = [...quotes].sort((a, b) => a.text.length - b.text.length);
-    const avgWords = Math.round(quotes.reduce((s, q) => s + q.text.split(" ").length, 0) / quotes.length);
-    return { topSrcs, shortest: sorted[0], longest: sorted[sorted.length - 1], avgWords };
-  })();
+    let shortest = quotes[0], longest = quotes[0], totalWords = 0;
+    for (const q of quotes) {
+      if (q.text.length < shortest.text.length) shortest = q;
+      if (q.text.length > longest.text.length) longest = q;
+      totalWords += q.text.split(" ").length;
+    }
+    return { topSrcs, shortest, longest, avgWords: Math.round(totalWords / quotes.length) };
+  };
 
   return {
     view, setView,
@@ -181,6 +192,6 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     isMobile,
     filtered, collectionFiltered, visible, hasMore, remaining, loadMore, paginationKey,
     cc, favCount, unknownCount,
-    hasActiveFilters, hasActiveFilterOrSort, clearFilters, computedStats,
+    hasActiveFilters, hasActiveFilterOrSort, clearFilters, getComputedStats,
   };
 }

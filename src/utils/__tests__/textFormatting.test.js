@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalize, similarity, basicFormat, smartSplit, smartParse } from "../textFormatting";
+import { normalize, similarity, similarityFromKeys, makeSimilarityKey, basicFormat, smartSplit, smartParse } from "../textFormatting";
 
 describe("normalize", () => {
   it("lowercases and trims", () => {
@@ -72,6 +72,39 @@ describe("similarity", () => {
     // Both normalize to non-empty but all words are too short for wordSet
     expect(similarity("I", "a")).toBe(0);
     expect(similarity("I a", "x y")).toBe(0);
+  });
+});
+
+describe("similarityFromKeys / makeSimilarityKey", () => {
+  const pairs = [
+    ["hello world", "hello world"],
+    ["apple banana cherry", "xyz qrs tuv"],
+    ["to be or not to be", "to be or not to be that is the question"],
+    ["the quick brown fox", "the quick red dog"],
+    ["Hello World", "hello world"],
+    ["I a", "x y"],
+  ];
+
+  it("matches similarity() when no threshold is passed", () => {
+    for (const [a, b] of pairs) {
+      expect(similarityFromKeys(makeSimilarityKey(a), makeSimilarityKey(b)))
+        .toBe(similarity(a, b));
+    }
+  });
+
+  it("preserves the dupe decision (> threshold) with the pre-filter enabled", () => {
+    const threshold = 0.55;
+    for (const [a, b] of pairs) {
+      const exact = similarity(a, b);
+      const gated = similarityFromKeys(makeSimilarityKey(a), makeSimilarityKey(b), threshold);
+      // The pre-filter may return 0 for pairs that can't exceed the threshold,
+      // but the boolean "is a duplicate" decision must be identical.
+      expect(gated > threshold).toBe(exact > threshold);
+    }
+  });
+
+  it("makeSimilarityKey exposes the normalized string", () => {
+    expect(makeSimilarityKey("Hello, World!").norm).toBe("hello world");
   });
 });
 

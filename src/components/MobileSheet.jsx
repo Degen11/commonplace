@@ -8,7 +8,7 @@ import { Sheet } from "react-modal-sheet";
 // and 1 (fully open). Callers can pass them in any order (e.g. legacy v3 descending
 // `[0.6, 0.4]`) with `initialSnap` indexing their own array — we normalize to a valid
 // ascending array and remap initialSnap to the fraction the caller wanted to rest at.
-function buildSnapProps(snapPoints, initialSnap) {
+export function buildSnapProps(snapPoints, initialSnap) {
   if (!Array.isArray(snapPoints) || snapPoints.length === 0) return null;
   const partials = snapPoints.filter(n => typeof n === "number" && n > 0 && n < 1);
   const desired = snapPoints[initialSnap] ?? partials[partials.length - 1];

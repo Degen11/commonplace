@@ -13,12 +13,12 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **TanStack React Query 5** — server state / sync mutations
 - **TanStack React Virtual 3** — virtualized list rendering
 - **motion 12** (Framer Motion successor) — animations via `motion/react`
-- **@base-ui/react 1** — headless Dialog (`ModalShell`), Menu (`QuoteActions`, `MiniHeader`), Popover (`QuickAddBar`, `CollectionsSidebar`) — provides focus traps, dismiss behavior, and ARIA semantics
+- **@base-ui/react 1** — headless Dialog (`ModalShell`), Menu (`QuoteActions`, `ExportDropdown`, `TableView`, `ToolbarSection`, `HeaderControls`), Popover (`QuickAddBar`, `CollectionsSidebar`) — provides focus traps, dismiss behavior, and ARIA semantics
 - **@dnd-kit** — drag-and-drop reordering (`@dnd-kit/core` 6 + `@dnd-kit/sortable` 10)
 - **@use-gesture/react 10** — touch gesture bindings (`useSwipe`, `useLongPress`)
 - **react-modal-sheet 5** — mobile bottom sheet (`MobileSheet.jsx`)
 - **Fuse.js 7** — fuzzy search
-- **compromise 14** — NLP (proper noun detection in text formatting)
+- **compromise 14** — NLP (proper noun detection in text formatting); lazy-loaded (~354KB) via `initNlp()` in `smartRestore.js` and split into its own `nlp` chunk
 - **clsx 2** — conditional className composition
 - **Zod 4** — API request validation (server-side, `api/_schemas.js`)
 - **satori + @resvg/resvg-js** — share image generation (server-side SVG → PNG); resvg also powers `scripts/generate-icons.mjs`
@@ -26,7 +26,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **lucide-react** — icons
 - **@supabase/supabase-js 2** — database client (server-side only)
 - **@vercel/analytics + @vercel/speed-insights** — rendered in `App.jsx`
-- **vite-plugin-pwa** — service worker / PWA manifest (precaches app shell + icons, runtime-caches Google Fonts and Fontshare)
+- **vite-plugin-pwa** — service worker / PWA manifest (precaches the app shell + icons but `globIgnores` the lazy `localQuotes`/`nlp`/`ResultsPhase` chunks, which are instead CacheFirst runtime-cached on first use; also runtime-caches Google Fonts and Fontshare)
 - **Vercel** — hosting + serverless functions
 - **Vitest 4** — test runner (configured in `vite.config.js`)
 - **ESLint 10** — flat config (`eslint.config.js`), React Compiler compatibility checks
@@ -66,6 +66,7 @@ src/
   contexts/
     QuotesContext.jsx           Side-effects-only provider — share link decoding, cloud pull/push scheduling, storage toast
     ToastContext.jsx            Toast notification queue
+    ResultsContext.jsx          Results-phase context — shared value provided by ResultsPhase to its subtree (TableView, CardItem, BulkBar) via useResultsContext
 
   components/
     App.jsx                    Root orchestrator — phase management, hook init (useProcessing, useQuoteActions, useTheme)
@@ -80,6 +81,7 @@ src/
     TableView.jsx              Main table view with inline editing and drag-to-reorder
     CardItem.jsx               Card view (mobile)
     HeaderBar.jsx              Top toolbar — search, filters, view toggles, sync pill
+    HeaderControls.jsx         Shared header building blocks (theme/view toggles, overflow-menu items) composed by HeaderBar and MiniHeader
     MiniHeader.jsx             Sticky header on scroll
     BulkBar.jsx                Bulk actions — reassign category/source, delete
     EditForm.jsx               Full quote editor modal
@@ -108,8 +110,9 @@ src/
     StatsPanel.jsx             Collection statistics panel
     StatsOverlay.jsx           Stats overlay display
     ScrollTopButton.jsx        Floating "back to top" button (fades in past ~600px scroll, bottom-left)
-    SyncPill.jsx               Cloud sync status indicator
-    ToolbarSection.jsx         Reusable toolbar section wrapper
+    SyncPill.jsx               Cloud sync status indicator — opens DeviceLinkModal on click
+    DeviceLinkModal.jsx        Cloud-sync panel — view/copy this device's code and link another device to the same synced data (opened from SyncPill)
+    ToolbarSection.jsx         Reusable toolbar section wrapper (category pills, search, Base UI sort menu)
     UrlPreviewModal.jsx        URL content preview before import
     styles.js                  All CSS-in-JS style objects + baseCSS (global CSS string)
 
@@ -122,7 +125,7 @@ src/
     useKeyboardShortcuts.js    Global keyboard shortcuts (Esc cascade, Ctrl+A, etc.)
     useDndQuotes.js            Drag-and-drop state, sensors, and handlers for quote reordering/collection drops
     useInfiniteScroll.js       Pagination — 100 items per page via intersection observer
-    useTheme.js                Dark/light theme toggle (CSS custom properties)
+    useTheme.js                Dark/light/auto theme (CSS custom properties; follows system in auto mode, animates the toggle via the View Transitions API)
     useScrollLock.js           Lock body scroll when modals are open
     useSwipe.js                Touch swipe gestures
     useLongPress.js            Mobile long-press for selection
@@ -135,10 +138,10 @@ src/
     localQuotes.js             3,700+ curated quotes — lazy-loaded via dynamic import. Builds ENTRY_WORDSETS (Map<entry,Set<word>>) and WORD_INDEX (inverted word→entries map) at module init for fast word-overlap lookup
 
   utils/
-    textFormatting.js          smartSplit, normalize, similarity (dupe detection), basicFormat, proper nouns
+    textFormatting.js          smartSplit, normalize, similarity + makeSimilarityKey/similarityFromKeys (keyed dupe detection), basicFormat, proper nouns
     parsers.js                 File parsing — Kindle highlights, Readwise, CSV, JSON, Markdown
     quotes.js                  makeQuote factory, findDuplicateGroups
-    export.js                  Export generators — CSV, JSON, Markdown, plain text
+    export.js                  Export generators — CSV, JSON, Markdown, plain text, Anki flashcards
     shareImage.js              Generate quote share images via Canvas (2x resolution)
     api.js                     fetchWithTimeout, shared API headers
     apiErrors.js               Human-readable API error descriptions
@@ -149,10 +152,11 @@ src/
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
 
-  **/__tests__/                Tests colocated with their modules (25 files, 314 tests)
-    components/                App, AddMorePanel, CollectionDupeModal, HeaderBar, InputPhase,
-                               ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
-    hooks/                     processingErrors, useEditState, useProcessing, useQuoteActions, useSync
+  **/__tests__/                Tests colocated with their modules (31 files, 356 tests)
+    components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
+                               MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
+    hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
+    stores/                    quotesStore
     utils/                     export, helpers, parsers, quotes, smartRestore, storage, sync, textFormatting, uuid
 ```
 
@@ -225,7 +229,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
-npm run test      # vitest run (25 test files, 314 tests across components, hooks, utils)
+npm run test      # vitest run (31 test files, 356 tests across components, hooks, stores, utils)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run lint      # eslint src/ api/ — React Compiler compatibility + serverless correctness rules
 vercel dev        # Test serverless functions locally
@@ -285,7 +289,7 @@ Z.TOAST           2000  Toasts
 
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - No TODO/FIXME comments exist in the codebase currently
-- **React Compiler vs TanStack Virtual** — the two components that call `useWindowVirtualizer()` (`TableView` and `MobileCardList` in `ResultsPhase.jsx`) carry a `"use no memo"` directive. The virtualizer is a stable mutable instance, so compiler-memoized `getVirtualItems()` results went stale when it re-rendered without a compiler-visible dep change (symptom: cards→table view switch left the table empty until a window resize). Don't remove the directives; virtualization itself still windows correctly without compiler memoization. Minor derived-state patterns in `ToolbarSection` and `UrlPreviewModal` also skip compiler optimization — those are functional and don't cause bugs. ESLint currently reports **zero errors and zero warnings** (`npm run lint`, covering `src/` and `api/`). Note: `eslint-plugin-react-hooks` must be installed separately to run the check
+- **React Compiler vs TanStack Virtual** — the two components that call `useWindowVirtualizer()` (`TableView` and `MobileCardList` in `ResultsPhase.jsx`) carry a `"use no memo"` directive. The virtualizer is a stable mutable instance, so compiler-memoized `getVirtualItems()` results went stale when it re-rendered without a compiler-visible dep change (symptom: cards→table view switch left the table empty until a window resize). Don't remove the directives; virtualization itself still windows correctly without compiler memoization. ESLint currently reports **zero errors and zero warnings** (`npm run lint`, covering `src/` and `api/`). Note: `eslint-plugin-react-hooks` must be installed separately to run the check
 - **API batch retry** — `useProcessing.js` retries each failed batch exactly once. On retry failure the batch's items are added to `failedEntries` with a count-specific error message and processing continues to the next batch (no early exit). This is intentional: a single-batch failure should never prevent other batches from completing
 - **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty messages array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
@@ -300,6 +304,7 @@ Z.TOAST           2000  Toasts
 - **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use. The module builds `ENTRY_WORDSETS` and `WORD_INDEX` at init time (once); the word-overlap path in `localLookup` uses these to avoid scanning all 3,700 entries — don't remove them
+- **Lazy-load `compromise` (NLP)** — it's ~354KB (~40% of initial JS if static) and is dynamically imported via `initNlp()` in `smartRestore.js`, called at the start of the processing pipeline and pre-warmed alongside localQuotes in `main.jsx`. Until it resolves, `nlpFormat`/`disambiguateContractions` fall back to regex-only. Don't convert to a static import (it's split into the `nlp` chunk and `globIgnore`d from the precache) — doing so puts it back on the critical path
 - **`serialize-javascript` npm override** — `package.json` has an `overrides` entry pinning `serialize-javascript` to `^7.0.5` to resolve a high-severity vulnerability in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain. Don't remove it; doing so re-introduces the vulnerability
 - **`styles.js` is the primary place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`. The one exception is `inputPhaseStyles.js`, which holds homepage-specific styles (`HP` object, timeline data, `reveal` helper) extracted from `InputPhase.jsx` to keep it manageable
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
@@ -308,7 +313,7 @@ Z.TOAST           2000  Toasts
 - **The assistant prefill** in `identify.js` (`{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
 - **SSRF protection in `fetch-url.js`** — `isPrivateHostname()` blocks requests to private/internal IPs (RFC1918, loopback, link-local, cloud metadata). Manual redirect following validates each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
 - **OG font pinned version** — `og.js` loads Inter font from jsdelivr with a pinned version (`@5.1.1`). Don't change to `@latest` — unpinned CDN URLs risk breakage from upstream changes
-- **Build chunk splitting** — `vite.config.js` uses a function-based `manualChunks` to split `motion` and `@dnd-kit` into separate chunks. Don't use object-based config (causes circular chunk warnings between dndkit and tanstack)
+- **Build chunk splitting** — `vite.config.js` uses a function-based `manualChunks` to split `motion`, `@dnd-kit` (`dndkit`), `@base-ui` (`baseui`), and `compromise` (`nlp`) into separate chunks. Don't use object-based config (causes circular chunk warnings between dndkit and tanstack)
 - **Onboarding localStorage key** — `LS_ONBOARDED` (`commonplace_onboarded`) tracks whether the user has seen the first-run modal. Don't reset this without user intent
 - **Don't remove `babel-plugin-react-compiler`** from `vite.config.js` — the entire codebase relies on compiler-managed memoization. Removing it would cause performance regressions since manual `memo`/`useCallback`/`useMemo` have been stripped
 - **Don't remove `LayoutGroup`** from `App.jsx` — it wraps `AnimatePresence` and enables shared element transitions (`layoutId`) across phases. Removing it breaks the logo morph and button→ring transitions between input/processing/results. If adding new `layoutId` props, ensure they're unique and only used on elements that should visually connect across phase transitions

@@ -13,7 +13,7 @@ import { useQuotesStore } from "../stores/quotesStore";
 import { ResultsProvider, useResultsContext } from "../contexts/ResultsContext";
 
 import { getCatColor, sanitizeName, DEFAULT_CATEGORIES, UNKNOWN_SOURCE, FALLBACK_CATEGORY } from "../data/constants";
-import { similarity } from "../utils/textFormatting";
+import { makeSimilarityKey, similarityFromKeys } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
 import {
@@ -227,7 +227,7 @@ export default function ResultsPhase({
     isMobile,
     filtered, collectionFiltered, visible, hasMore, remaining, loadMore, paginationKey,
     cc, favCount, unknownCount,
-    hasActiveFilters, hasActiveFilterOrSort, clearFilters, computedStats,
+    hasActiveFilters, hasActiveFilterOrSort, clearFilters, getComputedStats,
   } = useViewPreferences(quotes, { activeCollectionId, collections });
 
   const {
@@ -403,7 +403,8 @@ export default function ResultsPhase({
     };
 
     if (!skipDupeCheck) {
-      const match = quotes.find(q => similarity(q.text, text) > DUPE_SIMILARITY_THRESHOLD);
+      const incomingKey = makeSimilarityKey(text);
+      const match = quotes.find(q => similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
       if (match) {
         const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
         showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
@@ -789,7 +790,7 @@ export default function ResultsPhase({
           {showStats && (
             <StatsOverlay
               quotes={quotes}
-              computedStats={computedStats}
+              computedStats={getComputedStats()}
               cc={cc}
               customCats={customCats}
               headerVisible={headerVisible}
@@ -947,7 +948,7 @@ export default function ResultsPhase({
                 setCollapsed={setSidebarCollapsed}
                 onAutoGroup={handleAutoGroup}
                 onFindDupes={handleFindDupes}
-                uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
+                uniqueSources={quotes.length > 0 ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
                 favCount={favCount}
                 toolbarHeight={toolbarHeight}
                 onExportCollection={handleExportCollection}
@@ -971,7 +972,7 @@ export default function ResultsPhase({
                 setCollapsed={() => {}}
                 onAutoGroup={handleAutoGroup}
                 onFindDupes={handleFindDupes}
-                uniqueSources={computedStats ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
+                uniqueSources={quotes.length > 0 ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
                 favCount={favCount}
                 toolbarHeight={0}
                 isMobileSheet

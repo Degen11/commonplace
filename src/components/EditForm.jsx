@@ -3,6 +3,7 @@ import { styles } from "./styles";
 import { normalize } from "../utils/textFormatting";
 import { smartRestore } from "../utils/smartRestore";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
+import { DUPE_SIMILARITY_THRESHOLD } from "../config";
 import { Lightbulb } from "lucide-react";
 
 // Finds the closest local DB match to the current text.
@@ -22,13 +23,18 @@ function findSuggestion(text, db) {
   if (!db || !text || text.length < 8) return null;
   const norm = normalize(text);
 
+  // Build the input's word set ONCE — it only depends on `norm`, not on the
+  // entry being compared. Previously this ran on every one of the ~3,700 entries
+  // per keystroke.
+  const wa = new Set(norm.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
+  if (wa.size < 2) return null;
+
   // Score every entry by word overlap, ignoring stop words
   let best = null; let bestScore = 0;
   for (const entry of db) {
     if (entry.t === norm) return null; // exact match — no suggestion needed
-    const wa = new Set(norm.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
     const wb = new Set(entry.t.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
-    if (wa.size < 2 || wb.size < 2) continue;
+    if (wb.size < 2) continue;
     let overlap = 0;
     wa.forEach(w => { if (wb.has(w)) overlap++; });
     if (overlap < 2) continue;
@@ -36,7 +42,7 @@ function findSuggestion(text, db) {
     if (score > bestScore) { bestScore = score; best = entry; }
   }
   // Only suggest if similarity is meaningful but not exact
-  if (bestScore >= 0.55 && bestScore < 1) return best;
+  if (bestScore >= DUPE_SIMILARITY_THRESHOLD && bestScore < 1) return best;
   return null;
 }
 

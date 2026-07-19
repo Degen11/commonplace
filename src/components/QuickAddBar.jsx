@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Popover } from "@base-ui/react/popover";
-import { similarity } from "../utils/textFormatting";
+import { makeSimilarityKey, similarityFromKeys } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
@@ -27,7 +27,8 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (!text.trim()) return;
-    const match = quotes.find(q => similarity(q.text, text.trim()) > DUPE_SIMILARITY_THRESHOLD);
+    const incomingKey = makeSimilarityKey(text.trim());
+    const match = quotes.find(q => similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
     if (match) {
       setDupeMatch(match);
       return;

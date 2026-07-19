@@ -9,10 +9,11 @@ vi.mock("../../data/localQuotes", () => ({
 }));
 
 // Keep textFormatting mostly real; stub initProperNouns (needs localDb array)
-// and similarity (prevents false-positive dupe detection on synthetic test data)
+// and the similarity fns (prevents false-positive dupe detection on synthetic
+// test data). makeSimilarityKey stays real so seenExact norm keys still work.
 vi.mock("../../utils/textFormatting", async (importOriginal) => {
   const mod = await importOriginal();
-  return { ...mod, initProperNouns: vi.fn(), similarity: vi.fn(() => 0) };
+  return { ...mod, initProperNouns: vi.fn(), similarity: vi.fn(() => 0), similarityFromKeys: vi.fn(() => 0) };
 });
 
 import useProcessing from "../useProcessing";

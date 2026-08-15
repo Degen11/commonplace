@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.lighthouseci/
 **/.DS_Store
 
 # Environment and secret files

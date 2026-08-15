@@ -1,5 +1,16 @@
 # CLAUDE.md
 
+## Git commit identity
+
+All commits in this repo — including ones made by Claude Code — must be authored as **degen11 `<hill.degen@gmail.com>`**. Run this once per clone/session before committing:
+
+```bash
+git config user.name "degen11"
+git config user.email "hill.degen@gmail.com"
+```
+
+This is repo-local `git config` (not tracked by git, by design — a tracked file can't be allowed to silently override a contributor's identity), so it must be (re)applied in every fresh checkout or session container. Set it before making the first commit.
+
 ## Project overview
 
 Commonplace is a quote collection organizer. Users paste messy text (or import files), and the app identifies sources and categories using a local database of 3,700+ quotes and Claude Haiku AI (`claude-haiku-4-5-20251001`) as a fallback. The result is a searchable, filterable, exportable collection. Live at [commonplace.pro](https://commonplace.pro).

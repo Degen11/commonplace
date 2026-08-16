@@ -2,7 +2,11 @@
 
 Your personal library of ideas — paste messy quotes, and get an organized, searchable collection with sources identified automatically.
 
-**Try it now:** [commonplace.pro](https://commonplace.pro)
+**Live:** [commonplace.pro](https://commonplace.pro)
+
+## Why
+
+Named after the [commonplace book](https://en.wikipedia.org/wiki/Commonplace_book) — the centuries-old practice of copying down quotes and passages worth remembering. I kept a running note of quotes scattered across notes apps with no source, no structure, and no way to search them. Commonplace exists to turn a pile of pasted text into a collection that's actually usable: identified, categorized, and searchable, without asking for an account.
 
 ## What It Does
 
@@ -49,13 +53,17 @@ No signup. No account. Free to use.
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite, JavaScript |
-| Styling | CSS-in-JS (inline style objects) |
+| Frontend | React 19 (React Compiler, no TypeScript), Vite 8 (Rolldown) |
+| State | Zustand, TanStack React Query (server state/sync), TanStack React Virtual (list virtualization) |
+| UI | @base-ui/react (dialogs/menus/popovers), @dnd-kit (drag-and-drop), motion, react-modal-sheet |
+| Styling | CSS-in-JS (inline style objects), no CSS files |
+| Search/NLP | Fuse.js (fuzzy search), compromise (lazy-loaded NLP) |
 | Icons | lucide-react |
 | Backend | Vercel Serverless Functions |
 | Database | Supabase (PostgreSQL) |
-| AI | Anthropic Claude Haiku |
+| AI | Anthropic Claude Haiku, with a 3,700+ quote local database as the first line of lookup |
 | Deployment | Vercel |
+| Testing | Vitest (356 tests), ESLint (flat config, React Compiler rules) |
 
 ### Project Structure
 
@@ -122,6 +130,8 @@ SUPABASE_SECRET_KEY=...              # Required for sync
 ```bash
 npm run dev          # Vite dev server on localhost:5173
 vercel dev           # Test serverless functions locally
+npm run test         # Vitest — 356 tests across components, hooks, stores, utils
+npm run lint         # ESLint (src/ + api/)
 ```
 
 #### Production
@@ -147,3 +157,13 @@ Push to `main` triggers automatic deployment on Vercel.
 - **Quotes not persisting** — localStorage may be full or disabled; export as a file
 - **Table view missing on mobile** — auto-switches to cards below 640px
 - **Import not working** — supported formats: .txt, .csv, .json, .md; Kindle and Readwise auto-detected
+
+---
+
+## Status
+
+Live and actively maintained at [commonplace.pro](https://commonplace.pro). This repo is public for code review and reference — see [License](#license) before reusing anything.
+
+## License
+
+Source-available, all rights reserved — see [LICENSE](./LICENSE). You're welcome to read and learn from the code; reuse, redistribution, or deploying a copy requires permission.

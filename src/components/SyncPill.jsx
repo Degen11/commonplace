@@ -33,7 +33,6 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
   const style = {
     ...baseStyle,
     ...(interactive ? { cursor: "pointer" } : {}),
-    ...(isError ? { border: "none" } : {}),
     position: "relative",
     display: "inline-flex",
     alignItems: "center",

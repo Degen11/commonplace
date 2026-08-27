@@ -102,10 +102,14 @@ export const baseCSS = `
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--cp-bg);color:var(--cp-text);font-family:'Satoshi',-apple-system,sans-serif}
 
-  /* Smooth theme transition — CSS custom property crossfade (fallback when View Transitions unavailable) */
-  :root{transition:background-color .3s ease,color .3s ease}
+  /* Smooth theme transition — CSS custom property crossfade (fallback when View Transitions unavailable).
+     Deliberately NOT applied to :root/html itself — that's the root scrolling element, and giving it a
+     background-color transition made the browser repaint the themed native scrollbar (scrollbar-color,
+     set via the universal selector below) on every animation frame, causing a visible flicker/jank on
+     every theme toggle. body isn't the scrolling element, so transitioning it is safe and covers the same
+     visible area. */
   body{transition:background-color .3s ease,color .3s ease}
-  .theme-transitioning,.theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,background .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
+  .theme-transitioning *,.theme-transitioning *::before,.theme-transitioning *::after{transition:background-color .3s ease,background .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease !important}
 
   /* View Transition API — radial wipe for theme toggle */
   ::selection{background:var(--cp-selection-bg)}
@@ -512,9 +516,14 @@ export const baseCSS = `
 `;
 
 // ── Shared sync status pill — used by both HeaderBar and MiniHeader ──
+// Rendered as a real <button> whenever it's interactive (see SyncPill.jsx), so it needs its
+// own reset — the UA default button border (the "outset" bevel) isn't covered by the global
+// `*{box-sizing:border-box;margin:0;padding:0}` reset and was showing through on the synced/
+// syncing states (only the error state overrode it locally).
 const syncPillBase = {
   fontWeight: 500,
   borderRadius: 4,
+  border: "none",
   fontFamily: FONT_SANS,
   letterSpacing: 0.2,
   whiteSpace: "nowrap",

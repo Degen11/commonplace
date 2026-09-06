@@ -32,6 +32,7 @@ function LegalModal({ title, onClose, children }) {
           <h2 style={{ fontSize: 16, fontWeight: 600, fontFamily: FONT_SANS, color: "var(--cp-text)" }}>{title}</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 4 }}
           >
             <X size={18} strokeWidth={1.5} />
@@ -119,6 +120,7 @@ export default function Footer({ styles }) {
           href="https://www.degenh.com"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Degen Hill's website"
           style={{ color: "var(--cp-text)", display: "inline-flex", alignItems: "center" }}
         >
           <Globe size={16} strokeWidth={1.5} />
@@ -127,6 +129,7 @@ export default function Footer({ styles }) {
           href="https://github.com/Degen11"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Degen Hill on GitHub"
           style={{ color: "var(--cp-text)", display: "inline-flex", alignItems: "center" }}
         >
           <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor"><path d={GITHUB_PATH} /></svg>

@@ -12,7 +12,7 @@ import { generateId } from "../utils/uuid";
 import { useQuotesStore } from "../stores/quotesStore";
 import {
   SYNC_DEBOUNCE_MS, SYNC_MAX_RETRIES, SYNC_INITIAL_DELAY_MS,
-  SYNC_ERROR_THROTTLE_MS, LS_DEVICE_ID,
+  SYNC_ERROR_THROTTLE_MS, LS_DEVICE_ID, LS_SYNC_ENGAGED,
 } from "../config";
 import { loadString, saveString } from "../utils/storage";
 
@@ -84,6 +84,10 @@ export default function useSync({ onCloudData, onSyncError }) {
       });
       if (result?.quotes?.length > 0) {
         onCloudData(result.quotes, result.customCategories || [], result.collections || []);
+        // Restoring quotes from the cloud means sync is doing real work for
+        // this user (a returning or linked device) — from here on a failed
+        // backup is worth surfacing as an error rather than staying silent.
+        saveString(LS_SYNC_ENGAGED, "1");
       }
       initialLoadDone.current = true;
     } catch {
@@ -110,6 +114,15 @@ export default function useSync({ onCloudData, onSyncError }) {
     onError: () => {
       setSyncStatus("error");
       consecutiveFailures.current++;
+
+      // Nobody explicitly asked for cloud sync — it's a silent best-effort
+      // backup from the first device. Don't toast about it failing unless
+      // the user has actually engaged with sync (see SyncPill for the same
+      // gate on the header pill); still log it so it's visible in devtools.
+      if (loadString(LS_SYNC_ENGAGED) !== "1") {
+        console.warn("[Commonplace] Background sync failed (not yet surfaced — sync not engaged).");
+        return;
+      }
 
       const now = Date.now();
       if (now - lastErrorNotified.current > SYNC_ERROR_THROTTLE_MS) {

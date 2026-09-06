@@ -125,6 +125,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
             </button>
             <button
               onClick={() => setDismissed(true)}
+              aria-label="Dismiss suggestion"
               style={{
                 padding:"2px 6px",
                 borderRadius:4,

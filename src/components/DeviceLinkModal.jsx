@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { Cloud, Copy, Check, Link2, RefreshCw } from "lucide-react";
 import ModalShell from "./ModalShell";
 import { styles, CP_ACCENT } from "./styles";
 import { loadString, saveString } from "../utils/storage";
-import { LS_DEVICE_ID } from "../config";
+import { LS_DEVICE_ID, LS_SYNC_ENGAGED } from "../config";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -21,6 +21,10 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
   const deviceId = loadString(LS_DEVICE_ID);
   const [copied, setCopied] = useState(false);
   const [code, setCode] = useState("");
+
+  // Opening this panel is the user actively engaging with sync — from here on
+  // a failed background backup is worth surfacing as an error in the header.
+  useEffect(() => { saveString(LS_SYNC_ENGAGED, "1"); }, []);
 
   const copyCode = () => {
     if (!deviceId) return;

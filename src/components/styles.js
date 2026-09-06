@@ -411,7 +411,6 @@ export const baseCSS = `
     .hp-mini-demo{text-align:left !important}
     .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
-    .hp-timeline-cols{grid-template-columns:repeat(2, 1fr) !important}
     .hp-section{padding:60px 32px !important}
   }
   @media (max-width: 600px) {
@@ -421,11 +420,25 @@ export const baseCSS = `
     .hp-hero-sub{font-size:16px !important}
     .hp-section{padding:48px 20px !important}
     .hp-hero{padding:80px 20px 40px !important}
-    .hp-timeline-cols{grid-template-columns:1fr !important}
   }
   @media (max-width: 480px) {
     .hp-hero-headline{font-size:28px !important}
-    .hp-timeline-quote{flex-direction:column !important;align-items:flex-start !important;gap:4px !important}
+  }
+
+  /* FAQ accordion — hide native marker, rotate our own chevron on open */
+  .hp-faq-item summary{-webkit-tap-highlight-color:transparent}
+  .hp-faq-item summary::-webkit-details-marker{display:none}
+  .hp-faq-item summary::marker{content:""}
+  .hp-faq-item[open] .hp-faq-chevron{transform:rotate(180deg)}
+
+  /* Input-card footer → stack on mobile so the primary button isn't
+     squeezed against the meta column; word/char counts are dropped as
+     redundant detail at this width (entry count stays). */
+  @media(max-width:640px){
+    .input-footer{flex-direction:column;align-items:stretch}
+    .input-footer-wordcount{display:none}
+    .input-footer-actions{flex-direction:column;align-items:stretch;width:100%}
+    .input-footer-actions .try-btn,.input-footer-actions .proc-btn{width:100%;justify-content:center}
   }
 
   /* Dark mode — element-level overrides */

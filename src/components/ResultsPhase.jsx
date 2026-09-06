@@ -922,7 +922,7 @@ export default function ResultsPhase({
                 padding: "6px 14px", fontSize: 12, color: "var(--cp-text-muted)",
               }}>
                 <span>Press <kbd style={{ padding: "1px 5px", border: "1px solid var(--cp-border)", borderRadius: 4, fontSize: 11, fontFamily: "inherit", background: "var(--cp-bg-card)" }}>?</kbd> for keyboard shortcuts</span>
-                <button onClick={dismissKbHint} style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
+                <button onClick={dismissKbHint} aria-label="Dismiss keyboard shortcuts hint" style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
                   <X size={12} strokeWidth={2} />
                 </button>
               </div>
@@ -1159,6 +1159,7 @@ export default function ResultsPhase({
           <button
             className="ui-tip ui-tip-left hdr-btn"
             data-tip="Help & shortcuts"
+            aria-label="Help & shortcuts"
             onClick={() => { setShowShortcuts(true); dismissKbHint(); }}
             style={{
               position: "fixed", bottom: showBulkBar ? 72 : 20, right: 20,
@@ -1179,6 +1180,7 @@ export default function ResultsPhase({
           {isMobile && (
           <button
             className="mobile-fab"
+            aria-label="Browse collections"
             onClick={() => setShowMobileCollections(true)}
             style={{
               position: "fixed",

@@ -17,6 +17,8 @@ export function FavBtn({ q, onFav }) {
     <button
       className="act-btn ui-tip"
       data-tip={q.favorite ? "Remove from favorites" : "Add to favorites"}
+      aria-label={q.favorite ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={q.favorite}
       style={{ ...styles.actBtn, "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
       onClick={handleClick}
     >
@@ -64,6 +66,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
       >
         <Menu.Trigger
           className="overflow-btn act-btn"
+          aria-label="More actions for this quote"
           style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
           onClick={e => e.stopPropagation()}
         >

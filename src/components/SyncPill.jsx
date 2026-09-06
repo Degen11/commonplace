@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { loadString } from "../utils/storage";
+import { LS_SYNC_ENGAGED } from "../config";
 
 function formatRelativeTime(date) {
   if (!date) return null;
@@ -16,6 +18,14 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
   const [hovered, setHovered] = useState(false);
 
   if (syncStatus === "idle") return null;
+
+  // Sync runs automatically in the background from the first device — nobody
+  // explicitly turned it on. Don't surface a red "error" for that silent,
+  // best-effort backup until the user has actually engaged with sync (opened
+  // the device link panel, or restored data from a linked device). Until
+  // then a failed background push is a non-event, not a broken feature.
+  const hasEngagedSync = loadString(LS_SYNC_ENGAGED) === "1";
+  if (syncStatus === "error" && !hasEngagedSync) return null;
 
   const isError = syncStatus === "error";
   const isSyncing = syncStatus === "syncing";

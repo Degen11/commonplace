@@ -1,40 +1,5 @@
 import { CP_ACCENT, CP_ACCENT_06, FONT_SANS, FONT_SERIF } from "./styles";
 
-// ── Timeline data ────────────────────────────────────────────────────────────
-const TAG_COLORS = {
-  Film:   { bg: "rgba(139,92,246,0.08)",  text: "#7A48CE" },
-  Speech: { bg: "rgba(59,130,246,0.08)",  text: "#3967CD" },
-  Person: { bg: "rgba(168,85,247,0.08)",  text: "#8B43CC" },
-  Book:   { bg: "rgba(217,119,6,0.08)",   text: "#C07621" },
-};
-
-export const TIMELINE_MOMENTS = [
-  {
-    period: "First session",
-    count: 5,
-    quotes: [
-      { text: "You can\u2019t handle the truth", source: "A Few Good Men", tag: "Film" },
-      { text: "Be the change", source: "Gandhi", tag: "Speech" },
-    ],
-  },
-  {
-    period: "One week in",
-    count: 23,
-    quotes: [
-      { text: "Less is more", source: "Mies van der Rohe", tag: "Person" },
-      { text: "The only way out is through", source: "Robert Frost", tag: "Book" },
-    ],
-  },
-  {
-    period: "One month later",
-    count: 87,
-    quotes: [
-      { text: "Cogito ergo sum", source: "Descartes", tag: "Person" },
-      { text: "Stay hungry, stay foolish", source: "Steve Jobs", tag: "Speech" },
-    ],
-  },
-];
-
 // ── Homepage-specific styles ─────────────────────────────────────────────────
 export const HP = {
   // Hero — split layout
@@ -192,6 +157,13 @@ export const HP = {
     letterSpacing: 0.02,
     marginTop: 20,
   },
+  heroFinePrint: {
+    fontSize: 12,
+    lineHeight: 1.6,
+    color: "var(--cp-text-muted)",
+    maxWidth: 460,
+    marginTop: 14,
+  },
 
   // Sections
   section: {
@@ -246,111 +218,43 @@ export const HP = {
     maxWidth: 560,
   },
 
-  // Timeline — horizontal
-  timeline: {
-    position: "relative",
-    marginTop: 48,
-    textAlign: "left",
-  },
-  timelineTrack: {
-    position: "absolute",
-    top: 4,
-    left: 0,
-    right: 0,
-    height: 2,
-    background: "var(--cp-border)",
-    borderRadius: 1,
-  },
-  timelineTrackFill: {
-    position: "absolute",
-    top: 4,
-    left: 0,
-    width: "75%",
-    height: 2,
-    background: `linear-gradient(90deg, var(--cp-border-dim) 0%, ${CP_ACCENT} 100%)`,
-    borderRadius: 1,
-  },
-  timelineColumns: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: 24,
-    position: "relative",
-  },
-  timelineMoment: {
+  // FAQ — native <details>/<summary> accordion
+  faqList: {
     display: "flex",
     flexDirection: "column",
-    paddingTop: 24,
-    position: "relative",
+    gap: 8,
   },
-  timelineDot: {
-    width: 10,
-    height: 10,
-    borderRadius: "50%",
-    background: "var(--cp-border-dim)",
-    border: "2px solid var(--cp-bg-panel)",
-    position: "absolute",
-    top: -1,
-    left: 0,
-    zIndex: 1,
+  faqItem: {
+    background: "var(--cp-bg-card)",
+    border: "1px solid var(--cp-border-light)",
+    borderRadius: 6,
+    padding: "4px 18px",
   },
-  timelinePeriod: {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    color: CP_ACCENT,
-    marginBottom: 2,
-    fontFamily: FONT_SANS,
-  },
-  timelineCount: {
-    fontFamily: FONT_SANS,
-    fontSize: 20,
-    fontWeight: 700,
-    color: "var(--cp-text)",
-    marginBottom: 12,
-  },
-  timelineQuotes: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  timelineQuoteTag: (tag) => ({
-    fontSize: 9,
-    fontWeight: 700,
-    padding: "2px 6px",
-    borderRadius: 3,
-    background: TAG_COLORS[tag]?.bg || "#F1F1EF",
-    color: TAG_COLORS[tag]?.text || "#787774",
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-    whiteSpace: "nowrap",
-    flexShrink: 0,
-    fontFamily: "'DM Mono',monospace",
-  }),
-  timelineQuote: {
+  faqQuestion: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
-    padding: "6px 10px",
-    background: "var(--cp-bg-card)",
-    borderRadius: 6,
-    border: "1px solid var(--cp-border-light)",
-    fontSize: 12,
-  },
-  timelineQuoteText: {
-    color: "var(--cp-text-secondary)",
-    flex: 1,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: "14px 0",
+    cursor: "pointer",
+    listStyle: "none",
     fontFamily: FONT_SANS,
+    fontSize: 15,
+    fontWeight: 600,
+    color: "var(--cp-text)",
   },
-  timelineQuoteSrc: {
-    color: "var(--cp-text-muted)",
-    fontSize: 11,
-    whiteSpace: "nowrap",
+  faqChevron: {
     flexShrink: 0,
+    color: "var(--cp-text-faint)",
+    transition: "transform .2s ease",
+  },
+  faqAnswer: {
+    margin: "-4px 0 16px",
     fontFamily: FONT_SANS,
+    fontSize: 14,
+    lineHeight: 1.65,
+    color: "var(--cp-text-muted)",
+    maxWidth: "65ch",
   },
 
   // Features — single row of 4 cards

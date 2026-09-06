@@ -10,9 +10,8 @@ import ModalShell from "./ModalShell";
 const STEPS = [
   {
     Icon: Sparkles,
-    title: "Paste anything",
-    body: "Drop in messy quotes — one per line, with or without sources. We'll identify who said it and sort by category.",
-    example: '"be the change — Gandhi"\n"you miss 100% of the shots"\nthe unexamined life is not worth living',
+    title: "Your quotes, organized",
+    body: "Each entry was checked against a local database of 3,700+ quotes, looked up online, or identified by AI. Click any source or category cell to fix it by hand.",
   },
   {
     Icon: Layers,

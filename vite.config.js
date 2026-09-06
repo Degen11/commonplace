@@ -56,44 +56,9 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // Fontshare serves Satoshi — the primary UI font. Without these entries
-          // offline PWA sessions fall back to the system font.
-          {
-            urlPattern: /^https:\/\/api\.fontshare\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'fontshare-stylesheets',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/cdn\.fontshare\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'fontshare-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
+          // Fonts (Satoshi, Playfair Display) are self-hosted under /fonts/ now —
+          // no third-party origin to runtime-cache. The .woff2 files are same-origin
+          // and match globPatterns, so they're precached like any other static asset.
         ],
       },
       manifest: {

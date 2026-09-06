@@ -1,5 +1,6 @@
 import { Ellipsis } from "lucide-react";
 import Logo from "./Logo";
+import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import {
@@ -43,7 +44,7 @@ export default function MiniHeader({
       <div style={{ maxWidth: 1120, width: "100%", padding: isMobile ? "8px 16px" : "10px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           <Logo size={16} />
-          {!isMobile && <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 15, fontWeight: 700, color: "var(--cp-text-secondary)" }}>Commonplace</span>}
+          {!isMobile && <Wordmark height={14} color="var(--cp-text-secondary)" />}
         </span>
         <div style={{ display: "flex", gap: isMobile ? 4 : 6, alignItems: "center" }}>
           <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} onOpenSync={onOpenSync} pillStyles={pillStyles} />

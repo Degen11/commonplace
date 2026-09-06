@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { API_HEADERS } from "../utils/api";
 import { motion } from "motion/react";
 import Logo from "./Logo";
+import Wordmark from "./Wordmark";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
 import { styles, CP_ACCENT, FONT_SANS, CLR_EMERALD } from "./styles";
@@ -158,7 +159,7 @@ export default function InputPhase({
       <nav style={HP.nav}>
         <motion.div layoutId="app-logo" style={HP.navBrand} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
           <Logo size={24} />
-          <span style={HP.navName}>Commonplace</span>
+          <Wordmark height={17} color="var(--cp-text)" />
         </motion.div>
         <div style={{ marginLeft: "auto" }}>
           <ThemeToggleButton dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />

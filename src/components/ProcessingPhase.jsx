@@ -4,6 +4,7 @@ import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_BLUE, CLR_VIO
 import { getCatColor } from "../data/constants";
 import { ArrowRight, CircleCheckBig, Database, Globe, Sparkles, TriangleAlert } from "lucide-react";
 import Logo from "./Logo";
+import Wordmark from "./Wordmark";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
 
@@ -144,7 +145,7 @@ export default function ProcessingPhase({
   return (
     <div style={styles.wrap}>
       <nav style={styles.nav}>
-        <motion.span layoutId="app-logo" style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}><Logo size={22} />Commonplace</motion.span>
+        <motion.span layoutId="app-logo" style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}><Logo size={22} /><Wordmark height={18} color="var(--cp-text)" /></motion.span>
         <div style={styles.navRight}>
           <span style={{ color: "var(--cp-text-muted)", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
         </div>

@@ -1,4 +1,4 @@
-import { CP_ACCENT, CP_ACCENT_06, FONT_SANS, FONT_SERIF } from "./styles";
+import { CP_ACCENT, CP_ACCENT_06, FONT_SANS } from "./styles";
 
 // ── Homepage-specific styles ─────────────────────────────────────────────────
 export const HP = {
@@ -43,13 +43,6 @@ export const HP = {
     display: "flex",
     alignItems: "center",
     gap: 10,
-  },
-  navName: {
-    fontFamily: FONT_SERIF,
-    fontSize: 18,
-    fontWeight: 700,
-    letterSpacing: -0.5,
-    color: "var(--cp-text)",
   },
   heroLeft: {
     animation: "fadeUp .8s ease",

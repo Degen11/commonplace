@@ -53,7 +53,9 @@ describe("DeviceLinkModal", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), { target: { value: "not-a-uuid" } });
     fireEvent.click(screen.getByRole("button", { name: "Link" }));
     expect(lastVariant(showToast)).toBe("error");
-    expect(mocks.saveString).not.toHaveBeenCalled();
+    // Opening the panel marks sync as "engaged" (a separate flag) — the guard
+    // under test is that the device id itself is never overwritten.
+    expect(mocks.saveString).not.toHaveBeenCalledWith(LS_DEVICE_ID, expect.anything());
   });
 
   it("guards against linking to your own code — info toast, no relink", () => {
@@ -61,7 +63,7 @@ describe("DeviceLinkModal", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), { target: { value: THIS_DEVICE.toUpperCase() } });
     fireEvent.click(screen.getByRole("button", { name: "Link" }));
     expect(lastVariant(showToast)).toBe("info");
-    expect(mocks.saveString).not.toHaveBeenCalled();
+    expect(mocks.saveString).not.toHaveBeenCalledWith(LS_DEVICE_ID, expect.anything());
   });
 
   it("persists a valid new code before reloading", () => {

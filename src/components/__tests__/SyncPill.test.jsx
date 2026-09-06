@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import SyncPill from "../SyncPill";
 import { syncPillStyles } from "../styles";
+import { LS_SYNC_ENGAGED } from "../../config";
 
 afterEach(cleanup);
 
 const pillStyles = syncPillStyles.full;
+
+// Most tests below exercise the "error" pill, which only renders once the
+// user has actively engaged with sync (see the dedicated describe block for
+// the pre-engagement behavior). Simulate that engagement by default here.
+beforeEach(() => { localStorage.setItem(LS_SYNC_ENGAGED, "1"); });
+afterEach(() => { localStorage.removeItem(LS_SYNC_ENGAGED); });
 
 describe("SyncPill", () => {
   it("renders nothing when idle", () => {
@@ -61,5 +68,28 @@ describe("SyncPill", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sync failed — open cloud sync options" }));
     expect(onOpenSync).toHaveBeenCalledTimes(1);
     expect(onManualSync).not.toHaveBeenCalled();
+  });
+});
+
+describe("SyncPill — before the user has engaged with sync", () => {
+  it("hides the error pill for a background backup nobody opted into", () => {
+    localStorage.removeItem(LS_SYNC_ENGAGED);
+    const { container } = render(<SyncPill syncStatus="error" pillStyles={pillStyles} />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("still shows syncing/synced — those aren't alarming", () => {
+    localStorage.removeItem(LS_SYNC_ENGAGED);
+    const { rerender } = render(<SyncPill syncStatus="syncing" pillStyles={pillStyles} />);
+    expect(screen.getByText("Saving...")).toBeTruthy();
+    rerender(<SyncPill syncStatus="synced" lastSynced={new Date()} pillStyles={pillStyles} />);
+    expect(screen.getByText("Saved")).toBeTruthy();
+  });
+
+  it("shows the error pill again once sync has been engaged", () => {
+    localStorage.removeItem(LS_SYNC_ENGAGED);
+    localStorage.setItem(LS_SYNC_ENGAGED, "1");
+    render(<SyncPill syncStatus="error" pillStyles={pillStyles} />);
+    expect(screen.getByText("Sync error")).toBeTruthy();
   });
 });

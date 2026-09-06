@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — Commonplace</title>
+<meta name="description" content="How Commonplace handles your quotes and data: what's stored locally, what cloud sync sends, and what third-party services are involved." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://commonplace.pro/privacy" />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1A1A1A" media="(prefers-color-scheme: dark)" />
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-text:#1A1814;--cp-text-secondary:#37352F;
+    --cp-border-light:#E8E3DA;--cp-accent:#3C5775;
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-text:#E8E8E8;--cp-text-secondary:#CCCCCC;
+    --cp-border-light:#343434;--cp-accent:#90B4D4;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cp-bg);color:var(--cp-text-secondary);font-family:'Satoshi',-apple-system,'Segoe UI',sans-serif;line-height:1.7}
+  .wrap{max-width:640px;margin:0 auto;padding:48px 24px 80px}
+  a{color:var(--cp-accent)}
+  .back{display:inline-block;margin-bottom:24px;font-size:13px;color:var(--cp-text-secondary);text-decoration:none}
+  .back:hover{color:var(--cp-accent)}
+  h1{font-size:24px;font-weight:700;color:var(--cp-text);letter-spacing:-0.02em;margin:0 0 4px}
+  .updated{color:var(--cp-text-secondary);font-size:13px;margin:0 0 32px}
+  h2{font-size:15px;font-weight:600;color:var(--cp-text);margin:28px 0 8px}
+  p{font-size:14px;margin:0 0 8px}
+  .card{background:var(--cp-bg-card);border:1px solid var(--cp-border-light);border-radius:6px;padding:24px 28px;margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">&larr; Back to Commonplace</a>
+    <div class="card">
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: March 2026</p>
+
+      <h2>What we collect</h2>
+      <p>Commonplace stores your quotes and collections in your browser's local storage. If you use cloud sync, your data is also stored in our database (Supabase) and associated with an anonymous device ID — no email, name, or account required.</p>
+
+      <h2>How we use your data</h2>
+      <p>Your quotes are sent to our AI service (Claude by Anthropic) solely to identify sources and categories. We cache identification results to speed up future lookups. We do not sell, share, or use your data for advertising.</p>
+
+      <h2>Analytics</h2>
+      <p>We use Vercel Analytics and Speed Insights to collect anonymous performance metrics (page load times, Web Vitals). No personal information or quote content is included in analytics.</p>
+
+      <h2>Cookies &amp; local storage</h2>
+      <p>We do not use tracking cookies. We use browser local storage to save your quotes, preferences, and theme settings. A random device ID is stored for cloud sync.</p>
+
+      <h2>Third-party services</h2>
+      <p>Anthropic (AI identification), Supabase (cloud storage), Vercel (hosting and analytics), Google Fonts and Fontshare (web fonts). Each has their own privacy policy.</p>
+
+      <h2>Data deletion</h2>
+      <p>Clear your browser's local storage to remove all local data. Cloud-synced data can be removed by clearing your collection and syncing, which propagates the deletion.</p>
+
+      <h2>Contact</h2>
+      <p>Questions? Reach out via <a href="https://www.degenh.com" target="_blank" rel="noopener noreferrer">degenh.com</a>.</p>
+    </div>
+  </div>
+</body>
+</html>

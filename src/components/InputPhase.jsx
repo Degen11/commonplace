@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { API_HEADERS } from "../utils/api";
 import { motion } from "motion/react";
 import Logo from "./Logo";
+import Wordmark from "./Wordmark";
 import HowItWorksAnimation from "./HowItWorksAnimation";
 import Footer from "./Footer";
 import { styles, CP_ACCENT, FONT_SANS, CLR_EMERALD } from "./styles";
 import { smartSplit, basicFormat } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { EXAMPLE_QUOTES } from "../data/constants";
+import { FAQ_ITEMS } from "../data/faq";
 import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
@@ -16,7 +18,7 @@ import {
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
 import { ThemeToggleButton } from "./HeaderControls";
-import { HP, TIMELINE_MOMENTS, reveal } from "./inputPhaseStyles";
+import { HP, reveal } from "./inputPhaseStyles";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useScrollReveal(threshold = 0.15) {
@@ -108,7 +110,7 @@ export default function InputPhase({
 }) {
   // Scroll-reveal refs
   const [howRef, howVisible] = useScrollReveal();
-  const [timelineRef, timelineVisible] = useScrollReveal(0.1);
+  const [faqRef, faqVisible] = useScrollReveal(0.1);
   const [featuresRef, featuresVisible] = useScrollReveal();
   const [ctaRef, ctaVisible] = useScrollReveal();
 
@@ -157,7 +159,7 @@ export default function InputPhase({
       <nav style={HP.nav}>
         <motion.div layoutId="app-logo" style={HP.navBrand} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
           <Logo size={24} />
-          <span style={HP.navName}>Commonplace</span>
+          <Wordmark height={17} color="var(--cp-text)" />
         </motion.div>
         <div style={{ marginLeft: "auto" }}>
           <ThemeToggleButton dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
@@ -191,7 +193,7 @@ export default function InputPhase({
               </span>
             </div>
           </div>
-          <p style={HP.heroTrust}>No signup · Private processing · Instant results · Free</p>
+          <p style={HP.heroTrust}>No signup · No account · Stays in your browser · Free</p>
         </div>
 
         {/* Right column — input card */}
@@ -229,7 +231,15 @@ export default function InputPhase({
                 }}
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
-                onKeyDown={e => handleRichTextShortcut(e, rawInput, setRawInput)}
+                onKeyDown={e => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && rawInput.trim() && !isProcessing) {
+                    e.preventDefault();
+                    onProcess();
+                    return;
+                  }
+                  handleRichTextShortcut(e, rawInput, setRawInput);
+                }}
+                aria-label="Paste your quotes"
                 {...pasteDropHandlers}
                 placeholder={
                   "Paste everything here \u2014 one per line, messy is fine:\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
@@ -279,7 +289,7 @@ export default function InputPhase({
               </>
             )}
 
-            <div style={styles.inputFooter}>
+            <div className="input-footer" style={styles.inputFooter}>
               {(() => {
                 const trimmed = rawInput.trim();
                 const count = trimmed ? smartSplit(trimmed).length : 0;
@@ -287,10 +297,10 @@ export default function InputPhase({
                 const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
                 const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
                 return (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+                  <div className="input-footer-meta" style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
                     <span style={styles.entryMeta}>
                       {count > 0
-                        ? <>{count} {count === 1 ? "entry" : "entries"} detected<span style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
+                        ? <>{count} {count === 1 ? "entry" : "entries"} detected<span className="input-footer-wordcount" style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
                         : "Quotes, phrases, expressions \u2014 all welcome"}
                     </span>
                     {count > 50 && (
@@ -325,7 +335,7 @@ export default function InputPhase({
                   </div>
                 );
               })()}
-              <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
+              <div className="input-footer-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
                 {!rawInput.trim() && inputTab === "paste" && (
                   <button className="try-btn" style={styles.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
                     Try with examples
@@ -333,7 +343,8 @@ export default function InputPhase({
                 )}
                 <motion.button
                   layoutId="phase-action"
-                  className="proc-btn"
+                  className="proc-btn ui-tip ui-tip-below"
+                  data-tip="⌘/Ctrl + Enter"
                   style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
                   onClick={onProcess}
                   disabled={!rawInput.trim() || isProcessing}
@@ -349,6 +360,9 @@ export default function InputPhase({
               </div>
             </div>
           </div>
+          <p style={HP.heroFinePrint}>
+            Quotes we can't match locally or online are sent to Claude (by Anthropic) to identify the source. Nothing else leaves your browser unless you turn on cloud sync.
+          </p>
         </div>
       </section>
 
@@ -379,65 +393,29 @@ export default function InputPhase({
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          TIMELINE — horizontal library growth
+          FAQ — same content as the FAQPage JSON-LD in index.html (src/data/faq.js)
       ═══════════════════════════════════════════════════════════════════════ */}
       <section
-        ref={timelineRef}
+        ref={faqRef}
         className="hp-section"
-        style={{ ...HP.section, ...HP.sectionAlt, ...reveal(timelineVisible) }}
+        style={{ ...HP.section, ...HP.sectionAlt, ...reveal(faqVisible) }}
       >
-        <div style={HP.sectionInner}>
-          <div style={{ textAlign: "center", marginBottom: 8 }}>
-            <div style={HP.sectionLabel}>Build over time</div>
-            <h2 style={HP.sectionHeadline}>Your library grows with you</h2>
-            <p style={{ ...HP.sectionSub, margin: "0 auto" }}>
-              Every quote you collect becomes part of your personal archive.
-            </p>
+        <div style={{ ...HP.sectionInner, maxWidth: 720 }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={HP.sectionLabel}>FAQ</div>
+            <h2 style={HP.sectionHeadline}>Questions, answered</h2>
           </div>
 
-          <div className="hp-timeline" style={HP.timeline}>
-            {/* Continuous track line */}
-            <div style={HP.timelineTrack} />
-            <div style={HP.timelineTrackFill} />
-
-            <div className="hp-timeline-cols" style={HP.timelineColumns}>
-              {TIMELINE_MOMENTS.map((moment, i) => (
-                <div
-                  key={i}
-                  style={{
-                    ...HP.timelineMoment,
-                    ...reveal(timelineVisible, 0.15 + i * 0.15),
-                  }}
-                >
-                  <div style={HP.timelineDot} />
-                  <div style={HP.timelinePeriod}>{moment.period}</div>
-                  <div style={HP.timelineCount}>{moment.count} quotes</div>
-                  <div style={HP.timelineQuotes}>
-                    {moment.quotes.map((q, j) => (
-                      <div key={j} className="hp-timeline-quote" style={HP.timelineQuote}>
-                        <span style={HP.timelineQuoteTag(q.tag)}>{q.tag}</span>
-                        <span style={HP.timelineQuoteText}>&ldquo;{q.text}&rdquo;</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {/* Final milestone */}
-              <div
-                style={{
-                  ...HP.timelineMoment,
-                  ...reveal(timelineVisible, 0.15 + TIMELINE_MOMENTS.length * 0.15),
-                }}
-              >
-                <div style={{ ...HP.timelineDot, background: CP_ACCENT, width: 14, height: 14, left: -2, top: -3, border: `2px solid var(--cp-bg-panel)` }} />
-                <div style={HP.timelinePeriod}>Your library</div>
-                <div style={{ ...HP.timelineCount, fontSize: 28, color: CP_ACCENT }}>200+</div>
-                <div style={{ fontSize: 13, color: "var(--cp-text-muted)", fontFamily: FONT_SANS, lineHeight: 1.5 }}>
-                  Searchable, organized,<br />always yours
-                </div>
-              </div>
-            </div>
+          <div style={HP.faqList}>
+            {FAQ_ITEMS.map((item, i) => (
+              <details key={item.q} className="hp-faq-item" style={{ ...HP.faqItem, ...reveal(faqVisible, 0.08 + i * 0.05) }}>
+                <summary style={HP.faqQuestion}>
+                  <span>{item.q}</span>
+                  <ChevronDown className="hp-faq-chevron" size={16} strokeWidth={2} style={HP.faqChevron} />
+                </summary>
+                <p style={HP.faqAnswer}>{item.a}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -519,7 +497,7 @@ export default function InputPhase({
             Start building your library
           </h2>
           <p style={{ ...HP.sectionSub, marginBottom: 32, margin: "0 auto 32px" }}>
-            Free. Private. No signup required.
+            Free. No account. No signup required.
           </p>
           <button className="hp-primary" style={HP.heroPrimary} onClick={() => scrollTo("input-section")}>
             Start organizing <ArrowRight size={16} strokeWidth={2} style={{ marginLeft: 6 }} />

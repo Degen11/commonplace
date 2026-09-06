@@ -7,6 +7,7 @@ import { pluralize } from "../utils/helpers";
 
 export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
   const [selected, setSelected] = useState(() => new Set(lines.map((_, i) => i)));
+  const [dontAskAgain, setDontAskAgain] = useState(false);
 
   const toggle = (i) => {
     setSelected(prev => {
@@ -43,6 +44,7 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
             </div>
           </div>
           <Dialog.Close
+            aria-label="Close"
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 4 }}
           >
             <X size={16} strokeWidth={2} />
@@ -98,40 +100,49 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
         padding: "12px 16px",
         borderTop: "1px solid var(--cp-border)",
         display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: 8,
+        flexDirection: "column",
+        gap: 10,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--cp-text-muted)" }}>
-          <span>{count} of {lines.length} selected</span>
-          <span style={{ color: "var(--cp-border-dim)" }}>|</span>
-          <button
-            onClick={selectAll}
-            style={{ background: "none", border: "none", cursor: "pointer", color: CP_ACCENT, fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
-          >
-            All
-          </button>
-          <button
-            onClick={selectNone}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
-          >
-            None
-          </button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--cp-text-muted)" }}>
+            <span>{count} of {lines.length} selected</span>
+            <span style={{ color: "var(--cp-border-dim)" }}>|</span>
+            <button
+              onClick={selectAll}
+              style={{ background: "none", border: "none", cursor: "pointer", color: CP_ACCENT, fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+            >
+              All
+            </button>
+            <button
+              onClick={selectNone}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+            >
+              None
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
+            <button
+              style={{ ...styles.editSave, opacity: count === 0 ? 0.4 : 1, padding: "6px 16px" }}
+              disabled={count === 0}
+              onClick={() => {
+                const kept = lines.filter((_, i) => selected.has(i));
+                onConfirm(kept, dontAskAgain);
+              }}
+            >
+              Process {pluralize(count, "entry", "entries")}
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
-          <button
-            style={{ ...styles.editSave, opacity: count === 0 ? 0.4 : 1, padding: "6px 16px" }}
-            disabled={count === 0}
-            onClick={() => {
-              const kept = lines.filter((_, i) => selected.has(i));
-              onConfirm(kept);
-            }}
-          >
-            Process {pluralize(count, "entry", "entries")}
-          </button>
-        </div>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--cp-text-muted)", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={dontAskAgain}
+            onChange={(e) => setDontAskAgain(e.target.checked)}
+            style={{ margin: 0 }}
+          />
+          Don't ask again — always process everything
+        </label>
       </div>
     </ModalShell>
   );

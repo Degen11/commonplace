@@ -3,10 +3,34 @@ import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { VitePWA } from 'vite-plugin-pwa'
+import { FAQ_ITEMS } from './src/data/faq.js'
+
+// Renders index.html's FAQPage JSON-LD from the same FAQ_ITEMS array that
+// InputPhase.jsx uses for the visible FAQ section, so the two can't drift.
+// Runs in both dev and build (transformIndexHtml applies to the dev server's
+// served HTML too), replacing the <!--FAQ_JSONLD--> placeholder.
+function injectFaqJsonLd() {
+  return {
+    name: 'inject-faq-jsonld',
+    transformIndexHtml(html) {
+      const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+          '@type': 'Question',
+          name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+      }
+      return html.replace('<!--FAQ_JSONLD-->', JSON.stringify(jsonLd, null, 2))
+    },
+  }
+}
 
 export default defineConfig({
   plugins: [
     react(),
+    injectFaqJsonLd(),
     babel({
       presets: [reactCompilerPreset()],
     }),
@@ -32,44 +56,9 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // Fontshare serves Satoshi — the primary UI font. Without these entries
-          // offline PWA sessions fall back to the system font.
-          {
-            urlPattern: /^https:\/\/api\.fontshare\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'fontshare-stylesheets',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/cdn\.fontshare\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'fontshare-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
+          // Fonts (Satoshi, Playfair Display) are self-hosted under /fonts/ now —
+          // no third-party origin to runtime-cache. The .woff2 files are same-origin
+          // and match globPatterns, so they're precached like any other static asset.
         ],
       },
       manifest: {

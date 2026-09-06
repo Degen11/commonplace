@@ -45,6 +45,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
           Share as image
         </Dialog.Title>
         <Dialog.Close
+          aria-label="Close"
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 4, borderRadius: 4 }}
         >
           <X size={16} strokeWidth={2} />

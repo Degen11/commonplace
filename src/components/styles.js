@@ -10,8 +10,10 @@ export const CP_ACCENT_40 = "rgba(60,87,117,0.40)";
 
 // ── Shared design constants ──
 // Eliminates hardcoded font stacks and color literals across components.
+// Playfair Display was previously loaded here too, solely for the
+// "Commonplace" wordmark — that's now a traced SVG path (see Wordmark.jsx),
+// so the font and its Google Fonts stylesheet are gone entirely.
 export const FONT_SANS  = "'Satoshi',-apple-system,sans-serif";
-export const FONT_SERIF = "'Playfair Display',Georgia,serif";
 
 // Semantic color palette — replaces scattered hex literals
 export const CLR_RED     = "#DC2626";
@@ -25,6 +27,23 @@ export const CLR_GRAY    = "#9B9A97";
 
 // z-index scale: 50 pills, 59 overlays, 60 mini-header, 100 dropdowns, 200 tooltips, 500 bulk bar, 1000 modals, 2000 toasts
 export const baseCSS = `
+  /* Self-hosted fonts — replaces the Fontshare (Satoshi) and Google Fonts
+     (Playfair Display) stylesheet links that used to block first paint on
+     two third-party origins. font-display:swap avoids invisible text while
+     these load. Satoshi is the UI typeface everywhere; Playfair Display is
+     used only by the canvas-based share image generator (utils/shareImage.js,
+     ShareImageModal.jsx) — an @font-face declaration is lazy, so it's only
+     fetched when that feature actually renders text in it. Regenerate the
+     Satoshi files from Fontshare, or Playfair from Google Fonts, if either
+     is ever updated (see scripts/generate-wordmark.mjs for how the
+     "Commonplace" wordmark itself avoids needing Playfair at all). */
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Light.woff2') format('woff2');font-weight:300;font-style:normal;font-display:swap}
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+  @font-face{font-family:'Playfair Display';src:url('/fonts/PlayfairDisplay-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+  @font-face{font-family:'Playfair Display';src:url('/fonts/PlayfairDisplay-Italic.woff2') format('woff2');font-weight:400;font-style:italic;font-display:swap}
+
   :root{
     color-scheme:light;
     --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-bg-panel:#FAFAFA;--cp-bg-hover:rgba(55,53,47,0.05);
@@ -411,7 +430,6 @@ export const baseCSS = `
     .hp-mini-demo{text-align:left !important}
     .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
-    .hp-timeline-cols{grid-template-columns:repeat(2, 1fr) !important}
     .hp-section{padding:60px 32px !important}
   }
   @media (max-width: 600px) {
@@ -421,11 +439,25 @@ export const baseCSS = `
     .hp-hero-sub{font-size:16px !important}
     .hp-section{padding:48px 20px !important}
     .hp-hero{padding:80px 20px 40px !important}
-    .hp-timeline-cols{grid-template-columns:1fr !important}
   }
   @media (max-width: 480px) {
     .hp-hero-headline{font-size:28px !important}
-    .hp-timeline-quote{flex-direction:column !important;align-items:flex-start !important;gap:4px !important}
+  }
+
+  /* FAQ accordion — hide native marker, rotate our own chevron on open */
+  .hp-faq-item summary{-webkit-tap-highlight-color:transparent}
+  .hp-faq-item summary::-webkit-details-marker{display:none}
+  .hp-faq-item summary::marker{content:""}
+  .hp-faq-item[open] .hp-faq-chevron{transform:rotate(180deg)}
+
+  /* Input-card footer → stack on mobile so the primary button isn't
+     squeezed against the meta column; word/char counts are dropped as
+     redundant detail at this width (entry count stays). */
+  @media(max-width:640px){
+    .input-footer{flex-direction:column;align-items:stretch}
+    .input-footer-wordcount{display:none}
+    .input-footer-actions{flex-direction:column;align-items:stretch;width:100%}
+    .input-footer-actions .try-btn,.input-footer-actions .proc-btn{width:100%;justify-content:center}
   }
 
   /* Dark mode — element-level overrides */
@@ -558,7 +590,7 @@ export const styles = {
 
   // Nav
   nav:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"26px 0 22px",borderBottom:"1px solid var(--cp-border-light)"},
-  navLogo:{fontFamily:FONT_SERIF,fontSize:19,fontWeight:700,letterSpacing:"-0.3px",color:"var(--cp-text)",textDecoration:"none"},
+  navLogo:{color:"var(--cp-text)",textDecoration:"none"},
   navRight:{display:"flex",alignItems:"center",gap:28,fontSize:13,color:"var(--cp-text-muted)"},
 
   // Landing
@@ -569,9 +601,6 @@ export const styles = {
   splitLeft:{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:24,paddingTop:8},
   splitRight:{display:"flex",flexDirection:"column",gap:16},
 
-  // Hero brand mark — dominant visual anchor
-  heroBrandWrap:{display:"flex",alignItems:"center",gap:10,marginBottom:4,justifyContent:"center"},
-  heroBrandName:{fontFamily:FONT_SERIF,fontSize:42,fontWeight:700,letterSpacing:-1.5,color:"var(--cp-text)",lineHeight:1.1},
 
   // Tagline — clearly secondary
   heroTagline:{fontFamily:FONT_SANS,fontSize:18,fontWeight:300,color:"var(--cp-text-muted)",lineHeight:1.5,marginTop:2},
@@ -669,7 +698,7 @@ export const styles = {
 
   // Results header — #4 tightened padding rhythm
   header:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"32px 0 16px",borderBottom:"1px solid var(--cp-border)",flexWrap:"wrap",gap:12},
-  title:{fontFamily:FONT_SERIF,fontSize:32,fontWeight:700,letterSpacing:-1,color:"var(--cp-text-secondary)",lineHeight:1},
+  title:{color:"var(--cp-text-secondary)"},
   sub:{fontSize:13,color:"var(--cp-text-muted)",marginTop:6,letterSpacing:"0.01em"},
   hdrBtn:{padding:"6px 12px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   exportBtn:{padding:"6px 14px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:600,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit"},

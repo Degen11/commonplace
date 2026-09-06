@@ -37,7 +37,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **lucide-react** — icons
 - **@supabase/supabase-js 2** — database client (server-side only)
 - **@vercel/analytics + @vercel/speed-insights** — rendered in `App.jsx`
-- **vite-plugin-pwa** — service worker / PWA manifest (precaches the app shell + icons but `globIgnores` the lazy `localQuotes`/`nlp`/`ResultsPhase` chunks, which are instead CacheFirst runtime-cached on first use; also runtime-caches Google Fonts and Fontshare)
+- **vite-plugin-pwa** — service worker / PWA manifest (precaches the app shell + icons but `globIgnores` the lazy `localQuotes`/`nlp`/`ResultsPhase` chunks, which are instead CacheFirst runtime-cached on first use; fonts are self-hosted under `public/fonts/` so they're precached like any other static asset, not runtime-cached from a third-party origin)
 - **Vercel** — hosting + serverless functions
 - **Vitest 4** — test runner (configured in `vite.config.js`)
 - **ESLint 10** — flat config (`eslint.config.js`), React Compiler compatibility checks
@@ -50,10 +50,15 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 public/                       Static assets
   favicon.svg                 Source artwork for all app icons
   favicon.ico, *.png          Generated icons — regenerate via `npm run icons`, don't hand-edit
+  fonts/                      Self-hosted Satoshi + Playfair Display .woff2 files (see @font-face in styles.js)
+  og-image.svg, og-image.png  Default share-card image — .png regenerated via `npm run og-image`, don't hand-edit
+  privacy.html, terms.html    Static legal pages (rewritten from /privacy, /terms in vercel.json)
   robots.txt, sitemap.xml     SEO files
 
 scripts/
   generate-icons.mjs          Renders favicon.svg → PNG/ICO app icons (uses @resvg/resvg-js)
+  generate-og-image.mjs       Renders og-image.svg → og-image.png (uses @resvg/resvg-js)
+  generate-wordmark.mjs       Traces "Commonplace" from Playfair Display Bold → wordmarkPath.js (uses opentype.js)
 
 api/                          Vercel serverless functions (Node.js)
   _shared.js                  Supabase client, CORS, rate limiting, origin validation, withApiHandler middleware
@@ -98,14 +103,14 @@ src/
     EditForm.jsx               Full quote editor modal
     InlineEditors.jsx          Click-to-edit source/category with autocomplete
     CollectionsSidebar.jsx     Collection management sidebar
-    OnboardingModal.jsx        First-run 3-step onboarding walkthrough
+    OnboardingModal.jsx        First-run 3-step walkthrough, shown on first arrival at results (not the landing page)
     QuoteActions.jsx           Shared action components (FavBtn, OverflowMenu with pop animation)
     HighlightText.jsx          Search term highlighting in table/card views
     AddMorePanel.jsx           Panel for adding more quotes from results
     AnimatedNumber.jsx         Animated number transitions
     ConfirmModal.jsx           Reusable confirmation dialog
     ModalShell.jsx             Shared modal wrapper — Base UI Dialog root/portal/backdrop boilerplate
-    EntryReviewModal.jsx       Pre-processing review of split entries before identification
+    EntryReviewModal.jsx       Pre-processing review of split entries before identification — only shown when there's something to review (15+ entries or a 400+ char line), or always if the user hasn't opted out (see `LS_SKIP_REVIEW`)
     CollectionDupeModal.jsx    Collection-level duplicate resolution
     DupeModal.jsx              Quote duplicate detection modal
     EmptyState.jsx             Empty state placeholder UI
@@ -114,7 +119,8 @@ src/
     ExportDropdown.jsx         Export format menu
     Footer.jsx                 App footer
     HowItWorksAnimation.jsx    Onboarding animation sequence
-    Logo.jsx                   Commonplace wordmark
+    Logo.jsx                   Open-book icon mark
+    Wordmark.jsx               "Commonplace" wordmark — traced SVG path, not styled text (see wordmarkPath.js)
     MobileSheet.jsx            Mobile bottom sheet overlay
     ShareImageModal.jsx        Share image preview/download
     ShortcutsModal.jsx         Keyboard shortcuts reference
@@ -147,6 +153,7 @@ src/
   data/
     constants.js               Categories, colors, confidence levels, example quotes, sanitization
     localQuotes.js             3,700+ curated quotes — lazy-loaded via dynamic import. Builds ENTRY_WORDSETS (Map<entry,Set<word>>) and WORD_INDEX (inverted word→entries map) at module init for fast word-overlap lookup
+    faq.js                     Shared FAQ content — renders as a visible section on the landing page AND generates index.html's FAQPage JSON-LD at build time (see vite.config.js), so the two can't drift
 
   utils/
     textFormatting.js          smartSplit, normalize, similarity + makeSimilarityKey/similarityFromKeys (keyed dupe detection), basicFormat, proper nouns
@@ -240,8 +247,10 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/
 npm run preview   # Preview production build
-npm run test      # vitest run (31 test files, 356 tests across components, hooks, stores, utils)
+npm run test      # vitest run (31 test files, 359 tests across components, hooks, stores, utils)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
+npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
+npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
 npm run lint      # eslint src/ api/ — React Compiler compatibility + serverless correctness rules
 vercel dev        # Test serverless functions locally
 ```
@@ -256,7 +265,7 @@ vercel dev        # Test serverless functions locally
 - **Native `<select>` styling** — selects spread `SELECT_RESET` (in `styles.js`, also exported as `styles.selectReset`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
 - **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
 - **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle
-- **Fonts** — `FONT_SANS` is Satoshi (via Fontshare CDN), `FONT_SERIF` is Playfair Display (Google Fonts). Playfair is used only for the "Commonplace" wordmark (logo); all other headings and UI text use Satoshi. Don't introduce new fonts or expand Playfair usage beyond the logo
+- **Fonts** — self-hosted under `public/fonts/` and declared via `@font-face` in `baseCSS` (no third-party font origin). `FONT_SANS` is Satoshi (four weights: 300/400/500/700) and is used for all UI text and headings. Playfair Display (700 normal + 400 italic) is used only by the canvas-based share image generator (`utils/shareImage.js`, `ShareImageModal.jsx`) — the "Commonplace" wordmark itself is a traced SVG path (`Wordmark.jsx` / `wordmarkPath.js`, regenerate via `npm run wordmark`), not styled text, so it needs no font loaded at all. Don't introduce new fonts or expand Playfair usage beyond the share-image generator
 - **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, pills, checkboxes, menu items). `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
 - **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
 - **Category pill colors** — desaturated by design (text blended ~25% toward gray, bg at 0.07-0.08 opacity). Don't restore to full Tailwind saturation
@@ -310,8 +319,10 @@ Z.TOAST           2000  Toasts
 
 - **Don't change localStorage keys** — they're defined in `config.js` and used by both the store and the sync system. Changing them breaks existing users' data
 - **Don't modify `_shared.js` ALLOWED_ORIGINS** without also updating the CSP header in `vercel.json` — they must stay in sync
-- **Font CDN in CSP** — `vercel.json` CSP allows `api.fontshare.com` (style-src) and `cdn.fontshare.com` (font-src) for Satoshi. If switching fonts, update `index.html`, the CSP, **and** the Workbox `runtimeCaching` entries in `vite.config.js` (Fontshare is cached there so Satoshi works offline — don't remove those entries)
+- **Fonts are self-hosted, not CDN-linked** — Satoshi and Playfair Display `.woff2` files live in `public/fonts/` and are declared via `@font-face` in `baseCSS` (`styles.js`). There's no `fonts.googleapis.com`/`fonts.gstatic.com`/`fontshare.com` in the CSP or `index.html` anymore — don't reintroduce a font `<link>` tag or those origins in the CSP `style-src`/`font-src`. To update a font file (new weight, font swap), fetch the new `.woff2`, drop it into `public/fonts/`, and update the matching `@font-face` rule — no CSP, `vite.config.js`, or Workbox changes needed since same-origin `.woff2` files are already covered by `globPatterns` and the `/fonts/:path*` cache-control rule in `vercel.json`
+- **The "Commonplace" wordmark is a traced SVG path, not styled text** — `Wordmark.jsx` renders `wordmarkPath.js`, generated from Playfair Display Bold by `scripts/generate-wordmark.mjs` (`npm run wordmark`). This is what lets the page avoid loading Playfair Display at all for the four places the wordmark appears (`InputPhase.jsx` nav, `ProcessingPhase.jsx`, `HeaderBar.jsx`, `MiniHeader.jsx` — all share `layoutId="app-logo"` except `MiniHeader.jsx`). Don't hand-edit `wordmarkPath.js`; re-run the script if the wordmark text or source font ever changes
 - **App icons are generated** — `public/favicon.ico`, `apple-touch-icon.png`, and `icon-*.png` come from `npm run icons` (renders `favicon.svg`). Don't hand-edit the PNGs; if the SVG artwork changes, re-run the script (it depends on favicon.svg's structure — 32×32 viewBox, background `<rect>` first)
+- **OG image has a static fallback** — `public/og-image.png` (from `npm run og-image`, rendering `public/og-image.svg`) is what the default `og:image`/`twitter:image`/schema `screenshot` meta tags point to, so social previews don't depend on the `/api/og` serverless function being up. `/api/og` still exists for future dynamic per-quote share cards — if you touch it, note that its `h()` helper must give childless `<div>`s `children: undefined`, not `[]`, or satori throws requiring an explicit `display` style on every such node
 - **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use. The module builds `ENTRY_WORDSETS` and `WORD_INDEX` at init time (once); the word-overlap path in `localLookup` uses these to avoid scanning all 3,700 entries — don't remove them

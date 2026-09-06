@@ -17,14 +17,14 @@
     <meta property="og:title" content="Commonplace — Free AI Quote Organizer" />
     <meta property="og:description" content="Paste quotes in any format — AI identifies sources, assigns categories, and builds your searchable collection. Export as CSV, Markdown, or JSON. Free." />
     <meta property="og:url" content="https://commonplace.pro" />
-    <meta property="og:image" content="https://commonplace.pro/api/og" />
+    <meta property="og:image" content="https://commonplace.pro/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Commonplace — Free AI Quote Organizer" />
     <meta name="twitter:description" content="Paste quotes in any format — AI identifies sources, assigns categories, and builds your searchable collection. Free, no signup." />
-    <meta name="twitter:image" content="https://commonplace.pro/api/og" />
+    <meta name="twitter:image" content="https://commonplace.pro/og-image.png" />
 
     <!-- Structured Data: Software Application -->
     <script type="application/ld+json">
@@ -48,7 +48,7 @@
         "Duplicate detection",
         "Fuzzy search"
       ],
-      "screenshot": "https://commonplace.pro/api/og",
+      "screenshot": "https://commonplace.pro/og-image.png",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -62,71 +62,18 @@
     }
     </script>
 
-    <!-- Structured Data: FAQ -->
+    <!-- Structured Data: FAQ — generated at build time from src/data/faq.js
+         (see the injectFaqJsonLd plugin in vite.config.js) so this JSON-LD
+         and the visible FAQ section on the landing page can't drift apart. -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What is Commonplace?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Commonplace is a free AI-powered quote organizer. Paste quotes in any format and it identifies the sources, assigns categories, and builds a searchable collection you can export as CSV, Markdown, or JSON."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Is Commonplace free?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes, Commonplace is completely free. No account, subscription, or payment is required."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does AI quote identification work?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Commonplace first checks a local database of 3,700+ curated quotes for instant matches. Unmatched quotes are looked up via Wikiquote and Open Library, then identified by Claude AI (by Anthropic) as a final fallback."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What file formats can I import?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Commonplace supports .txt, .csv, .json, and .md files, including exports from Kindle highlights, Readwise, Notion, and similar apps. You can also import quotes directly from a URL."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I export my quote collection?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Export your collection as CSV, Markdown, or JSON. These formats are compatible with Notion, Obsidian, Roam Research, and other note-taking tools."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Is my quote data private?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Your quotes are stored locally in your browser's local storage by default. No account is required and no personal data is collected. Cloud sync is optional and uses an anonymous device ID — no email or login needed."
-          }
-        }
-      ]
-    }
+    <!--FAQ_JSONLD-->
     </script>
 
-    <!-- Fonts — render-blocking stylesheets; display=swap avoids invisible text while loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" />
+    <!-- Fonts — self-hosted (public/fonts/), declared via @font-face in baseCSS
+         (src/components/styles.js). No third-party font origin on the page
+         anymore; preload the two Satoshi weights used above the fold. -->
+    <link rel="preload" href="/fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Satoshi-Bold.woff2" as="font" type="font/woff2" crossorigin />
 
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -15,6 +15,9 @@ import { smartSplit } from "../utils/textFormatting";
 import {
   DRAFT_SAVE_DEBOUNCE_MS,
   LS_DRAFT,
+  LS_SKIP_REVIEW,
+  REVIEW_MIN_ENTRIES,
+  REVIEW_LONG_LINE_CHARS,
 } from "../config";
 
 import InputPhase from "./InputPhase";
@@ -108,6 +111,11 @@ export default function Commonplace() {
       document.title = `(${progress.done}/${progress.total}) Organizing... \u2014 ${baseTitle}`;
     } else if (quotes.length > 0) {
       document.title = `(${quotes.length}) ${baseTitle}`;
+    } else if (phase === "input") {
+      // Keep the full marketing title (matches index.html and the OG/schema
+      // tags) on the empty landing page \u2014 this is the title search engines
+      // actually index, so it shouldn't collapse to the bare app name.
+      document.title = `${baseTitle} \u2014 Free AI Quote Organizer`;
     } else {
       document.title = baseTitle;
     }
@@ -118,11 +126,22 @@ export default function Commonplace() {
   const handleProcess = () => {
     const lines = smartSplit(rawInput.trim());
     if (!lines.length) return;
+
+    // Skip the review step unless there's actually something worth reviewing
+    // (a lot of lines, or a suspiciously long one — likely a pasted paragraph
+    // rather than a quote) or the user has opted out of it entirely.
+    const skipReview = loadString(LS_SKIP_REVIEW) === "1";
+    const needsReview = lines.length > REVIEW_MIN_ENTRIES || lines.some(l => l.length > REVIEW_LONG_LINE_CHARS);
+    if (skipReview || !needsReview) {
+      processEntries(rawInput, false, formattingEnabled, lines);
+      return;
+    }
     setPendingReview(lines);
   };
 
-  const handleReviewConfirm = (selectedLines) => {
+  const handleReviewConfirm = (selectedLines, dontAskAgain) => {
     setPendingReview(null);
+    if (dontAskAgain) saveString(LS_SKIP_REVIEW, "1");
     processEntries(rawInput, false, formattingEnabled, selectedLines);
   };
 
@@ -168,7 +187,10 @@ export default function Commonplace() {
       <SpeedInsights />
 
       <Suspense fallback={null}>
-        <OnboardingModal />
+        {/* Shown on first arrival at results, not on the landing page — it explains
+            confidence levels and collections, which only mean something once
+            there's something on screen to point at. */}
+        {phase === "results" && <OnboardingModal />}
         <DupeModal
           pendingDupes={pendingDupes}
           dupeDecisions={dupeDecisions}

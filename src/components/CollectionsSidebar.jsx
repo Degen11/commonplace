@@ -90,10 +90,10 @@ function CollectionRow({
           }}
           autoFocus
         />
-        <button onClick={() => handleRename(c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: CLR_GREEN, padding: 2 }}>
+        <button onClick={() => handleRename(c.id)} aria-label="Save name" style={{ background: "none", border: "none", cursor: "pointer", color: CLR_GREEN, padding: 2 }}>
           <Check size={14} strokeWidth={2} />
         </button>
-        <button onClick={() => setEditingId(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}>
+        <button onClick={() => setEditingId(null)} aria-label="Cancel rename" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 2 }}>
           <X size={14} strokeWidth={2} />
         </button>
       </div>

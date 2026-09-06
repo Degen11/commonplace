@@ -264,11 +264,13 @@ describe("App — document title", () => {
     document.title = "Commonplace";
   });
 
-  it("sets base title when no quotes exist", async () => {
+  it("sets the full marketing title on the empty landing page", async () => {
+    // Matches index.html's <title> — this is what search engines index, so
+    // it shouldn't collapse to the bare app name (see App.jsx's title effect).
     storeState.quotes = [];
     renderApp();
     await act(async () => {});
-    expect(document.title).toBe("Commonplace");
+    expect(document.title).toBe("Commonplace — Free AI Quote Organizer");
   });
 
   it("includes quote count in title when quotes exist", async () => {

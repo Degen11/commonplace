@@ -67,7 +67,7 @@ export default function NotificationBars({
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
             {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: CLR_RED, display: "inline-flex", alignItems: "center", gap: 4 }}><CircleX size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
             {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
-            <button style={styles.statsDismiss} onClick={dismissStats}><X size={14} strokeWidth={2} /></button>
+            <button style={styles.statsDismiss} aria-label="Dismiss processing summary" onClick={dismissStats}><X size={14} strokeWidth={2} /></button>
           </div>
         </motion.div>
       )}
@@ -93,7 +93,7 @@ export default function NotificationBars({
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button className="ui-tip ui-tip-left" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
-              <button className="ui-tip ui-tip-left attention-dismiss" data-tip="Dismiss" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
+              <button className="ui-tip ui-tip-left attention-dismiss" data-tip="Dismiss" aria-label="Dismiss review reminder" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
             </div>
           </div>
         </motion.div>

@@ -46,6 +46,13 @@ export const SHARE_URL_MAX_LENGTH   = 8000;
 // Duplicate detection
 export const DUPE_SIMILARITY_THRESHOLD = 0.55;
 
+// Entry review modal — only worth showing when there's actually something to
+// review (a lot of lines, or a suspiciously long one that might be a
+// paragraph rather than a quote). Below these thresholds we skip straight
+// to processing.
+export const REVIEW_MIN_ENTRIES     = 15;
+export const REVIEW_LONG_LINE_CHARS = 400;
+
 // Text truncation
 export const QUOTE_TRUNCATE_CHARS  = 180;  // truncate quotes beyond this in table view
 
@@ -82,3 +89,9 @@ export const LS_KB_HINT     = "commonplace_kb_hint_dismissed";
 export const LS_SHOW_CONF   = "commonplace_show_confidence";
 export const LS_ONBOARDED   = "commonplace_onboarded";
 export const LS_DEVICE_ID   = "commonplace_device_id";
+export const LS_SKIP_REVIEW = "commonplace_skip_entry_review";
+// Set once the user has actively engaged with cloud sync (opened the device
+// link panel, or completed a successful sync at least once). Until then the
+// SyncPill treats a failed background backup as a non-event rather than
+// showing a red "Sync error" state for a feature the user hasn't opted into.
+export const LS_SYNC_ENGAGED = "commonplace_sync_engaged";

@@ -46,9 +46,13 @@ async function loadFont() {
   return fontData;
 }
 
-// Helper to build virtual DOM nodes (satori expects React.createElement format)
+// Helper to build virtual DOM nodes (satori expects React.createElement format).
+// A childless div must get `children: undefined`, not `[]` — satori treats an
+// array-typed `children` (even empty) as requiring an explicit `display` on
+// every such node, which the accent-bar and border divs below don't set.
 function h(type, props, ...children) {
-  return { type, props: { ...props, children: children.length === 1 ? children[0] : children } };
+  const kids = children.length === 0 ? undefined : children.length === 1 ? children[0] : children;
+  return { type, props: { ...props, children: kids } };
 }
 
 export default async function handler(req, res) {

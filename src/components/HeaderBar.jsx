@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import Logo from "./Logo";
+import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import {
@@ -42,7 +43,7 @@ export default function HeaderBar({
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
       <motion.h1 layoutId="app-logo" style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
         <Logo size={28} />
-        Commonplace
+        <Wordmark height={30} color="var(--cp-text-secondary)" />
       </motion.h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} onOpenSync={onOpenSync} pillStyles={pillStyles} />

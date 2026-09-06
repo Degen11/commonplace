@@ -69,6 +69,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
                   )}
                 </div>
                 <Dialog.Close
+                  aria-label="Close"
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 4 }}
                 >
                   <X size={16} strokeWidth={2} />

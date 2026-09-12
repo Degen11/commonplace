@@ -1,6 +1,20 @@
 import { withApiHandler, normalizeForCache, RATE_LIMITS } from './_shared.js';
 import { lookupSchema, parseBody } from './_schemas.js';
 
+// Grammatical stop words to ignore when measuring overlap between our quote
+// and a search snippet. Without this, two unrelated quotes that both happen
+// to use "the," "that," or "with" can look like they overlap.
+const LOOKUP_STOP_WORDS = new Set([
+  'the', 'a', 'an', 'of', 'in', 'on', 'at', 'to', 'for', 'and', 'or', 'but',
+  'with', 'from', 'by', 'as', 'is', 'was', 'are', 'be', 'been', 'has',
+  'have', 'had', 'it', 'its', 'this', 'that', 'these', 'those', 'my', 'his',
+  'her', 'our', 'your', 'not', 'all', 'one', 'two', 'other', 'each', 'some',
+  'than', 'then', 'there', 'when', 'while', 'after', 'before', 'until',
+  'since', 'into', 'about', 'over', 'under', 'through', 'between',
+  'without', 'within', 'who', 'what', 'why', 'how', 'them', 'they', 'him',
+  'she', 'he', 'we', 'you', 'come',
+]);
+
 // ── Wikiquote search ──
 // Uses MediaWiki API to search for quote text and find the page (author/source) it appears on
 async function searchWikiquote(text) {
@@ -30,17 +44,27 @@ async function searchWikiquote(text) {
     const hasYear = /\(\d{4}/.test(title);
     if (!hasYear) return null;
 
-    // Check snippet actually contains meaningful overlap with our quote
-    const snippet = (results[0].snippet || '').replace(/<[^>]*>/g, '').toLowerCase();
-    const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const matchCount = words.filter(w => snippet.includes(w)).length;
-    if (matchCount < Math.min(3, words.length * 0.3)) return null;
+    // Check real overlap between our quote and the snippet. Both sides are
+    // normalized the same way (punctuation/case stripped) and stop words are
+    // dropped so two unrelated quotes can't "match" on generic words like
+    // "the," "life," or "find" — a bare word count was too easy to satisfy
+    // by coincidence and let a wrong page through as a confident match.
+    const snippet = normalizeForCache((results[0].snippet || '').replace(/<[^>]*>/g, ''));
+    const meaningfulWords = [...new Set(
+      normalizeForCache(text).split(' ').filter(w => w.length > 3 && !LOOKUP_STOP_WORDS.has(w))
+    )];
+    const matchCount = meaningfulWords.filter(w => snippet.includes(w)).length;
+    const matchRatio = meaningfulWords.length > 0 ? matchCount / meaningfulWords.length : 0;
+    // Require real majority overlap, not just a handful of shared words
+    if (matchCount < 2 || matchRatio < 0.5) return null;
 
-    // Strong overlap = high confidence (most words matched in snippet)
-    const matchRatio = words.length > 0 ? matchCount / words.length : 0;
-    const confidence = matchRatio >= 0.6 ? 'high' : 'medium';
+    const { category, certain } = inferCategory(title);
+    // Only "high" when the text overlap is strong AND the category wasn't a guess —
+    // otherwise this is a plausible lead, not a confirmed match, and should be
+    // checked by the AI identification step rather than accepted outright.
+    const confidence = (matchRatio >= 0.7 && certain) ? 'high' : 'medium';
 
-    return { source: title, platform: 'wikiquote', confidence };
+    return { source: title, category, platform: 'wikiquote', confidence };
   } catch {
     return null;
   }
@@ -59,10 +83,23 @@ async function searchOpenLibrary(hint) {
     if (!data.docs?.length) return null;
 
     const book = data.docs[0];
+    if (!book.title) return null;
+
+    // Make sure the top hit is actually related to the hint — Open Library's
+    // search is lenient and will happily return its best-effort guess for a
+    // loosely related or generic query, not just a real match.
+    const hintWords = normalizeForCache(hint).split(' ').filter(w => w.length > 2);
+    const titleNorm = normalizeForCache(book.title);
+    const titleOverlap = hintWords.filter(w => titleNorm.includes(w)).length;
+    if (hintWords.length > 0 && titleOverlap / hintWords.length < 0.5) return null;
+
     const author = book.author_name?.[0] || '';
     const year = book.first_publish_year ? ` (${book.first_publish_year})` : '';
     const source = author ? `${book.title}${year} - ${author}` : `${book.title}${year}`;
-    return { source, category: 'Book', platform: 'openlibrary', confidence: author ? 'high' : 'medium' };
+    // Open Library can confirm a book/author exists, but has no full-text
+    // search to confirm this exact quote is actually in it — so this is
+    // always a lead for the AI to confirm, never a confident match on its own.
+    return { source, category: 'Book', platform: 'openlibrary', confidence: 'medium' };
   } catch {
     return null;
   }
@@ -108,21 +145,26 @@ async function writeCache(normalizedText, source, category, confidence, supabase
 // Infer category from a Wikiquote page title (which has no category metadata).
 // Since the Wikiquote whitelist only accepts titles with years, this mostly
 // sees patterns like "Title (YYYY)", "Title (YYYY film)", etc.
+// Returns `certain: false` when the category is a guess rather than backed by
+// an explicit type annotation — callers use this to avoid treating a guessed
+// category as a confirmed match (e.g. a bare "(1926-2022)" birth-death range
+// on a person's page isn't a film, even though it matches the year pattern).
 function inferCategory(source) {
-  if (!source) return 'Reflection';
+  if (!source) return { category: 'Reflection', certain: false };
   const s = source.toLowerCase();
   // Explicit type annotations from Wikiquote disambiguation
-  if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return 'Film';
-  if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return 'TV';
-  if (/\(video game\)|\(game\)/.test(s)) return 'Game';
-  if (/\(novel\)|\(book\)|\(play\)|\(poem\)/.test(s)) return 'Book';
-  if (/\(song\)|\(album\)|\(musical\)/.test(s)) return 'Music';
+  if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return { category: 'Film', certain: true };
+  if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return { category: 'TV', certain: true };
+  if (/\(video game\)|\(game\)/.test(s)) return { category: 'Game', certain: true };
+  if (/\(novel\)|\(book\)|\(play\)|\(poem\)/.test(s)) return { category: 'Book', certain: true };
+  if (/\(song\)|\(album\)|\(musical\)/.test(s)) return { category: 'Music', certain: true };
   // Wikiquote pages for shows, tours, specials
-  if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return 'TV';
-  // Title with year but no explicit type — likely Film (most common on Wikiquote)
-  if (/\(\d{4}\)/.test(s)) return 'Film';
+  if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return { category: 'TV', certain: true };
+  // Title with year but no explicit type — likely Film (most common on Wikiquote),
+  // but it's a guess, not a confirmed type
+  if (/\(\d{4}\)/.test(s)) return { category: 'Film', certain: false };
   // Anything else that slips through — don't guess
-  return 'Reflection';
+  return { category: 'Reflection', certain: false };
 }
 
 export default withApiHandler(async (req, res, { supabase }) => {
@@ -154,7 +196,7 @@ export default withApiHandler(async (req, res, { supabase }) => {
     if (best) {
       const result = {
         source: best.source,
-        category: best.category || inferCategory(best.source),
+        category: best.category || 'Reflection',
         confidence: best.confidence || 'medium',
       };
       // Cache results so the same quote doesn't re-hit external APIs

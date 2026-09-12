@@ -17,7 +17,7 @@ const LOOKUP_STOP_WORDS = new Set([
 
 // ── Wikiquote search ──
 // Uses MediaWiki API to search for quote text and find the page (author/source) it appears on
-async function searchWikiquote(text) {
+export async function searchWikiquote(text) {
   const query = text.slice(0, 120);
   const url = `https://en.wikiquote.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srnamespace=0&srlimit=3&format=json&origin=*`;
 
@@ -72,7 +72,7 @@ async function searchWikiquote(text) {
 
 // ── Open Library search (books) ──
 // Searches Open Library for book/author when hint suggests literary content
-async function searchOpenLibrary(hint) {
+export async function searchOpenLibrary(hint) {
   if (!hint) return null;
 
   try {
@@ -147,9 +147,11 @@ async function writeCache(normalizedText, source, category, confidence, supabase
 // sees patterns like "Title (YYYY)", "Title (YYYY film)", etc.
 // Returns `certain: false` when the category is a guess rather than backed by
 // an explicit type annotation — callers use this to avoid treating a guessed
-// category as a confirmed match (e.g. a bare "(1926-2022)" birth-death range
-// on a person's page isn't a film, even though it matches the year pattern).
-function inferCategory(source) {
+// category as a confirmed match. Note a birth-death range like "(1926-2022)"
+// doesn't match the bare "(YYYY)" pattern below (it has trailing digits before
+// the close-paren), so it falls all the way through to the uncertain default
+// rather than being guessed as a Film.
+export function inferCategory(source) {
   if (!source) return { category: 'Reflection', certain: false };
   const s = source.toLowerCase();
   // Explicit type annotations from Wikiquote disambiguation

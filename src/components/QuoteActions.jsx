@@ -1,7 +1,18 @@
 import { useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import clsx from "clsx";
-import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
+import {
+  Star,
+  Copy,
+  Check,
+  RefreshCw,
+  Trash2,
+  Share2,
+  Ellipsis,
+  FolderPlus,
+  FolderMinus,
+  ChevronRight,
+} from "lucide-react";
 import { styles, CLR_EMERALD } from "./styles";
 
 export function FavBtn({ q, onFav }) {
@@ -19,7 +30,11 @@ export function FavBtn({ q, onFav }) {
       data-tip={q.favorite ? "Remove from favorites" : "Add to favorites"}
       aria-label={q.favorite ? "Remove from favorites" : "Add to favorites"}
       aria-pressed={q.favorite}
-      style={{ ...styles.actBtn, "--hover-color": "#F59E0B", ...(q.favorite ? { color: "#F59E0B" } : {}) }}
+      style={{
+        ...styles.actBtn,
+        "--hover-color": "#F59E0B",
+        ...(q.favorite ? { color: "#F59E0B" } : {}),
+      }}
       onClick={handleClick}
     >
       <Star
@@ -68,13 +83,13 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
           className="overflow-btn act-btn"
           aria-label="More actions for this quote"
           style={{ ...styles.actBtn, "--hover-color": "var(--cp-text-secondary)" }}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <Ellipsis size={16} strokeWidth={2} />
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
-            <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
+            <Menu.Popup style={menuContentStyle} onClick={(e) => e.stopPropagation()}>
               <Menu.Item
                 className="overflow-menu-item overflow-copy"
                 closeOnClick={false}
@@ -89,16 +104,29 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                   }
                 }}
               >
-                {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={clsx({ "copy-push": copyAnim })} />}
+                {localCopied ? (
+                  <Check size={14} strokeWidth={2} />
+                ) : (
+                  <Copy size={14} strokeWidth={1.5} className={clsx({ "copy-push": copyAnim })} />
+                )}
                 <span>{localCopied ? "Copied!" : "Copy"}</span>
               </Menu.Item>
               <Menu.Item
                 className="overflow-menu-item overflow-reidentify"
-                style={{ ...menuItemStyle, ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}) }}
+                style={{
+                  ...menuItemStyle,
+                  ...(isReidentifying ? { opacity: 0.5, cursor: "wait" } : {}),
+                }}
                 disabled={isReidentifying}
-                onClick={() => { if (!isReidentifying) actionProps.onReidentify(q); }}
+                onClick={() => {
+                  if (!isReidentifying) actionProps.onReidentify(q);
+                }}
               >
-                <RefreshCw size={14} strokeWidth={1.5} className={clsx({ spin: isReidentifying })} />
+                <RefreshCw
+                  size={14}
+                  strokeWidth={1.5}
+                  className={clsx({ spin: isReidentifying })}
+                />
                 <span>{isReidentifying ? "Re-identifying…" : "Re-identify"}</span>
               </Menu.Item>
               <Menu.Item
@@ -132,18 +160,36 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                   <div style={{ position: "relative" }}>
                     <button
                       className="overflow-menu-item"
-                      style={{ ...menuItemStyle, justifyContent: "space-between", background: "none", border: "none", width: "100%", fontFamily: "inherit" }}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCollections(prev => !prev); }}
+                      style={{
+                        ...menuItemStyle,
+                        justifyContent: "space-between",
+                        background: "none",
+                        border: "none",
+                        width: "100%",
+                        fontFamily: "inherit",
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowCollections((prev) => !prev);
+                      }}
                     >
                       <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <FolderPlus size={14} strokeWidth={1.5} />
                         <span>Add to collection</span>
                       </span>
-                      <ChevronRight size={12} strokeWidth={2} style={{ transform: showCollections ? "rotate(90deg)" : "none", transition: "transform .12s" }} />
+                      <ChevronRight
+                        size={12}
+                        strokeWidth={2}
+                        style={{
+                          transform: showCollections ? "rotate(90deg)" : "none",
+                          transition: "transform .12s",
+                        }}
+                      />
                     </button>
                     {showCollections && (
                       <div style={{ padding: "2px 4px 2px 24px" }}>
-                        {collections.map(c => (
+                        {collections.map((c) => (
                           <Menu.Item
                             key={c.id}
                             className="overflow-menu-item"
@@ -164,7 +210,9 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
               <Menu.Item
                 className="overflow-menu-item-destructive"
                 style={styles.overflowMenuItemDestructive}
-                onClick={() => { actionProps.onDelete(q.id); }}
+                onClick={() => {
+                  actionProps.onDelete(q.id);
+                }}
               >
                 <Trash2 size={14} strokeWidth={1.5} />
                 <span>Delete</span>

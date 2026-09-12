@@ -36,7 +36,9 @@ export default function useTheme() {
   // explicit in-app toggle. `dark` already tracks system changes in auto mode.
   useEffect(() => {
     const color = dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT;
-    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", color));
+    document
+      .querySelectorAll('meta[name="theme-color"]')
+      .forEach((m) => m.setAttribute("content", color));
   }, [dark]);
 
   // Listen for system preference changes and follow them when no explicit choice
@@ -54,9 +56,16 @@ export default function useTheme() {
   useEffect(() => {
     const handler = (e) => {
       if (e.key !== LS_THEME) return;
-      if (e.newValue === "dark") { setDark(true); setExplicit(true); }
-      else if (e.newValue === "light") { setDark(false); setExplicit(true); }
-      else { setExplicit(false); setDark(window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false); }
+      if (e.newValue === "dark") {
+        setDark(true);
+        setExplicit(true);
+      } else if (e.newValue === "light") {
+        setDark(false);
+        setExplicit(true);
+      } else {
+        setExplicit(false);
+        setDark(window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false);
+      }
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
@@ -82,7 +91,10 @@ export default function useTheme() {
   };
 
   const toggleTheme = () => {
-    applyWithTransition(() => { setExplicit(true); setDark(d => !d); });
+    applyWithTransition(() => {
+      setExplicit(true);
+      setDark((d) => !d);
+    });
   };
 
   // Reset to auto (follow system preference)
@@ -96,13 +108,16 @@ export default function useTheme() {
   // Cycle: light (explicit) → dark (explicit) → auto → ...
   const cycleTheme = () => {
     if (explicit && dark) {
-      setAutoTheme();                       // dark (explicit) → auto
+      setAutoTheme(); // dark (explicit) → auto
     } else if (explicit && !dark) {
-      toggleTheme();                        // light (explicit) → dark (explicit)
+      toggleTheme(); // light (explicit) → dark (explicit)
     } else if (dark) {
-      applyWithTransition(() => { setExplicit(true); setDark(false); }); // auto-dark → explicit light
+      applyWithTransition(() => {
+        setExplicit(true);
+        setDark(false);
+      }); // auto-dark → explicit light
     } else {
-      toggleTheme();                        // auto-light → explicit dark
+      toggleTheme(); // auto-light → explicit dark
     }
   };
 

@@ -14,7 +14,9 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [dupeMatch, setDupeMatch] = useState(null);
 
-  useEffect(() => { textRef.current?.focus(); }, []);
+  useEffect(() => {
+    textRef.current?.focus();
+  }, []);
 
   const doAdd = () => {
     onAdd(text.trim(), source.trim() || undefined, category || undefined, { skipDupeCheck: true });
@@ -28,7 +30,11 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
     e?.preventDefault();
     if (!text.trim()) return;
     const incomingKey = makeSimilarityKey(text.trim());
-    const match = quotes.find(q => similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
+    const match = quotes.find(
+      (q) =>
+        similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) >
+        DUPE_SIMILARITY_THRESHOLD,
+    );
     if (match) {
       setDupeMatch(match);
       return;
@@ -43,53 +49,97 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
       <form
         onSubmit={handleSubmit}
         style={{
-          display: "flex", alignItems: isMobile ? "stretch" : "center",
+          display: "flex",
+          alignItems: isMobile ? "stretch" : "center",
           flexDirection: isMobile ? "column" : "row",
-          gap: isMobile ? 10 : 8, padding: isMobile ? "12px 16px" : "10px 16px",
+          gap: isMobile ? 10 : 8,
+          padding: isMobile ? "12px 16px" : "10px 16px",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-          <Plus size={14} strokeWidth={2} style={{ color: "var(--cp-text-muted)", flexShrink: 0 }} />
+          <Plus
+            size={14}
+            strokeWidth={2}
+            style={{ color: "var(--cp-text-muted)", flexShrink: 0 }}
+          />
           <input
             ref={textRef}
             value={text}
-            onChange={e => { setText(e.target.value); setDupeMatch(null); }}
+            onChange={(e) => {
+              setText(e.target.value);
+              setDupeMatch(null);
+            }}
             placeholder="Quote text…"
             style={{
-              flex: 1, minWidth: 0, padding: isMobile ? "10px 12px" : "6px 10px",
-              fontSize: isMobile ? 15 : 13, fontFamily: "inherit",
-              border: "1px solid var(--cp-border)", borderRadius: 6,
-              background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
+              flex: 1,
+              minWidth: 0,
+              padding: isMobile ? "10px 12px" : "6px 10px",
+              fontSize: isMobile ? 15 : 13,
+              fontFamily: "inherit",
+              border: "1px solid var(--cp-border)",
+              borderRadius: 6,
+              background: "var(--cp-bg)",
+              color: "var(--cp-text)",
+              outline: "none",
             }}
-            onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                onClose();
+              }
+            }}
           />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, ...(isMobile ? { paddingLeft: 22 } : {}) }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            ...(isMobile ? { paddingLeft: 22 } : {}),
+          }}
+        >
           <input
             value={source}
-            onChange={e => setSource(e.target.value)}
+            onChange={(e) => setSource(e.target.value)}
             placeholder="Source (optional)"
             style={{
-              width: isMobile ? undefined : 160, flex: isMobile ? 1 : undefined,
+              width: isMobile ? undefined : 160,
+              flex: isMobile ? 1 : undefined,
               minWidth: isMobile ? 0 : undefined,
               padding: isMobile ? "8px 12px" : "6px 10px",
-              fontSize: isMobile ? 14 : 13, fontFamily: "inherit",
-              border: "1px solid var(--cp-border)", borderRadius: 6,
-              background: "var(--cp-bg)", color: "var(--cp-text)", outline: "none",
+              fontSize: isMobile ? 14 : 13,
+              fontFamily: "inherit",
+              border: "1px solid var(--cp-border)",
+              borderRadius: 6,
+              background: "var(--cp-bg)",
+              color: "var(--cp-text)",
+              outline: "none",
             }}
-            onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                onClose();
+              }
+            }}
           />
           <Popover.Root open={showCatPicker} onOpenChange={setShowCatPicker}>
             <Popover.Trigger
               type="button"
               style={{
-                display: "flex", alignItems: "center", gap: 4,
-                padding: isMobile ? "8px 10px" : "5px 8px", fontSize: 12, fontFamily: "inherit",
-                border: "1px solid var(--cp-border)", borderRadius: 4,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: isMobile ? "8px 10px" : "5px 8px",
+                fontSize: 12,
+                fontFamily: "inherit",
+                border: "1px solid var(--cp-border)",
+                borderRadius: 4,
                 background: catColor ? catColor.bg : "var(--cp-bg)",
                 color: catColor ? catColor.text : "var(--cp-text-muted)",
-                cursor: "pointer", fontWeight: category ? 500 : 400,
-                whiteSpace: "nowrap", letterSpacing: "0.02em",
+                cursor: "pointer",
+                fontWeight: category ? 500 : 400,
+                whiteSpace: "nowrap",
+                letterSpacing: "0.02em",
                 flexShrink: 0,
               }}
             >
@@ -99,35 +149,53 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             <Popover.Portal>
               <Popover.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
                 <Popover.Popup
-                  onClick={e => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                   style={{
-                    background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
-                    boxShadow: "var(--cp-shadow-md)", padding: 6,
-                    display: "flex", flexWrap: "wrap", gap: 4,
+                    background: "var(--cp-bg-card)",
+                    border: "1px solid var(--cp-border)",
+                    borderRadius: 6,
+                    boxShadow: "var(--cp-shadow-md)",
+                    padding: 6,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 4,
                     width: "min(280px, 90vw)",
-                    maxHeight: "60vh", overflowY: "auto",
+                    maxHeight: "60vh",
+                    overflowY: "auto",
                     animation: "slideD .12s ease",
                   }}
                 >
-                  {[...allCats].sort((a, b) => a.localeCompare(b)).map(c => {
-                    const col = getCatColor(c, customCats);
-                    const isActive = c === category;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => { setCategory(c); setShowCatPicker(false); }}
-                        style={{
-                          ...styles.tag, background: col.bg, color: col.text,
-                          border: isActive ? `1.5px solid ${col.text}` : "1.5px solid transparent",
-                          cursor: "pointer", fontFamily: "inherit",
-                          fontSize: 11, padding: isMobile ? "6px 10px" : "3px 8px", borderRadius: 4,
-                        }}
-                      >
-                        {c}
-                      </button>
-                    );
-                  })}
+                  {[...allCats]
+                    .sort((a, b) => a.localeCompare(b))
+                    .map((c) => {
+                      const col = getCatColor(c, customCats);
+                      const isActive = c === category;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => {
+                            setCategory(c);
+                            setShowCatPicker(false);
+                          }}
+                          style={{
+                            ...styles.tag,
+                            background: col.bg,
+                            color: col.text,
+                            border: isActive
+                              ? `1.5px solid ${col.text}`
+                              : "1.5px solid transparent",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            fontSize: 11,
+                            padding: isMobile ? "6px 10px" : "3px 8px",
+                            borderRadius: 4,
+                          }}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
                 </Popover.Popup>
               </Popover.Positioner>
             </Popover.Portal>
@@ -137,10 +205,14 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             className="qa-submit"
             disabled={!text.trim()}
             style={{
-              padding: isMobile ? "8px 18px" : "6px 14px", fontSize: 13, fontWeight: 500, fontFamily: "inherit",
+              padding: isMobile ? "8px 18px" : "6px 14px",
+              fontSize: 13,
+              fontWeight: 500,
+              fontFamily: "inherit",
               background: text.trim() ? "var(--cp-accent)" : "var(--cp-bg-tab)",
               color: text.trim() ? "#fff" : "var(--cp-text-muted)",
-              border: "none", borderRadius: 6,
+              border: "none",
+              borderRadius: 6,
               whiteSpace: "nowrap",
             }}
           >
@@ -150,8 +222,13 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             type="button"
             onClick={onClose}
             style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--cp-text-muted)", padding: 4, borderRadius: 4, flexShrink: 0,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--cp-text-muted)",
+              padding: 4,
+              borderRadius: 4,
+              flexShrink: 0,
             }}
           >
             <X size={14} strokeWidth={2} />
@@ -159,23 +236,36 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
         </div>
       </form>
       {dupeMatch && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8, padding: "6px 16px 10px",
-          fontSize: 12, color: "var(--cp-warning-text)",
-          background: "var(--cp-warning-bg)",
-          flexWrap: "wrap",
-          animation: "slideD .15s ease",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 16px 10px",
+            fontSize: 12,
+            color: "var(--cp-warning-text)",
+            background: "var(--cp-warning-bg)",
+            flexWrap: "wrap",
+            animation: "slideD .15s ease",
+          }}
+        >
           <TriangleAlert size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, minWidth: 0 }}>
-            Similar to: "{dupeMatch.text.length > 60 ? dupeMatch.text.slice(0, 60) + "\u2026" : dupeMatch.text}"
+            Similar to: "
+            {dupeMatch.text.length > 60 ? dupeMatch.text.slice(0, 60) + "\u2026" : dupeMatch.text}"
           </span>
           <button
             onClick={doAdd}
             style={{
-              padding: "3px 10px", borderRadius: 4, border: "1px solid var(--cp-warning-border)",
-              background: "transparent", color: "var(--cp-warning-text)",
-              fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              padding: "3px 10px",
+              borderRadius: 4,
+              border: "1px solid var(--cp-warning-border)",
+              background: "transparent",
+              color: "var(--cp-warning-text)",
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
               whiteSpace: "nowrap",
             }}
           >
@@ -184,8 +274,13 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
           <button
             onClick={() => setDupeMatch(null)}
             style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--cp-warning-text)", padding: 2, fontSize: 11, fontFamily: "inherit",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--cp-warning-text)",
+              padding: 2,
+              fontSize: 11,
+              fontFamily: "inherit",
               opacity: 0.7,
             }}
           >

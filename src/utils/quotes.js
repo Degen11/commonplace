@@ -30,7 +30,7 @@ export function makeQuote(text, source, category, confidence) {
  */
 export function findDuplicateGroups(quotes, threshold) {
   // Precompute { norm, words } once per quote — reused across all O(n²) pairs.
-  const norms = quotes.map(q => {
+  const norms = quotes.map((q) => {
     const key = makeSimilarityKey(q.text);
     return {
       id: q.id,
@@ -46,10 +46,15 @@ export function findDuplicateGroups(quotes, threshold) {
   const parent = norms.map((_, i) => i);
   const scores = new Map();
   const find = (x) => {
-    while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]];
+      x = parent[x];
+    }
     return x;
   };
-  const union = (a, b) => { parent[find(a)] = find(b); };
+  const union = (a, b) => {
+    parent[find(a)] = find(b);
+  };
 
   for (let i = 0; i < norms.length; i++) {
     for (let j = i + 1; j < norms.length; j++) {
@@ -72,7 +77,8 @@ export function findDuplicateGroups(quotes, threshold) {
   const groups = [];
   for (const members of clusters.values()) {
     if (members.length < 2) continue;
-    let minScore = 1, maxScore = 0;
+    let minScore = 1,
+      maxScore = 0;
     for (let i = 0; i < members.length; i++) {
       for (let j = i + 1; j < members.length; j++) {
         const key = `${Math.min(members[i], members[j])}:${Math.max(members[i], members[j])}`;
@@ -83,7 +89,7 @@ export function findDuplicateGroups(quotes, threshold) {
         }
       }
     }
-    groups.push({ entries: members.map(i => norms[i]), minScore, maxScore });
+    groups.push({ entries: members.map((i) => norms[i]), minScore, maxScore });
   }
 
   groups.sort((a, b) => b.maxScore - a.maxScore);

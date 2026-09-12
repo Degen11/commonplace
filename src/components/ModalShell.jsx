@@ -1,17 +1,23 @@
 import { Dialog } from "@base-ui/react/dialog";
 
 const backdropBase = {
-  position: "fixed", inset: 0,
+  position: "fixed",
+  inset: 0,
   background: "var(--cp-overlay)",
-  backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
   zIndex: 1000,
   animation: "backdropBlurIn .25s ease-out",
 };
 
 const containerBase = {
-  position: "fixed", inset: 0,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  zIndex: 1000, padding: 20,
+  position: "fixed",
+  inset: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 1000,
+  padding: 20,
   pointerEvents: "none",
   animation: "modalScaleIn .3s cubic-bezier(0.16,1,0.3,1)",
 };
@@ -27,19 +33,30 @@ const containerBase = {
  * @param {Object}   [backdropExtra] - Extra styles merged into the backdrop (overrides defaults)
  * @param {React.ReactNode} children - Modal content
  */
-export default function ModalShell({ onClose, popupStyle, containerExtra, backdropBg, backdropExtra, children }) {
-  const bdStyle = (backdropBg || backdropExtra)
-    ? { ...backdropBase, ...(backdropBg ? { background: backdropBg } : {}), ...backdropExtra }
-    : backdropBase;
+export default function ModalShell({
+  onClose,
+  popupStyle,
+  containerExtra,
+  backdropBg,
+  backdropExtra,
+  children,
+}) {
+  const bdStyle =
+    backdropBg || backdropExtra
+      ? { ...backdropBase, ...(backdropBg ? { background: backdropBg } : {}), ...backdropExtra }
+      : backdropBase;
 
   return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Backdrop style={bdStyle} />
         <div style={containerExtra ? { ...containerBase, ...containerExtra } : containerBase}>
-          <Dialog.Popup style={{ pointerEvents: "auto", ...popupStyle }}>
-            {children}
-          </Dialog.Popup>
+          <Dialog.Popup style={{ pointerEvents: "auto", ...popupStyle }}>{children}</Dialog.Popup>
         </div>
       </Dialog.Portal>
     </Dialog.Root>

@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { normalize, similarity, similarityFromKeys, makeSimilarityKey, basicFormat, smartSplit, smartParse } from "../textFormatting";
+import {
+  normalize,
+  similarity,
+  similarityFromKeys,
+  makeSimilarityKey,
+  basicFormat,
+  smartSplit,
+  smartParse,
+} from "../textFormatting";
 
 describe("normalize", () => {
   it("lowercases and trims", () => {
@@ -87,8 +95,7 @@ describe("similarityFromKeys / makeSimilarityKey", () => {
 
   it("matches similarity() when no threshold is passed", () => {
     for (const [a, b] of pairs) {
-      expect(similarityFromKeys(makeSimilarityKey(a), makeSimilarityKey(b)))
-        .toBe(similarity(a, b));
+      expect(similarityFromKeys(makeSimilarityKey(a), makeSimilarityKey(b))).toBe(similarity(a, b));
     }
   });
 

@@ -7,8 +7,12 @@ export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) 
   // Refs to avoid stale closures in the gesture callback
   const onSwipeLeftRef = useRef(onSwipeLeft);
   const onSwipeRightRef = useRef(onSwipeRight);
-  useEffect(() => { onSwipeLeftRef.current = onSwipeLeft; }, [onSwipeLeft]);
-  useEffect(() => { onSwipeRightRef.current = onSwipeRight; }, [onSwipeRight]);
+  useEffect(() => {
+    onSwipeLeftRef.current = onSwipeLeft;
+  }, [onSwipeLeft]);
+  useEffect(() => {
+    onSwipeRightRef.current = onSwipeRight;
+  }, [onSwipeRight]);
 
   const bind = useDrag(
     ({ movement: [mx, my], last, cancel, memo = false }) => {
@@ -25,8 +29,13 @@ export default function useSwipe({ onSwipeLeft, onSwipeRight, enabled = true }) 
 
       if (last) {
         setOffsetX(0);
-        if (dampened < -SWIPE_THRESHOLD_PX && onSwipeLeftRef.current) { navigator.vibrate?.(15); onSwipeLeftRef.current(); }
-        else if (dampened > SWIPE_THRESHOLD_PX && onSwipeRightRef.current) { navigator.vibrate?.(15); onSwipeRightRef.current(); }
+        if (dampened < -SWIPE_THRESHOLD_PX && onSwipeLeftRef.current) {
+          navigator.vibrate?.(15);
+          onSwipeLeftRef.current();
+        } else if (dampened > SWIPE_THRESHOLD_PX && onSwipeRightRef.current) {
+          navigator.vibrate?.(15);
+          onSwipeRightRef.current();
+        }
       } else {
         setOffsetX(dampened);
       }

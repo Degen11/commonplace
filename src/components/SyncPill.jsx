@@ -36,9 +36,11 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
   const onClick = onOpenSync || (isError ? onManualSync : undefined);
   const interactive = !!onClick;
 
-  const baseStyle = isSyncing ? pillStyles.syncing
-    : isSynced ? pillStyles.synced
-    : pillStyles.error;
+  const baseStyle = isSyncing
+    ? pillStyles.syncing
+    : isSynced
+      ? pillStyles.synced
+      : pillStyles.error;
 
   const style = {
     ...baseStyle,
@@ -49,25 +51,27 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
     gap: 4,
   };
 
-  const label = isSyncing ? "Saving..."
-    : isError ? "Sync error"
-    : "Saved";
+  const label = isSyncing ? "Saving..." : isError ? "Sync error" : "Saved";
 
   const tooltip = onOpenSync
-    ? (isError ? "Sync failed — open sync options" : "Cloud sync — link a device")
+    ? isError
+      ? "Sync failed — open sync options"
+      : "Cloud sync — link a device"
     : isError
-    ? "Click to retry"
-    : isSyncing
-    ? "Saving changes\u2026"
-    : lastSynced
-    ? `Last saved ${formatRelativeTime(lastSynced)}`
-    : null;
+      ? "Click to retry"
+      : isSyncing
+        ? "Saving changes\u2026"
+        : lastSynced
+          ? `Last saved ${formatRelativeTime(lastSynced)}`
+          : null;
 
   // Interactive states render a real <button> so the action is reachable by
   // keyboard and announced by screen readers; otherwise stay a plain <span>.
   const Pill = interactive ? "button" : "span";
   const ariaLabel = onOpenSync
-    ? (isError ? "Sync failed — open cloud sync options" : "Cloud sync options")
+    ? isError
+      ? "Sync failed — open cloud sync options"
+      : "Cloud sync options"
     : "Sync failed — retry";
 
   return (
@@ -85,22 +89,24 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
       {isError && <RefreshCw size={10} strokeWidth={2} />}
       {label}
       {hovered && tooltip && (
-        <span style={{
-          position: "absolute",
-          top: "calc(100% + 6px)",
-          left: "50%",
-          transform: "translateX(-50%)",
-          whiteSpace: "nowrap",
-          fontSize: 11,
-          fontWeight: 500,
-          color: "#fff",
-          background: "var(--cp-toast-bg)",
-          padding: "4px 10px",
-          borderRadius: 6,
-          zIndex: 200,
-          pointerEvents: "none",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-        }}>
+        <span
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            whiteSpace: "nowrap",
+            fontSize: 11,
+            fontWeight: 500,
+            color: "#fff",
+            background: "var(--cp-toast-bg)",
+            padding: "4px 10px",
+            borderRadius: 6,
+            zIndex: 200,
+            pointerEvents: "none",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          }}
+        >
           {tooltip}
         </span>
       )}

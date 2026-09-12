@@ -26,9 +26,11 @@ const defaultQuotes = [
 function setup(overrides = {}) {
   const props = {
     quotes: overrides.quotes ?? [...defaultQuotes],
-    setQuotes: overrides.setQuotes ?? vi.fn((updater) => {
-      if (typeof updater === "function") return updater(props.quotes);
-    }),
+    setQuotes:
+      overrides.setQuotes ??
+      vi.fn((updater) => {
+        if (typeof updater === "function") return updater(props.quotes);
+      }),
     allCats: overrides.allCats ?? [],
     showToast: overrides.showToast ?? vi.fn(),
     identifyBatch: overrides.identifyBatch ?? vi.fn(),
@@ -98,11 +100,7 @@ describe("useQuoteActions", () => {
       expect(setQuotes).toHaveBeenCalled();
       expect(trackDeletion).toHaveBeenCalledWith(["2"]);
       expect(cleanCollectionRefs).toHaveBeenCalledWith(["2"]);
-      expect(showToast).toHaveBeenCalledWith(
-        "Entry deleted",
-        "Undo",
-        expect.any(Function),
-      );
+      expect(showToast).toHaveBeenCalledWith("Entry deleted", "Undo", expect.any(Function));
     });
 
     it("undo callback re-inserts the quote at the correct position", () => {
@@ -170,9 +168,7 @@ describe("useQuoteActions", () => {
           result.result.current.copyQuote(q);
         });
 
-        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-          `"hello" \u2014 Source`,
-        );
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(`"hello" \u2014 Source`);
         navigator.clipboard.writeText.mockClear();
       }
     });
@@ -190,9 +186,7 @@ describe("useQuoteActions", () => {
           result.result.current.copyQuote(q);
         });
 
-        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-          "hello \u2014 Source",
-        );
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith("hello \u2014 Source");
         navigator.clipboard.writeText.mockClear();
       }
     });
@@ -310,9 +304,7 @@ describe("useQuoteActions", () => {
       });
 
       // Should not show an error toast — the file passes validation gates
-      const errorCalls = showToast.mock.calls.filter(
-        (call) => call[3] === "error",
-      );
+      const errorCalls = showToast.mock.calls.filter((call) => call[3] === "error");
       expect(errorCalls).toHaveLength(0);
     });
 
@@ -327,9 +319,7 @@ describe("useQuoteActions", () => {
         result.result.current.handleFileImport(csvFile, vi.fn(), vi.fn());
       });
 
-      const errorCalls = showToast.mock.calls.filter(
-        (call) => call[3] === "error",
-      );
+      const errorCalls = showToast.mock.calls.filter((call) => call[3] === "error");
       expect(errorCalls).toHaveLength(0);
     });
 
@@ -344,9 +334,7 @@ describe("useQuoteActions", () => {
         result.result.current.handleFileImport(jsonFile, vi.fn(), vi.fn());
       });
 
-      const errorCalls = showToast.mock.calls.filter(
-        (call) => call[3] === "error",
-      );
+      const errorCalls = showToast.mock.calls.filter((call) => call[3] === "error");
       expect(errorCalls).toHaveLength(0);
     });
 
@@ -361,9 +349,7 @@ describe("useQuoteActions", () => {
         result.result.current.handleFileImport(mdFile, vi.fn(), vi.fn());
       });
 
-      const errorCalls = showToast.mock.calls.filter(
-        (call) => call[3] === "error",
-      );
+      const errorCalls = showToast.mock.calls.filter((call) => call[3] === "error");
       expect(errorCalls).toHaveLength(0);
     });
 

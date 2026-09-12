@@ -43,9 +43,7 @@ describe("CollectionDupeModal", () => {
     });
 
     it("allResolved is true when all groups handled", () => {
-      const dupeGroups = [
-        { entries: [{ id: "a" }, { id: "b" }], minScore: 0.8, maxScore: 0.9 },
-      ];
+      const dupeGroups = [{ entries: [{ id: "a" }, { id: "b" }], minScore: 0.8, maxScore: 0.9 }];
 
       const resolved = new Map([[0, "a"]]);
 
@@ -64,7 +62,7 @@ describe("CollectionDupeModal", () => {
         entries: [{ id: "a" }, { id: "b" }, { id: "c" }],
       };
       const keepId = "b";
-      const toDelete = group.entries.filter(e => e.id !== keepId).map(e => e.id);
+      const toDelete = group.entries.filter((e) => e.id !== keepId).map((e) => e.id);
       expect(toDelete).toEqual(["a", "c"]);
     });
   });

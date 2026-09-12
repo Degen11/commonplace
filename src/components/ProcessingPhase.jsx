@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_BLUE, CLR_VIOLET } from "./styles";
+import {
+  styles,
+  FONT_SANS,
+  CP_ACCENT,
+  CLR_AMBER,
+  CLR_EMERALD,
+  CLR_BLUE,
+  CLR_VIOLET,
+} from "./styles";
 import { getCatColor } from "../data/constants";
 import { ArrowRight, CircleCheckBig, Database, Globe, Sparkles, TriangleAlert } from "lucide-react";
 import Logo from "./Logo";
@@ -19,25 +27,42 @@ function ProgressRing({ pct, isComplete }) {
     <div style={{ position: "relative", width: RING_SIZE, height: RING_SIZE, marginBottom: 20 }}>
       <svg width={RING_SIZE} height={RING_SIZE} style={{ transform: "rotate(-90deg)" }}>
         <circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          fill="none" stroke="var(--cp-border)" strokeWidth={RING_STROKE}
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          fill="none"
+          stroke="var(--cp-border)"
+          strokeWidth={RING_STROKE}
         />
         <circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
           fill="none"
           stroke={isComplete ? CLR_EMERALD : CP_ACCENT}
           strokeWidth={RING_STROKE}
           strokeDasharray={RING_CIRCUMFERENCE}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease" }}
+          style={{
+            transition: "stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease",
+          }}
         />
       </svg>
-      <span style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 18, fontWeight: 700, fontFamily: FONT_SANS, color: isComplete ? CLR_EMERALD : "var(--cp-text-secondary)",
-        letterSpacing: "-0.02em",
-      }}>
+      <span
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 18,
+          fontWeight: 700,
+          fontFamily: FONT_SANS,
+          color: isComplete ? CLR_EMERALD : "var(--cp-text-secondary)",
+          letterSpacing: "-0.02em",
+        }}
+      >
         {pct}%
       </span>
     </div>
@@ -45,10 +70,16 @@ function ProgressRing({ pct, isComplete }) {
 }
 
 const statChipStyle = {
-  display: "inline-flex", alignItems: "center", gap: 6,
-  padding: "5px 12px", borderRadius: 6,
-  background: "var(--cp-bg-panel)", border: "1px solid var(--cp-border-light)",
-  fontSize: 12, color: "var(--cp-text-secondary)", fontWeight: 500,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "5px 12px",
+  borderRadius: 6,
+  background: "var(--cp-bg-panel)",
+  border: "1px solid var(--cp-border-light)",
+  fontSize: 12,
+  color: "var(--cp-text-secondary)",
+  fontWeight: 500,
   fontFamily: FONT_SANS,
 };
 
@@ -137,25 +168,49 @@ export default function ProcessingPhase({
   }
 
   const elapsedSec = Math.floor((now - startTime) / 1000);
-  const etaSec = !isComplete && progress?.phase === "api"
-    ? estimateRemaining({ now, sample: apiSample, done: doneCount, total })
-    : null;
+  const etaSec =
+    !isComplete && progress?.phase === "api"
+      ? estimateRemaining({ now, sample: apiSample, done: doneCount, total })
+      : null;
   const showTimeRow = !isComplete && progress && elapsedSec >= 1;
 
   return (
     <div style={styles.wrap}>
       <nav style={styles.nav}>
-        <motion.span layoutId="app-logo" style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}><Logo size={22} /><Wordmark height={18} color="var(--cp-text)" /></motion.span>
+        <motion.span
+          layoutId="app-logo"
+          style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }}
+          transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}
+        >
+          <Logo size={22} />
+          <Wordmark height={18} color="var(--cp-text)" />
+        </motion.span>
         <div style={styles.navRight}>
-          <span style={{ color: "var(--cp-text-muted)", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
+          <span style={{ color: "var(--cp-text-muted)", fontSize: 12, fontWeight: 500 }}>
+            Step 2 of 2
+          </span>
         </div>
       </nav>
       <div style={styles.procWrap}>
         {isComplete ? (
           <>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <CircleCheckBig size={56} color={CLR_EMERALD} strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
-              <h2 style={{ ...styles.procTitle, color: CLR_EMERALD, fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
+              <CircleCheckBig
+                size={56}
+                color={CLR_EMERALD}
+                strokeWidth={1.5}
+                style={{ marginBottom: 16, animation: "completePop .4s ease both" }}
+              />
+              <h2
+                style={{
+                  ...styles.procTitle,
+                  color: CLR_EMERALD,
+                  fontSize: 28,
+                  animation: "fadeUp .25s .15s ease both",
+                }}
+              >
+                All done!
+              </h2>
               <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>
                 {stats?.failed > 0
                   ? `${total - stats.failed} of ${pluralize(total, "entry", "entries")} organized`
@@ -163,10 +218,16 @@ export default function ProcessingPhase({
               </p>
             </div>
             {stats && (
-              <div style={{
-                display: "flex", gap: 12, marginTop: 12, justifyContent: "center",
-                flexWrap: "wrap", animation: "fadeUp .35s .35s ease both",
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 12,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  animation: "fadeUp .35s .35s ease both",
+                }}
+              >
                 {stats.local > 0 && (
                   <div style={statChipStyle}>
                     <Database size={13} strokeWidth={1.5} color={CLR_EMERALD} />
@@ -186,7 +247,13 @@ export default function ProcessingPhase({
                   </div>
                 )}
                 {stats.failed > 0 && (
-                  <div style={{ ...statChipStyle, color: CLR_AMBER, borderColor: "rgba(217,119,6,0.3)" }}>
+                  <div
+                    style={{
+                      ...statChipStyle,
+                      color: CLR_AMBER,
+                      borderColor: "rgba(217,119,6,0.3)",
+                    }}
+                  >
                     <TriangleAlert size={13} strokeWidth={1.5} color={CLR_AMBER} />
                     {stats.failed} couldn&rsquo;t be identified &mdash; retry from results
                   </div>
@@ -197,28 +264,58 @@ export default function ProcessingPhase({
         ) : (
           <>
             {total > 0 && (
-              <motion.div layoutId="phase-action" transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.9 }}>
+              <motion.div
+                layoutId="phase-action"
+                transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.9 }}
+              >
                 <ProgressRing pct={pct} isComplete={false} />
               </motion.div>
             )}
             <h2 style={styles.procTitle}>Organizing your collection...</h2>
-            <p style={styles.procSub} role="status">{phaseSubtitle(progress, doneCount, total)}</p>
+            <p style={styles.procSub} role="status">
+              {phaseSubtitle(progress, doneCount, total)}
+            </p>
           </>
         )}
         {progress && (
           <div style={styles.procCard}>
             <div style={styles.procTop}>
-              <span style={{ fontWeight: 600 }}><AnimatedNumber value={doneCount} /> of {total}</span>
-              <span style={{ color: isComplete ? CLR_EMERALD : "var(--cp-text-muted)" }}><AnimatedNumber value={pct} />%</span>
+              <span style={{ fontWeight: 600 }}>
+                <AnimatedNumber value={doneCount} /> of {total}
+              </span>
+              <span style={{ color: isComplete ? CLR_EMERALD : "var(--cp-text-muted)" }}>
+                <AnimatedNumber value={pct} />%
+              </span>
             </div>
-            <div style={styles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Identification progress"><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
+            <div
+              style={styles.track}
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Identification progress"
+            >
+              <div
+                style={{
+                  ...styles.fill,
+                  width: `${pct}%`,
+                  ...(isComplete ? { background: CLR_EMERALD } : {}),
+                }}
+              />
+            </div>
             {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
             {showTimeRow && (
-              <div style={{
-                display: "flex", justifyContent: "space-between", marginTop: 8,
-                fontSize: 11, color: "var(--cp-text-faint)",
-                fontVariantNumeric: "tabular-nums", letterSpacing: "0.01em",
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 8,
+                  fontSize: 11,
+                  color: "var(--cp-text-faint)",
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "0.01em",
+                }}
+              >
                 <span>Elapsed {formatElapsed(elapsedSec)}</span>
                 {etaSec != null && <span>{formatEta(etaSec)}</span>}
               </div>
@@ -226,7 +323,15 @@ export default function ProcessingPhase({
           </div>
         )}
         {isComplete && onSkipToResults ? (
-          <div style={{ marginTop: 20, width: "100%", maxWidth: 480, textAlign: "center", animation: "fadeUp .35s .45s ease both" }}>
+          <div
+            style={{
+              marginTop: 20,
+              width: "100%",
+              maxWidth: 480,
+              textAlign: "center",
+              animation: "fadeUp .35s .45s ease both",
+            }}
+          >
             <button
               style={{ ...styles.processBtn, display: "inline-flex", alignItems: "center", gap: 6 }}
               onClick={onSkipToResults}
@@ -234,17 +339,26 @@ export default function ProcessingPhase({
               View results <ArrowRight size={14} strokeWidth={2} />
             </button>
           </div>
-        ) : !isComplete && (
-          <div style={{ marginTop: 20, borderTop: "1px solid var(--cp-border)", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
-            <button
-              style={{ ...styles.hdrBtn, padding: "8px 20px", fontSize: 13 }}
-              onClick={onCancel}
+        ) : (
+          !isComplete && (
+            <div
+              style={{
+                marginTop: 20,
+                borderTop: "1px solid var(--cp-border)",
+                paddingTop: 16,
+                width: "100%",
+                maxWidth: 480,
+                textAlign: "center",
+              }}
             >
-              {doneCount > 0
-                ? `Cancel (keep ${doneCount} identified)`
-                : "Cancel"}
-            </button>
-          </div>
+              <button
+                style={{ ...styles.hdrBtn, padding: "8px 20px", fontSize: 13 }}
+                onClick={onCancel}
+              >
+                {doneCount > 0 ? `Cancel (keep ${doneCount} identified)` : "Cancel"}
+              </button>
+            </div>
+          )
         )}
         {identifiedFeed.length > 0 && !isComplete && (
           <div style={styles.feedWrap}>
@@ -252,7 +366,9 @@ export default function ProcessingPhase({
               const col = getCatColor(item.category, customCats);
               return (
                 <div key={`${reversedFeed.length - 1 - i}`} style={styles.feedItem}>
-                  <span style={{ ...styles.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
+                  <span style={{ ...styles.feedItemTag, background: col.bg, color: col.text }}>
+                    {item.category}
+                  </span>
                   <span style={styles.feedItemText}>{item.text}</span>
                   <span style={styles.feedItemSrc}>{item.source}</span>
                 </div>

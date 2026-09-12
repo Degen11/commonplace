@@ -2,26 +2,53 @@ import { useState, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
 import { fallbackCategory, QUOTED_CATS, UNKNOWN_SOURCE } from "../data/constants";
 import { smartSplit } from "../utils/textFormatting";
-import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
+import {
+  parseKindleClippings,
+  parseReadwiseCSV,
+  parseCSVLine,
+  parseJSONQuotes,
+  parseMarkdownQuotes,
+  parseNotionCSV,
+} from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
 import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } from "../config";
 import { describeApiError } from "../utils/apiErrors";
-import { addToSet, removeFromSet, addAllToSet, removeAllFromSet, pluralize } from "../utils/helpers";
+import {
+  addToSet,
+  removeFromSet,
+  addAllToSet,
+  removeAllFromSet,
+  pluralize,
+} from "../utils/helpers";
 
-export default function useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
-  const [deletingId, setDeletingId]             = useState(null);
-  const [copiedId, setCopiedId]                 = useState(null);
+export default function useQuoteActions({
+  quotes,
+  setQuotes,
+  allCats,
+  showToast,
+  identifyBatch,
+  trackDeletion,
+  untrackDeletion,
+  cleanCollectionRefs,
+  collections,
+  addToCollection,
+}) {
+  const [deletingId, setDeletingId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
   const [reidentifyingIds, setReidentifyingIds] = useState(new Set());
 
-  const reidentifyAbortRefs  = useRef(new Map());
-  const quotesRef            = useLatestRef(quotes);
-  const collectionsRef       = useLatestRef(collections);
+  const reidentifyAbortRefs = useRef(new Map());
+  const quotesRef = useLatestRef(quotes);
+  const collectionsRef = useLatestRef(collections);
 
   // Abort all in-flight re-identify requests on unmount
   useEffect(() => {
     const refs = reidentifyAbortRefs.current;
-    return () => { for (const c of refs.values()) c.abort(); refs.clear(); };
+    return () => {
+      for (const c of refs.values()) c.abort();
+      refs.clear();
+    };
   }, []);
 
   // ── Delete ──
@@ -31,7 +58,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
   // re-insert relative to it — immune to index shifts from other deletes.
   const handleDelete = (id) => {
     const current = quotesRef.current;
-    const idx = current.findIndex(q => q.id === id);
+    const idx = current.findIndex((q) => q.id === id);
     const deleted = current[idx];
     const neighborId = idx > 0 ? current[idx - 1].id : null;
     setDeletingId(id);
@@ -39,21 +66,21 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       setDeletingId(null);
       // Snapshot collection memberships before cleanup
       const collectionSnapshot = (collectionsRef.current || [])
-        .filter(c => c.quoteIds.includes(id))
-        .map(c => c.id);
-      setQuotes(p => p.filter(q => q.id !== id));
+        .filter((c) => c.quoteIds.includes(id))
+        .map((c) => c.id);
+      setQuotes((p) => p.filter((q) => q.id !== id));
       trackDeletion([id]);
       if (cleanCollectionRefs) cleanCollectionRefs([id]);
       showToast("Entry deleted", "Undo", () => {
-        setQuotes(p => {
+        setQuotes((p) => {
           const n = [...p];
-          const insertAt = neighborId ? n.findIndex(q => q.id === neighborId) + 1 : 0;
+          const insertAt = neighborId ? n.findIndex((q) => q.id === neighborId) + 1 : 0;
           n.splice(insertAt, 0, deleted);
           return n;
         });
         untrackDeletion([id]);
         // Restore collection memberships
-        collectionSnapshot.forEach(cId => addToCollection(cId, [id]));
+        collectionSnapshot.forEach((cId) => addToCollection(cId, [id]));
       });
     }, DELETE_ANIM_MS);
   };
@@ -63,13 +90,18 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     const text = QUOTED_CATS.has(q.category)
       ? `"${q.text}" \u2014 ${q.source}`
       : `${q.text} \u2014 ${q.source}`;
-    navigator.clipboard.writeText(text)
+    navigator.clipboard
+      .writeText(text)
       .then(() => {
         setCopiedId(q.id);
-        setTimeout(() => { setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
+        setTimeout(() => {
+          setCopiedId((prev) => (prev === q.id ? null : prev));
+        }, COPY_PULSE_MS);
         showToast("Copied!", null, null, "success");
       })
-      .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text.", null, null, "error"));
+      .catch(() =>
+        showToast("Couldn't copy \u2014 try manually selecting the text.", null, null, "error"),
+      );
   };
 
   // ── Share as image ──
@@ -99,10 +131,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     const controller = new AbortController();
     reidentifyAbortRefs.current.set(q.id, controller);
 
-    setReidentifyingIds(prev => addToSet(prev, q.id));
+    setReidentifyingIds((prev) => addToSet(prev, q.id));
     const clearId = () => {
       reidentifyAbortRefs.current.delete(q.id);
-      setReidentifyingIds(prev => removeFromSet(prev, q.id));
+      setReidentifyingIds((prev) => removeFromSet(prev, q.id));
     };
 
     try {
@@ -112,12 +144,22 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       const local = localLookup(q.text, null, { exactOnly: true });
       if (local) {
         const snapshot = { ...q };
-        setQuotes(prev => prev.map(x => x.id === q.id ? {
-          ...x, source: local.source, category: local.category, confidence: local.confidence, updatedAt: Date.now(),
-        } : x));
+        setQuotes((prev) =>
+          prev.map((x) =>
+            x.id === q.id
+              ? {
+                  ...x,
+                  source: local.source,
+                  category: local.category,
+                  confidence: local.confidence,
+                  updatedAt: Date.now(),
+                }
+              : x,
+          ),
+        );
         clearId();
         showToast(describeChanges(q, local.source, local.category), "Undo", () => {
-          setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
+          setQuotes((prev) => prev.map((x) => (x.id === q.id ? snapshot : x)));
         });
         return;
       }
@@ -131,15 +173,21 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         const newSource = r.source || UNKNOWN_SOURCE;
         const newCategory = fallbackCategory(r.category, allCats);
         const snapshot = { ...q };
-        setQuotes(prev => prev.map(x => x.id === q.id ? {
-          ...x,
-          source: newSource,
-          category: newCategory,
-          confidence: r.confidence || "low",
-          updatedAt: Date.now(),
-        } : x));
+        setQuotes((prev) =>
+          prev.map((x) =>
+            x.id === q.id
+              ? {
+                  ...x,
+                  source: newSource,
+                  category: newCategory,
+                  confidence: r.confidence || "low",
+                  updatedAt: Date.now(),
+                }
+              : x,
+          ),
+        );
         showToast(describeChanges(q, newSource, newCategory), "Undo", () => {
-          setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
+          setQuotes((prev) => prev.map((x) => (x.id === q.id ? snapshot : x)));
         });
       }
     } catch (err) {
@@ -151,21 +199,21 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
   // ── Batch re-identify (for selected quotes) ──
   const batchReIdentify = async (quoteIds) => {
-    const qs = quotesRef.current.filter(q => quoteIds.has(q.id));
+    const qs = quotesRef.current.filter((q) => quoteIds.has(q.id));
     if (qs.length === 0) return;
 
     const controller = new AbortController();
-    const ids = qs.map(q => q.id);
-    ids.forEach(id => {
+    const ids = qs.map((q) => q.id);
+    ids.forEach((id) => {
       const existing = reidentifyAbortRefs.current.get(id);
       if (existing) existing.abort();
       reidentifyAbortRefs.current.set(id, controller);
     });
-    setReidentifyingIds(prev => addAllToSet(prev, ids));
+    setReidentifyingIds((prev) => addAllToSet(prev, ids));
 
     const clearIds = () => {
-      ids.forEach(id => reidentifyAbortRefs.current.delete(id));
-      setReidentifyingIds(prev => removeAllFromSet(prev, ids));
+      ids.forEach((id) => reidentifyAbortRefs.current.delete(id));
+      setReidentifyingIds((prev) => removeAllFromSet(prev, ids));
     };
 
     try {
@@ -173,16 +221,26 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       if (controller.signal.aborted) return;
 
       const needsApi = [];
-      const snapshot = new Map(qs.map(q => [q.id, { ...q }]));
+      const snapshot = new Map(qs.map((q) => [q.id, { ...q }]));
       let localCount = 0;
 
       // First pass: try local matches
-      qs.forEach(q => {
+      qs.forEach((q) => {
         const local = localLookup(q.text, null, { exactOnly: true });
         if (local) {
-          setQuotes(prev => prev.map(x => x.id === q.id ? {
-            ...x, source: local.source, category: local.category, confidence: local.confidence, updatedAt: Date.now(),
-          } : x));
+          setQuotes((prev) =>
+            prev.map((x) =>
+              x.id === q.id
+                ? {
+                    ...x,
+                    source: local.source,
+                    category: local.category,
+                    confidence: local.confidence,
+                    updatedAt: Date.now(),
+                  }
+                : x,
+            ),
+          );
           localCount++;
         } else {
           needsApi.push(q);
@@ -194,19 +252,28 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         for (let i = 0; i < needsApi.length; i += API_BATCH_SIZE) {
           if (controller.signal.aborted) break;
           const chunk = needsApi.slice(i, i + API_BATCH_SIZE);
-          const items = chunk.map(q => ({ text: q.text, hint: null }));
+          const items = chunk.map((q) => ({ text: q.text, hint: null }));
           try {
             const results = await identifyBatch(items, false, controller.signal);
             if (controller.signal.aborted) break;
-            results.forEach(r => {
+            results.forEach((r) => {
               const q = chunk[r.i];
               if (!q) return;
               const newSource = r.source || UNKNOWN_SOURCE;
               const newCategory = fallbackCategory(r.category, allCats);
-              setQuotes(prev => prev.map(x => x.id === q.id ? {
-                ...x, source: newSource, category: newCategory,
-                confidence: r.confidence || "low", updatedAt: Date.now(),
-              } : x));
+              setQuotes((prev) =>
+                prev.map((x) =>
+                  x.id === q.id
+                    ? {
+                        ...x,
+                        source: newSource,
+                        category: newCategory,
+                        confidence: r.confidence || "low",
+                        updatedAt: Date.now(),
+                      }
+                    : x,
+                ),
+              );
             });
           } catch (err) {
             if (err.name === "AbortError") break;
@@ -217,9 +284,14 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       clearIds();
       const total = qs.length;
-      showToast(`Re-identified ${total} ${total === 1 ? "entry" : "entries"}`, "Undo", () => {
-        setQuotes(prev => prev.map(q => snapshot.has(q.id) ? snapshot.get(q.id) : q));
-      }, "success");
+      showToast(
+        `Re-identified ${total} ${total === 1 ? "entry" : "entries"}`,
+        "Undo",
+        () => {
+          setQuotes((prev) => prev.map((q) => (snapshot.has(q.id) ? snapshot.get(q.id) : q)));
+        },
+        "success",
+      );
     } catch (err) {
       clearIds();
       if (err.name === "AbortError") return;
@@ -229,7 +301,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
   // ── File import ──
   const entriesToContent = (entries) =>
-    entries.map(en => en.hint ? `${en.text} \u2014 ${en.hint}` : en.text).join("\n");
+    entries.map((en) => (en.hint ? `${en.text} \u2014 ${en.hint}` : en.text)).join("\n");
 
   const handleFileImport = (file, setRawInput, setImportedFileName, onImportCollections) => {
     if (!file) return;
@@ -237,12 +309,20 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     // Gate: reject files that are too large to process safely in the browser
     if (file.size > MAX_IMPORT_FILE_BYTES) {
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      showToast(`File too large (${sizeMB} MB). Maximum is ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB.`, null, null, "error");
+      showToast(
+        `File too large (${sizeMB} MB). Maximum is ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB.`,
+        null,
+        null,
+        "error",
+      );
       return;
     }
 
     const ext = file.name.split(".").pop().toLowerCase();
-    if (!["txt", "csv", "json", "md"].includes(ext)) { showToast("Supported formats: .txt, .csv, .json, .md", null, null, "error"); return; }
+    if (!["txt", "csv", "json", "md"].includes(ext)) {
+      showToast("Supported formats: .txt, .csv, .json, .md", null, null, "error");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
       let content = e.target.result;
@@ -258,7 +338,12 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
             onImportCollections(collections);
           }
         } else {
-          showToast("Couldn't find quotes in JSON file. Expected an array with text/quote/content fields.", null, null, "error");
+          showToast(
+            "Couldn't find quotes in JSON file. Expected an array with text/quote/content fields.",
+            null,
+            null,
+            "error",
+          );
           return;
         }
       } else if (ext === "md") {
@@ -269,7 +354,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         }
         // If no blockquotes found, treat the whole file as plain text (one quote per line)
       } else if (ext === "txt" && content.includes("==========")) {
-        const totalClips = content.split("==========").filter(c => c.trim()).length;
+        const totalClips = content.split("==========").filter((c) => c.trim()).length;
         const entries = parseKindleClippings(content);
         if (entries.length > 0) {
           skippedCount = totalClips - entries.length;
@@ -289,23 +374,31 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         } else {
           // Try Notion-style CSV (has source/author columns)
           const notionEntries = parseNotionCSV(content);
-          if (notionEntries.length > 0 && notionEntries.some(e => e.hint)) {
+          if (notionEntries.length > 0 && notionEntries.some((e) => e.hint)) {
             content = entriesToContent(notionEntries);
             formatLabel = "CSV";
           } else {
             // Generic CSV fallback
             const lines = content.split("\n");
-            const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, "").trim().toLowerCase());
-            const textCol = ["text","quote","quotes","content","entry","name"].reduce((found, key) => {
-              const idx = headers.indexOf(key);
-              return found >= 0 ? found : idx;
-            }, -1);
+            const headers = parseCSVLine(lines[0]).map((h) =>
+              h.replace(/"/g, "").trim().toLowerCase(),
+            );
+            const textCol = ["text", "quote", "quotes", "content", "entry", "name"].reduce(
+              (found, key) => {
+                const idx = headers.indexOf(key);
+                return found >= 0 ? found : idx;
+              },
+              -1,
+            );
             const colIdx = textCol >= 0 ? textCol : 0;
             const dataLines = lines.slice(1);
-            content = dataLines.map(l => {
-              const fields = parseCSVLine(l);
-              return fields[colIdx]?.trim() || "";
-            }).filter(Boolean).join("\n");
+            content = dataLines
+              .map((l) => {
+                const fields = parseCSVLine(l);
+                return fields[colIdx]?.trim() || "";
+              })
+              .filter(Boolean)
+              .join("\n");
           }
         }
       }
@@ -319,7 +412,13 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       if (skippedCount > 0) msg += ` \u00b7 ${pluralize(skippedCount, "line")} skipped`;
       showToast(msg, null, null, "success");
     };
-    reader.onerror = () => showToast("Couldn't read file \u2014 it may be corrupted or inaccessible.", null, null, "error");
+    reader.onerror = () =>
+      showToast(
+        "Couldn't read file \u2014 it may be corrupted or inaccessible.",
+        null,
+        null,
+        "error",
+      );
     reader.readAsText(file);
   };
 
@@ -327,7 +426,10 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     deletingId,
     copiedId,
     reidentifyingIds,
-    handleDelete, copyQuote, reIdentify, batchReIdentify,
+    handleDelete,
+    copyQuote,
+    reIdentify,
+    batchReIdentify,
     handleFileImport,
   };
 }

@@ -1,13 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // ── Config ──
-export const SUPABASE_URL = 'https://aoyagemikimsycaupych.supabase.co';
+export const SUPABASE_URL = "https://aoyagemikimsycaupych.supabase.co";
 
 export const ALLOWED_ORIGINS = [
-  'https://commonplace.pro',
-  'http://localhost:5173',
-  'http://localhost:4173',
-  'http://localhost:3000',
+  "https://commonplace.pro",
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:3000",
 ];
 
 // ── Supabase client (lazy, per-request) ──
@@ -49,7 +49,7 @@ function checkRateLimitInMemory(ip, limit) {
 export async function checkRateLimit(ip, limit, supabase) {
   if (!supabase) return checkRateLimitInMemory(ip, limit);
   try {
-    const { data, error } = await supabase.rpc('check_rate_limit', {
+    const { data, error } = await supabase.rpc("check_rate_limit", {
       p_ip: ip,
       p_limit: limit,
       p_window_sec: 60,
@@ -72,39 +72,43 @@ function looksLikeIp(ip) {
 }
 
 // ── CORS helpers ──
-export function setCorsHeaders(req, res, methods = 'POST, OPTIONS') {
-  const origin = req.headers['origin'] || '';
+export function setCorsHeaders(req, res, methods = "POST, OPTIONS") {
+  const origin = req.headers["origin"] || "";
   if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
   }
-  res.setHeader('Access-Control-Allow-Methods', methods);
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
+  res.setHeader("Access-Control-Allow-Methods", methods);
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Requested-With");
+  res.setHeader("Access-Control-Max-Age", "86400");
 }
 
 // ── Common security checks ──
 export function validateOrigin(req) {
-  const origin = req.headers['origin'] || '';
-  const referer = req.headers['referer'] || '';
+  const origin = req.headers["origin"] || "";
+  const referer = req.headers["referer"] || "";
   // Parse referer origin properly to prevent subdomain spoofing
   // (e.g. "https://commonplace.pro.evil.com/" must not pass)
-  let refererOrigin = '';
-  try { refererOrigin = new URL(referer).origin; } catch { /* invalid referer */ }
-  return ALLOWED_ORIGINS.some(o => origin === o || refererOrigin === o);
+  let refererOrigin = "";
+  try {
+    refererOrigin = new URL(referer).origin;
+  } catch {
+    /* invalid referer */
+  }
+  return ALLOWED_ORIGINS.some((o) => origin === o || refererOrigin === o);
 }
 
 export function getClientIp(req) {
-  const forwarded = req.headers['x-forwarded-for']?.split(',')[0]?.trim();
+  const forwarded = req.headers["x-forwarded-for"]?.split(",")[0]?.trim();
   if (forwarded && looksLikeIp(forwarded)) return forwarded;
-  return req.socket?.remoteAddress || 'unknown';
+  return req.socket?.remoteAddress || "unknown";
 }
 
 // ── Anthropic API configuration ──
 export const ANTHROPIC = {
-  URL: 'https://api.anthropic.com/v1/messages',
-  MODEL: 'claude-haiku-4-5-20251001',
-  VERSION: '2023-06-01',
+  URL: "https://api.anthropic.com/v1/messages",
+  MODEL: "claude-haiku-4-5-20251001",
+  VERSION: "2023-06-01",
   TIMEOUT_MS: 30_000,
 };
 
@@ -117,77 +121,93 @@ export async function callAnthropic(payload, { timeoutMs = ANTHROPIC.TIMEOUT_MS 
   let response;
   try {
     response = await fetch(ANTHROPIC.URL, {
-      method: 'POST',
+      method: "POST",
       signal: AbortSignal.timeout(timeoutMs),
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': ANTHROPIC.VERSION,
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": ANTHROPIC.VERSION,
       },
       body: JSON.stringify(payload),
     });
   } catch (error) {
-    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
-      return { ok: false, status: 504, error: 'AI service took too long. Please try again.' };
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return { ok: false, status: 504, error: "AI service took too long. Please try again." };
     }
-    console.error('Anthropic fetch error:', error?.message || 'unknown');
+    console.error("Anthropic fetch error:", error?.message || "unknown");
     return { ok: false, status: 500, error: ERROR_MESSAGES.AI_UNREACHABLE };
   }
 
   if (!response.ok) {
-    console.error('Anthropic API error:', response.status);
+    console.error("Anthropic API error:", response.status);
     if (response.status === 429) {
-      return { ok: false, status: 429, error: 'AI rate limit reached. Please wait a moment and try again.' };
+      return {
+        ok: false,
+        status: 429,
+        error: "AI rate limit reached. Please wait a moment and try again.",
+      };
     }
     if (response.status === 401) {
-      return { ok: false, status: 502, error: 'AI authentication failed. Please contact support.' };
+      return { ok: false, status: 502, error: "AI authentication failed. Please contact support." };
     }
     if (response.status === 529 || response.status === 503) {
-      return { ok: false, status: 503, error: 'AI service is overloaded. Please try again shortly.' };
+      return {
+        ok: false,
+        status: 503,
+        error: "AI service is overloaded. Please try again shortly.",
+      };
     }
-    return { ok: false, status: 502, error: 'AI service temporarily unavailable. Please try again.' };
+    return {
+      ok: false,
+      status: 502,
+      error: "AI service temporarily unavailable. Please try again.",
+    };
   }
 
   try {
     return { ok: true, data: await response.json() };
   } catch {
-    console.error('Anthropic returned a non-JSON response');
-    return { ok: false, status: 502, error: 'AI returned an unexpected response format. Please try again.' };
+    console.error("Anthropic returned a non-JSON response");
+    return {
+      ok: false,
+      status: 502,
+      error: "AI returned an unexpected response format. Please try again.",
+    };
   }
 }
 
 // ── Per-endpoint rate limits (requests per minute) ──
 export const RATE_LIMITS = {
-  IDENTIFY:   30,
-  SYNC:       60,
-  SHARE:      15,
-  AUTO_GROUP:  15,
-  CACHE:      60,
-  LOOKUP:     60,
-  FETCH_URL:  15,
+  IDENTIFY: 30,
+  SYNC: 60,
+  SHARE: 15,
+  AUTO_GROUP: 15,
+  CACHE: 60,
+  LOOKUP: 60,
+  FETCH_URL: 15,
 };
 
 // ── Standardized error messages ──
 export const ERROR_MESSAGES = {
-  RATE_LIMITED:        'Too many requests. Please wait a moment and try again.',
-  FORBIDDEN:           'Forbidden',
-  METHOD_NOT_ALLOWED:  'Method not allowed',
-  INVALID_CONTENT_TYPE:'Content-Type must be application/json',
-  SERVICE_NOT_CONFIGURED: 'Service not configured',
-  STORAGE_NOT_CONFIGURED: 'Storage not configured',
-  AI_UNREACHABLE:      'Failed to reach AI service',
+  RATE_LIMITED: "Too many requests. Please wait a moment and try again.",
+  FORBIDDEN: "Forbidden",
+  METHOD_NOT_ALLOWED: "Method not allowed",
+  INVALID_CONTENT_TYPE: "Content-Type must be application/json",
+  SERVICE_NOT_CONFIGURED: "Service not configured",
+  STORAGE_NOT_CONFIGURED: "Storage not configured",
+  AI_UNREACHABLE: "Failed to reach AI service",
 };
 
 // ── Text normalization for cache keys ──
 // Must stay in sync with normalize() in src/utils/textFormatting.js.
 // Uses Unicode property escapes for correct handling of non-Latin scripts.
 export function normalizeForCache(text) {
-  return (text || '')
-    .normalize('NFKD')
+  return (text || "")
+    .normalize("NFKD")
     .toLowerCase()
-    .replace(/\p{M}/gu, '')
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\p{M}/gu, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -204,39 +224,43 @@ export function normalizeForCache(text) {
 //   requireSupabase — return error if Supabase is unavailable (default: false)
 //   requireAnthropicKey — return error if ANTHROPIC_API_KEY is missing (default: false)
 //
-export function withApiHandler(handler, {
-  methods = ['POST'],
-  requireJson = null,
-  requireAuth = true,
-  rateLimit = null,
-  requireSupabase = false,
-  requireAnthropicKey = false,
-} = {}) {
+export function withApiHandler(
+  handler,
+  {
+    methods = ["POST"],
+    requireJson = null,
+    requireAuth = true,
+    rateLimit = null,
+    requireSupabase = false,
+    requireAnthropicKey = false,
+  } = {},
+) {
   // Default requireJson: true for POST-only endpoints, false otherwise
   if (requireJson === null) {
-    requireJson = methods.length === 1 && methods[0] === 'POST';
+    requireJson = methods.length === 1 && methods[0] === "POST";
   }
 
-  const allowedMethods = [...methods, 'OPTIONS'].join(', ');
+  const allowedMethods = [...methods, "OPTIONS"].join(", ");
 
   return async (req, res) => {
     setCorsHeaders(req, res, allowedMethods);
-    if (req.method === 'OPTIONS') return res.status(204).end();
+    if (req.method === "OPTIONS") return res.status(204).end();
     if (!methods.includes(req.method)) {
       return res.status(405).json({ error: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
     }
 
     // Auth check — can be boolean or a function of (req) for conditional auth
-    const needsAuth = typeof requireAuth === 'function' ? requireAuth(req) : requireAuth;
+    const needsAuth = typeof requireAuth === "function" ? requireAuth(req) : requireAuth;
     if (needsAuth) {
       if (!validateOrigin(req)) return res.status(403).json({ error: ERROR_MESSAGES.FORBIDDEN });
-      if (!req.headers['x-requested-with']) return res.status(403).json({ error: ERROR_MESSAGES.FORBIDDEN });
+      if (!req.headers["x-requested-with"])
+        return res.status(403).json({ error: ERROR_MESSAGES.FORBIDDEN });
     }
 
     // Content-Type check for methods with a body
-    if (requireJson && req.method !== 'GET') {
-      const ct = req.headers['content-type'] || '';
-      if (!ct.includes('application/json')) {
+    if (requireJson && req.method !== "GET") {
+      const ct = req.headers["content-type"] || "";
+      if (!ct.includes("application/json")) {
         return res.status(415).json({ error: ERROR_MESSAGES.INVALID_CONTENT_TYPE });
       }
     }

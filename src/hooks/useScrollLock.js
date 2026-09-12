@@ -8,7 +8,8 @@ import { useEffect } from "react";
  */
 let lockCount = 0;
 let scrollY = 0;
-const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+const isTouchDevice =
+  typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
 export default function useScrollLock() {
   useEffect(() => {

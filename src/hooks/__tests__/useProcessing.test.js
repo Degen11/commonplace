@@ -84,7 +84,12 @@ describe("processingReducer", () => {
 
   describe("FINISH", () => {
     it("clears processing state", () => {
-      const state = { ...INITIAL_STATE, isProcessing: true, processingDone: true, progress: { total: 5, done: 5 } };
+      const state = {
+        ...INITIAL_STATE,
+        isProcessing: true,
+        processingDone: true,
+        progress: { total: 5, done: 5 },
+      };
       const next = processingReducer(state, { type: "FINISH" });
       expect(next.isProcessing).toBe(false);
       expect(next.processingDone).toBe(false);
@@ -115,7 +120,11 @@ describe("processingReducer", () => {
   describe("SET_DUPE_DECISION", () => {
     it("updates a single dupe decision", () => {
       const state = { ...INITIAL_STATE, dupeDecisions: { 0: "skip", 1: "skip" } };
-      const next = processingReducer(state, { type: "SET_DUPE_DECISION", index: 1, decision: "keep" });
+      const next = processingReducer(state, {
+        type: "SET_DUPE_DECISION",
+        index: 1,
+        decision: "keep",
+      });
       expect(next.dupeDecisions[0]).toBe("skip");
       expect(next.dupeDecisions[1]).toBe("keep");
     });
@@ -123,7 +132,11 @@ describe("processingReducer", () => {
 
   describe("CLEAR_DUPES", () => {
     it("clears dupes and decisions", () => {
-      const state = { ...INITIAL_STATE, pendingDupes: [{ incoming: { text: "a" } }], dupeDecisions: { 0: "keep" } };
+      const state = {
+        ...INITIAL_STATE,
+        pendingDupes: [{ incoming: { text: "a" } }],
+        dupeDecisions: { 0: "keep" },
+      };
       const next = processingReducer(state, { type: "CLEAR_DUPES" });
       expect(next.pendingDupes).toEqual([]);
       expect(next.dupeDecisions).toEqual({});
@@ -185,10 +198,17 @@ describe("processingReducer", () => {
       state = processingReducer(state, { type: "START", dupes: 0, total: 5 });
       expect(state.isProcessing).toBe(true);
 
-      state = processingReducer(state, { type: "PROGRESS", progress: { total: 5, done: 2, current: "Batch 1...", phase: "api" } });
+      state = processingReducer(state, {
+        type: "PROGRESS",
+        progress: { total: 5, done: 2, current: "Batch 1...", phase: "api" },
+      });
       expect(state.progress.done).toBe(2);
 
-      state = processingReducer(state, { type: "DONE", total: 5, stats: { local: 2, lookup: 1, api: 2, failed: 0, total: 5 } });
+      state = processingReducer(state, {
+        type: "DONE",
+        total: 5,
+        stats: { local: 2, lookup: 1, api: 2, failed: 0, total: 5 },
+      });
       expect(state.processingDone).toBe(true);
       expect(state.isProcessing).toBe(true);
 

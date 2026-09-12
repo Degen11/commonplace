@@ -9,14 +9,21 @@ function Divider() {
 
 export default function BulkBar({ onDelete, onBatchReIdentify }) {
   const {
-    selected, setSelected,
-    bulkEditCat, setBulkEditCat,
-    bulkEditSource, setBulkEditSource,
-    allCats, applyBulk,
+    selected,
+    setSelected,
+    bulkEditCat,
+    setBulkEditCat,
+    bulkEditSource,
+    setBulkEditSource,
+    allCats,
+    applyBulk,
     reidentifyingIds,
     onFav,
-    collections, activeCollectionId, isMobile,
-    onAddToCollection, onRemoveFromCollection,
+    collections,
+    activeCollectionId,
+    isMobile,
+    onAddToCollection,
+    onRemoveFromCollection,
     onBulkCopy,
   } = useResultsContext();
   const isReidentifying = reidentifyingIds.size > 0;
@@ -24,11 +31,18 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
 
   // Shared inline button style for dark-bg context
   const btnBase = {
-    padding: "5px 10px", borderRadius: 6,
+    padding: "5px 10px",
+    borderRadius: 6,
     border: "1px solid var(--cp-bulk-input-border)",
-    background: "transparent", color: "var(--cp-bulk-text)",
-    fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-    display: "inline-flex", alignItems: "center", gap: 4,
+    background: "transparent",
+    color: "var(--cp-bulk-text)",
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
     whiteSpace: "nowrap",
   };
 
@@ -41,15 +55,30 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
 
       {/* ── Edit group: category + source + apply ── */}
       <div style={{ ...styles.bulkGroup, ...(isMobile ? { flex: "1 1 auto", minWidth: 0 } : {}) }}>
-        <select style={{ ...styles.bulkSel, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}>
+        <select
+          style={{ ...styles.bulkSel, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }}
+          value={bulkEditCat}
+          onChange={(e) => setBulkEditCat(e.target.value)}
+        >
           <option value="">Category</option>
-          {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+          {allCats.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
-        {!isMobile && <input style={styles.bulkIn} placeholder="Source" value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />}
+        {!isMobile && (
+          <input
+            style={styles.bulkIn}
+            placeholder="Source"
+            value={bulkEditSource}
+            onChange={(e) => setBulkEditSource(e.target.value)}
+          />
+        )}
         <button
           className="ui-tip bulk-apply"
           data-tip="Apply to selected"
-          style={{ ...styles.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }}
+          style={{ ...styles.bulkApply, opacity: !bulkEditCat && !bulkEditSource.trim() ? 0.4 : 1 }}
           onClick={applyBulk}
           disabled={!bulkEditCat && !bulkEditSource.trim()}
         >
@@ -66,7 +95,9 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
             className="ui-tip bulk-fav"
             data-tip="Toggle favorite on selected"
             style={btnBase}
-            onClick={() => { for (const id of selected) onFav(id); }}
+            onClick={() => {
+              for (const id of selected) onFav(id);
+            }}
           >
             <Star size={12} strokeWidth={2} />
             Favorite
@@ -108,11 +139,13 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
               className="ui-tip"
               data-tip="Add selected to collection"
               style={{
-                ...btnBase, ...styles.selectReset, padding: "5px 24px 5px 8px",
+                ...btnBase,
+                ...styles.selectReset,
+                padding: "5px 24px 5px 8px",
                 backgroundColor: "var(--cp-bulk-input-bg)",
               }}
               value=""
-              onChange={e => {
+              onChange={(e) => {
                 if (e.target.value) {
                   onAddToCollection(e.target.value, [...selected]);
                   e.target.value = "";
@@ -120,7 +153,11 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
               }}
             >
               <option value="">Add to collection</option>
-              {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {collections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           )}
         </div>
@@ -131,14 +168,42 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
       {/* ── Destructive + dismiss ── */}
       <div style={{ ...styles.bulkGroup, ...(isMobile ? { marginLeft: "auto" } : {}) }}>
         {isMobile && (
-          <button className="ui-tip bulk-fav" data-tip="Toggle favorite" aria-label="Toggle favorite on selected" style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }} onClick={() => { for (const id of selected) onFav(id); }}>
+          <button
+            className="ui-tip bulk-fav"
+            data-tip="Toggle favorite"
+            aria-label="Toggle favorite on selected"
+            style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }}
+            onClick={() => {
+              for (const id of selected) onFav(id);
+            }}
+          >
             <Star size={13} strokeWidth={2} />
           </button>
         )}
-        <button className="ui-tip bulk-del" data-tip="Delete selected" aria-label="Delete selected" style={{ ...styles.bulkDelBtn, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={onDelete}>
+        <button
+          className="ui-tip bulk-del"
+          data-tip="Delete selected"
+          aria-label="Delete selected"
+          style={{
+            ...styles.bulkDelBtn,
+            minHeight: isMobile ? 36 : undefined,
+            minWidth: isMobile ? 36 : undefined,
+          }}
+          onClick={onDelete}
+        >
           <Trash2 size={13} strokeWidth={2} />
         </button>
-        <button className="ui-tip" data-tip="Clear selection" aria-label="Clear selection" style={{ ...styles.bulkX, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={() => setSelected(new Set())}>
+        <button
+          className="ui-tip"
+          data-tip="Clear selection"
+          aria-label="Clear selection"
+          style={{
+            ...styles.bulkX,
+            minHeight: isMobile ? 36 : undefined,
+            minWidth: isMobile ? 36 : undefined,
+          }}
+          onClick={() => setSelected(new Set())}
+        >
           <X size={14} strokeWidth={2} />
         </button>
       </div>

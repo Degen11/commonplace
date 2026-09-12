@@ -1,13 +1,13 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import App from './components/App'
-import ErrorBoundary from './components/ErrorBoundary'
-import { ToastProvider } from './contexts/ToastContext'
-import { QuotesProvider } from './contexts/QuotesContext'
-import { baseCSS } from './components/styles'
-import { LS_THEME } from './config'
-import { loadString } from './utils/storage'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./components/App";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ToastProvider } from "./contexts/ToastContext";
+import { QuotesProvider } from "./contexts/QuotesContext";
+import { baseCSS } from "./components/styles";
+import { LS_THEME } from "./config";
+import { loadString } from "./utils/storage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
   },
-})
+});
 
 // Apply theme immediately to prevent flash of wrong theme
 const savedTheme = loadString(LS_THEME);
@@ -30,17 +30,17 @@ if (savedTheme === "dark") {
 // When no saved preference, the CSS @media(prefers-color-scheme:dark) handles it automatically
 
 // Inject global CSS once at app root (was previously injected 3x via <style> tags)
-const style = document.createElement('style')
-style.textContent = baseCSS
-document.head.appendChild(style)
+const style = document.createElement("style");
+style.textContent = baseCSS;
+document.head.appendChild(style);
 
 // Catch unhandled promise rejections (e.g. failed fetches, async errors)
-window.addEventListener('unhandledrejection', (event) => {
-  if (event.reason?.name === 'AbortError') return;
-  console.error('[Commonplace] Unhandled rejection:', event.reason);
-})
+window.addEventListener("unhandledrejection", (event) => {
+  if (event.reason?.name === "AbortError") return;
+  console.error("[Commonplace] Unhandled rejection:", event.reason);
+});
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -52,10 +52,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>,
-)
+);
 
 // Pre-warm the heavy lazy chunks during idle time so the first processing run
 // doesn't stall on the ~477KB local-quotes DB or the ~354KB compromise NLP import.
-const scheduleIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200))
-scheduleIdle(() => { import('./data/localQuotes').catch(() => {}) })
-scheduleIdle(() => { import('./utils/smartRestore').then(m => m.initNlp()).catch(() => {}) })
+const scheduleIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
+scheduleIdle(() => {
+  import("./data/localQuotes").catch(() => {});
+});
+scheduleIdle(() => {
+  import("./utils/smartRestore").then((m) => m.initNlp()).catch(() => {});
+});

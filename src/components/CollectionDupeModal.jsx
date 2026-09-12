@@ -13,7 +13,9 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
   // Track which group index the user has resolved (and which entry ID they kept)
   const [resolved, setResolved] = useState(new Map());
   const resolvedRef = useRef(resolved);
-  useEffect(() => { resolvedRef.current = resolved; }, [resolved]);
+  useEffect(() => {
+    resolvedRef.current = resolved;
+  }, [resolved]);
 
   const pending = dupeGroups.reduce((acc, group, i) => {
     if (!resolved.has(i)) acc.push({ group, groupIndex: i });
@@ -31,13 +33,13 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
 
   const keepOne = (groupIndex, keepId) => {
     const group = dupeGroups[groupIndex];
-    const toDelete = group.entries.filter(e => e.id !== keepId).map(e => e.id);
+    const toDelete = group.entries.filter((e) => e.id !== keepId).map((e) => e.id);
     onDeleteQuotes(toDelete);
-    setResolved(p => new Map([...p, [groupIndex, keepId]]));
+    setResolved((p) => new Map([...p, [groupIndex, keepId]]));
   };
 
   const ignoreGroup = (groupIndex) => {
-    setResolved(p => new Map([...p, [groupIndex, null]]));
+    setResolved((p) => new Map([...p, [groupIndex, null]]));
   };
 
   const removeAllDupes = () => {
@@ -45,26 +47,53 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     dupeGroups.forEach((group, i) => {
       if (resolvedRef.current.has(i)) return;
       // Keep the first entry, delete the rest
-      const toDelete = group.entries.slice(1).map(e => e.id);
+      const toDelete = group.entries.slice(1).map((e) => e.id);
       allToDelete.push(...toDelete);
     });
     if (allToDelete.length > 0) onDeleteQuotes(allToDelete);
     onClose();
   };
 
-  if (allResolved) return (
-    <ModalShell
-      onClose={onClose}
-      backdropBg="rgba(0,0,0,.45)"
-      popupStyle={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)", padding: "48px 24px", textAlign: "center" }}
-    >
-      <CircleCheckBig size={44} color="#059669" strokeWidth={1.5} style={{ marginBottom: 12, animation: "completePop .4s ease both" }} />
-      <div style={{ fontSize: 16, fontWeight: 600, color: "var(--cp-text)", marginBottom: 4, animation: "fadeUp .25s .1s ease both" }}>All duplicates resolved</div>
-      <div style={{ fontSize: 13, color: "var(--cp-text-muted)", animation: "fadeUp .25s .2s ease both" }}>
-        {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} handled
-      </div>
-    </ModalShell>
-  );
+  if (allResolved)
+    return (
+      <ModalShell
+        onClose={onClose}
+        backdropBg="rgba(0,0,0,.45)"
+        popupStyle={{
+          ...styles.dupeModalBox,
+          maxWidth: "min(90vw, 640px)",
+          padding: "48px 24px",
+          textAlign: "center",
+        }}
+      >
+        <CircleCheckBig
+          size={44}
+          color="#059669"
+          strokeWidth={1.5}
+          style={{ marginBottom: 12, animation: "completePop .4s ease both" }}
+        />
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 600,
+            color: "var(--cp-text)",
+            marginBottom: 4,
+            animation: "fadeUp .25s .1s ease both",
+          }}
+        >
+          All duplicates resolved
+        </div>
+        <div
+          style={{
+            fontSize: 13,
+            color: "var(--cp-text-muted)",
+            animation: "fadeUp .25s .2s ease both",
+          }}
+        >
+          {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} handled
+        </div>
+      </ModalShell>
+    );
 
   const totalDupeEntries = pending.reduce((sum, { group }) => sum + group.entries.length - 1, 0);
 
@@ -72,137 +101,182 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
     <ModalShell
       onClose={onClose}
       backdropBg="rgba(0,0,0,.45)"
-      popupStyle={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)", maxHeight: "85vh", display: "flex", flexDirection: "column" }}
+      popupStyle={{
+        ...styles.dupeModalBox,
+        maxWidth: "min(90vw, 640px)",
+        maxHeight: "85vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       <div style={styles.dupeModalHeader}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
           <Search size={22} color="var(--cp-text-secondary)" strokeWidth={1.5} />
-          <Dialog.Title render={<div />} style={styles.dupeModalTitle}>Duplicates Found</Dialog.Title>
+          <Dialog.Title render={<div />} style={styles.dupeModalTitle}>
+            Duplicates Found
+          </Dialog.Title>
         </div>
         <Dialog.Description style={styles.dupeModalSub}>
-          Found {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} of similar entries
-          ({totalDupeEntries} duplicate{totalDupeEntries === 1 ? "" : "s"} to resolve).
+          Found {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} of similar
+          entries ({totalDupeEntries} duplicate{totalDupeEntries === 1 ? "" : "s"} to resolve).
         </Dialog.Description>
       </div>
 
       <div style={{ padding: "16px 24px", overflowY: "auto", flex: 1, minHeight: 0 }}>
         {pending.map(({ group, groupIndex }) => (
-            <div key={groupIndex} style={{
+          <div
+            key={groupIndex}
+            style={{
               border: "1px solid var(--cp-border)",
               borderRadius: 6,
               marginBottom: 16,
               background: "var(--cp-bg-card)",
               overflow: "hidden",
               boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
-            }}>
-              {/* Header */}
-              <div style={{
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
                 padding: "8px 16px",
                 background: "var(--cp-bg-panel)",
                 borderBottom: "1px solid var(--cp-border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-              }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--cp-text-muted)", letterSpacing: 0.5 }}>
-                  {group.entries.length} SIMILAR ENTRIES
-                </span>
-                <span style={{ fontSize: 11, color: "var(--cp-text-faint)" }}>
-                  {Math.round(group.minScore * 100)}&ndash;{Math.round(group.maxScore * 100)}% similar
-                </span>
-              </div>
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--cp-text-muted)",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {group.entries.length} SIMILAR ENTRIES
+              </span>
+              <span style={{ fontSize: 11, color: "var(--cp-text-faint)" }}>
+                {Math.round(group.minScore * 100)}&ndash;{Math.round(group.maxScore * 100)}% similar
+              </span>
+            </div>
 
-              {/* Entries — pick one to keep */}
-              {group.entries.map((entry, entryIdx) => (
-                <div key={entry.id} style={{
+            {/* Entries — pick one to keep */}
+            {group.entries.map((entry, entryIdx) => (
+              <div
+                key={entry.id}
+                style={{
                   padding: "12px 16px",
-                  borderBottom: entryIdx < group.entries.length - 1 ? "1px solid var(--cp-border)" : "none",
+                  borderBottom:
+                    entryIdx < group.entries.length - 1 ? "1px solid var(--cp-border)" : "none",
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 12,
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, color: "var(--cp-text)", lineHeight: 1.5, marginBottom: 4 }}>
-                      &ldquo;{entry.text}&rdquo;
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
-                      &mdash; {entry.source || "Unknown"}
-                      {entry.category && entry.category !== "Unknown" && (
-                        <span style={{ color: "var(--cp-text-faint)", marginLeft: 8 }}>{entry.category}</span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => keepOne(groupIndex, entry.id)}
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
                     style={{
-                      padding: "5px 14px",
-                      borderRadius: 20,
-                      border: "none",
-                      background: CP_ACCENT,
-                      color: "white",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      transition: "background 0.15s ease",
+                      fontSize: 14,
+                      color: "var(--cp-text)",
+                      lineHeight: 1.5,
+                      marginBottom: 4,
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = CP_ACCENT_TEXT}
-                    onMouseLeave={e => e.currentTarget.style.background = CP_ACCENT}
                   >
-                    Keep this
-                  </button>
+                    &ldquo;{entry.text}&rdquo;
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--cp-text-muted)" }}>
+                    &mdash; {entry.source || "Unknown"}
+                    {entry.category && entry.category !== "Unknown" && (
+                      <span style={{ color: "var(--cp-text-faint)", marginLeft: 8 }}>
+                        {entry.category}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              ))}
+                <button
+                  onClick={() => keepOne(groupIndex, entry.id)}
+                  style={{
+                    padding: "5px 14px",
+                    borderRadius: 20,
+                    border: "none",
+                    background: CP_ACCENT,
+                    color: "white",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                    transition: "background 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = CP_ACCENT_TEXT)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = CP_ACCENT)}
+                >
+                  Keep this
+                </button>
+              </div>
+            ))}
 
-              {/* Ignore action */}
-              <div style={{
+            {/* Ignore action */}
+            <div
+              style={{
                 padding: "8px 16px",
                 borderTop: "1px solid var(--cp-border)",
                 background: "var(--cp-bg-panel)",
                 display: "flex",
                 justifyContent: "flex-end",
-              }}>
-                <button
-                  onClick={() => ignoreGroup(groupIndex)}
-                  style={{
-                    padding: "5px 14px",
-                    borderRadius: 20,
-                    border: "none",
-                    background: "var(--cp-bg-card)",
-                    color: "var(--cp-text-muted)",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "var(--cp-bg-hover)"; e.currentTarget.style.color = "var(--cp-text)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "var(--cp-bg-card)"; e.currentTarget.style.color = "var(--cp-text-muted)"; }}
-                >
-                  Ignore group
-                </button>
-              </div>
+              }}
+            >
+              <button
+                onClick={() => ignoreGroup(groupIndex)}
+                style={{
+                  padding: "5px 14px",
+                  borderRadius: 20,
+                  border: "none",
+                  background: "var(--cp-bg-card)",
+                  color: "var(--cp-text-muted)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--cp-bg-hover)";
+                  e.currentTarget.style.color = "var(--cp-text)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--cp-bg-card)";
+                  e.currentTarget.style.color = "var(--cp-text-muted)";
+                }}
+              >
+                Ignore group
+              </button>
             </div>
+          </div>
         ))}
       </div>
 
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "16px 24px",
-        borderTop: "1px solid var(--cp-border)",
-        background: "var(--cp-bg-card)",
-        flexShrink: 0,
-      }}>
-        <span style={{
-          fontSize: 13,
-          color: "var(--cp-text-secondary)",
-          fontWeight: 600,
-          background: CP_ACCENT_10,
-          padding: "4px 14px",
-          borderRadius: 30,
-        }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "16px 24px",
+          borderTop: "1px solid var(--cp-border)",
+          background: "var(--cp-bg-card)",
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 13,
+            color: "var(--cp-text-secondary)",
+            fontWeight: 600,
+            background: CP_ACCENT_10,
+            padding: "4px 14px",
+            borderRadius: 30,
+          }}
+        >
           {pending.length} {pending.length === 1 ? "group" : "groups"} remaining
         </span>
         <div style={{ display: "flex", gap: 8 }}>
@@ -222,8 +296,12 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
               gap: 6,
               transition: "all 0.15s ease",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,87,87,0.08)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(235,87,87,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
           >
             <Trash2 size={13} strokeWidth={2} />
             Remove all duplicates
@@ -240,8 +318,8 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
               fontWeight: 600,
               cursor: "pointer",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = CP_ACCENT_TEXT}
-            onMouseLeave={e => e.currentTarget.style.background = CP_ACCENT}
+            onMouseEnter={(e) => (e.currentTarget.style.background = CP_ACCENT_TEXT)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = CP_ACCENT)}
           >
             Done
           </button>

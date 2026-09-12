@@ -10,7 +10,7 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
   const [dontAskAgain, setDontAskAgain] = useState(false);
 
   const toggle = (i) => {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
       else next.add(i);
@@ -27,7 +27,11 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
     <ModalShell
       onClose={onCancel}
       backdropBg="rgba(0,0,0,.45)"
-      backdropExtra={{ backdropFilter: "none", WebkitBackdropFilter: "none", animation: "overlayFade .15s ease-out" }}
+      backdropExtra={{
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
+        animation: "overlayFade .15s ease-out",
+      }}
       containerExtra={{ animation: "fadeUp .15s ease-out" }}
       popupStyle={{ ...styles.dupeModalBox, maxWidth: "min(90vw, 640px)" }}
     >
@@ -39,13 +43,17 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
               <ListChecks size={15} strokeWidth={2} style={{ marginRight: 6, verticalAlign: -2 }} />
               Review entries before processing
             </Dialog.Title>
-            <div style={styles.dupeModalSub}>
-              Deselect any lines you don't want to process
-            </div>
+            <div style={styles.dupeModalSub}>Deselect any lines you don't want to process</div>
           </div>
           <Dialog.Close
             aria-label="Close"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 4 }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--cp-text-muted)",
+              padding: 4,
+            }}
           >
             <X size={16} strokeWidth={2} />
           </Dialog.Close>
@@ -83,12 +91,14 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
             >
               {selected.has(i) && <Check size={10} strokeWidth={3} color="#fff" />}
             </div>
-            <div style={{
-              fontSize: 12,
-              lineHeight: 1.5,
-              color: "var(--cp-text-secondary)",
-              wordBreak: "break-word",
-            }}>
+            <div
+              style={{
+                fontSize: 12,
+                lineHeight: 1.5,
+                color: "var(--cp-text-secondary)",
+                wordBreak: "break-word",
+              }}
+            >
               {line}
             </div>
           </div>
@@ -96,32 +106,72 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
       </div>
 
       {/* Footer */}
-      <div style={{
-        padding: "12px 16px",
-        borderTop: "1px solid var(--cp-border)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--cp-text-muted)" }}>
-            <span>{count} of {lines.length} selected</span>
+      <div
+        style={{
+          padding: "12px 16px",
+          borderTop: "1px solid var(--cp-border)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 12,
+              color: "var(--cp-text-muted)",
+            }}
+          >
+            <span>
+              {count} of {lines.length} selected
+            </span>
             <span style={{ color: "var(--cp-border-dim)" }}>|</span>
             <button
               onClick={selectAll}
-              style={{ background: "none", border: "none", cursor: "pointer", color: CP_ACCENT, fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: CP_ACCENT,
+                fontSize: 11,
+                fontWeight: 500,
+                fontFamily: "inherit",
+                padding: 0,
+              }}
             >
               All
             </button>
             <button
               onClick={selectNone}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", fontSize: 11, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--cp-text-muted)",
+                fontSize: 11,
+                fontWeight: 500,
+                fontFamily: "inherit",
+                padding: 0,
+              }}
             >
               None
             </button>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button style={styles.editCancel} onClick={onCancel}>Cancel</button>
+            <button style={styles.editCancel} onClick={onCancel}>
+              Cancel
+            </button>
             <button
               style={{ ...styles.editSave, opacity: count === 0 ? 0.4 : 1, padding: "6px 16px" }}
               disabled={count === 0}
@@ -134,7 +184,16 @@ export default function EntryReviewModal({ lines, onConfirm, onCancel }) {
             </button>
           </div>
         </div>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--cp-text-muted)", cursor: "pointer" }}>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 12,
+            color: "var(--cp-text-muted)",
+            cursor: "pointer",
+          }}
+        >
           <input
             type="checkbox"
             checked={dontAskAgain}

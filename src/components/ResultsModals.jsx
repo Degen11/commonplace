@@ -11,11 +11,23 @@ import { pluralize } from "../utils/helpers";
  * Each modal is conditionally rendered based on its trigger state.
  */
 export default function ResultsModals({
-  showShortcuts, setShowShortcuts,
-  shareImageQuote, setShareImageQuote, showToast,
-  confirmClear, setConfirmClear, handleClear, quotesLength, onExportBeforeClear,
-  confirmBulkDel, setConfirmBulkDel, bulkDel, selectedSize,
-  collectionDupes, setCollectionDupes, handleDupeDeleteBatch,
+  showShortcuts,
+  setShowShortcuts,
+  shareImageQuote,
+  setShareImageQuote,
+  showToast,
+  confirmClear,
+  setConfirmClear,
+  handleClear,
+  quotesLength,
+  onExportBeforeClear,
+  confirmBulkDel,
+  setConfirmBulkDel,
+  bulkDel,
+  selectedSize,
+  collectionDupes,
+  setCollectionDupes,
+  handleDupeDeleteBatch,
 }) {
   return (
     <>

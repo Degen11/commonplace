@@ -9,13 +9,27 @@ import { ThemeToggleButton, ViewToggle } from "../HeaderControls";
 vi.mock("motion/react", async () => {
   const React = await import("react");
   return {
-    motion: new Proxy({}, {
-      get(_, key) {
-        return function MockMotion({ children, layoutId, initial, animate, exit, transition, variants, whileHover, whileTap, ...props }) {
-          return React.createElement(key || "div", props, children);
-        };
+    motion: new Proxy(
+      {},
+      {
+        get(_, key) {
+          return function MockMotion({
+            children,
+            layoutId,
+            initial,
+            animate,
+            exit,
+            transition,
+            variants,
+            whileHover,
+            whileTap,
+            ...props
+          }) {
+            return React.createElement(key || "div", props, children);
+          };
+        },
       },
-    }),
+    ),
     AnimatePresence: ({ children }) => children ?? null,
   };
 });
@@ -24,17 +38,27 @@ afterEach(cleanup);
 
 function headerProps(overrides = {}) {
   return {
-    view: "table", compact: false, setView: vi.fn(), setCompact: vi.fn(),
-    showStats: false, setShowStats: vi.fn(),
-    showAddMore: false, setShowAddMore: vi.fn(),
+    view: "table",
+    compact: false,
+    setView: vi.fn(),
+    setCompact: vi.fn(),
+    showStats: false,
+    setShowStats: vi.fn(),
+    showAddMore: false,
+    setShowAddMore: vi.fn(),
     isMobile: false,
     setConfirmClear: vi.fn(),
     addMoreRef: { current: null },
     headerRef: { current: null },
     exportDropdownContent: null,
-    syncStatus: "idle", lastSynced: null, onManualSync: vi.fn(),
-    dark: false, toggleTheme: vi.fn(), themeMode: "light",
-    showConfidence: true, setShowConfidence: vi.fn(),
+    syncStatus: "idle",
+    lastSynced: null,
+    onManualSync: vi.fn(),
+    dark: false,
+    toggleTheme: vi.fn(),
+    themeMode: "light",
+    showConfidence: true,
+    setShowConfidence: vi.fn(),
     onShowShortcuts: vi.fn(),
     ...overrides,
   };
@@ -59,7 +83,8 @@ describe("ThemeToggleButton", () => {
 
 describe("ViewToggle", () => {
   it("switches to compact table view", () => {
-    const setView = vi.fn(), setCompact = vi.fn();
+    const setView = vi.fn(),
+      setCompact = vi.fn();
     render(<ViewToggle view="table" compact={false} setView={setView} setCompact={setCompact} />);
     fireEvent.click(screen.getByRole("button", { name: "Compact view" }));
     expect(setView).toHaveBeenCalledWith("table");
@@ -70,11 +95,12 @@ describe("ViewToggle", () => {
     const calls = [];
     render(
       <ViewToggle
-        view="table" compact={false}
+        view="table"
+        compact={false}
         setView={(v) => calls.push(`setView:${v}`)}
         setCompact={() => calls.push("setCompact")}
         onSwitch={() => calls.push("onSwitch")}
-      />
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Card view" }));
     expect(calls).toEqual(["onSwitch", "setView:cards"]);

@@ -12,15 +12,45 @@ const RAW_LINES = [
 ];
 
 const RESULT_CARDS = [
-  { tag: "Person", tagBg: "rgba(168,85,247,0.08)", tagColor: "#8B43CC",  text: "You miss 100% of the shots you don't take", source: "Wayne Gretzky" },
-  { tag: "Film",   tagBg: "rgba(139,92,246,0.08)", tagColor: "#7A48CE",  text: "All those moments will be lost in time",    source: "Blade Runner" },
-  { tag: "Person", tagBg: "rgba(168,85,247,0.08)", tagColor: "#8B43CC",  text: "The unexamined life is not worth living",   source: "Socrates" },
-  { tag: "Book",   tagBg: "rgba(217,119,6,0.08)",  tagColor: "#C07621",  text: "Not all those who wander are lost",         source: "J.R.R. Tolkien" },
-  { tag: "Speech", tagBg: "rgba(59,130,246,0.08)", tagColor: "#3967CD",  text: "Be the change",                            source: "Mahatma Gandhi" },
+  {
+    tag: "Person",
+    tagBg: "rgba(168,85,247,0.08)",
+    tagColor: "#8B43CC",
+    text: "You miss 100% of the shots you don't take",
+    source: "Wayne Gretzky",
+  },
+  {
+    tag: "Film",
+    tagBg: "rgba(139,92,246,0.08)",
+    tagColor: "#7A48CE",
+    text: "All those moments will be lost in time",
+    source: "Blade Runner",
+  },
+  {
+    tag: "Person",
+    tagBg: "rgba(168,85,247,0.08)",
+    tagColor: "#8B43CC",
+    text: "The unexamined life is not worth living",
+    source: "Socrates",
+  },
+  {
+    tag: "Book",
+    tagBg: "rgba(217,119,6,0.08)",
+    tagColor: "#C07621",
+    text: "Not all those who wander are lost",
+    source: "J.R.R. Tolkien",
+  },
+  {
+    tag: "Speech",
+    tagBg: "rgba(59,130,246,0.08)",
+    tagColor: "#3967CD",
+    text: "Be the change",
+    source: "Mahatma Gandhi",
+  },
 ];
 
 const STEPS = [
-  { label: "Paste",    Icon: ClipboardList },
+  { label: "Paste", Icon: ClipboardList },
   { label: "Identify", Icon: Zap },
   { label: "Organize", Icon: CircleCheckBig },
 ];
@@ -173,7 +203,7 @@ export default function HowItWorksAnimation({ active = true }) {
   const [scanIndex, setScanIndex] = useState(-1); // which line is currently being scanned
   const [scannedLines, setScannedLines] = useState(new Set());
   const [linesFading, setLinesFading] = useState(false); // lines fading out
-  const [showCards, setShowCards] = useState(false);      // cards layer mounted
+  const [showCards, setShowCards] = useState(false); // cards layer mounted
   const [cardCount, setCardCount] = useState(0);
   const [progress, setProgress] = useState(0);
 
@@ -186,13 +216,16 @@ export default function HowItWorksAnimation({ active = true }) {
     setShowCards(false);
     setCardCount(0);
     setProgress(0);
-    setRunKey(k => k + 1);
+    setRunKey((k) => k + 1);
   };
 
   useEffect(() => {
     if (!active) return;
     const ts = [];
-    const t = (ms, fn) => { const id = setTimeout(fn, ms); ts.push(id); };
+    const t = (ms, fn) => {
+      const id = setTimeout(fn, ms);
+      ts.push(id);
+    };
 
     // Step 1 — Paste: lines appear one by one (slower)
     t(600, () => setStep(1));
@@ -217,7 +250,7 @@ export default function HowItWorksAnimation({ active = true }) {
       });
       // Mark it as scanned
       t(scanStart + 550, () => {
-        setScannedLines(prev => new Set([...prev, i]));
+        setScannedLines((prev) => new Set([...prev, i]));
         setScanIndex(-1);
         setProgress(Math.round(((i + 1) / RAW_LINES.length) * 100));
       });
@@ -228,7 +261,7 @@ export default function HowItWorksAnimation({ active = true }) {
     // Transition: fade out lines, start bg transition, then fade in cards
     t(identifyDone, () => {
       setStep(3);
-      setLinesFading(true);  // lines fade out (0.6s)
+      setLinesFading(true); // lines fade out (0.6s)
       setProgress(100);
     });
 
@@ -254,14 +287,17 @@ export default function HowItWorksAnimation({ active = true }) {
     <div style={S.root}>
       {/* Animation stage — dark bg for paste/identify, transitions to white for organize */}
       <div style={S.stage(isDark)}>
-
         {/* Lines layer — always mounted, fades out during transition */}
         {!showCards && (
           <div style={S.linesWrap(linesFading)}>
             {RAW_LINES.map((line, i) => (
               <div key={i} style={S.line(i < lineCount, scanIndex === i, scannedLines.has(i))}>
                 <span style={S.lineCaret(scanIndex === i, scannedLines.has(i))}>›</span>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{line}</span>
+                <span
+                  style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                  {line}
+                </span>
               </div>
             ))}
           </div>
@@ -281,26 +317,37 @@ export default function HowItWorksAnimation({ active = true }) {
         )}
 
         {/* Progress bar during identify */}
-        {step === 2 && (
-          <div style={{ ...S.progressBar, width: `${progress}%` }} />
-        )}
+        {step === 2 && <div style={{ ...S.progressBar, width: `${progress}%` }} />}
 
         {/* Replay button — inside the stage, bottom-right corner */}
         {step === 4 && (
-          <button onClick={replay} style={{
-            position: "absolute", bottom: 8, right: 8,
-            background: "none", border: "none", padding: 4,
-            cursor: "pointer", display: "flex", alignItems: "center",
-            justifyContent: "center", color: "var(--cp-text-faint)", transition: "color 0.2s ease",
-            zIndex: 10,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.color = "var(--cp-text-muted)"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "var(--cp-text-faint)"; }}
+          <button
+            onClick={replay}
+            style={{
+              position: "absolute",
+              bottom: 8,
+              right: 8,
+              background: "none",
+              border: "none",
+              padding: 4,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--cp-text-faint)",
+              transition: "color 0.2s ease",
+              zIndex: 10,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--cp-text-muted)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--cp-text-faint)";
+            }}
           >
             <RefreshCw size={12} strokeWidth={1.5} />
           </button>
         )}
-
       </div>
 
       {/* Step indicators — below animation */}

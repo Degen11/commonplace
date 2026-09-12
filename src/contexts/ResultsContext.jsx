@@ -3,11 +3,7 @@ import { createContext, useContext } from "react";
 const ResultsContext = createContext(null);
 
 export function ResultsProvider({ value, children }) {
-  return (
-    <ResultsContext.Provider value={value}>
-      {children}
-    </ResultsContext.Provider>
-  );
+  return <ResultsContext.Provider value={value}>{children}</ResultsContext.Provider>;
 }
 
 export function useResultsContext() {

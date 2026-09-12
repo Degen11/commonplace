@@ -4,10 +4,16 @@ import { loadFromStorage, saveToStorage } from "../storage";
 // Minimal localStorage mock for Node environment
 const store = {};
 const localStorageMock = {
-  getItem: (key) => key in store ? store[key] : null,
-  setItem: (key, val) => { store[key] = String(val); },
-  removeItem: (key) => { delete store[key]; },
-  clear: () => { for (const k in store) delete store[k]; },
+  getItem: (key) => (key in store ? store[key] : null),
+  setItem: (key, val) => {
+    store[key] = String(val);
+  },
+  removeItem: (key) => {
+    delete store[key];
+  },
+  clear: () => {
+    for (const k in store) delete store[k];
+  },
 };
 globalThis.localStorage = localStorageMock;
 
@@ -84,7 +90,9 @@ describe("saveToStorage", () => {
 
   it("returns false on quota error", () => {
     const orig = localStorage.setItem;
-    localStorage.setItem = () => { throw new DOMException("quota exceeded"); };
+    localStorage.setItem = () => {
+      throw new DOMException("quota exceeded");
+    };
     expect(saveToStorage("key", "value")).toBe(false);
     localStorage.setItem = orig;
   });

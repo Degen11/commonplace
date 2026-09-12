@@ -1,4 +1,3 @@
-
 // Search-term highlight. Styling lives in baseCSS (.cp-hl) so it can adapt to
 // dark mode — the default UA <mark> color doesn't track `color-scheme` reliably.
 
@@ -38,9 +37,13 @@ function applyHighlight(str, term, keyPrefix) {
   const parts = str.split(splitRegex);
   if (parts.length === 1) return str;
   return parts.map((part, i) =>
-    testRegex.test(part)
-      ? <mark key={`${keyPrefix}-${i}`} className="cp-hl">{part}</mark>
-      : part
+    testRegex.test(part) ? (
+      <mark key={`${keyPrefix}-${i}`} className="cp-hl">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
   );
 }
 
@@ -54,7 +57,7 @@ function HighlightText({ text, term }) {
   if (!text) return null;
 
   const segments = parseRichSegments(text);
-  const hasRichText = segments.some(s => s.type !== "plain");
+  const hasRichText = segments.some((s) => s.type !== "plain");
 
   // Fast path: no rich text and no search term
   if (!hasRichText && !term) return text;
@@ -68,7 +71,11 @@ function HighlightText({ text, term }) {
   return segments.map((seg, i) => {
     const content = applyHighlight(seg.text, term, `s${i}`);
     if (seg.type === "plain") return <span key={i}>{content}</span>;
-    return <span key={i} style={STYLE_MAP[seg.type]}>{content}</span>;
+    return (
+      <span key={i} style={STYLE_MAP[seg.type]}>
+        {content}
+      </span>
+    );
   });
 }
 

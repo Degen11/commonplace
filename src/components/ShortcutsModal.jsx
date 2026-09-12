@@ -29,59 +29,103 @@ export default function ShortcutsModal({ onClose }) {
     <ModalShell
       onClose={onClose}
       popupStyle={{
-        background: "var(--cp-bg-card)", borderRadius: 6, padding: 0,
-        maxWidth: "min(90vw, 420px)", width: "100%", overflow: "hidden",
+        background: "var(--cp-bg-card)",
+        borderRadius: 6,
+        padding: 0,
+        maxWidth: "min(90vw, 420px)",
+        width: "100%",
+        overflow: "hidden",
       }}
     >
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "16px 20px 12px", borderBottom: "1px solid var(--cp-border)",
-      }}>
-        <Dialog.Title render={<h2 />} style={{ fontSize: 16, fontWeight: 700, color: "var(--cp-text-secondary)", fontFamily: FONT_SANS }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "16px 20px 12px",
+          borderBottom: "1px solid var(--cp-border)",
+        }}
+      >
+        <Dialog.Title
+          render={<h2 />}
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            color: "var(--cp-text-secondary)",
+            fontFamily: FONT_SANS,
+          }}
+        >
           Keyboard shortcuts
         </Dialog.Title>
         <Dialog.Close
           aria-label="Close"
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 4, borderRadius: 4 }}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--cp-text-muted)",
+            padding: 4,
+            borderRadius: 4,
+          }}
         >
           <X size={16} strokeWidth={2} />
         </Dialog.Close>
       </div>
       <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 0 }}>
-        {SHORTCUTS.map((s, i) => s.section ? (
-          <div key={i} style={{
-            fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em",
-            color: "var(--cp-text-muted)", padding: i === 0 ? "0 0 6px" : "12px 0 6px",
-          }}>
-            {s.section}
-          </div>
-        ) : (
-          <div key={i} style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            padding: "7px 0",
-            borderBottom: i < SHORTCUTS.length - 1 && !SHORTCUTS[i + 1].section ? "1px solid var(--cp-border-light)" : "none",
-          }}>
-            <span style={{ fontSize: 13, color: "var(--cp-text-secondary)" }}>{s.desc}</span>
-            <div style={{ display: "flex", gap: 4 }}>
-              {s.keys.map((k, j) => (
-                <kbd key={j} style={{
-                  display: "inline-block",
-                  padding: "2px 7px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  fontFamily: "'DM Mono',monospace",
-                  color: "var(--cp-text-secondary)",
-                  background: "var(--cp-bg-tab)",
-                  border: "1px solid var(--cp-border)",
-                  borderRadius: 4,
-                  whiteSpace: "nowrap",
-                }}>
-                  {k}
-                </kbd>
-              ))}
+        {SHORTCUTS.map((s, i) =>
+          s.section ? (
+            <div
+              key={i}
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                color: "var(--cp-text-muted)",
+                padding: i === 0 ? "0 0 6px" : "12px 0 6px",
+              }}
+            >
+              {s.section}
             </div>
-          </div>
-        ))}
+          ) : (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "7px 0",
+                borderBottom:
+                  i < SHORTCUTS.length - 1 && !SHORTCUTS[i + 1].section
+                    ? "1px solid var(--cp-border-light)"
+                    : "none",
+              }}
+            >
+              <span style={{ fontSize: 13, color: "var(--cp-text-secondary)" }}>{s.desc}</span>
+              <div style={{ display: "flex", gap: 4 }}>
+                {s.keys.map((k, j) => (
+                  <kbd
+                    key={j}
+                    style={{
+                      display: "inline-block",
+                      padding: "2px 7px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      fontFamily: "'DM Mono',monospace",
+                      color: "var(--cp-text-secondary)",
+                      background: "var(--cp-bg-tab)",
+                      border: "1px solid var(--cp-border)",
+                      borderRadius: 4,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {k}
+                  </kbd>
+                ))}
+              </div>
+            </div>
+          ),
+        )}
       </div>
     </ModalShell>
   );

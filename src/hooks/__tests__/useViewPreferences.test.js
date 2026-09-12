@@ -5,7 +5,13 @@ import useViewPreferences from "../useViewPreferences";
 import { LS_FILTERS } from "../../config";
 
 const q = (id, text, extra = {}) => ({
-  id, text, source: "S", category: "Reflection", confidence: "high", favorite: false, ...extra,
+  id,
+  text,
+  source: "S",
+  category: "Reflection",
+  confidence: "high",
+  favorite: false,
+  ...extra,
 });
 
 beforeEach(() => localStorage.clear());
@@ -19,7 +25,10 @@ describe("useViewPreferences — filters", () => {
     act(() => result.current.setFavFilter(true));
     expect(result.current.hasActiveFilters).toBeTruthy();
 
-    act(() => { result.current.setCatFilter("Reflection"); result.current.setSortBy("alpha"); });
+    act(() => {
+      result.current.setCatFilter("Reflection");
+      result.current.setSortBy("alpha");
+    });
     act(() => result.current.clearFilters());
     expect(result.current.favFilter).toBe(false);
     expect(result.current.catFilter).toBe("All");
@@ -36,8 +45,8 @@ describe("useViewPreferences — getComputedStats", () => {
 
   it("computes shortest/longest/avgWords and top sources on demand", () => {
     const quotes = [
-      q("1", "short", { source: "Seneca" }),                        // 1 word
-      q("2", "a", { source: "Seneca" }),                            // shortest, 1 word
+      q("1", "short", { source: "Seneca" }), // 1 word
+      q("2", "a", { source: "Seneca" }), // shortest, 1 word
       q("3", "this is a much longer quote here", { source: "Marcus" }), // longest, 7 words
     ];
     const { result } = renderHook(() => useViewPreferences(quotes));

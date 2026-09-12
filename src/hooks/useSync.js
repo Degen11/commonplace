@@ -11,8 +11,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateId } from "../utils/uuid";
 import { useQuotesStore } from "../stores/quotesStore";
 import {
-  SYNC_DEBOUNCE_MS, SYNC_MAX_RETRIES, SYNC_INITIAL_DELAY_MS,
-  SYNC_ERROR_THROTTLE_MS, LS_DEVICE_ID, LS_SYNC_ENGAGED,
+  SYNC_DEBOUNCE_MS,
+  SYNC_MAX_RETRIES,
+  SYNC_INITIAL_DELAY_MS,
+  SYNC_ERROR_THROTTLE_MS,
+  LS_DEVICE_ID,
+  LS_SYNC_ENGAGED,
 } from "../config";
 import { loadString, saveString } from "../utils/storage";
 
@@ -57,9 +61,9 @@ async function pushSyncData(payload) {
 
 export default function useSync({ onCloudData, onSyncError }) {
   const queryClient = useQueryClient();
-  const setSyncStatus = useQuotesStore(s => s.setSyncStatus);
-  const setLastSynced = useQuotesStore(s => s.setLastSynced);
-  const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
+  const setSyncStatus = useQuotesStore((s) => s.setSyncStatus);
+  const setLastSynced = useQuotesStore((s) => s.setLastSynced);
+  const setInitialLoading = useQuotesStore((s) => s.setInitialLoading);
   const initialLoadDone = useRef(false);
   const pushTimer = useRef(null);
   const lastErrorNotified = useRef(0);
@@ -131,7 +135,7 @@ export default function useSync({ onCloudData, onSyncError }) {
           onSyncError(
             consecutiveFailures.current > 1
               ? "Cloud backup unavailable \u2014 your data is saved locally."
-              : "Couldn't back up to cloud \u2014 will retry on next change."
+              : "Couldn't back up to cloud \u2014 will retry on next change.",
           );
         }
       }
@@ -143,28 +147,31 @@ export default function useSync({ onCloudData, onSyncError }) {
   const { mutate: pushMutate } = pushMutation;
 
   // ── Debounced push — same API as before ──
-  const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
-    // Always capture latest data
-    const payload = {
-      quotes,
-      customCategories: customCats,
-      collections: collections || [],
-    };
-    if (deletedIds?.length > 0) {
-      payload.deletedIds = deletedIds;
-    }
-    latestPayload.current = payload;
+  const schedulePush = useCallback(
+    (quotes, customCats, deletedIds, collections) => {
+      // Always capture latest data
+      const payload = {
+        quotes,
+        customCategories: customCats,
+        collections: collections || [],
+      };
+      if (deletedIds?.length > 0) {
+        payload.deletedIds = deletedIds;
+      }
+      latestPayload.current = payload;
 
-    // Debounce: clear pending push, schedule new one
-    if (pushTimer.current) clearTimeout(pushTimer.current);
-    pushTimer.current = setTimeout(() => {
-      if (!initialLoadDone.current) return;
-      if (!deviceId) return;
-      const p = latestPayload.current;
-      if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      pushMutate(p);
-    }, SYNC_DEBOUNCE_MS);
-  }, [pushMutate]);
+      // Debounce: clear pending push, schedule new one
+      if (pushTimer.current) clearTimeout(pushTimer.current);
+      pushTimer.current = setTimeout(() => {
+        if (!initialLoadDone.current) return;
+        if (!deviceId) return;
+        const p = latestPayload.current;
+        if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
+        pushMutate(p);
+      }, SYNC_DEBOUNCE_MS);
+    },
+    [pushMutate],
+  );
 
   // Manual sync — push immediately with fresh retries
   const manualPush = useCallback(() => {
@@ -175,8 +182,10 @@ export default function useSync({ onCloudData, onSyncError }) {
   }, [pushMutate]);
 
   // Register manualPush in Zustand store so components can access it directly
-  const setManualPush = useQuotesStore(s => s.setManualPush);
-  useEffect(() => { setManualPush(manualPush); }, [manualPush, setManualPush]);
+  const setManualPush = useQuotesStore((s) => s.setManualPush);
+  useEffect(() => {
+    setManualPush(manualPush);
+  }, [manualPush, setManualPush]);
 
   // Sync when coming back online
   useEffect(() => {

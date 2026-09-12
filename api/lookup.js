@@ -1,5 +1,5 @@
-import { withApiHandler, normalizeForCache, RATE_LIMITS } from './_shared.js';
-import { lookupSchema, parseBody } from './_schemas.js';
+import { withApiHandler, normalizeForCache, RATE_LIMITS } from "./_shared.js";
+import { lookupSchema, parseBody } from "./_schemas.js";
 
 // ── Wikiquote search ──
 // Uses MediaWiki API to search for quote text and find the page (author/source) it appears on
@@ -9,7 +9,7 @@ async function searchWikiquote(text) {
 
   try {
     const r = await fetch(url, {
-      headers: { 'User-Agent': 'Commonplace/1.0 (https://commonplace.pro)' },
+      headers: { "User-Agent": "Commonplace/1.0 (https://commonplace.pro)" },
       signal: AbortSignal.timeout(5000),
     });
     if (!r.ok) return null;
@@ -31,16 +31,19 @@ async function searchWikiquote(text) {
     if (!hasYear) return null;
 
     // Check snippet actually contains meaningful overlap with our quote
-    const snippet = (results[0].snippet || '').replace(/<[^>]*>/g, '').toLowerCase();
-    const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const matchCount = words.filter(w => snippet.includes(w)).length;
+    const snippet = (results[0].snippet || "").replace(/<[^>]*>/g, "").toLowerCase();
+    const words = text
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3);
+    const matchCount = words.filter((w) => snippet.includes(w)).length;
     if (matchCount < Math.min(3, words.length * 0.3)) return null;
 
     // Strong overlap = high confidence (most words matched in snippet)
     const matchRatio = words.length > 0 ? matchCount / words.length : 0;
-    const confidence = matchRatio >= 0.6 ? 'high' : 'medium';
+    const confidence = matchRatio >= 0.6 ? "high" : "medium";
 
-    return { source: title, platform: 'wikiquote', confidence };
+    return { source: title, platform: "wikiquote", confidence };
   } catch {
     return null;
   }
@@ -59,10 +62,15 @@ async function searchOpenLibrary(hint) {
     if (!data.docs?.length) return null;
 
     const book = data.docs[0];
-    const author = book.author_name?.[0] || '';
-    const year = book.first_publish_year ? ` (${book.first_publish_year})` : '';
+    const author = book.author_name?.[0] || "";
+    const year = book.first_publish_year ? ` (${book.first_publish_year})` : "";
     const source = author ? `${book.title}${year} - ${author}` : `${book.title}${year}`;
-    return { source, category: 'Book', platform: 'openlibrary', confidence: author ? 'high' : 'medium' };
+    return {
+      source,
+      category: "Book",
+      platform: "openlibrary",
+      confidence: author ? "high" : "medium",
+    };
   } catch {
     return null;
   }
@@ -75,14 +83,16 @@ async function checkCacheBatch(normalizedTexts, supabase) {
   if (!supabase || normalizedTexts.length === 0) return new Map();
   try {
     const { data, error } = await supabase
-      .from('quote_cache')
-      .select('normalized_text, source, category, confidence')
-      .in('normalized_text', normalizedTexts);
+      .from("quote_cache")
+      .select("normalized_text, source, category, confidence")
+      .in("normalized_text", normalizedTexts);
     if (error || !data) return new Map();
-    return new Map(data.map(r => [
-      r.normalized_text,
-      { source: r.source, category: r.category, confidence: r.confidence },
-    ]));
+    return new Map(
+      data.map((r) => [
+        r.normalized_text,
+        { source: r.source, category: r.category, confidence: r.confidence },
+      ]),
+    );
   } catch {
     return new Map();
   }
@@ -91,15 +101,16 @@ async function checkCacheBatch(normalizedTexts, supabase) {
 async function writeCache(normalizedText, source, category, confidence, supabase) {
   if (!supabase) return;
   try {
-    await supabase
-      .from('quote_cache')
-      .upsert({
+    await supabase.from("quote_cache").upsert(
+      {
         normalized_text: normalizedText,
         source,
         category,
         confidence,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'normalized_text' });
+      },
+      { onConflict: "normalized_text" },
+    );
   } catch {
     // Cache write failure is non-critical
   }
@@ -109,65 +120,70 @@ async function writeCache(normalizedText, source, category, confidence, supabase
 // Since the Wikiquote whitelist only accepts titles with years, this mostly
 // sees patterns like "Title (YYYY)", "Title (YYYY film)", etc.
 function inferCategory(source) {
-  if (!source) return 'Reflection';
+  if (!source) return "Reflection";
   const s = source.toLowerCase();
   // Explicit type annotations from Wikiquote disambiguation
-  if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return 'Film';
-  if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return 'TV';
-  if (/\(video game\)|\(game\)/.test(s)) return 'Game';
-  if (/\(novel\)|\(book\)|\(play\)|\(poem\)/.test(s)) return 'Book';
-  if (/\(song\)|\(album\)|\(musical\)/.test(s)) return 'Music';
+  if (/\(\d{4}\s*film\)/.test(s) || /\(film\)/.test(s)) return "Film";
+  if (/\(tv series\)|\(television\)|\(tv\)/.test(s)) return "TV";
+  if (/\(video game\)|\(game\)/.test(s)) return "Game";
+  if (/\(novel\)|\(book\)|\(play\)|\(poem\)/.test(s)) return "Book";
+  if (/\(song\)|\(album\)|\(musical\)/.test(s)) return "Music";
   // Wikiquote pages for shows, tours, specials
-  if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return 'TV';
+  if (/\b(show|tour|series|season|episode|sitcom|comedy special)\b/.test(s)) return "TV";
   // Title with year but no explicit type — likely Film (most common on Wikiquote)
-  if (/\(\d{4}\)/.test(s)) return 'Film';
+  if (/\(\d{4}\)/.test(s)) return "Film";
   // Anything else that slips through — don't guess
-  return 'Reflection';
+  return "Reflection";
 }
 
-export default withApiHandler(async (req, res, { supabase }) => {
-  const { ok, data: body, error: validationError } = parseBody(lookupSchema, req.body);
-  if (!ok) return res.status(400).json({ error: validationError });
+export default withApiHandler(
+  async (req, res, { supabase }) => {
+    const { ok, data: body, error: validationError } = parseBody(lookupSchema, req.body);
+    if (!ok) return res.status(400).json({ error: validationError });
 
-  // 1. Check cache for all quotes in one query
-  const norms = body.quotes.map(q => (q.text ? normalizeForCache(q.text) : null));
-  const cacheHits = await checkCacheBatch(norms.filter(Boolean), supabase);
+    // 1. Check cache for all quotes in one query
+    const norms = body.quotes.map((q) => (q.text ? normalizeForCache(q.text) : null));
+    const cacheHits = await checkCacheBatch(norms.filter(Boolean), supabase);
 
-  const results = await Promise.all(body.quotes.map(async (q, i) => {
-    const { text, hint } = q;
-    if (!text) return { i, found: false };
+    const results = await Promise.all(
+      body.quotes.map(async (q, i) => {
+        const { text, hint } = q;
+        if (!text) return { i, found: false };
 
-    const norm = norms[i];
-    const cached = cacheHits.get(norm);
-    if (cached) {
-      return { i, found: true, ...cached, platform: 'cache' };
-    }
+        const norm = norms[i];
+        const cached = cacheHits.get(norm);
+        if (cached) {
+          return { i, found: true, ...cached, platform: "cache" };
+        }
 
-    // 2. Search Wikiquote and Open Library in parallel
-    const [wiki, openLib] = await Promise.all([
-      searchWikiquote(text),
-      hint ? searchOpenLibrary(hint) : null,
-    ]);
+        // 2. Search Wikiquote and Open Library in parallel
+        const [wiki, openLib] = await Promise.all([
+          searchWikiquote(text),
+          hint ? searchOpenLibrary(hint) : null,
+        ]);
 
-    // Pick best result: OpenLib (specific) > Wikiquote (general)
-    const best = openLib || wiki;
-    if (best) {
-      const result = {
-        source: best.source,
-        category: best.category || inferCategory(best.source),
-        confidence: best.confidence || 'medium',
-      };
-      // Cache results so the same quote doesn't re-hit external APIs
-      if (result.confidence === 'high' || result.confidence === 'medium') {
-        writeCache(norm, result.source, result.category, result.confidence, supabase);
-      }
-      return { i, found: true, ...result, platform: best.platform };
-    }
+        // Pick best result: OpenLib (specific) > Wikiquote (general)
+        const best = openLib || wiki;
+        if (best) {
+          const result = {
+            source: best.source,
+            category: best.category || inferCategory(best.source),
+            confidence: best.confidence || "medium",
+          };
+          // Cache results so the same quote doesn't re-hit external APIs
+          if (result.confidence === "high" || result.confidence === "medium") {
+            writeCache(norm, result.source, result.category, result.confidence, supabase);
+          }
+          return { i, found: true, ...result, platform: best.platform };
+        }
 
-    return { i, found: false };
-  }));
+        return { i, found: false };
+      }),
+    );
 
-  return res.status(200).json({ results });
-}, {
-  rateLimit: RATE_LIMITS.LOOKUP,
-});
+    return res.status(200).json({ results });
+  },
+  {
+    rateLimit: RATE_LIMITS.LOOKUP,
+  },
+);

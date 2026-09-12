@@ -1,7 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
-  pluralize, groupBy, countBy,
-  addToSet, removeFromSet, toggleInSet, addAllToSet, removeAllFromSet,
+  pluralize,
+  groupBy,
+  countBy,
+  addToSet,
+  removeFromSet,
+  toggleInSet,
+  addAllToSet,
+  removeAllFromSet,
 } from "../helpers";
 
 describe("pluralize", () => {

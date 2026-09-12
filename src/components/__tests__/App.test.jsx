@@ -17,13 +17,25 @@ globalThis.IntersectionObserver = MockIntersectionObserver;
 vi.mock("motion/react", async () => {
   const React = await import("react");
   return {
-    motion: new Proxy({}, {
-      get(_, key) {
-        return function MockMotion({ children, layoutId, initial, animate, exit, transition, variants, ...props }) {
-          return React.createElement(key || "div", props, children);
-        };
+    motion: new Proxy(
+      {},
+      {
+        get(_, key) {
+          return function MockMotion({
+            children,
+            layoutId,
+            initial,
+            animate,
+            exit,
+            transition,
+            variants,
+            ...props
+          }) {
+            return React.createElement(key || "div", props, children);
+          };
+        },
       },
-    }),
+    ),
     AnimatePresence: ({ children, mode }) => children ?? null,
     LayoutGroup: ({ children }) => children ?? null,
     MotionConfig: ({ children }) => children ?? null,
@@ -41,7 +53,9 @@ vi.mock("../ResultsPhase", () => ({
   },
 }));
 vi.mock("../OnboardingModal", () => ({
-  default: function MockOnboardingModal() { return null; },
+  default: function MockOnboardingModal() {
+    return null;
+  },
 }));
 vi.mock("../DupeModal", () => ({
   default: function MockDupeModal({ pendingDupes }) {
@@ -51,7 +65,9 @@ vi.mock("../DupeModal", () => ({
 }));
 vi.mock("../EntryReviewModal", () => ({
   default: function MockEntryReviewModal({ lines, onConfirm, onCancel }) {
-    return React.createElement("div", { "data-testid": "review-modal" },
+    return React.createElement(
+      "div",
+      { "data-testid": "review-modal" },
       React.createElement("button", { onClick: () => onConfirm(lines) }, "Confirm"),
       React.createElement("button", { onClick: onCancel }, "Cancel"),
     );
@@ -61,12 +77,18 @@ vi.mock("../EntryReviewModal", () => ({
 // Input / Processing phase components
 vi.mock("../InputPhase", () => ({
   default: function MockInputPhase({ onProcess, rawInput }) {
-    return React.createElement("div", { "data-testid": "input-phase" },
-      React.createElement("button", {
-        "data-testid": "process-btn",
-        onClick: onProcess,
-        disabled: !rawInput?.trim(),
-      }, "Process"),
+    return React.createElement(
+      "div",
+      { "data-testid": "input-phase" },
+      React.createElement(
+        "button",
+        {
+          "data-testid": "process-btn",
+          onClick: onProcess,
+          disabled: !rawInput?.trim(),
+        },
+        "Process",
+      ),
     );
   },
 }));
@@ -76,7 +98,9 @@ vi.mock("../ProcessingPhase", () => ({
   },
 }));
 vi.mock("../SectionErrorBoundary", () => ({
-  default: function MockSEB({ children }) { return children; },
+  default: function MockSEB({ children }) {
+    return children;
+  },
 }));
 
 // ── Store mock — isolates App from Supabase/localStorage side effects ─────────
@@ -223,9 +247,15 @@ describe("App — draft persistence", () => {
     const store = {};
     globalThis.localStorage = {
       getItem: (k) => store[k] ?? null,
-      setItem: (k, v) => { store[k] = v; },
-      removeItem: (k) => { delete store[k]; },
-      clear: () => { for (const k in store) delete store[k]; },
+      setItem: (k, v) => {
+        store[k] = v;
+      },
+      removeItem: (k) => {
+        delete store[k];
+      },
+      clear: () => {
+        for (const k in store) delete store[k];
+      },
     };
   });
 
@@ -241,8 +271,12 @@ describe("App — draft persistence", () => {
 
   it("renders without crashing when localStorage is unavailable", async () => {
     globalThis.localStorage = {
-      getItem: () => { throw new Error("SecurityError"); },
-      setItem: () => { throw new Error("SecurityError"); },
+      getItem: () => {
+        throw new Error("SecurityError");
+      },
+      setItem: () => {
+        throw new Error("SecurityError");
+      },
       removeItem: () => {},
       clear: () => {},
     };

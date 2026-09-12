@@ -31,11 +31,7 @@ function createSetQuotesMock(initialQuotes) {
 }
 
 function createDefaultProps(quotesOverride) {
-  const quotes = quotesOverride || [
-    makeQuote("q1"),
-    makeQuote("q2"),
-    makeQuote("q3"),
-  ];
+  const quotes = quotesOverride || [makeQuote("q1"), makeQuote("q2"), makeQuote("q3")];
   const setQuotes = createSetQuotesMock(quotes);
   return {
     quotes,
@@ -167,7 +163,7 @@ describe("useEditState", () => {
         "Review complete — all entries updated!",
         null,
         null,
-        "success"
+        "success",
       );
     });
   });
@@ -401,12 +397,8 @@ describe("useEditState", () => {
       expect(remaining).toHaveLength(1);
       expect(remaining[0].id).toBe("q3");
 
-      expect(props.trackDeletion).toHaveBeenCalledWith(
-        expect.arrayContaining(["q1", "q2"])
-      );
-      expect(props.cleanCollectionRefs).toHaveBeenCalledWith(
-        expect.arrayContaining(["q1", "q2"])
-      );
+      expect(props.trackDeletion).toHaveBeenCalledWith(expect.arrayContaining(["q1", "q2"]));
+      expect(props.cleanCollectionRefs).toHaveBeenCalledWith(expect.arrayContaining(["q1", "q2"]));
     });
 
     it("clears selection and confirmBulkDel", () => {
@@ -443,10 +435,7 @@ describe("useEditState", () => {
 
   describe("ghost cleanup", () => {
     it("removes selected IDs that no longer exist in quotes", () => {
-      const { result, rerender } = renderHook(
-        (p) => useEditState(p),
-        { initialProps: props }
-      );
+      const { result, rerender } = renderHook((p) => useEditState(p), { initialProps: props });
 
       act(() => {
         result.current.toggleSel("q1");
@@ -474,10 +463,7 @@ describe("useEditState", () => {
 
   describe("stale edit cleanup", () => {
     it("clears editingId when the edited quote is removed", () => {
-      const { result, rerender } = renderHook(
-        (p) => useEditState(p),
-        { initialProps: props }
-      );
+      const { result, rerender } = renderHook((p) => useEditState(p), { initialProps: props });
 
       act(() => result.current.startEditing("q1"));
       expect(result.current.editingId).toBe("q1");
@@ -489,10 +475,7 @@ describe("useEditState", () => {
     });
 
     it("clears inlineEdit when the edited quote is removed", () => {
-      const { result, rerender } = renderHook(
-        (p) => useEditState(p),
-        { initialProps: props }
-      );
+      const { result, rerender } = renderHook((p) => useEditState(p), { initialProps: props });
 
       act(() => result.current.startInlineEdit("q2", "source"));
       expect(result.current.inlineEdit).toEqual({ id: "q2", field: "source" });
@@ -508,10 +491,7 @@ describe("useEditState", () => {
 
   describe("review queue cleanup", () => {
     it("removes deleted quote IDs from the review queue", () => {
-      const { result, rerender } = renderHook(
-        (p) => useEditState(p),
-        { initialProps: props }
-      );
+      const { result, rerender } = renderHook((p) => useEditState(p), { initialProps: props });
 
       act(() => result.current.setReviewQueue(["q1", "q2", "q3"]));
       expect(result.current.reviewQueue).toEqual(["q1", "q2", "q3"]);

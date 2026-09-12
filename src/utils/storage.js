@@ -17,7 +17,9 @@ export function loadFromStorage(key, validate = Array.isArray, fallback = []) {
       const parsed = JSON.parse(raw);
       if (validate(parsed)) return parsed;
     }
-  } catch { /* corrupt or quota — fall through */ }
+  } catch {
+    /* corrupt or quota — fall through */
+  }
   return typeof fallback === "function" ? fallback() : fallback;
 }
 
@@ -50,7 +52,9 @@ export function loadString(key, fallback = null) {
   try {
     const raw = localStorage.getItem(key);
     if (raw != null) return raw;
-  } catch { /* security/quota — fall through */ }
+  } catch {
+    /* security/quota — fall through */
+  }
   return fallback;
 }
 
@@ -79,5 +83,7 @@ export function saveString(key, value) {
 export function removeFromStorage(...keys) {
   try {
     for (const key of keys) localStorage.removeItem(key);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }

@@ -19,13 +19,27 @@ globalThis.IntersectionObserver = MockIntersectionObserver;
 vi.mock("motion/react", async () => {
   const React = await import("react");
   return {
-    motion: new Proxy({}, {
-      get(_, key) {
-        return function MockMotion({ children, layoutId, initial, animate, exit, transition, variants, whileHover, whileTap, ...props }) {
-          return React.createElement(key || "div", props, children);
-        };
+    motion: new Proxy(
+      {},
+      {
+        get(_, key) {
+          return function MockMotion({
+            children,
+            layoutId,
+            initial,
+            animate,
+            exit,
+            transition,
+            variants,
+            whileHover,
+            whileTap,
+            ...props
+          }) {
+            return React.createElement(key || "div", props, children);
+          };
+        },
       },
-    }),
+    ),
     AnimatePresence: ({ children }) => children ?? null,
     LayoutGroup: ({ children }) => children ?? null,
   };
@@ -34,10 +48,14 @@ vi.mock("motion/react", async () => {
 vi.mock("../HowItWorksAnimation", () => ({ default: () => null }));
 vi.mock("../UrlImportPanel", () => ({
   default: function UrlImportPanel({ onLoad }) {
-    return React.createElement("button", {
-      "data-testid": "url-import-btn",
-      onClick: () => onLoad("url-content"),
-    }, "Load from URL");
+    return React.createElement(
+      "button",
+      {
+        "data-testid": "url-import-btn",
+        onClick: () => onLoad("url-content"),
+      },
+      "Load from URL",
+    );
   },
 }));
 vi.mock("../Logo", () => ({
@@ -225,7 +243,7 @@ describe("InputPhase theme toggle", () => {
     render(<InputPhase {...makeProps({ toggleTheme })} />);
     // Find theme toggle button in nav (has data-tip attribute)
     const allButtons = screen.getAllByRole("button");
-    const themeBtn = allButtons.find(b => b.getAttribute("data-tip") !== null);
+    const themeBtn = allButtons.find((b) => b.getAttribute("data-tip") !== null);
     expect(themeBtn).toBeDefined();
     fireEvent.click(themeBtn);
     expect(toggleTheme).toHaveBeenCalledOnce();
@@ -263,7 +281,10 @@ describe("InputPhase connection pre-warming", () => {
     globalThis.fetch = fetchSpy;
 
     // Mock requestIdleCallback to call synchronously for test
-    globalThis.requestIdleCallback = vi.fn((cb) => { cb(); return 0; });
+    globalThis.requestIdleCallback = vi.fn((cb) => {
+      cb();
+      return 0;
+    });
 
     const { rerender } = render(<InputPhase {...makeProps({ rawInput: "" })} />);
 
@@ -281,7 +302,10 @@ describe("InputPhase connection pre-warming", () => {
   it("does not pre-warm when rawInput is empty", async () => {
     const fetchSpy = vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) });
     globalThis.fetch = fetchSpy;
-    globalThis.requestIdleCallback = vi.fn((cb) => { cb(); return 0; });
+    globalThis.requestIdleCallback = vi.fn((cb) => {
+      cb();
+      return 0;
+    });
 
     render(<InputPhase {...makeProps({ rawInput: "" })} />);
 

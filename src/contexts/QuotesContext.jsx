@@ -13,17 +13,23 @@ import useSync from "../hooks/useSync";
 import { generateId } from "../utils/uuid";
 import { fetchWithTimeout } from "../utils/api";
 import {
-  MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
+  MAX_QUOTE_TEXT_LENGTH,
+  MAX_SOURCE_LENGTH,
+  MAX_CATEGORY_LENGTH,
+  MAX_SHARE_ITEMS,
   API_TIMEOUT_MS,
-  LS_QUOTES, LS_CATS,
-  SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
+  LS_QUOTES,
+  LS_CATS,
+  SHARE_HASH_PREFIX,
+  PUBLIC_HASH_PREFIX,
 } from "../config";
 import { loadString, removeFromStorage } from "../utils/storage";
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
   const [text, source, category, fav] = raw;
-  if (typeof text !== "string" || typeof source !== "string" || typeof category !== "string") return null;
+  if (typeof text !== "string" || typeof source !== "string" || typeof category !== "string")
+    return null;
   if (text.length === 0 || text.length > MAX_QUOTE_TEXT_LENGTH) return null;
   if (source.length > MAX_SOURCE_LENGTH) return null;
   if (category.length > MAX_CATEGORY_LENGTH) return null;
@@ -42,7 +48,7 @@ function validateShareQuote(raw) {
 export function safeDecodeShareData(hash) {
   try {
     if (hash.length > 1_000_000) return null;
-    const bytes = Uint8Array.from(atob(hash), c => c.charCodeAt(0));
+    const bytes = Uint8Array.from(atob(hash), (c) => c.charCodeAt(0));
     const json = new TextDecoder().decode(bytes);
     const arr = JSON.parse(json);
     if (!Array.isArray(arr) || arr.length === 0 || arr.length > MAX_SHARE_ITEMS) return null;
@@ -57,14 +63,14 @@ export function QuotesProvider({ children }) {
   const { showToast } = useToastContext();
 
   // ── State needed for side effects ──
-  const quotes = useQuotesStore(s => s.quotes);
-  const customCats = useQuotesStore(s => s.customCats);
-  const collections = useQuotesStore(s => s.collections);
-  const isSharedView = useQuotesStore(s => s.isSharedView);
-  const setQuotes = useQuotesStore(s => s.setQuotes);
-  const setIsSharedView = useQuotesStore(s => s.setIsSharedView);
-  const setInitialLoading = useQuotesStore(s => s.setInitialLoading);
-  const handleCloudData = useQuotesStore(s => s.handleCloudData);
+  const quotes = useQuotesStore((s) => s.quotes);
+  const customCats = useQuotesStore((s) => s.customCats);
+  const collections = useQuotesStore((s) => s.collections);
+  const isSharedView = useQuotesStore((s) => s.isSharedView);
+  const setQuotes = useQuotesStore((s) => s.setQuotes);
+  const setIsSharedView = useQuotesStore((s) => s.setIsSharedView);
+  const setInitialLoading = useQuotesStore((s) => s.setInitialLoading);
+  const handleCloudData = useQuotesStore((s) => s.handleCloudData);
 
   // ── Storage limit warning (needs toast) ──
   const storageLimitWarned = useRef(false);
@@ -104,11 +110,24 @@ export function QuotesProvider({ children }) {
         setInitialLoading(false);
         document.title = `Shared Collection (${decoded.length} quotes) — Commonplace`;
         const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.setAttribute("content", `A shared collection of ${decoded.length} quotes — Commonplace`);
+        if (metaDesc)
+          metaDesc.setAttribute(
+            "content",
+            `A shared collection of ${decoded.length} quotes — Commonplace`,
+          );
         return;
       }
-      showToast("This shared link couldn\u2019t be loaded \u2014 it may be corrupted.", null, null, "error");
-      try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
+      showToast(
+        "This shared link couldn\u2019t be loaded \u2014 it may be corrupted.",
+        null,
+        null,
+        "error",
+      );
+      try {
+        window.history.replaceState(null, "", window.location.pathname);
+      } catch {
+        /* ignore */
+      }
     }
 
     // 1b. Public collection link
@@ -131,9 +150,9 @@ export function QuotesProvider({ children }) {
               throw new Error("empty");
             }
 
-            const reconstructed = data.quotes.map(q =>
-              Array.isArray(q) ? validateShareQuote(q) : (q.id ? q : null)
-            ).filter(Boolean);
+            const reconstructed = data.quotes
+              .map((q) => (Array.isArray(q) ? validateShareQuote(q) : q.id ? q : null))
+              .filter(Boolean);
             if (reconstructed.length === 0) throw new Error("empty");
 
             setQuotes(reconstructed);
@@ -142,20 +161,29 @@ export function QuotesProvider({ children }) {
             if (data.title) {
               document.title = `${data.title} — Commonplace`;
               const metaDesc = document.querySelector('meta[name="description"]');
-              if (metaDesc) metaDesc.setAttribute("content", `Shared collection: "${data.title}" (${reconstructed.length} quotes) — Commonplace`);
+              if (metaDesc)
+                metaDesc.setAttribute(
+                  "content",
+                  `Shared collection: "${data.title}" (${reconstructed.length} quotes) — Commonplace`,
+                );
               showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
             }
           } catch (err) {
             if (err.name === "AbortError") return;
-            const msg = err.message === "expired"
-              ? "This shared link has expired."
-              : err.message === "not_found"
-              ? "Shared collection not found."
-              : err.message === "empty"
-              ? "This shared collection is empty."
-              : "Couldn\u2019t load this shared collection.";
+            const msg =
+              err.message === "expired"
+                ? "This shared link has expired."
+                : err.message === "not_found"
+                  ? "Shared collection not found."
+                  : err.message === "empty"
+                    ? "This shared collection is empty."
+                    : "Couldn\u2019t load this shared collection.";
             showToast(msg, null, null, "error");
-            try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
+            try {
+              window.history.replaceState(null, "", window.location.pathname);
+            } catch {
+              /* ignore */
+            }
             markReady();
             pull();
           }

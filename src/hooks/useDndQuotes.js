@@ -1,5 +1,12 @@
 import { useState, useRef } from "react";
-import { PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin, closestCenter } from "@dnd-kit/core";
+import {
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  pointerWithin,
+  closestCenter,
+} from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { pluralize } from "../utils/helpers";
 
@@ -7,9 +14,18 @@ import { pluralize } from "../utils/helpers";
  * Encapsulates all drag-and-drop state and handlers for quote reordering
  * and drag-to-collection. Used by ResultsPhase.
  */
-export default function useDndQuotes({ selected, collections, addToCollection, removeFromCollection, showToast, setQuotes }) {
+export default function useDndQuotes({
+  selected,
+  collections,
+  addToCollection,
+  removeFromCollection,
+  showToast,
+  setQuotes,
+}) {
   const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
-  const keyboardSensor = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
+  const keyboardSensor = useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates,
+  });
   const sensors = useSensors(pointerSensor, keyboardSensor);
 
   const [activeDragId, setActiveDragId] = useState(null);
@@ -18,7 +34,9 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
 
   const collisionDetection = (args) => {
     const pointerHits = pointerWithin(args);
-    const collectionHit = pointerHits.find(c => typeof c.id === "string" && c.id.startsWith("collection:"));
+    const collectionHit = pointerHits.find(
+      (c) => typeof c.id === "string" && c.id.startsWith("collection:"),
+    );
     if (collectionHit) return [collectionHit];
     return closestCenter(args);
   };
@@ -46,28 +64,32 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
     // Drop onto a collection
     if (typeof over.id === "string" && over.id.startsWith("collection:")) {
       const collectionId = over.id.replace("collection:", "");
-      const ids = selected.has(active.id) && selected.size > 1
-        ? [...selected]
-        : [active.id];
+      const ids = selected.has(active.id) && selected.size > 1 ? [...selected] : [active.id];
       const { added, skipped } = addToCollection(collectionId, ids);
-      const col = collections.find(c => c.id === collectionId);
+      const col = collections.find((c) => c.id === collectionId);
       if (col) {
         const name = col.name;
-        const msg = skipped > 0 && added === 0
-          ? `${pluralize(skipped, "quote")} already in "${name}"`
-          : skipped > 0
-            ? `${pluralize(skipped, "quote")} already in "${name}", ${added} added`
-            : `Added ${pluralize(added, "quote")} to "${name}"`;
-        showToast(msg, added > 0 ? "Undo" : undefined, added > 0 ? () => removeFromCollection(collectionId, ids) : undefined, "success");
+        const msg =
+          skipped > 0 && added === 0
+            ? `${pluralize(skipped, "quote")} already in "${name}"`
+            : skipped > 0
+              ? `${pluralize(skipped, "quote")} already in "${name}", ${added} added`
+              : `Added ${pluralize(added, "quote")} to "${name}"`;
+        showToast(
+          msg,
+          added > 0 ? "Undo" : undefined,
+          added > 0 ? () => removeFromCollection(collectionId, ids) : undefined,
+          "success",
+        );
       }
       return;
     }
 
     // Sortable reorder — signal to TableView to skip the list-shuffle animation
     dndReorderRef.current = true;
-    setQuotes(prev => {
-      const oldIndex = prev.findIndex(q => q.id === active.id);
-      const newIndex = prev.findIndex(q => q.id === over.id);
+    setQuotes((prev) => {
+      const oldIndex = prev.findIndex((q) => q.id === active.id);
+      const newIndex = prev.findIndex((q) => q.id === over.id);
       if (oldIndex < 0 || newIndex < 0) return prev;
       return arrayMove(prev, oldIndex, newIndex);
     });

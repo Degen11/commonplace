@@ -50,7 +50,8 @@ function wrapText(ctx, text, maxW) {
 
 export async function generateShareImage(q, styleName = "classic") {
   const theme = IMAGE_STYLES[styleName] || IMAGE_STYLES.classic;
-  const W = 1080, PAD = 72;
+  const W = 1080,
+    PAD = 72;
   const MIN_H = 1080;
 
   await document.fonts.ready;
@@ -165,7 +166,7 @@ export async function generateShareImage(q, styleName = "classic") {
   drawBranding(ctx, W, H, PAD, theme.brandColor);
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob(b => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/png");
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas export failed"))), "image/png");
   });
 }
 

@@ -9,16 +9,18 @@ describe("exportAnki", () => {
     const origCreate = URL.createObjectURL;
     const origRevoke = URL.revokeObjectURL;
     let parts;
-    global.Blob = vi.fn(function (p) { parts = p; });
+    global.Blob = vi.fn(function (p) {
+      parts = p;
+    });
     URL.createObjectURL = vi.fn(() => "blob:x");
     URL.revokeObjectURL = vi.fn();
     try {
       exportAnki([
         { text: "Stay hungry", source: "Steve Jobs", category: "Speech" }, // quoted category
-        { text: "Be kind", source: "Unknown", category: "Reflection" },      // non-quoted
+        { text: "Be kind", source: "Unknown", category: "Reflection" }, // non-quoted
       ]);
       const content = parts[0];
-      expect(content.charCodeAt(0)).toBe(0xFEFF); // BOM
+      expect(content.charCodeAt(0)).toBe(0xfeff); // BOM
       const lines = content.slice(1).split("\r\n");
       expect(lines).toHaveLength(2); // no header row, no trailing newline
       expect(lines[0]).toBe('"“Stay hungry”","Steve Jobs"'); // smart-quoted front
@@ -67,36 +69,32 @@ describe("displayText", () => {
 
 describe("encodeShareData", () => {
   it("encodes quotes to base64", () => {
-    const quotes = [
-      { text: "Hello", source: "Test", category: "Film", favorite: false },
-    ];
+    const quotes = [{ text: "Hello", source: "Test", category: "Film", favorite: false }];
     const encoded = encodeShareData(quotes);
     // Should be valid base64
     expect(() => atob(encoded)).not.toThrow();
     // Should round-trip correctly
-    const decoded = JSON.parse(new TextDecoder().decode(
-      Uint8Array.from(atob(encoded), c => c.charCodeAt(0))
-    ));
+    const decoded = JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))),
+    );
     expect(decoded).toEqual([["Hello", "Test", "Film", 0]]);
   });
 
   it("encodes favorite as 1", () => {
-    const quotes = [
-      { text: "a", source: "b", category: "c", favorite: true },
-    ];
+    const quotes = [{ text: "a", source: "b", category: "c", favorite: true }];
     const encoded = encodeShareData(quotes);
-    const decoded = JSON.parse(new TextDecoder().decode(
-      Uint8Array.from(atob(encoded), c => c.charCodeAt(0))
-    ));
+    const decoded = JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))),
+    );
     expect(decoded[0][3]).toBe(1);
   });
 
   it("handles empty text/source/category as empty strings", () => {
     const quotes = [{ favorite: false }];
     const encoded = encodeShareData(quotes);
-    const decoded = JSON.parse(new TextDecoder().decode(
-      Uint8Array.from(atob(encoded), c => c.charCodeAt(0))
-    ));
+    const decoded = JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))),
+    );
     expect(decoded[0]).toEqual(["", "", "", 0]);
   });
 
@@ -106,28 +104,36 @@ describe("encodeShareData", () => {
       { text: "b", source: "s2", category: "Book", favorite: true },
     ];
     const encoded = encodeShareData(quotes);
-    const decoded = JSON.parse(new TextDecoder().decode(
-      Uint8Array.from(atob(encoded), c => c.charCodeAt(0))
-    ));
+    const decoded = JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))),
+    );
     expect(decoded).toHaveLength(2);
     expect(decoded[1]).toEqual(["b", "s2", "Book", 1]);
   });
 
   it("throws when exceeding maxItems", () => {
     const quotes = Array.from({ length: 5 }, (_, i) => ({
-      text: `q${i}`, source: "s", category: "c", favorite: false,
+      text: `q${i}`,
+      source: "s",
+      category: "c",
+      favorite: false,
     }));
     expect(() => encodeShareData(quotes, 3)).toThrow("Too many items");
   });
 
   it("handles unicode text correctly", () => {
     const quotes = [
-      { text: "caf\u00e9 r\u00e9sum\u00e9", source: "\u2014 Author", category: "Book", favorite: false },
+      {
+        text: "caf\u00e9 r\u00e9sum\u00e9",
+        source: "\u2014 Author",
+        category: "Book",
+        favorite: false,
+      },
     ];
     const encoded = encodeShareData(quotes);
-    const decoded = JSON.parse(new TextDecoder().decode(
-      Uint8Array.from(atob(encoded), c => c.charCodeAt(0))
-    ));
+    const decoded = JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))),
+    );
     expect(decoded[0][0]).toBe("caf\u00e9 r\u00e9sum\u00e9");
   });
 });

@@ -2,7 +2,14 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Fuse from "fuse.js";
 import useInfiniteScroll from "./useInfiniteScroll";
 import { CONF_ORDER } from "../data/constants";
-import { LS_FILTERS, LS_VIEW, LS_SORT, LS_SHOW_CONF, SEARCH_DEBOUNCE_MS, MOBILE_BREAKPOINT_PX } from "../config";
+import {
+  LS_FILTERS,
+  LS_VIEW,
+  LS_SORT,
+  LS_SHOW_CONF,
+  SEARCH_DEBOUNCE_MS,
+  MOBILE_BREAKPOINT_PX,
+} from "../config";
 import { loadFromStorage, saveToStorage, loadString, saveString } from "../utils/storage";
 import { countBy } from "../utils/helpers";
 
@@ -10,7 +17,7 @@ import { countBy } from "../utils/helpers";
 // Used to avoid rebuilding the Fuse.js index on metadata-only changes
 // (favorite, category, confidence) that don't affect search results.
 function buildFuseFingerprint(quotes) {
-  return quotes.map(q => q.id + q.text.length + (q.source || "").length).join("|");
+  return quotes.map((q) => q.id + q.text.length + (q.source || "").length).join("|");
 }
 
 const FUSE_OPTIONS = {
@@ -20,16 +27,16 @@ const FUSE_OPTIONS = {
   minMatchCharLength: 2,
 };
 
-const _savedView = loadFromStorage(LS_VIEW, v => v && typeof v === "object", {});
-const _initFilters = loadFromStorage(LS_FILTERS, v => v && typeof v === "object", {});
+const _savedView = loadFromStorage(LS_VIEW, (v) => v && typeof v === "object", {});
+const _initFilters = loadFromStorage(LS_FILTERS, (v) => v && typeof v === "object", {});
 
 const SORT_OPTIONS = [
-  { key: "default",    label: "Default order" },
+  { key: "default", label: "Default order" },
   { key: "confidence", label: "Needs attention first" },
-  { key: "alpha",      label: "Alphabetical" },
-  { key: "category",   label: "By category" },
-  { key: "shortest",   label: "Shortest first" },
-  { key: "longest",    label: "Longest first" },
+  { key: "alpha", label: "Alphabetical" },
+  { key: "category", label: "By category" },
+  { key: "shortest", label: "Shortest first" },
+  { key: "longest", label: "Longest first" },
 ];
 
 export default function useViewPreferences(quotes, { activeCollectionId, collections } = {}) {
@@ -41,15 +48,15 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     return window.innerWidth < MOBILE_BREAKPOINT_PX ? "cards" : "table";
   });
   const [compact, setCompact] = useState(() =>
-    typeof _savedView.compact === "boolean" ? _savedView.compact : false
+    typeof _savedView.compact === "boolean" ? _savedView.compact : false,
   );
-  const [catFilter, setCatFilter]             = useState(_initFilters.cat || "All");
-  const [favFilter, setFavFilter]             = useState(!!_initFilters.fav);
-  const [search, setSearch]                   = useState(_initFilters.search || "");
+  const [catFilter, setCatFilter] = useState(_initFilters.cat || "All");
+  const [favFilter, setFavFilter] = useState(!!_initFilters.fav);
+  const [search, setSearch] = useState(_initFilters.search || "");
   const [debouncedSearch, setDebouncedSearch] = useState(_initFilters.search || "");
   const [sortBy, setSortBy] = useState(() => {
     const saved = loadString(LS_SORT);
-    if (saved && SORT_OPTIONS.some(o => o.key === saved)) return saved;
+    if (saved && SORT_OPTIONS.some((o) => o.key === saved)) return saved;
     return "default";
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < MOBILE_BREAKPOINT_PX);
@@ -115,21 +122,26 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
     // When searching, use Fuse.js for fuzzy matching
     let searchMatchIds = null;
     if (debouncedSearch) {
-      searchMatchIds = new Set(fuseIndex.search(debouncedSearch).map(r => r.item.id));
+      searchMatchIds = new Set(fuseIndex.search(debouncedSearch).map((r) => r.item.id));
     }
 
-    const result = quotes.filter(q => {
+    const result = quotes.filter((q) => {
       if (catFilter !== "All" && q.category !== catFilter) return false;
       if (favFilter && !q.favorite) return false;
       if (searchMatchIds && !searchMatchIds.has(q.id)) return false;
       return true;
     });
-    if (sortBy === "confidence") result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
+    if (sortBy === "confidence")
+      result.sort((a, b) => (CONF_ORDER[a.confidence] || 0) - (CONF_ORDER[b.confidence] || 0));
     else if (sortBy === "alpha") {
-      const strip = s => s.replace(/^[^\p{L}\p{N}]+/u, "");
-      result.sort((a, b) => strip(a.text).localeCompare(strip(b.text), undefined, { sensitivity: "base" }));
-    }
-    else if (sortBy === "category") result.sort((a, b) => a.category.localeCompare(b.category, undefined, { sensitivity: "base" }));
+      const strip = (s) => s.replace(/^[^\p{L}\p{N}]+/u, "");
+      result.sort((a, b) =>
+        strip(a.text).localeCompare(strip(b.text), undefined, { sensitivity: "base" }),
+      );
+    } else if (sortBy === "category")
+      result.sort((a, b) =>
+        a.category.localeCompare(b.category, undefined, { sensitivity: "base" }),
+      );
     else if (sortBy === "shortest") result.sort((a, b) => a.text.length - b.text.length);
     else if (sortBy === "longest") result.sort((a, b) => b.text.length - a.text.length);
     return result;
@@ -138,20 +150,23 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   // Apply collection scoping before pagination so hasMore/remaining counts are accurate
   const collectionFiltered = (() => {
     if (!activeCollectionId || !collections) return filtered;
-    const col = collections.find(c => c.id === activeCollectionId);
+    const col = collections.find((c) => c.id === activeCollectionId);
     if (!col) return filtered;
     const idSet = new Set(col.quoteIds);
-    return filtered.filter(q => idSet.has(q.id));
+    return filtered.filter((q) => idSet.has(q.id));
   })();
 
   const paginationKey = `${catFilter}-${favFilter}-${debouncedSearch}-${sortBy}-${activeCollectionId || "all"}`;
-  const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(collectionFiltered, paginationKey);
+  const { visible, hasMore, remaining, loadMore } = useInfiniteScroll(
+    collectionFiltered,
+    paginationKey,
+  );
 
   // ── Computed stats ──
   const { cc, favCount, unknownCount } = {
     cc: countBy(quotes, "category"),
-    favCount: quotes.filter(q => q.favorite).length,
-    unknownCount: quotes.filter(q => q.confidence === "low" || q.category === "Unknown").length,
+    favCount: quotes.filter((q) => q.favorite).length,
+    unknownCount: quotes.filter((q) => q.confidence === "low" || q.category === "Unknown").length,
   };
 
   const hasActiveFilters = catFilter !== "All" || favFilter || search;
@@ -171,8 +186,13 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   const getComputedStats = () => {
     if (quotes.length === 0) return null;
     const srcCount = countBy(quotes, "source");
-    const topSrcs  = Object.entries(srcCount).filter(([s]) => s !== "Unknown").sort((a, b) => b[1] - a[1]).slice(0, 5);
-    let shortest = quotes[0], longest = quotes[0], totalWords = 0;
+    const topSrcs = Object.entries(srcCount)
+      .filter(([s]) => s !== "Unknown")
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    let shortest = quotes[0],
+      longest = quotes[0],
+      totalWords = 0;
     for (const q of quotes) {
       if (q.text.length < shortest.text.length) shortest = q;
       if (q.text.length > longest.text.length) longest = q;
@@ -182,16 +202,34 @@ export default function useViewPreferences(quotes, { activeCollectionId, collect
   };
 
   return {
-    view, setView,
-    compact, setCompact,
-    showConfidence, setShowConfidence,
-    sortBy, setSortBy,
-    catFilter, setCatFilter,
-    favFilter, setFavFilter,
-    search, setSearch,
+    view,
+    setView,
+    compact,
+    setCompact,
+    showConfidence,
+    setShowConfidence,
+    sortBy,
+    setSortBy,
+    catFilter,
+    setCatFilter,
+    favFilter,
+    setFavFilter,
+    search,
+    setSearch,
     isMobile,
-    filtered, collectionFiltered, visible, hasMore, remaining, loadMore, paginationKey,
-    cc, favCount, unknownCount,
-    hasActiveFilters, hasActiveFilterOrSort, clearFilters, getComputedStats,
+    filtered,
+    collectionFiltered,
+    visible,
+    hasMore,
+    remaining,
+    loadMore,
+    paginationKey,
+    cc,
+    favCount,
+    unknownCount,
+    hasActiveFilters,
+    hasActiveFilterOrSort,
+    clearFilters,
+    getComputedStats,
   };
 }

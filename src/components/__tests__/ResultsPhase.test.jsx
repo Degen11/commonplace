@@ -25,13 +25,27 @@ globalThis.ResizeObserver = MockResizeObserver;
 vi.mock("motion/react", async () => {
   const React = await import("react");
   return {
-    motion: new Proxy({}, {
-      get(_, key) {
-        return function MockMotion({ children, layoutId, initial, animate, exit, transition, variants, whileHover, whileTap, ...props }) {
-          return React.createElement(key || "div", props, children);
-        };
+    motion: new Proxy(
+      {},
+      {
+        get(_, key) {
+          return function MockMotion({
+            children,
+            layoutId,
+            initial,
+            animate,
+            exit,
+            transition,
+            variants,
+            whileHover,
+            whileTap,
+            ...props
+          }) {
+            return React.createElement(key || "div", props, children);
+          };
+        },
       },
-    }),
+    ),
     AnimatePresence: ({ children }) => children ?? null,
     LayoutGroup: ({ children }) => children ?? null,
   };
@@ -61,8 +75,11 @@ vi.mock("@dnd-kit/core", () => ({
 vi.mock("@dnd-kit/sortable", () => ({
   SortableContext: ({ children }) => children,
   useSortable: () => ({
-    attributes: {}, listeners: {}, setNodeRef: vi.fn(),
-    transform: null, isDragging: false,
+    attributes: {},
+    listeners: {},
+    setNodeRef: vi.fn(),
+    transform: null,
+    isDragging: false,
   }),
   sortableKeyboardCoordinates: vi.fn(),
   verticalListSortingStrategy: "vertical",
@@ -84,8 +101,12 @@ vi.mock("../../contexts/ResultsContext", () => ({
 
 vi.mock("../TableView", () => ({
   default: React.memo(function MockTableView({ visible }) {
-    return React.createElement("div", { "data-testid": "table-view" },
-      visible?.map(q => React.createElement("div", { key: q.id, "data-testid": `row-${q.id}` }, q.text)),
+    return React.createElement(
+      "div",
+      { "data-testid": "table-view" },
+      visible?.map((q) =>
+        React.createElement("div", { key: q.id, "data-testid": `row-${q.id}` }, q.text),
+      ),
     );
   }),
 }));
@@ -98,11 +119,13 @@ vi.mock("../CardItem", () => ({
 
 vi.mock("../HeaderBar", () => ({
   default: function MockHeaderBar({ search, onSearchChange }) {
-    return React.createElement("div", { "data-testid": "header-bar" },
+    return React.createElement(
+      "div",
+      { "data-testid": "header-bar" },
       React.createElement("input", {
         "data-testid": "search-input",
         value: search,
-        onChange: e => onSearchChange(e.target.value),
+        onChange: (e) => onSearchChange(e.target.value),
         placeholder: "Search",
       }),
     );
@@ -126,7 +149,9 @@ vi.mock("../MobileSheet", () => ({ default: () => null }));
 vi.mock("../Footer", () => ({ default: () => null }));
 vi.mock("../BulkBar", () => ({ default: () => null }));
 vi.mock("../ToolbarSection", () => ({
-  default: function MockToolbarSection({ children }) { return children ?? null; },
+  default: function MockToolbarSection({ children }) {
+    return children ?? null;
+  },
 }));
 
 // ── Store mock ────────────────────────────────────────────────────────────────
@@ -227,7 +252,11 @@ describe("ResultsPhase — with quotes", () => {
 
   beforeEach(() => {
     // Force desktop mode so table view is active (jsdom defaults to 0px width)
-    Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: 1200 });
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1200,
+    });
     storeState.quotes = [
       makeQuote({ id: "q1", text: "First quote" }),
       makeQuote({ id: "q2", text: "Second quote" }),
@@ -235,7 +264,11 @@ describe("ResultsPhase — with quotes", () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: originalInnerWidth });
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: originalInnerWidth,
+    });
   });
 
   it("renders the header bar with search input", () => {
@@ -259,13 +292,18 @@ describe("ResultsPhase — with quotes", () => {
 describe("ResultsPhase — filtering logic", () => {
   const allQuotes = [
     makeQuote({ id: "q1", text: "To be or not to be", source: "Shakespeare", category: "Book" }),
-    makeQuote({ id: "q2", text: "I think therefore I am", source: "Descartes", category: "Philosophical" }),
+    makeQuote({
+      id: "q2",
+      text: "I think therefore I am",
+      source: "Descartes",
+      category: "Philosophical",
+    }),
     makeQuote({ id: "q3", text: "Carpe diem", source: "Horace", category: "Speech" }),
   ];
 
   it("applies category filter to reduce visible quotes", () => {
     // Test the filtering logic directly (pure function)
-    const filtered = allQuotes.filter(q => q.category === "Book");
+    const filtered = allQuotes.filter((q) => q.category === "Book");
     expect(filtered).toHaveLength(1);
     expect(filtered[0].id).toBe("q1");
   });
@@ -276,10 +314,10 @@ describe("ResultsPhase — filtering logic", () => {
       makeQuote({ id: "q2", favorite: false }),
       makeQuote({ id: "q3", favorite: true }),
     ];
-    const favOnly = withFavorites.filter(q => q.favorite);
+    const favOnly = withFavorites.filter((q) => q.favorite);
     expect(favOnly).toHaveLength(2);
-    expect(favOnly.map(q => q.id)).toContain("q1");
-    expect(favOnly.map(q => q.id)).toContain("q3");
+    expect(favOnly.map((q) => q.id)).toContain("q1");
+    expect(favOnly.map((q) => q.id)).toContain("q3");
   });
 
   it("groups quotes by category correctly", () => {
@@ -329,7 +367,9 @@ describe("ResultsPhase — confidence-based attention sorting", () => {
       makeQuote({ id: "low", confidence: "low" }),
       makeQuote({ id: "med", confidence: "medium" }),
     ];
-    const sorted = [...quotes].sort((a, b) => (CONF_ORDER[a.confidence] ?? 1) - (CONF_ORDER[b.confidence] ?? 1));
+    const sorted = [...quotes].sort(
+      (a, b) => (CONF_ORDER[a.confidence] ?? 1) - (CONF_ORDER[b.confidence] ?? 1),
+    );
     expect(sorted[0].id).toBe("low");
     expect(sorted[1].id).toBe("med");
     expect(sorted[2].id).toBe("high");

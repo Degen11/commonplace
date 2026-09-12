@@ -1,5 +1,5 @@
-import { withApiHandler, callAnthropic, ANTHROPIC, RATE_LIMITS } from './_shared.js';
-import { identifySchema, parseBody } from './_schemas.js';
+import { withApiHandler, callAnthropic, ANTHROPIC, RATE_LIMITS } from "./_shared.js";
+import { identifySchema, parseBody } from "./_schemas.js";
 
 // ── Server-side system prompt (never exposed to client) ──
 const SYSTEM_PROMPT = `You are an expert in film, television, literature, music, history, philosophy, and popular culture. Your job is to identify the origin of quotes and phrases. Given a numbered list, identify each one. Respond ONLY with a JSON array (no markdown, no preamble).
@@ -53,42 +53,49 @@ EXAMPLE INPUT:
 EXAMPLE OUTPUT:
 [{"i":0,"source":"Attributed to Aristotle (paraphrased by Will Durant)","category":"Person","confidence":"medium"},{"i":1,"source":"Cosmos (1980) - Carl Sagan","category":"TV","confidence":"high"},{"i":2,"source":"Attributed to Wayne Gretzky","category":"Person","confidence":"high"},{"i":3,"source":"Rumi","category":"Person","confidence":"high"},{"i":4,"source":"Friedrich Nietzsche - Twilight of the Idols (1888)","category":"Book","confidence":"medium"},{"i":5,"source":"Unknown source","category":"Phrase","confidence":"low"}]`;
 
-const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
-  'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
-  'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}'
-) + ' For cleanText: fix typos, fix \'i\' → \'I\', capitalize the first word, preserve original meaning. Return plain text only — never wrap in markdown, asterisks, or any formatting markers.';
+const SYSTEM_PROMPT_WITH_FORMATTING =
+  SYSTEM_PROMPT.replace(
+    'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low"}',
+    'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}',
+  ) +
+  " For cleanText: fix typos, fix 'i' → 'I', capitalize the first word, preserve original meaning. Return plain text only — never wrap in markdown, asterisks, or any formatting markers.";
 
-export default withApiHandler(async (req, res) => {
-  const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
-  if (!ok) return res.status(400).json({ error: validationError });
+export default withApiHandler(
+  async (req, res) => {
+    const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
+    if (!ok) return res.status(400).json({ error: validationError });
 
-  const firstMsg = body.messages[0];
-  const wantsFormatting = body.formatting === true;
+    const firstMsg = body.messages[0];
+    const wantsFormatting = body.formatting === true;
 
-  const safeBody = {
-    model: ANTHROPIC.MODEL,
-    max_tokens: 8192,
-    temperature: 0,
-    system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
-    messages: [
-      { role: 'user', content: firstMsg.content },
-      { role: 'assistant', content: '[' },
-    ],
-  };
+    const safeBody = {
+      model: ANTHROPIC.MODEL,
+      max_tokens: 8192,
+      temperature: 0,
+      system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
+      messages: [
+        { role: "user", content: firstMsg.content },
+        { role: "assistant", content: "[" },
+      ],
+    };
 
-  const result = await callAnthropic(safeBody);
-  if (!result.ok) return res.status(result.status).json({ error: result.error });
+    const result = await callAnthropic(safeBody);
+    if (!result.ok) return res.status(result.status).json({ error: result.error });
 
-  const data = result.data;
+    const data = result.data;
 
-  // Validate response structure before proxying to client
-  if (!data.content || !Array.isArray(data.content) || !data.content[0]?.text) {
-    console.error('Anthropic returned unexpected structure:', JSON.stringify(data).slice(0, 200));
-    return res.status(502).json({ error: 'AI returned an unexpected response format. Please try again.' });
-  }
+    // Validate response structure before proxying to client
+    if (!data.content || !Array.isArray(data.content) || !data.content[0]?.text) {
+      console.error("Anthropic returned unexpected structure:", JSON.stringify(data).slice(0, 200));
+      return res
+        .status(502)
+        .json({ error: "AI returned an unexpected response format. Please try again." });
+    }
 
-  return res.status(200).json(data);
-}, {
-  rateLimit: RATE_LIMITS.IDENTIFY,
-  requireAnthropicKey: true,
-});
+    return res.status(200).json(data);
+  },
+  {
+    rateLimit: RATE_LIMITS.IDENTIFY,
+    requireAnthropicKey: true,
+  },
+);

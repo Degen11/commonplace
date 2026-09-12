@@ -12,8 +12,12 @@ const pillStyles = syncPillStyles.full;
 // Most tests below exercise the "error" pill, which only renders once the
 // user has actively engaged with sync (see the dedicated describe block for
 // the pre-engagement behavior). Simulate that engagement by default here.
-beforeEach(() => { localStorage.setItem(LS_SYNC_ENGAGED, "1"); });
-afterEach(() => { localStorage.removeItem(LS_SYNC_ENGAGED); });
+beforeEach(() => {
+  localStorage.setItem(LS_SYNC_ENGAGED, "1");
+});
+afterEach(() => {
+  localStorage.removeItem(LS_SYNC_ENGAGED);
+});
 
 describe("SyncPill", () => {
   it("renders nothing when idle", () => {
@@ -63,7 +67,12 @@ describe("SyncPill", () => {
     const onOpenSync = vi.fn();
     const onManualSync = vi.fn();
     render(
-      <SyncPill syncStatus="error" onOpenSync={onOpenSync} onManualSync={onManualSync} pillStyles={pillStyles} />,
+      <SyncPill
+        syncStatus="error"
+        onOpenSync={onOpenSync}
+        onManualSync={onManualSync}
+        pillStyles={pillStyles}
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Sync failed — open cloud sync options" }));
     expect(onOpenSync).toHaveBeenCalledTimes(1);

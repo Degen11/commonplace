@@ -33,49 +33,77 @@ export default function Commonplace() {
   const { showToast } = useToastContext();
 
   // Direct Zustand subscriptions — each selector triggers re-render only when its slice changes
-  const quotes = useQuotesStore(s => s.quotes);
-  const setQuotes = useQuotesStore(s => s.setQuotes);
-  const customCats = useQuotesStore(s => s.customCats);
-  const setCustomCats = useQuotesStore(s => s.setCustomCats);
-  const initialLoading = useQuotesStore(s => s.initialLoading);
-  const trackDeletion = useQuotesStore(s => s.trackDeletion);
-  const untrackDeletion = useQuotesStore(s => s.untrackDeletion);
-  const collections = useQuotesStore(s => s.collections);
-  const createCollection = useQuotesStore(s => s.createCollection);
-  const addToCollection = useQuotesStore(s => s.addToCollection);
-  const removeFromCollection = useQuotesStore(s => s.removeFromCollection);
-  const updateCollectionIcon = useQuotesStore(s => s.updateCollectionIcon);
-  const cleanCollectionRefs = useQuotesStore(s => s.cleanCollectionRefs);
+  const quotes = useQuotesStore((s) => s.quotes);
+  const setQuotes = useQuotesStore((s) => s.setQuotes);
+  const customCats = useQuotesStore((s) => s.customCats);
+  const setCustomCats = useQuotesStore((s) => s.setCustomCats);
+  const initialLoading = useQuotesStore((s) => s.initialLoading);
+  const trackDeletion = useQuotesStore((s) => s.trackDeletion);
+  const untrackDeletion = useQuotesStore((s) => s.untrackDeletion);
+  const collections = useQuotesStore((s) => s.collections);
+  const createCollection = useQuotesStore((s) => s.createCollection);
+  const addToCollection = useQuotesStore((s) => s.addToCollection);
+  const removeFromCollection = useQuotesStore((s) => s.removeFromCollection);
+  const updateCollectionIcon = useQuotesStore((s) => s.updateCollectionIcon);
+  const cleanCollectionRefs = useQuotesStore((s) => s.cleanCollectionRefs);
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
-  const [phase, setPhase]         = useState(() => quotes.length > 0 ? "results" : "input");
-  const [rawInput, setRawInput]   = useState(() => loadString(LS_DRAFT, ""));
+  const [phase, setPhase] = useState(() => (quotes.length > 0 ? "results" : "input"));
+  const [rawInput, setRawInput] = useState(() => loadString(LS_DRAFT, ""));
 
   const processing = useProcessing({ quotes, setQuotes, allCats, goPhase: setPhase });
   const {
-    isProcessing, processingDone, progress, identifiedFeed,
-    apiError, failedEntries,
+    isProcessing,
+    processingDone,
+    progress,
+    identifiedFeed,
+    apiError,
+    failedEntries,
     stats,
-    pendingDupes, dupeDecisions, setDupeDecision,
-    formattingEnabled, setFormattingEnabled,
-    processEntries, handleDupesContinue, retryFailed,
-    identifyBatch, autoGroup, skipToResults, cancelProcessing, resetProcessingState,
-    dismissApiError, dismissStats,
+    pendingDupes,
+    dupeDecisions,
+    setDupeDecision,
+    formattingEnabled,
+    setFormattingEnabled,
+    processEntries,
+    handleDupesContinue,
+    retryFailed,
+    identifyBatch,
+    autoGroup,
+    skipToResults,
+    cancelProcessing,
+    resetProcessingState,
+    dismissApiError,
+    dismissStats,
   } = processing;
 
   const {
     deletingId,
     copiedId,
     reidentifyingIds,
-    handleDelete, copyQuote, reIdentify, batchReIdentify,
+    handleDelete,
+    copyQuote,
+    reIdentify,
+    batchReIdentify,
     handleFileImport,
-  } = useQuoteActions({ quotes, setQuotes, allCats, showToast, identifyBatch, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
+  } = useQuoteActions({
+    quotes,
+    setQuotes,
+    allCats,
+    showToast,
+    identifyBatch,
+    trackDeletion,
+    untrackDeletion,
+    cleanCollectionRefs,
+    collections,
+    addToCollection,
+  });
 
   const { dark, cycleTheme: toggleTheme, themeMode } = useTheme();
-  const [inputTab, setInputTab]               = useState("paste");
-  const [isDragOver, setIsDragOver]           = useState(false);
+  const [inputTab, setInputTab] = useState("paste");
+  const [isDragOver, setIsDragOver] = useState(false);
   const [importedFileName, setImportedFileName] = useState(null);
-  const fileInputRef        = useRef(null);
+  const fileInputRef = useRef(null);
 
   // When quotes are loaded from sync/shared link, transition to results
   const [prevQuotesEmpty, setPrevQuotesEmpty] = useState(quotes.length === 0);
@@ -100,7 +128,10 @@ export default function Commonplace() {
   // Only while actively processing; the completion screen doesn't need a guard.
   useEffect(() => {
     if (phase !== "processing" || processingDone) return undefined;
-    const warn = (e) => { e.preventDefault(); e.returnValue = ""; };
+    const warn = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [phase, processingDone]);
@@ -131,7 +162,8 @@ export default function Commonplace() {
     // (a lot of lines, or a suspiciously long one — likely a pasted paragraph
     // rather than a quote) or the user has opted out of it entirely.
     const skipReview = loadString(LS_SKIP_REVIEW) === "1";
-    const needsReview = lines.length > REVIEW_MIN_ENTRIES || lines.some(l => l.length > REVIEW_LONG_LINE_CHARS);
+    const needsReview =
+      lines.length > REVIEW_MIN_ENTRIES || lines.some((l) => l.length > REVIEW_LONG_LINE_CHARS);
     if (skipReview || !needsReview) {
       processEntries(rawInput, false, formattingEnabled, lines);
       return;
@@ -150,7 +182,7 @@ export default function Commonplace() {
   };
 
   const importCollections = (imported) => {
-    const existingNames = new Set(collections.map(c => c.name.toLowerCase()));
+    const existingNames = new Set(collections.map((c) => c.name.toLowerCase()));
     let added = 0;
     for (const c of imported) {
       if (existingNames.has(c.name.toLowerCase())) continue;
@@ -177,7 +209,12 @@ export default function Commonplace() {
   // Shared motion variants for phase transitions — spring entry, quick ease exit
   const phaseVariants = {
     initial: { opacity: 0, y: 20, scale: 0.99 },
-    animate: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 380, damping: 30, mass: 0.8 } },
+    animate: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { type: "spring", stiffness: 380, damping: 30, mass: 0.8 },
+    },
     exit: { opacity: 0, y: -8, scale: 0.99, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
@@ -208,80 +245,104 @@ export default function Commonplace() {
 
       {/* reducedMotion="user" — disables motion/react transforms when the OS requests reduced motion */}
       <MotionConfig reducedMotion="user">
-      <LayoutGroup>
-      <AnimatePresence mode="wait">
-      {/* ── Input phase ── */}
-      {phase === "input" && (
-        <motion.div key="input" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
-        <SectionErrorBoundary name="Input">
-          <InputPhase
-            rawInput={rawInput} setRawInput={setRawInput}
-            inputTab={inputTab} setInputTab={setInputTab}
-            isDragOver={isDragOver} setIsDragOver={setIsDragOver}
-            importedFileName={importedFileName}
-            formattingEnabled={formattingEnabled} setFormattingEnabled={setFormattingEnabled}
-            isProcessing={isProcessing}
-            initialLoading={initialLoading}
-            onProcess={handleProcess}
-            onFileImport={(file) => handleFileImport(file, setRawInput, setImportedFileName, importCollections)}
-            fileInputRef={fileInputRef}
-            dark={dark}
-            toggleTheme={toggleTheme}
-            themeMode={themeMode}
-          />
-        </SectionErrorBoundary>
-        </motion.div>
-      )}
+        <LayoutGroup>
+          <AnimatePresence mode="wait">
+            {/* ── Input phase ── */}
+            {phase === "input" && (
+              <motion.div
+                key="input"
+                variants={phaseVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <SectionErrorBoundary name="Input">
+                  <InputPhase
+                    rawInput={rawInput}
+                    setRawInput={setRawInput}
+                    inputTab={inputTab}
+                    setInputTab={setInputTab}
+                    isDragOver={isDragOver}
+                    setIsDragOver={setIsDragOver}
+                    importedFileName={importedFileName}
+                    formattingEnabled={formattingEnabled}
+                    setFormattingEnabled={setFormattingEnabled}
+                    isProcessing={isProcessing}
+                    initialLoading={initialLoading}
+                    onProcess={handleProcess}
+                    onFileImport={(file) =>
+                      handleFileImport(file, setRawInput, setImportedFileName, importCollections)
+                    }
+                    fileInputRef={fileInputRef}
+                    dark={dark}
+                    toggleTheme={toggleTheme}
+                    themeMode={themeMode}
+                  />
+                </SectionErrorBoundary>
+              </motion.div>
+            )}
 
-      {/* ── Processing phase ── */}
-      {phase === "processing" && (
-        <motion.div key="processing" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
-        <SectionErrorBoundary name="Processing">
-          <ProcessingPhase
-            progress={progress}
-            identifiedFeed={identifiedFeed}
-            customCats={customCats}
-            processingDone={processingDone}
-            onCancel={cancelProcessing}
-            onSkipToResults={skipToResults}
-            stats={stats}
-          />
-        </SectionErrorBoundary>
-        </motion.div>
-      )}
+            {/* ── Processing phase ── */}
+            {phase === "processing" && (
+              <motion.div
+                key="processing"
+                variants={phaseVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <SectionErrorBoundary name="Processing">
+                  <ProcessingPhase
+                    progress={progress}
+                    identifiedFeed={identifiedFeed}
+                    customCats={customCats}
+                    processingDone={processingDone}
+                    onCancel={cancelProcessing}
+                    onSkipToResults={skipToResults}
+                    stats={stats}
+                  />
+                </SectionErrorBoundary>
+              </motion.div>
+            )}
 
-      {/* ── Results phase ── */}
-      {phase === "results" && (
-        <motion.div key="results" variants={phaseVariants} initial="initial" animate="animate" exit="exit">
-          <Suspense fallback={null}>
-          <ResultsPhase
-            apiError={apiError}
-            failedEntries={failedEntries}
-            stats={stats}
-            retryFailed={retryFailed}
-            dismissApiError={dismissApiError}
-            dismissStats={dismissStats}
-            processEntries={processEntries}
-            autoGroup={autoGroup}
-            deletingId={deletingId}
-            copiedId={copiedId}
-            reidentifyingIds={reidentifyingIds}
-            handleDelete={handleDelete}
-            copyQuote={copyQuote}
-            reIdentify={reIdentify}
-            batchReIdentify={batchReIdentify}
-            handleFileImport={handleFileImport}
-            dark={dark}
-            toggleTheme={toggleTheme}
-            themeMode={themeMode}
-            importCollections={importCollections}
-            onClearReset={clearParentState}
-          />
-          </Suspense>
-        </motion.div>
-      )}
-      </AnimatePresence>
-      </LayoutGroup>
+            {/* ── Results phase ── */}
+            {phase === "results" && (
+              <motion.div
+                key="results"
+                variants={phaseVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <Suspense fallback={null}>
+                  <ResultsPhase
+                    apiError={apiError}
+                    failedEntries={failedEntries}
+                    stats={stats}
+                    retryFailed={retryFailed}
+                    dismissApiError={dismissApiError}
+                    dismissStats={dismissStats}
+                    processEntries={processEntries}
+                    autoGroup={autoGroup}
+                    deletingId={deletingId}
+                    copiedId={copiedId}
+                    reidentifyingIds={reidentifyingIds}
+                    handleDelete={handleDelete}
+                    copyQuote={copyQuote}
+                    reIdentify={reIdentify}
+                    batchReIdentify={batchReIdentify}
+                    handleFileImport={handleFileImport}
+                    dark={dark}
+                    toggleTheme={toggleTheme}
+                    themeMode={themeMode}
+                    importCollections={importCollections}
+                    onClearReset={clearParentState}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </LayoutGroup>
       </MotionConfig>
     </main>
   );

@@ -7,28 +7,41 @@ import { Z } from "../data/constants";
 import AnimatedNumber from "./AnimatedNumber";
 
 const SORT_OPTIONS = [
-  { key: "default",    label: "Default order",        badge: null },
+  { key: "default", label: "Default order", badge: null },
   { key: "confidence", label: "Needs attention first", badge: "alert" },
-  { key: "alpha",      label: "Alphabetical",         badge: "A-Z" },
-  { key: "category",   label: "By category",          badge: "Cat" },
-  { key: "shortest",   label: "Shortest first",       badge: "Short" },
-  { key: "longest",    label: "Longest first",        badge: "Long" },
+  { key: "alpha", label: "Alphabetical", badge: "A-Z" },
+  { key: "category", label: "By category", badge: "Cat" },
+  { key: "shortest", label: "Shortest first", badge: "Short" },
+  { key: "longest", label: "Longest first", badge: "Long" },
 ];
 
 export default function ToolbarSection({
-  catFilter, setCatFilter,
-  favFilter, setFavFilter,
+  catFilter,
+  setCatFilter,
+  favFilter,
+  setFavFilter,
   favCount,
-  allCats, customCats, cc, quotes,
-  showNewCat, setShowNewCat,
-  newCatName, setNewCatName,
-  addCat, remCat,
+  allCats,
+  customCats,
+  cc,
+  quotes,
+  showNewCat,
+  setShowNewCat,
+  newCatName,
+  setNewCatName,
+  addCat,
+  remCat,
   toolbarRef,
-  catScrollRef, updateCatFade, catFade,
+  catScrollRef,
+  updateCatFade,
+  catFade,
   getCatColor,
-  search, setSearch,
-  sortBy, setSortBy,
-  showSort, setShowSort,
+  search,
+  setSearch,
+  sortBy,
+  setSortBy,
+  showSort,
+  setShowSort,
   hasActiveFilters,
   clearFilters,
   resultCount,
@@ -59,79 +72,270 @@ export default function ToolbarSection({
 
   return (
     <>
-      <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
+      <div
+        ref={toolbarRef}
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          background: "var(--cp-bg)",
+          borderBottom: "1px solid var(--cp-border)",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {/* Category pills — scrollable area with fade overlays */}
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
-            <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
-              style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button className="cat-pill" aria-pressed={catFilter === "All" && !favFilter} onClick={() => setCatFilter("All")} style={{ ...styles.catPill, borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)", ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+            <div
+              className="cat-scroll"
+              ref={catScrollRef}
+              onScroll={updateCatFade}
+              style={{
+                ...styles.cats,
+                position: "static",
+                top: "auto",
+                zIndex: "auto",
+                borderBottom: "none",
+              }}
+            >
+              <button
+                className="cat-pill"
+                aria-pressed={catFilter === "All" && !favFilter}
+                onClick={() => setCatFilter("All")}
+                style={{
+                  ...styles.catPill,
+                  borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)",
+                  ...(catFilter === "All" && !favFilter ? styles.catOn : {}),
+                }}
+              >
+                All
+              </button>
               {favCount > 0 && (
-                <button className="cat-pill" aria-pressed={favFilter} onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
-                  ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
+                <button
+                  className="cat-pill"
+                  aria-pressed={favFilter}
+                  onClick={() => setFavFilter(!favFilter)}
+                  style={{
+                    ...styles.catPill,
+                    borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)",
+                    ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}),
+                  }}
+                >
+                  ★ Favorites{" "}
+                  <span style={{ opacity: 0.5, fontSize: 11, marginLeft: 2 }}>
+                    <AnimatedNumber value={favCount} />
+                  </span>
                 </button>
               )}
-              {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
-                const col = getCatColor(c, customCats); const on = catFilter === c;
-                const count = cc[c];
-                const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <button key={c} className="cat-pill" aria-pressed={on} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, borderColor: on ? col.bg : "var(--cp-border)", ...(on ? { background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
-                  {count ? <span style={{ opacity: .5, fontSize: 11 }}><AnimatedNumber value={count} /></span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
-                  {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, position: "absolute", top: 2, right: 2 }} />}
-                  {/* native title (not .ui-tip): inside the .cat-scroll clip container, a custom tooltip would be cut off */}
-                  {customCats.includes(c) && <span title="Remove category" aria-label={`Remove ${c} category`} role="button" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
-                </button>;
-              })}
+              {allCats
+                .filter((c) => cc[c] || customCats.includes(c))
+                .map((c) => {
+                  const col = getCatColor(c, customCats);
+                  const on = catFilter === c;
+                  const count = cc[c];
+                  const attCount = quotes.filter(
+                    (q) => q.category === c && (q.confidence === "low" || q.category === "Unknown"),
+                  ).length;
+                  return (
+                    <button
+                      key={c}
+                      className="cat-pill"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setCatFilter(c);
+                        setFavFilter(false);
+                      }}
+                      style={{
+                        ...styles.catPill,
+                        borderColor: on ? col.bg : "var(--cp-border)",
+                        ...(on ? { background: col.bg, color: col.text } : {}),
+                        ...(!count ? { opacity: 0.6 } : {}),
+                        position: "relative",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: "50%",
+                          background: col.text,
+                          opacity: 0.6,
+                          flexShrink: 0,
+                        }}
+                      />
+                      {c}
+                      {count ? (
+                        <span style={{ opacity: 0.5, fontSize: 11 }}>
+                          <AnimatedNumber value={count} />
+                        </span>
+                      ) : (
+                        <span style={{ opacity: 0.4, fontSize: 10 }}>0</span>
+                      )}
+                      {attCount > 0 && (
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: CLR_ORANGE,
+                            position: "absolute",
+                            top: 2,
+                            right: 2,
+                          }}
+                        />
+                      )}
+                      {/* native title (not .ui-tip): inside the .cat-scroll clip container, a custom tooltip would be cut off */}
+                      {customCats.includes(c) && (
+                        <span
+                          title="Remove category"
+                          aria-label={`Remove ${c} category`}
+                          role="button"
+                          style={{ opacity: 0.4, cursor: "pointer", display: "inline-flex" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            remCat(c);
+                          }}
+                        >
+                          <X size={10} strokeWidth={2} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               {showNewCat ? (
                 <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-                  <input style={styles.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
-                  <button style={styles.newCatSv} onClick={addCat}>Add</button>
+                  <input
+                    style={styles.newCatIn}
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    placeholder="Name"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") addCat();
+                      if (e.key === "Escape") {
+                        setShowNewCat(false);
+                        setNewCatName("");
+                      }
+                    }}
+                  />
+                  <button style={styles.newCatSv} onClick={addCat}>
+                    Add
+                  </button>
                 </div>
-              ) : <button className="add-cat-btn" title="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+              ) : (
+                <button
+                  className="add-cat-btn"
+                  title="Add custom category"
+                  aria-label="Add custom category"
+                  style={styles.addCatBtn}
+                  onClick={() => setShowNewCat(true)}
+                >
+                  +
+                </button>
+              )}
             </div>
             {/* Fade overlays — scoped to scroll container */}
-            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
-            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 24,
+                background: "linear-gradient(to right, var(--cp-bg), transparent)",
+                pointerEvents: "none",
+                zIndex: 51,
+                opacity: catFade.left ? 1 : 0,
+                transition: "opacity .15s",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 24,
+                background: "linear-gradient(to left, var(--cp-bg), transparent)",
+                pointerEvents: "none",
+                zIndex: 51,
+                opacity: catFade.right ? 1 : 0,
+                transition: "opacity .15s",
+              }}
+            />
           </div>
 
           {/* Search + Sort — pinned right */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, paddingRight: 2, paddingLeft: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              flexShrink: 0,
+              paddingRight: 2,
+              paddingLeft: 8,
+            }}
+          >
             {searchOpen ? (
-              <div style={{
-                display: "flex", alignItems: "center",
-                border: "1px solid var(--cp-border)", borderRadius: 6,
-                background: "var(--cp-bg-card)", overflow: "hidden",
-                width: isMobile ? 160 : 180, transition: "width .15s ease",
-              }}>
-                <Search size={13} strokeWidth={2} style={{ marginLeft: 8, flexShrink: 0, opacity: 0.4 }} />
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  border: "1px solid var(--cp-border)",
+                  borderRadius: 6,
+                  background: "var(--cp-bg-card)",
+                  overflow: "hidden",
+                  width: isMobile ? 160 : 180,
+                  transition: "width .15s ease",
+                }}
+              >
+                <Search
+                  size={13}
+                  strokeWidth={2}
+                  style={{ marginLeft: 8, flexShrink: 0, opacity: 0.4 }}
+                />
                 <input
                   ref={searchInputRef}
                   data-search-input
                   value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  onKeyDown={e => {
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
                     if (e.key === "Escape") {
-                      if (search) { setSearch(""); } else { setSearchOpen(false); }
+                      if (search) {
+                        setSearch("");
+                      } else {
+                        setSearchOpen(false);
+                      }
                     }
                   }}
-                  onBlur={() => { if (!search) setSearchOpen(false); }}
+                  onBlur={() => {
+                    if (!search) setSearchOpen(false);
+                  }}
                   placeholder="Search..."
                   style={{
-                    flex: 1, padding: isMobile ? "8px 6px" : "5px 6px",
-                    fontSize: isMobile ? 14 : 12, fontFamily: "inherit",
-                    border: "none", outline: "none", background: "transparent",
-                    color: "var(--cp-text)", minWidth: 0,
+                    flex: 1,
+                    padding: isMobile ? "8px 6px" : "5px 6px",
+                    fontSize: isMobile ? 14 : 12,
+                    fontFamily: "inherit",
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    color: "var(--cp-text)",
+                    minWidth: 0,
                   }}
                 />
                 <button
                   onClick={() => setSearch("")}
                   style={{
-                    background: "transparent", border: "none",
-                    color: "var(--cp-text-muted)", padding: isMobile ? "8px" : "4px 6px",
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--cp-text-muted)",
+                    padding: isMobile ? "8px" : "4px 6px",
                     cursor: search ? "pointer" : "default",
-                    display: "flex", alignItems: "center", flexShrink: 0,
-                    opacity: search ? 1 : 0, pointerEvents: search ? "auto" : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    opacity: search ? 1 : 0,
+                    pointerEvents: search ? "auto" : "none",
                     transition: "opacity .15s ease",
                   }}
                   tabIndex={search ? 0 : -1}
@@ -140,10 +344,17 @@ export default function ToolbarSection({
                   <X size={12} strokeWidth={2} />
                 </button>
                 {search && resultCount != null && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 600, color: "var(--cp-text-muted)",
-                    padding: "2px 7px", marginRight: 4, flexShrink: 0, whiteSpace: "nowrap",
-                  }}>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: "var(--cp-text-muted)",
+                      padding: "2px 7px",
+                      marginRight: 4,
+                      flexShrink: 0,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {resultCount === totalCount ? `${resultCount}` : `${resultCount}/${totalCount}`}
                   </span>
                 )}
@@ -155,31 +366,49 @@ export default function ToolbarSection({
                 aria-label="Search"
                 onClick={() => setSearchOpen(true)}
                 style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "var(--cp-text-muted)", padding: isMobile ? "8px" : "6px",
-                  display: "flex", alignItems: "center", borderRadius: 6,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--cp-text-muted)",
+                  padding: isMobile ? "8px" : "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  borderRadius: 6,
                   minHeight: isMobile ? 40 : undefined,
                 }}
               >
                 <Search size={isMobile ? 18 : 15} strokeWidth={2} />
               </button>
             )}
-            {hasActiveFilters && !(search && catFilter === "All" && !favFilter && sortBy === "default") && (
-              <button
-                className="reset-btn"
-                onClick={() => { clearFilters(); setShowSort(false); document.activeElement?.blur(); }}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "var(--cp-text-muted)", padding: "4px 8px",
-                  fontSize: 11, fontWeight: 500, fontFamily: "inherit",
-                  borderRadius: 6, whiteSpace: "nowrap",
-                  display: "flex", alignItems: "center", gap: 3,
-                }}
-              >
-                <X size={11} strokeWidth={2.5} />
-                Clear
-              </button>
-            )}
+            {hasActiveFilters &&
+              !(search && catFilter === "All" && !favFilter && sortBy === "default") && (
+                <button
+                  className="reset-btn"
+                  onClick={() => {
+                    clearFilters();
+                    setShowSort(false);
+                    document.activeElement?.blur();
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--cp-text-muted)",
+                    padding: "4px 8px",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    fontFamily: "inherit",
+                    borderRadius: 6,
+                    whiteSpace: "nowrap",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 3,
+                  }}
+                >
+                  <X size={11} strokeWidth={2.5} />
+                  Clear
+                </button>
+              )}
             {/* Base UI Menu — gives keyboard nav, focus return, Escape/outside-click,
                 aria-expanded/haspopup, and unmounting (options aren't focusable when closed). */}
             <Menu.Root open={showSort} onOpenChange={setShowSort}>
@@ -188,9 +417,15 @@ export default function ToolbarSection({
                 data-tip="Sort order"
                 aria-label="Sort order"
                 style={{
-                  background: "none", border: "none", cursor: "pointer",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
                   color: sortBy !== "default" ? CLR_BLUE : "var(--cp-text-muted)",
-                  padding: isMobile ? "8px" : "4px 6px", display: "flex", alignItems: "center", gap: 3, borderRadius: 6,
+                  padding: isMobile ? "8px" : "4px 6px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  borderRadius: 6,
                   fontWeight: sortBy !== "default" ? 600 : 400,
                   fontSize: 11,
                   minHeight: isMobile ? 40 : undefined,
@@ -198,19 +433,46 @@ export default function ToolbarSection({
               >
                 <ArrowUpDown size={14} strokeWidth={2} />
                 {sortBy !== "default" && (
-                  <span style={{ letterSpacing: sortBy === "alpha" ? 0.5 : 0, display: "inline-flex", alignItems: "center" }}>
-                    {SORT_OPTIONS.find(o => o.key === sortBy)?.badge === "alert"
-                      ? <TriangleAlert size={12} strokeWidth={2} />
-                      : SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
+                  <span
+                    style={{
+                      letterSpacing: sortBy === "alpha" ? 0.5 : 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {SORT_OPTIONS.find((o) => o.key === sortBy)?.badge === "alert" ? (
+                      <TriangleAlert size={12} strokeWidth={2} />
+                    ) : (
+                      SORT_OPTIONS.find((o) => o.key === sortBy)?.badge
+                    )}
                   </span>
                 )}
               </Menu.Trigger>
               <Menu.Portal>
-                <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
-                  <Menu.Popup style={{ background: "var(--cp-bg-card)", borderRadius: 6, boxShadow: "var(--cp-shadow-md)", border: "1px solid var(--cp-border)", minWidth: 200, padding: 4, animation: "menuIn .14s ease" }}>
-                    {SORT_OPTIONS.map(o => (
-                      <Menu.Item key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
-                        onClick={() => setSortBy(o.key)}>
+                <Menu.Positioner
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
+                  style={{ zIndex: Z.DROPDOWN }}
+                >
+                  <Menu.Popup
+                    style={{
+                      background: "var(--cp-bg-card)",
+                      borderRadius: 6,
+                      boxShadow: "var(--cp-shadow-md)",
+                      border: "1px solid var(--cp-border)",
+                      minWidth: 200,
+                      padding: 4,
+                      animation: "menuIn .14s ease",
+                    }}
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <Menu.Item
+                        key={o.key}
+                        className="dd-opt"
+                        style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
+                        onClick={() => setSortBy(o.key)}
+                      >
                         {o.label}
                       </Menu.Item>
                     ))}

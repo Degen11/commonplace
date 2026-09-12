@@ -15,7 +15,7 @@
 export function mergeByTimestamp(local, cloud, timestampKey) {
   if (!cloud?.length) return local;
 
-  const localMap = new Map(local.map(item => [item.id, item]));
+  const localMap = new Map(local.map((item) => [item.id, item]));
   let changed = false;
   const missing = [];
 
@@ -32,6 +32,6 @@ export function mergeByTimestamp(local, cloud, timestampKey) {
 
   if (!changed) return local;
 
-  const updated = local.map(item => localMap.get(item.id)).filter(Boolean);
+  const updated = local.map((item) => localMap.get(item.id)).filter(Boolean);
   return missing.length > 0 ? [...updated, ...missing] : updated;
 }

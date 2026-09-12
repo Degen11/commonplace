@@ -89,10 +89,12 @@ describe("parseJSONQuotes", () => {
   });
 
   it("parses array of objects with text field", () => {
-    const { entries } = parseJSONQuotes(JSON.stringify([
-      { text: "hello", source: "World" },
-      { quote: "goodbye", author: "Author" },
-    ]));
+    const { entries } = parseJSONQuotes(
+      JSON.stringify([
+        { text: "hello", source: "World" },
+        { quote: "goodbye", author: "Author" },
+      ]),
+    );
     expect(entries).toHaveLength(2);
     expect(entries[0].text).toBe("hello");
     expect(entries[0].hint).toBe("World");
@@ -157,7 +159,7 @@ describe("parseMarkdownQuotes", () => {
 
 describe("parseReadwiseCSV", () => {
   it("parses standard Readwise export", () => {
-    const csv = "Highlight,Book Title,Book Author\n\"The highlight text\",\"The Book\",\"The Author\"";
+    const csv = 'Highlight,Book Title,Book Author\n"The highlight text","The Book","The Author"';
     const results = parseReadwiseCSV(csv);
     expect(results).toHaveLength(1);
     expect(results[0].text).toBe("The highlight text");
@@ -178,7 +180,7 @@ describe("parseReadwiseCSV", () => {
 
 describe("parseNotionCSV", () => {
   it("parses Notion export with quote and source columns", () => {
-    const csv = "Quote,Source,Title\n\"Hello world\",\"Author\",\"Book\"";
+    const csv = 'Quote,Source,Title\n"Hello world","Author","Book"';
     const results = parseNotionCSV(csv);
     expect(results).toHaveLength(1);
     expect(results[0].text).toBe("Hello world");
@@ -186,7 +188,7 @@ describe("parseNotionCSV", () => {
   });
 
   it("falls back to Name column", () => {
-    const csv = "Name,Author\n\"A quote\",\"Someone\"";
+    const csv = 'Name,Author\n"A quote","Someone"';
     const results = parseNotionCSV(csv);
     expect(results).toHaveLength(1);
     expect(results[0].text).toBe("A quote");

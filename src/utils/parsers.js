@@ -1,24 +1,36 @@
 export function parseCSVLine(line) {
   const fields = [];
-  let cur = "", inQuote = false;
+  let cur = "",
+    inQuote = false;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
     if (ch === '"') {
-      if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
-      else { inQuote = !inQuote; }
-    } else if (ch === "," && !inQuote) { fields.push(cur.trim()); cur = ""; }
-    else { cur += ch; }
+      if (inQuote && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuote = !inQuote;
+      }
+    } else if (ch === "," && !inQuote) {
+      fields.push(cur.trim());
+      cur = "";
+    } else {
+      cur += ch;
+    }
   }
   fields.push(cur.trim());
   return fields;
 }
 
 export function parseKindleClippings(content) {
-  const clips = content.split("==========").filter(c => c.trim());
+  const clips = content.split("==========").filter((c) => c.trim());
   const results = [];
 
   for (const clip of clips) {
-    const lines = clip.trim().split("\n").map(l => l.trim());
+    const lines = clip
+      .trim()
+      .split("\n")
+      .map((l) => l.trim());
     if (lines.length < 3) continue;
 
     const titleLine = lines[0];
@@ -36,7 +48,7 @@ export function parseKindleClippings(content) {
       const title = match[1].trim();
       const rawAuthor = match[2].trim();
       // Kindle stores author as "Last, First" — flip it
-      const parts = rawAuthor.split(",").map(p => p.trim());
+      const parts = rawAuthor.split(",").map((p) => p.trim());
       const author = parts.length === 2 ? `${parts[1]} ${parts[0]}` : rawAuthor;
       hint = `${title} - ${author}`;
     } else {
@@ -54,26 +66,36 @@ export function parseJSONQuotes(content) {
     const data = JSON.parse(content);
     const arr = Array.isArray(data)
       ? data
-      : (data.quotes || data.highlights || data.entries || data.items || data.data || []);
+      : data.quotes || data.highlights || data.entries || data.items || data.data || [];
     if (!Array.isArray(arr) || arr.length === 0) return { entries: [], collections: [] };
 
-    const entries = arr.map(item => {
-      if (typeof item === "string") return { text: item.trim(), hint: null };
-      if (!item || typeof item !== "object") return null;
-      const text = (item.text || item.quote || item.content || item.highlight || item.passage || "").trim();
-      if (!text) return null;
-      const source = (item.source || "").trim();
-      const author = (item.author || item.by || "").trim();
-      const title = (item.title || item.book || item.work || "").trim();
-      const hint = source || (title && author ? `${title} - ${author}` : title || author) || null;
-      return { text, hint, id: item.id || null };
-    }).filter(Boolean);
+    const entries = arr
+      .map((item) => {
+        if (typeof item === "string") return { text: item.trim(), hint: null };
+        if (!item || typeof item !== "object") return null;
+        const text = (
+          item.text ||
+          item.quote ||
+          item.content ||
+          item.highlight ||
+          item.passage ||
+          ""
+        ).trim();
+        if (!text) return null;
+        const source = (item.source || "").trim();
+        const author = (item.author || item.by || "").trim();
+        const title = (item.title || item.book || item.work || "").trim();
+        const hint = source || (title && author ? `${title} - ${author}` : title || author) || null;
+        return { text, hint, id: item.id || null };
+      })
+      .filter(Boolean);
 
     // Extract collections if present (Commonplace export format)
     let collections = [];
     if (!Array.isArray(data) && Array.isArray(data.collections)) {
-      collections = data.collections.filter(c =>
-        c && typeof c.id === "string" && typeof c.name === "string" && Array.isArray(c.quoteIds)
+      collections = data.collections.filter(
+        (c) =>
+          c && typeof c.id === "string" && typeof c.name === "string" && Array.isArray(c.quoteIds),
       );
     }
 
@@ -113,19 +135,25 @@ export function parseNotionCSV(content) {
   const lines = content.split("\n");
   if (lines.length < 2) return [];
 
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+  const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase().trim());
 
   // Notion databases often export with "Name" as the primary column
   // Look for quote-like columns first, then fall back to "name"
   const textCols = ["quote", "text", "content", "highlight", "passage", "name"];
-  const textIdx = textCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  const textIdx = textCols.reduce((found, key) => (found >= 0 ? found : headers.indexOf(key)), -1);
   if (textIdx < 0) return [];
 
   const sourceCols = ["source", "author", "by", "attribution"];
-  const sourceIdx = sourceCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  const sourceIdx = sourceCols.reduce(
+    (found, key) => (found >= 0 ? found : headers.indexOf(key)),
+    -1,
+  );
 
   const titleCols = ["title", "book", "work", "film", "movie"];
-  const titleIdx = titleCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  const titleIdx = titleCols.reduce(
+    (found, key) => (found >= 0 ? found : headers.indexOf(key)),
+    -1,
+  );
 
   const results = [];
   for (let i = 1; i < lines.length; i++) {
@@ -152,14 +180,20 @@ export function parseReadwiseCSV(content) {
   const lines = content.split("\n");
   if (lines.length < 2) return [];
 
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+  const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase().trim());
 
   const highlightIdx = headers.indexOf("highlight");
   // Prefer "book title" over generic "title", same for author
   const titleCols = ["book title", "title"];
-  const titleIdx = titleCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  const titleIdx = titleCols.reduce(
+    (found, key) => (found >= 0 ? found : headers.indexOf(key)),
+    -1,
+  );
   const authorCols = ["book author", "author"];
-  const authorIdx = authorCols.reduce((found, key) => found >= 0 ? found : headers.indexOf(key), -1);
+  const authorIdx = authorCols.reduce(
+    (found, key) => (found >= 0 ? found : headers.indexOf(key)),
+    -1,
+  );
 
   if (highlightIdx < 0) return [];
 

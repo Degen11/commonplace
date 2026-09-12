@@ -58,9 +58,7 @@ describe("findDuplicateGroups", () => {
   });
 
   it("returns empty for single quote", () => {
-    const quotes = [
-      { id: "1", text: "hello world", source: "A", category: "Film" },
-    ];
+    const quotes = [{ id: "1", text: "hello world", source: "A", category: "Film" }];
     expect(findDuplicateGroups(quotes, 0.55)).toHaveLength(0);
   });
 

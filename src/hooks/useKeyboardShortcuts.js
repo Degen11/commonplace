@@ -10,30 +10,65 @@ import useLatestRef from "./useLatestRef";
  */
 export default function useKeyboardShortcuts({
   phase,
-  search, editingId, inlineEdit,
-  selected, setSelected,
-  confirmClear, setConfirmClear,
-  confirmBulkDel, setConfirmBulkDel,
-  showExport, setShowExport,
-  showSort, setShowSort,
-  showShortcuts, setShowShortcuts,
-  showStats, showAddMore,
-  showQuickInput, setShowQuickInput,
-  reviewQueue, setReviewQueue,
+  search,
+  editingId,
+  inlineEdit,
+  selected,
+  setSelected,
+  confirmClear,
+  setConfirmClear,
+  confirmBulkDel,
+  setConfirmBulkDel,
+  showExport,
+  setShowExport,
+  showSort,
+  setShowSort,
+  showShortcuts,
+  setShowShortcuts,
+  showStats,
+  showAddMore,
+  showQuickInput,
+  setShowQuickInput,
+  reviewQueue,
+  setReviewQueue,
   selAll,
-  visible, filtered, hasMore, loadMore,
-  onFav, handleDelete, bulkDel,
-  setEditingId, setSearch,
+  visible,
+  filtered,
+  hasMore,
+  loadMore,
+  onFav,
+  handleDelete,
+  bulkDel,
+  setEditingId,
+  setSearch,
   lastSelectedIndex,
   showToast,
 }) {
   // Pack all readable state into a single ref — avoids re-registering the
   // keydown listener on every state change while keeping reads fresh.
   const stateRef = useLatestRef({
-    phase, search, editingId, inlineEdit,
-    selected, confirmClear, confirmBulkDel,
-    showExport, showSort, showShortcuts, showStats, showAddMore, showQuickInput,
-    reviewQueue, selAll, visible, filtered, hasMore, loadMore, onFav, handleDelete, bulkDel,
+    phase,
+    search,
+    editingId,
+    inlineEdit,
+    selected,
+    confirmClear,
+    confirmBulkDel,
+    showExport,
+    showSort,
+    showShortcuts,
+    showStats,
+    showAddMore,
+    showQuickInput,
+    reviewQueue,
+    selAll,
+    visible,
+    filtered,
+    hasMore,
+    loadMore,
+    onFav,
+    handleDelete,
+    bulkDel,
   });
 
   useEffect(() => {
@@ -45,15 +80,37 @@ export default function useKeyboardShortcuts({
       if (s.phase !== "results" && e.key !== "Escape") return;
 
       // Block navigation/action shortcuts when modals or inline edits are active
-      const modalOpen = s.showShortcuts || s.showStats || s.showAddMore || s.confirmClear || s.confirmBulkDel || s.showExport || s.showSort;
+      const modalOpen =
+        s.showShortcuts ||
+        s.showStats ||
+        s.showAddMore ||
+        s.confirmClear ||
+        s.confirmBulkDel ||
+        s.showExport ||
+        s.showSort;
       const isEditing = s.editingId || s.inlineEdit;
 
       if (e.key === "Escape") {
-        if (s.showQuickInput) { setShowQuickInput(false); return; }
-        if (s.confirmClear) { setConfirmClear(false); return; }
-        if (s.confirmBulkDel) { setConfirmBulkDel(false); return; }
-        if (s.showExport) { setShowExport(false); return; }
-        if (s.showSort) { setShowSort(false); return; }
+        if (s.showQuickInput) {
+          setShowQuickInput(false);
+          return;
+        }
+        if (s.confirmClear) {
+          setConfirmClear(false);
+          return;
+        }
+        if (s.confirmBulkDel) {
+          setConfirmBulkDel(false);
+          return;
+        }
+        if (s.showExport) {
+          setShowExport(false);
+          return;
+        }
+        if (s.showSort) {
+          setShowSort(false);
+          return;
+        }
         if (s.selected.size > 0) {
           setSelected(new Set());
           lastSelectedIndex.current = null;
@@ -61,7 +118,10 @@ export default function useKeyboardShortcuts({
         }
         if (s.editingId) {
           setEditingId(null);
-          if (s.reviewQueue.length > 0) { setReviewQueue([]); showToast("Review paused"); }
+          if (s.reviewQueue.length > 0) {
+            setReviewQueue([]);
+            showToast("Review paused");
+          }
           return;
         }
         if (s.search) {
@@ -71,7 +131,7 @@ export default function useKeyboardShortcuts({
       }
 
       if (e.key === "?") {
-        setShowShortcuts(prev => !prev);
+        setShowShortcuts((prev) => !prev);
         return;
       }
 
@@ -106,14 +166,14 @@ export default function useKeyboardShortcuts({
         let curIdx = -1;
         if (s.selected.size > 0) {
           const lastId = [...s.selected].pop();
-          curIdx = list.findIndex(q => q.id === lastId);
+          curIdx = list.findIndex((q) => q.id === lastId);
         }
         let nextIdx = e.key === "j" ? curIdx + 1 : curIdx - 1;
         // Load more items when navigating past the current page
         if (e.key === "j" && nextIdx >= list.length && s.hasMore) {
           s.loadMore();
           // Select from the full filtered list — the item will render after loadMore
-          const fullIdx = s.filtered.findIndex(q => q.id === list[list.length - 1]?.id);
+          const fullIdx = s.filtered.findIndex((q) => q.id === list[list.length - 1]?.id);
           const nextItem = s.filtered[fullIdx + 1];
           if (nextItem) {
             setSelected(new Set([nextItem.id]));
@@ -151,7 +211,19 @@ export default function useKeyboardShortcuts({
 
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [stateRef, showToast, setEditingId, setSelected, setReviewQueue, setSearch,
-      setConfirmBulkDel, setConfirmClear, setShowExport, setShowSort,
-      setShowShortcuts, setShowQuickInput, lastSelectedIndex]);
+  }, [
+    stateRef,
+    showToast,
+    setEditingId,
+    setSelected,
+    setReviewQueue,
+    setSearch,
+    setConfirmBulkDel,
+    setConfirmClear,
+    setShowExport,
+    setShowSort,
+    setShowShortcuts,
+    setShowQuickInput,
+    lastSelectedIndex,
+  ]);
 }

@@ -6,11 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "src/**",
-      "api/**",
-      "!src/data/wordmarkPath.js"
-    ]
+    "includes": ["src/**", "api/**", "!src/data/wordmarkPath.js"]
   },
   "formatter": {
     "enabled": true,

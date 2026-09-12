@@ -19,7 +19,15 @@ vi.mock("../../utils/storage", () => ({
 
 function setup(props = {}) {
   const showToast = vi.fn();
-  render(<DeviceLinkModal onClose={vi.fn()} syncStatus="synced" onRetry={vi.fn()} showToast={showToast} {...props} />);
+  render(
+    <DeviceLinkModal
+      onClose={vi.fn()}
+      syncStatus="synced"
+      onRetry={vi.fn()}
+      showToast={showToast}
+      {...props}
+    />,
+  );
   return { showToast };
 }
 
@@ -34,7 +42,12 @@ beforeEach(() => {
   realLocation = window.location;
   Object.defineProperty(window, "location", {
     configurable: true,
-    value: { reload: vi.fn(), href: "http://localhost/", pathname: "/", origin: "http://localhost" },
+    value: {
+      reload: vi.fn(),
+      href: "http://localhost/",
+      pathname: "/",
+      origin: "http://localhost",
+    },
   });
 });
 afterEach(() => {
@@ -50,7 +63,9 @@ describe("DeviceLinkModal", () => {
 
   it("rejects an invalid code — error toast, no relink", () => {
     const { showToast } = setup();
-    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), { target: { value: "not-a-uuid" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), {
+      target: { value: "not-a-uuid" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Link" }));
     expect(lastVariant(showToast)).toBe("error");
     // Opening the panel marks sync as "engaged" (a separate flag) — the guard
@@ -60,7 +75,9 @@ describe("DeviceLinkModal", () => {
 
   it("guards against linking to your own code — info toast, no relink", () => {
     const { showToast } = setup();
-    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), { target: { value: THIS_DEVICE.toUpperCase() } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), {
+      target: { value: THIS_DEVICE.toUpperCase() },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Link" }));
     expect(lastVariant(showToast)).toBe("info");
     expect(mocks.saveString).not.toHaveBeenCalledWith(LS_DEVICE_ID, expect.anything());
@@ -68,7 +85,9 @@ describe("DeviceLinkModal", () => {
 
   it("persists a valid new code before reloading", () => {
     setup();
-    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), { target: { value: OTHER_DEVICE } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), {
+      target: { value: OTHER_DEVICE },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Link" }));
     expect(mocks.saveString).toHaveBeenCalledWith(LS_DEVICE_ID, OTHER_DEVICE);
   });
@@ -76,7 +95,9 @@ describe("DeviceLinkModal", () => {
   it("surfaces a storage-write failure instead of relinking", () => {
     mocks.saveString.mockReturnValue(false);
     const { showToast } = setup();
-    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), { target: { value: OTHER_DEVICE } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Device code to link" }), {
+      target: { value: OTHER_DEVICE },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Link" }));
     expect(lastVariant(showToast)).toBe("error");
   });

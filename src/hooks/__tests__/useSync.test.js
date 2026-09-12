@@ -17,7 +17,11 @@ describe("sync API functions", () => {
 
   describe("fetchSyncData contract", () => {
     it("calls GET /api/sync with device_id and CSRF header", async () => {
-      const mockData = { quotes: [{ id: "1", text: "test" }], customCategories: [], collections: [] };
+      const mockData = {
+        quotes: [{ id: "1", text: "test" }],
+        customCategories: [],
+        collections: [],
+      };
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockData),
@@ -55,7 +59,10 @@ describe("sync API functions", () => {
 
       const payload = {
         device_id: "test-device",
-        quotes: [{ id: "1", text: "a" }, { id: "2", text: "b" }],
+        quotes: [
+          { id: "1", text: "a" },
+          { id: "2", text: "b" },
+        ],
         customCategories: ["MyTag"],
         collections: [],
       };

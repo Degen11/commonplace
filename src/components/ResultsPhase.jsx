@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import useViewPreferences from "../hooks/useViewPreferences";
@@ -12,13 +16,24 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
 import { ResultsProvider, useResultsContext } from "../contexts/ResultsContext";
 
-import { getCatColor, sanitizeName, DEFAULT_CATEGORIES, UNKNOWN_SOURCE, FALLBACK_CATEGORY } from "../data/constants";
+import {
+  getCatColor,
+  sanitizeName,
+  DEFAULT_CATEGORIES,
+  UNKNOWN_SOURCE,
+  FALLBACK_CATEGORY,
+} from "../data/constants";
 import { makeSimilarityKey, similarityFromKeys } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
 import {
   DUPE_SIMILARITY_THRESHOLD,
-  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
+  LS_QUOTES,
+  LS_CATS,
+  LS_FILTERS,
+  LS_DRAFT,
+  LS_SIDEBAR,
+  LS_KB_HINT,
 } from "../config";
 import { pluralize } from "../utils/helpers";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
@@ -57,11 +72,25 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
   // getVirtualItems() results go stale on remount-after-view-switch.
   "use no memo";
   const {
-    selected, editingId, inlineEdit, deletingId, savedPulse,
-    showConfidence, sortBy, allCats, customCats,
-    actionProps, toggleSel, startEditing, startInlineEdit,
-    saveEdit, saveInlineField, setInlineEdit, setEditingId,
-    searchTerm, newQuoteHighlight,
+    selected,
+    editingId,
+    inlineEdit,
+    deletingId,
+    savedPulse,
+    showConfidence,
+    sortBy,
+    allCats,
+    customCats,
+    actionProps,
+    toggleSel,
+    startEditing,
+    startInlineEdit,
+    saveEdit,
+    saveInlineField,
+    setInlineEdit,
+    setEditingId,
+    searchTerm,
+    newQuoteHighlight,
   } = useResultsContext();
   const listRef = useRef(null);
   const outerRef = useRef(null);
@@ -77,7 +106,10 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
   }, []);
 
   // Detect list changes and trigger shuffle animation
-  const cardFingerprint = visible.slice(0, 8).map(q => q.id).join(",");
+  const cardFingerprint = visible
+    .slice(0, 8)
+    .map((q) => q.id)
+    .join(",");
   const prevCardFingerprintRef = useRef(cardFingerprint);
   useEffect(() => {
     if (prevCardFingerprintRef.current === cardFingerprint) return;
@@ -108,63 +140,68 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
   });
 
   const virtualItems = virtualizer.getVirtualItems();
-  const topPad = virtualItems.length > 0
-    ? virtualItems[0].start - (virtualizer.options.scrollMargin ?? 0)
-    : 0;
-  const bottomPad = virtualItems.length > 0
-    ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
-    : 0;
+  const topPad =
+    virtualItems.length > 0 ? virtualItems[0].start - (virtualizer.options.scrollMargin ?? 0) : 0;
+  const bottomPad =
+    virtualItems.length > 0
+      ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
+      : 0;
 
   return (
     <div ref={outerRef} style={{ paddingTop: 8 }}>
       <div ref={listRef}>
-      {topPad > 0 && <div style={{ height: topPad }} />}
-      {virtualItems.map(virtualRow => {
-        const q = visible[virtualRow.index];
-        const col = getCatColor(q.category, customCats);
-        const isSel = selected.has(q.id);
-        const isEd = editingId === q.id;
-        const needsAtt = q.confidence === "low" || q.category === "Unknown";
-        const isInlineEditing = inlineEdit?.id === q.id;
-        const inlineEditField = isInlineEditing ? inlineEdit.field : null;
-        const isDeleting = deletingId === q.id;
-        const isSavedPulse = savedPulse?.id === q.id;
-        const savedPulseField = isSavedPulse ? savedPulse.field : null;
-        const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
-        return (
-          <div key={q.id} data-index={virtualRow.index} ref={virtualizer.measureElement} style={{ paddingBottom: 12 }}>
-            <CardItem
-              q={q}
-              col={col}
-              isSel={isSel}
-              isEd={isEd}
-              needsAtt={needsAtt}
-              showConfidence={showConfidence}
-              sortBy={sortBy}
-              isMobile={true}
-              isInlineEditing={isInlineEditing}
-              inlineEditField={inlineEditField}
-              isSavedPulse={isSavedPulse}
-              savedPulseField={savedPulseField}
-              allCats={allCats}
-              customCats={customCats}
-              actionProps={actionProps}
-              toggleSel={toggleSel}
-              startEditing={startEditing}
-              startInlineEdit={startInlineEdit}
-              saveEdit={saveEdit}
-              saveInlineField={saveInlineField}
-              setInlineEdit={setInlineEdit}
-              setEditingId={setEditingId}
-              isDeleting={isDeleting}
-              searchTerm={searchTerm}
-              isOverTarget={isOverTarget}
-              isNewQuote={newQuoteHighlight === q.id}
-            />
-          </div>
-        );
-      })}
-      {bottomPad > 0 && <div style={{ height: bottomPad }} />}
+        {topPad > 0 && <div style={{ height: topPad }} />}
+        {virtualItems.map((virtualRow) => {
+          const q = visible[virtualRow.index];
+          const col = getCatColor(q.category, customCats);
+          const isSel = selected.has(q.id);
+          const isEd = editingId === q.id;
+          const needsAtt = q.confidence === "low" || q.category === "Unknown";
+          const isInlineEditing = inlineEdit?.id === q.id;
+          const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+          const isDeleting = deletingId === q.id;
+          const isSavedPulse = savedPulse?.id === q.id;
+          const savedPulseField = isSavedPulse ? savedPulse.field : null;
+          const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
+          return (
+            <div
+              key={q.id}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              style={{ paddingBottom: 12 }}
+            >
+              <CardItem
+                q={q}
+                col={col}
+                isSel={isSel}
+                isEd={isEd}
+                needsAtt={needsAtt}
+                showConfidence={showConfidence}
+                sortBy={sortBy}
+                isMobile={true}
+                isInlineEditing={isInlineEditing}
+                inlineEditField={inlineEditField}
+                isSavedPulse={isSavedPulse}
+                savedPulseField={savedPulseField}
+                allCats={allCats}
+                customCats={customCats}
+                actionProps={actionProps}
+                toggleSel={toggleSel}
+                startEditing={startEditing}
+                startInlineEdit={startInlineEdit}
+                saveEdit={saveEdit}
+                saveInlineField={saveInlineField}
+                setInlineEdit={setInlineEdit}
+                setEditingId={setEditingId}
+                isDeleting={isDeleting}
+                searchTerm={searchTerm}
+                isOverTarget={isOverTarget}
+                isNewQuote={newQuoteHighlight === q.id}
+              />
+            </div>
+          );
+        })}
+        {bottomPad > 0 && <div style={{ height: bottomPad }} />}
       </div>
     </div>
   );
@@ -172,127 +209,200 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
 
 export default function ResultsPhase({
   // From useProcessing (stays in App.jsx)
-  apiError, failedEntries, stats,
-  retryFailed, dismissApiError, dismissStats,
-  processEntries, autoGroup,
+  apiError,
+  failedEntries,
+  stats,
+  retryFailed,
+  dismissApiError,
+  dismissStats,
+  processEntries,
+  autoGroup,
   // From useQuoteActions (stays in App.jsx)
-  deletingId, copiedId, reidentifyingIds,
-  handleDelete, copyQuote, reIdentify, batchReIdentify,
+  deletingId,
+  copiedId,
+  reidentifyingIds,
+  handleDelete,
+  copyQuote,
+  reIdentify,
+  batchReIdentify,
   handleFileImport,
   // From useTheme (stays in App.jsx)
-  dark, toggleTheme, themeMode,
+  dark,
+  toggleTheme,
+  themeMode,
   // Callbacks from App.jsx
-  importCollections, onClearReset,
+  importCollections,
+  onClearReset,
 }) {
   const { showToast } = useToastContext();
 
   // Direct Zustand subscriptions — selective re-renders per slice
-  const quotes = useQuotesStore(s => s.quotes);
-  const setQuotes = useQuotesStore(s => s.setQuotes);
-  const customCats = useQuotesStore(s => s.customCats);
-  const setCustomCats = useQuotesStore(s => s.setCustomCats);
-  const columnOrder = useQuotesStore(s => s.columnOrder);
-  const setColumnOrder = useQuotesStore(s => s.setColumnOrder);
-  const isSharedView = useQuotesStore(s => s.isSharedView);
-  const setIsSharedView = useQuotesStore(s => s.setIsSharedView);
-  const syncStatus = useQuotesStore(s => s.syncStatus);
-  const lastSynced = useQuotesStore(s => s.lastSynced);
-  const trackDeletion = useQuotesStore(s => s.trackDeletion);
-  const untrackDeletion = useQuotesStore(s => s.untrackDeletion);
-  const collections = useQuotesStore(s => s.collections);
-  const activeCollectionId = useQuotesStore(s => s.activeCollectionId);
-  const setActiveCollectionId = useQuotesStore(s => s.setActiveCollectionId);
-  const createCollection = useQuotesStore(s => s.createCollection);
-  const deleteCollection = useQuotesStore(s => s.deleteCollection);
-  const restoreCollection = useQuotesStore(s => s.restoreCollection);
-  const renameCollection = useQuotesStore(s => s.renameCollection);
-  const addToCollection = useQuotesStore(s => s.addToCollection);
-  const removeFromCollection = useQuotesStore(s => s.removeFromCollection);
-  const updateCollectionIcon = useQuotesStore(s => s.updateCollectionIcon);
-  const cleanCollectionRefs = useQuotesStore(s => s.cleanCollectionRefs);
-  const initialLoading = useQuotesStore(s => s.initialLoading);
-  const manualPush = useQuotesStore(s => s.manualPush);
+  const quotes = useQuotesStore((s) => s.quotes);
+  const setQuotes = useQuotesStore((s) => s.setQuotes);
+  const customCats = useQuotesStore((s) => s.customCats);
+  const setCustomCats = useQuotesStore((s) => s.setCustomCats);
+  const columnOrder = useQuotesStore((s) => s.columnOrder);
+  const setColumnOrder = useQuotesStore((s) => s.setColumnOrder);
+  const isSharedView = useQuotesStore((s) => s.isSharedView);
+  const setIsSharedView = useQuotesStore((s) => s.setIsSharedView);
+  const syncStatus = useQuotesStore((s) => s.syncStatus);
+  const lastSynced = useQuotesStore((s) => s.lastSynced);
+  const trackDeletion = useQuotesStore((s) => s.trackDeletion);
+  const untrackDeletion = useQuotesStore((s) => s.untrackDeletion);
+  const collections = useQuotesStore((s) => s.collections);
+  const activeCollectionId = useQuotesStore((s) => s.activeCollectionId);
+  const setActiveCollectionId = useQuotesStore((s) => s.setActiveCollectionId);
+  const createCollection = useQuotesStore((s) => s.createCollection);
+  const deleteCollection = useQuotesStore((s) => s.deleteCollection);
+  const restoreCollection = useQuotesStore((s) => s.restoreCollection);
+  const renameCollection = useQuotesStore((s) => s.renameCollection);
+  const addToCollection = useQuotesStore((s) => s.addToCollection);
+  const removeFromCollection = useQuotesStore((s) => s.removeFromCollection);
+  const updateCollectionIcon = useQuotesStore((s) => s.updateCollectionIcon);
+  const cleanCollectionRefs = useQuotesStore((s) => s.cleanCollectionRefs);
+  const initialLoading = useQuotesStore((s) => s.initialLoading);
+  const manualPush = useQuotesStore((s) => s.manualPush);
   const allCats = [...DEFAULT_CATEGORIES, ...customCats];
 
   // ── Hooks owned by ResultsPhase ──
 
   const {
-    view, setView,
-    compact, setCompact,
-    showConfidence, setShowConfidence,
-    sortBy, setSortBy,
-    catFilter, setCatFilter,
-    favFilter, setFavFilter,
-    search, setSearch,
+    view,
+    setView,
+    compact,
+    setCompact,
+    showConfidence,
+    setShowConfidence,
+    sortBy,
+    setSortBy,
+    catFilter,
+    setCatFilter,
+    favFilter,
+    setFavFilter,
+    search,
+    setSearch,
     isMobile,
-    filtered, collectionFiltered, visible, hasMore, remaining, loadMore, paginationKey,
-    cc, favCount, unknownCount,
-    hasActiveFilters, hasActiveFilterOrSort, clearFilters, getComputedStats,
+    filtered,
+    collectionFiltered,
+    visible,
+    hasMore,
+    remaining,
+    loadMore,
+    paginationKey,
+    cc,
+    favCount,
+    unknownCount,
+    hasActiveFilters,
+    hasActiveFilterOrSort,
+    clearFilters,
+    getComputedStats,
   } = useViewPreferences(quotes, { activeCollectionId, collections });
 
   const {
-    editingId, setEditingId,
-    inlineEdit, setInlineEdit,
-    selected, setSelected,
-    bulkEditCat, setBulkEditCat,
-    bulkEditSource, setBulkEditSource,
-    reviewQueue, setReviewQueue,
-    confirmBulkDel, setConfirmBulkDel,
+    editingId,
+    setEditingId,
+    inlineEdit,
+    setInlineEdit,
+    selected,
+    setSelected,
+    bulkEditCat,
+    setBulkEditCat,
+    bulkEditSource,
+    setBulkEditSource,
+    reviewQueue,
+    setReviewQueue,
+    confirmBulkDel,
+    setConfirmBulkDel,
     savedPulse,
     lastSelectedIndex,
-    startEditing, startInlineEdit,
-    saveEdit, saveInlineField,
-    toggleSel, selAll,
-    applyBulk, bulkDel,
+    startEditing,
+    startInlineEdit,
+    saveEdit,
+    saveInlineField,
+    toggleSel,
+    selAll,
+    applyBulk,
+    bulkDel,
     startReviewFlow,
-  } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, filterKey: paginationKey, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
+  } = useEditState({
+    quotes,
+    setQuotes,
+    filtered,
+    visibleFiltered: collectionFiltered,
+    filterKey: paginationKey,
+    showToast,
+    trackDeletion,
+    untrackDeletion,
+    cleanCollectionRefs,
+    collections,
+    addToCollection,
+  });
 
   const {
-    sensors, activeDragId, overDragId,
-    collisionDetection, handleDndStart, handleDndOver, handleDndEnd, anchorToCursor,
+    sensors,
+    activeDragId,
+    overDragId,
+    collisionDetection,
+    handleDndStart,
+    handleDndOver,
+    handleDndEnd,
+    anchorToCursor,
     dndReorderRef,
-  } = useDndQuotes({ selected, collections, addToCollection, removeFromCollection, showToast, setQuotes });
+  } = useDndQuotes({
+    selected,
+    collections,
+    addToCollection,
+    removeFromCollection,
+    showToast,
+    setQuotes,
+  });
 
   // ── Local state ──
 
-  const [showExport, setShowExport]           = useState(false);
-  const [showSort, setShowSort]               = useState(false);
-  const [showStats, setShowStats]             = useState(false);
-  const [showAddMore, setShowAddMore]         = useState(false);
-  const [addMoreInput, setAddMoreInput]       = useState("");
+  const [showExport, setShowExport] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [showAddMore, setShowAddMore] = useState(false);
+  const [addMoreInput, setAddMoreInput] = useState("");
   const [addMoreFormatting, setAddMoreFormatting] = useState(false);
-  const [confirmClear, setConfirmClear]       = useState(false);
-  const [newCatName, setNewCatName]           = useState("");
-  const [showNewCat, setShowNewCat]           = useState(false);
-  const [headerVisible, setHeaderVisible]     = useState(true);
-  const [catFade, setCatFade]                 = useState({ left: false, right: false });
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [showNewCat, setShowNewCat] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [catFade, setCatFade] = useState({ left: false, right: false });
   const [dismissedAtCount, setDismissedAtCount] = useState(null);
-  const [showShortcuts, setShowShortcuts]       = useState(false);
-  const [showQuickInput, setShowQuickInput]     = useState(false);
-  const [collectionDupes, setCollectionDupes]   = useState([]);
-  const [shareImageQuote, setShareImageQuote]   = useState(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showQuickInput, setShowQuickInput] = useState(false);
+  const [collectionDupes, setCollectionDupes] = useState([]);
+  const [shareImageQuote, setShareImageQuote] = useState(null);
   const [showMobileCollections, setShowMobileCollections] = useState(false);
-  const [showSync, setShowSync]                 = useState(false);
+  const [showSync, setShowSync] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => loadString(LS_SIDEBAR) === "1");
   const [showKbHint, setShowKbHint] = useState(() => !loadString(LS_KB_HINT));
   const [newQuoteHighlight, setNewQuoteHighlight] = useState(null);
 
   // ── Refs ──
 
-  const addMoreRef          = useRef(null);
-  const toolbarRef          = useRef(null);
+  const addMoreRef = useRef(null);
+  const toolbarRef = useRef(null);
   const pendingScrollAdjust = useRef(null);
-  const catScrollRef        = useRef(null);
-  const headerObsRef        = useRef(null);
-  const headerRef           = (node) => {
-    if (headerObsRef.current) { headerObsRef.current.disconnect(); headerObsRef.current = null; }
+  const catScrollRef = useRef(null);
+  const headerObsRef = useRef(null);
+  const headerRef = (node) => {
+    if (headerObsRef.current) {
+      headerObsRef.current.disconnect();
+      headerObsRef.current = null;
+    }
     if (node) {
-      const obs = new IntersectionObserver(([entry]) => {
-        setHeaderVisible(entry.isIntersecting);
-        // Close dropdowns when scrolling between main/mini header
-        setShowExport(false);
-        setShowSort(false);
-      }, { threshold: 0 });
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          setHeaderVisible(entry.isIntersecting);
+          // Close dropdowns when scrolling between main/mini header
+          setShowExport(false);
+          setShowSort(false);
+        },
+        { threshold: 0 },
+      );
       obs.observe(node);
       headerObsRef.current = obs;
     }
@@ -342,15 +452,20 @@ export default function ResultsPhase({
   useEffect(() => {
     const t = setTimeout(updateCatFade, 100);
     window.addEventListener("resize", updateCatFade);
-    return () => { clearTimeout(t); window.removeEventListener("resize", updateCatFade); };
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", updateCatFade);
+    };
   }, []);
 
-  useEffect(() => { updateCatFade(); }, [quotes.length, customCats.length, catFilter]);
+  useEffect(() => {
+    updateCatFade();
+  }, [quotes.length, customCats.length, catFilter]);
 
   useEffect(() => {
-    const h = e => {
+    const h = (e) => {
       if (editingId) {
-        const clickedInside = e.target.closest('.qrow, .qcard, textarea, input, button, select');
+        const clickedInside = e.target.closest(".qrow, .qcard, textarea, input, button, select");
         if (!clickedInside) {
           setEditingId(null);
         }
@@ -374,7 +489,10 @@ export default function ResultsPhase({
 
   // ── Handlers ──
 
-  const onFav = id => setQuotes(p => p.map(x => x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x));
+  const onFav = (id) =>
+    setQuotes((p) =>
+      p.map((x) => (x.id === id ? { ...x, favorite: !x.favorite, updatedAt: Date.now() } : x)),
+    );
 
   const handleAddMore = () => {
     if (!addMoreInput.trim()) return;
@@ -395,16 +513,20 @@ export default function ResultsPhase({
         favorite: false,
         updatedAt: Date.now(),
       };
-      setQuotes(p => [newQuote, ...p]);
+      setQuotes((p) => [newQuote, ...p]);
       setShowAddMore(false);
       showToast("Quote added", null, null, "success");
       setNewQuoteHighlight(newQuote.id);
-      setTimeout(() => setNewQuoteHighlight(prev => prev === newQuote.id ? null : prev), 1000);
+      setTimeout(() => setNewQuoteHighlight((prev) => (prev === newQuote.id ? null : prev)), 1000);
     };
 
     if (!skipDupeCheck) {
       const incomingKey = makeSimilarityKey(text);
-      const match = quotes.find(q => similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
+      const match = quotes.find(
+        (q) =>
+          similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) >
+          DUPE_SIMILARITY_THRESHOLD,
+      );
       if (match) {
         const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
         showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
@@ -427,27 +549,31 @@ export default function ResultsPhase({
     // quote (deleting the cloud copy too), so a misclick was unrecoverable.
     const quotesSnapshot = quotes;
     const catsSnapshot = customCats;
-    const clearedIds = quotes.map(q => q.id);
+    const clearedIds = quotes.map((q) => q.id);
     if (clearedIds.length > 0) trackDeletion(clearedIds);
-    try { window.history.replaceState(null, "", window.location.pathname); } catch {}
+    try {
+      window.history.replaceState(null, "", window.location.pathname);
+    } catch {}
     setIsSharedView(false);
     removeFromStorage(LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT);
     setQuotes([]);
     setSelected(new Set());
-    setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default");
-    setConfirmClear(false); setShowAddMore(false); setShowStats(false);
-    setCustomCats([]); setActiveCollectionId(null);
+    setCatFilter("All");
+    setFavFilter(false);
+    setSearch("");
+    setSortBy("default");
+    setConfirmClear(false);
+    setShowAddMore(false);
+    setShowStats(false);
+    setCustomCats([]);
+    setActiveCollectionId(null);
     onClearReset();
     if (quotesSnapshot.length > 0) {
-      showToast(
-        `Cleared ${pluralize(quotesSnapshot.length, "entry", "entries")}`,
-        "Undo",
-        () => {
-          setQuotes(quotesSnapshot);
-          setCustomCats(catsSnapshot);
-          untrackDeletion(clearedIds);
-        },
-      );
+      showToast(`Cleared ${pluralize(quotesSnapshot.length, "entry", "entries")}`, "Undo", () => {
+        setQuotes(quotesSnapshot);
+        setCustomCats(catsSnapshot);
+        untrackDeletion(clearedIds);
+      });
     }
   };
 
@@ -464,10 +590,10 @@ export default function ResultsPhase({
     // so dupe detection covers all quotes in the target
     let target = quotes;
     if (activeCollectionId && collections) {
-      const col = collections.find(c => c.id === activeCollectionId);
+      const col = collections.find((c) => c.id === activeCollectionId);
       if (col) {
         const idSet = new Set(col.quoteIds);
-        target = quotes.filter(q => idSet.has(q.id));
+        target = quotes.filter((q) => idSet.has(q.id));
       }
     }
     if (target.length < 2) {
@@ -483,40 +609,44 @@ export default function ResultsPhase({
   };
 
   const handleDupeDeleteBatch = (quoteIds) => {
-    const snapshot = quotes.filter(q => quoteIds.includes(q.id));
+    const snapshot = quotes.filter((q) => quoteIds.includes(q.id));
     const idToIdx = new Map(quotes.map((q, i) => [q.id, i]));
-    const indices = snapshot.map(q => ({ quote: q, idx: idToIdx.get(q.id) ?? -1 }));
+    const indices = snapshot.map((q) => ({ quote: q, idx: idToIdx.get(q.id) ?? -1 }));
     trackDeletion(quoteIds);
     const idSet = new Set(quoteIds);
-    setQuotes(prev => prev.filter(q => !idSet.has(q.id)));
+    setQuotes((prev) => prev.filter((q) => !idSet.has(q.id)));
     cleanCollectionRefs(quoteIds);
-    showToast(
-      `Removed ${pluralize(quoteIds.length, "duplicate")}`,
-      "Undo",
-      () => {
-        setQuotes(prev => {
-          const restored = [...prev];
-          indices
-            .sort((a, b) => a.idx - b.idx)
-            .forEach(({ quote, idx }) => restored.splice(Math.min(idx, restored.length), 0, quote));
-          return restored;
-        });
-        untrackDeletion(quoteIds);
-      },
-    );
+    showToast(`Removed ${pluralize(quoteIds.length, "duplicate")}`, "Undo", () => {
+      setQuotes((prev) => {
+        const restored = [...prev];
+        indices
+          .sort((a, b) => a.idx - b.idx)
+          .forEach(({ quote, idx }) => restored.splice(Math.min(idx, restored.length), 0, quote));
+        return restored;
+      });
+      untrackDeletion(quoteIds);
+    });
   };
 
   const addCat = () => {
     const sanitized = sanitizeName(newCatName);
-    if (!sanitized || allCats.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
+    if (!sanitized || allCats.some((c) => c.toLowerCase() === sanitized.toLowerCase())) {
       showToast("Invalid or duplicate category name", null, null, "error");
       return;
     }
-    setCustomCats(p => [...p, sanitized]);
+    setCustomCats((p) => [...p, sanitized]);
     setNewCatName("");
     setShowNewCat(false);
   };
-  const remCat = c => { setCustomCats(p => p.filter(x => x !== c)); setQuotes(p => p.map(q => q.category === c ? { ...q, category: FALLBACK_CATEGORY, updatedAt: Date.now() } : q)); if (catFilter === c) setCatFilter("All"); };
+  const remCat = (c) => {
+    setCustomCats((p) => p.filter((x) => x !== c));
+    setQuotes((p) =>
+      p.map((q) =>
+        q.category === c ? { ...q, category: FALLBACK_CATEGORY, updatedAt: Date.now() } : q,
+      ),
+    );
+    if (catFilter === c) setCatFilter("All");
+  };
 
   // AI auto-group: create a collection from a theme
   const handleAutoGroup = async (theme) => {
@@ -528,21 +658,26 @@ export default function ResultsPhase({
     if (!col || col.error) throw new Error(`Collection "${name}" already exists`);
     addToCollection(col.id, matchedIds);
     setActiveCollectionId(col.id);
-    showToast(`Created "${col.name}" with ${pluralize(matchedIds.length, "quote")}`, null, null, "success");
+    showToast(
+      `Created "${col.name}" with ${pluralize(matchedIds.length, "quote")}`,
+      null,
+      null,
+      "success",
+    );
   };
 
   // Compute per-collection quote counts for sidebar
   const quoteCounts = (() => {
-    const quoteIdSet = new Set(quotes.map(q => q.id));
+    const quoteIdSet = new Set(quotes.map((q) => q.id));
     const counts = {};
     for (const c of collections) {
-      counts[c.id] = c.quoteIds.filter(id => quoteIdSet.has(id)).length;
+      counts[c.id] = c.quoteIds.filter((id) => quoteIdSet.has(id)).length;
     }
     return counts;
   })();
 
   const handleDeleteCollection = (id) => {
-    const col = collections.find(c => c.id === id);
+    const col = collections.find((c) => c.id === id);
     const count = quoteCounts[id] || 0;
     const snapshot = col ? { ...col, quoteIds: [...col.quoteIds] } : null;
     const wasActive = activeCollectionId === id;
@@ -565,7 +700,7 @@ export default function ResultsPhase({
 
   const handleRemoveFromCollection = (collectionId, quoteIds) => {
     removeFromCollection(collectionId, quoteIds);
-    const col = collections.find(c => c.id === collectionId);
+    const col = collections.find((c) => c.id === collectionId);
     showToast(
       `Removed ${pluralize(quoteIds.length, "quote")} from "${col?.name || "collection"}"`,
       "Undo",
@@ -575,16 +710,17 @@ export default function ResultsPhase({
 
   const handleAddToCollection = (collectionId, quoteIds) => {
     const { added, skipped } = addToCollection(collectionId, quoteIds);
-    const col = collections.find(c => c.id === collectionId);
+    const col = collections.find((c) => c.id === collectionId);
     const name = col?.name || "collection";
     const parts = [];
     if (skipped > 0) parts.push(`${pluralize(skipped, "quote")} already in "${name}"`);
     if (added > 0) parts.push(`${added} added`);
-    const msg = skipped > 0 && added === 0
-      ? `${pluralize(skipped, "quote")} already in "${name}"`
-      : skipped > 0
-        ? `${parts.join(", ")}`
-        : `Added ${pluralize(added, "quote")} to "${name}"`;
+    const msg =
+      skipped > 0 && added === 0
+        ? `${pluralize(skipped, "quote")} already in "${name}"`
+        : skipped > 0
+          ? `${parts.join(", ")}`
+          : `Added ${pluralize(added, "quote")} to "${name}"`;
     showToast(
       msg,
       added > 0 ? "Undo" : undefined,
@@ -593,10 +729,13 @@ export default function ResultsPhase({
   };
 
   const handleBulkCopy = () => {
-    const selectedQuotes = quotes.filter(q => selected.has(q.id));
-    const text = selectedQuotes.map(q => `${displayText(q)} — ${q.source}`).join("\n\n");
-    navigator.clipboard.writeText(text)
-      .then(() => showToast(`Copied ${pluralize(selectedQuotes.length, "quote")}`, null, null, "success"))
+    const selectedQuotes = quotes.filter((q) => selected.has(q.id));
+    const text = selectedQuotes.map((q) => `${displayText(q)} — ${q.source}`).join("\n\n");
+    navigator.clipboard
+      .writeText(text)
+      .then(() =>
+        showToast(`Copied ${pluralize(selectedQuotes.length, "quote")}`, null, null, "success"),
+      )
       .catch(() => showToast("Couldn’t copy — try manually.", null, null, "error"));
   };
 
@@ -604,10 +743,10 @@ export default function ResultsPhase({
 
   const actionProps = {
     onFav,
-    onDelete:      handleDelete,
-    onCopy:        copyQuote,
-    onReidentify:  reIdentify,
-    onShareImage:  setShareImageQuote,
+    onDelete: handleDelete,
+    onCopy: copyQuote,
+    onReidentify: reIdentify,
+    onShareImage: setShareImageQuote,
     copiedId,
     reidentifying: reidentifyingIds,
     collections,
@@ -617,16 +756,21 @@ export default function ResultsPhase({
   };
 
   const handleExportCollection = (collectionId) => {
-    const col = collections.find(c => c.id === collectionId);
+    const col = collections.find((c) => c.id === collectionId);
     if (!col) return;
     const idSet = new Set(col.quoteIds);
-    const colQuotes = quotes.filter(q => idSet.has(q.id));
+    const colQuotes = quotes.filter((q) => idSet.has(q.id));
     if (colQuotes.length === 0) {
       showToast("This collection is empty.", null, null, "error");
       return;
     }
     exportCSV(colQuotes, collections);
-    showToast(`Exported ${pluralize(colQuotes.length, "quote")} from "${col.name}" as CSV`, null, null, "success");
+    showToast(
+      `Exported ${pluralize(colQuotes.length, "quote")} from "${col.name}" as CSV`,
+      null,
+      null,
+      "success",
+    );
   };
 
   const makeExportDropdown = (triggerStyle, triggerClassName, triggerTip) => (
@@ -649,20 +793,37 @@ export default function ResultsPhase({
 
   useKeyboardShortcuts({
     phase: "results",
-    search, editingId, inlineEdit,
-    selected, setSelected,
-    confirmClear, setConfirmClear,
-    confirmBulkDel, setConfirmBulkDel,
-    showExport, setShowExport,
-    showSort, setShowSort,
-    showShortcuts, setShowShortcuts,
-    showStats, showAddMore,
-    showQuickInput, setShowQuickInput,
-    reviewQueue, setReviewQueue,
+    search,
+    editingId,
+    inlineEdit,
+    selected,
+    setSelected,
+    confirmClear,
+    setConfirmClear,
+    confirmBulkDel,
+    setConfirmBulkDel,
+    showExport,
+    setShowExport,
+    showSort,
+    setShowSort,
+    showShortcuts,
+    setShowShortcuts,
+    showStats,
+    showAddMore,
+    showQuickInput,
+    setShowQuickInput,
+    reviewQueue,
+    setReviewQueue,
     selAll,
-    visible, filtered: collectionFiltered, hasMore, loadMore,
-    onFav, handleDelete, bulkDel,
-    setEditingId, setSearch,
+    visible,
+    filtered: collectionFiltered,
+    hasMore,
+    loadMore,
+    onFav,
+    handleDelete,
+    bulkDel,
+    setEditingId,
+    setSearch,
     lastSelectedIndex,
     showToast,
   });
@@ -671,32 +832,49 @@ export default function ResultsPhase({
 
   const resultsCtx = {
     // Edit state
-    editingId, setEditingId,
-    inlineEdit, setInlineEdit,
-    selected, setSelected,
+    editingId,
+    setEditingId,
+    inlineEdit,
+    setInlineEdit,
+    selected,
+    setSelected,
     savedPulse,
-    toggleSel, selAll,
-    startEditing, startInlineEdit,
-    saveEdit, saveInlineField,
-    bulkEditCat, setBulkEditCat,
-    bulkEditSource, setBulkEditSource,
-    applyBulk, bulkDel,
+    toggleSel,
+    selAll,
+    startEditing,
+    startInlineEdit,
+    saveEdit,
+    saveInlineField,
+    bulkEditCat,
+    setBulkEditCat,
+    bulkEditSource,
+    setBulkEditSource,
+    applyBulk,
+    bulkDel,
     // Action props
     actionProps,
-    deletingId, copiedId, reidentifyingIds,
+    deletingId,
+    copiedId,
+    reidentifyingIds,
     onFav,
     onAddToCollection: handleAddToCollection,
     onRemoveFromCollection: handleRemoveFromCollection,
     onBulkCopy: handleBulkCopy,
     batchReIdentify,
     // View preferences
-    showConfidence, sortBy, compact, view,
+    showConfidence,
+    sortBy,
+    compact,
+    view,
     searchTerm: search,
     isMobile,
     // Common data
-    allCats, customCats,
-    columnOrder, setColumnOrder,
-    collections, activeCollectionId,
+    allCats,
+    customCats,
+    columnOrder,
+    setColumnOrder,
+    collections,
+    activeCollectionId,
     // Highlight
     newQuoteHighlight,
   };
@@ -706,11 +884,23 @@ export default function ResultsPhase({
   return (
     <ResultsProvider value={resultsCtx}>
       <ResultsModals
-        showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts}
-        shareImageQuote={shareImageQuote} setShareImageQuote={setShareImageQuote} showToast={showToast}
-        confirmClear={confirmClear} setConfirmClear={setConfirmClear} handleClear={handleClear} quotesLength={quotes.length} onExportBeforeClear={handleExportBeforeClear}
-        confirmBulkDel={confirmBulkDel} setConfirmBulkDel={setConfirmBulkDel} bulkDel={bulkDel} selectedSize={selected.size}
-        collectionDupes={collectionDupes} setCollectionDupes={setCollectionDupes} handleDupeDeleteBatch={handleDupeDeleteBatch}
+        showShortcuts={showShortcuts}
+        setShowShortcuts={setShowShortcuts}
+        shareImageQuote={shareImageQuote}
+        setShareImageQuote={setShareImageQuote}
+        showToast={showToast}
+        confirmClear={confirmClear}
+        setConfirmClear={setConfirmClear}
+        handleClear={handleClear}
+        quotesLength={quotes.length}
+        onExportBeforeClear={handleExportBeforeClear}
+        confirmBulkDel={confirmBulkDel}
+        setConfirmBulkDel={setConfirmBulkDel}
+        bulkDel={bulkDel}
+        selectedSize={selected.size}
+        collectionDupes={collectionDupes}
+        setCollectionDupes={setCollectionDupes}
+        handleDupeDeleteBatch={handleDupeDeleteBatch}
       />
 
       {showSync && (
@@ -723,70 +913,97 @@ export default function ResultsPhase({
       )}
 
       <div className="cp-wrap" style={styles.wrap}>
+        <NotificationBars
+          isSharedView={isSharedView}
+          setIsSharedView={setIsSharedView}
+          quotesLength={quotes.length}
+          apiError={apiError}
+          failedEntries={failedEntries}
+          retryFailed={retryFailed}
+          dismissApiError={dismissApiError}
+          stats={stats}
+          dismissStats={dismissStats}
+          unknownCount={unknownCount}
+          reviewQueue={reviewQueue}
+          setReviewQueue={setReviewQueue}
+          setEditingId={setEditingId}
+          sortBy={sortBy}
+          dismissedAtCount={dismissedAtCount}
+          setDismissedAtCount={setDismissedAtCount}
+          handleStartReview={handleStartReview}
+        />
 
-          <NotificationBars
-            isSharedView={isSharedView} setIsSharedView={setIsSharedView} quotesLength={quotes.length}
-            apiError={apiError} failedEntries={failedEntries} retryFailed={retryFailed} dismissApiError={dismissApiError}
-            stats={stats} dismissStats={dismissStats}
-            unknownCount={unknownCount} reviewQueue={reviewQueue} setReviewQueue={setReviewQueue} setEditingId={setEditingId}
-            sortBy={sortBy} dismissedAtCount={dismissedAtCount} setDismissedAtCount={setDismissedAtCount}
-            handleStartReview={handleStartReview}
+        <SectionErrorBoundary name="Header">
+          <HeaderBar
+            view={view}
+            compact={compact}
+            setView={setView}
+            setCompact={setCompact}
+            showStats={showStats}
+            setShowStats={setShowStats}
+            showAddMore={showAddMore}
+            setShowAddMore={setShowAddMore}
+            isMobile={isMobile}
+            setConfirmClear={setConfirmClear}
+            addMoreRef={addMoreRef}
+            headerRef={headerRef}
+            exportDropdownContent={makeExportDropdown(
+              styles.exportBtn,
+              "ui-tip ui-tip-below hdr-btn",
+              "Export or share your collection",
+            )}
+            syncStatus={syncStatus}
+            lastSynced={lastSynced}
+            onManualSync={manualPush}
+            onOpenSync={() => setShowSync(true)}
+            dark={dark}
+            toggleTheme={toggleTheme}
+            themeMode={themeMode}
+            showConfidence={showConfidence}
+            setShowConfidence={setShowConfidence}
+            onShowShortcuts={() => {
+              setShowShortcuts(true);
+              dismissKbHint();
+            }}
           />
+        </SectionErrorBoundary>
 
-          <SectionErrorBoundary name="Header">
-            <HeaderBar
-              view={view}
-              compact={compact}
-              setView={setView}
-              setCompact={setCompact}
-              showStats={showStats}
-              setShowStats={setShowStats}
-              showAddMore={showAddMore}
-              setShowAddMore={setShowAddMore}
-              isMobile={isMobile}
-              setConfirmClear={setConfirmClear}
-              addMoreRef={addMoreRef}
-              headerRef={headerRef}
-              exportDropdownContent={makeExportDropdown(styles.exportBtn, "ui-tip ui-tip-below hdr-btn", "Export or share your collection")}
-              syncStatus={syncStatus}
-              lastSynced={lastSynced}
-              onManualSync={manualPush}
-              onOpenSync={() => setShowSync(true)}
-              dark={dark}
-              toggleTheme={toggleTheme}
-              themeMode={themeMode}
-              showConfidence={showConfidence}
-              setShowConfidence={setShowConfidence}
-              onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
-            />
-          </SectionErrorBoundary>
+        {/* Sticky mini-header when main header scrolls out */}
+        {!headerVisible && (
+          <MiniHeader
+            view={view}
+            setView={setView}
+            compact={compact}
+            setCompact={setCompact}
+            showStats={showStats}
+            setShowStats={setShowStats}
+            showAddMore={showAddMore}
+            setShowAddMore={setShowAddMore}
+            addMoreRef={addMoreRef}
+            exportDropdownContent={makeExportDropdown(
+              { ...styles.exportBtn, fontSize: 11, padding: "4px 10px" },
+              "hdr-btn",
+            )}
+            preserveScroll={preserveScroll}
+            syncStatus={syncStatus}
+            lastSynced={lastSynced}
+            onManualSync={manualPush}
+            onOpenSync={() => setShowSync(true)}
+            dark={dark}
+            toggleTheme={toggleTheme}
+            themeMode={themeMode}
+            showConfidence={showConfidence}
+            setShowConfidence={setShowConfidence}
+            setConfirmClear={setConfirmClear}
+            onShowShortcuts={() => {
+              setShowShortcuts(true);
+              dismissKbHint();
+            }}
+            isMobile={isMobile}
+          />
+        )}
 
-          {/* Sticky mini-header when main header scrolls out */}
-          {!headerVisible && (
-            <MiniHeader
-              view={view} setView={setView}
-              compact={compact} setCompact={setCompact}
-              showStats={showStats} setShowStats={setShowStats}
-              showAddMore={showAddMore} setShowAddMore={setShowAddMore}
-              addMoreRef={addMoreRef}
-              exportDropdownContent={makeExportDropdown({ ...styles.exportBtn, fontSize: 11, padding: "4px 10px" }, "hdr-btn")}
-              preserveScroll={preserveScroll}
-              syncStatus={syncStatus}
-              lastSynced={lastSynced}
-              onManualSync={manualPush}
-              onOpenSync={() => setShowSync(true)}
-              dark={dark}
-              toggleTheme={toggleTheme}
-              themeMode={themeMode}
-              showConfidence={showConfidence}
-              setShowConfidence={setShowConfidence}
-              setConfirmClear={setConfirmClear}
-              onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
-              isMobile={isMobile}
-            />
-          )}
-
-          <AnimatePresence>
+        <AnimatePresence>
           {showStats && (
             <StatsOverlay
               quotes={quotes}
@@ -798,28 +1015,39 @@ export default function ResultsPhase({
               onClose={() => setShowStats(false)}
             />
           )}
-          </AnimatePresence>
+        </AnimatePresence>
 
-          <AnimatePresence>
-          {showAddMore && (
-            headerVisible ? (
+        <AnimatePresence>
+          {showAddMore &&
+            (headerVisible ? (
               <motion.div
                 key="add-more-inline"
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto", transition: { duration: 0.25, ease: "easeOut" } }}
+                animate={{
+                  opacity: 1,
+                  height: "auto",
+                  transition: { duration: 0.25, ease: "easeOut" },
+                }}
                 exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 style={{ overflow: "hidden" }}
               >
                 <div style={styles.addMorePanel}>
                   <AddMorePanel
-                    addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
-                    addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
+                    addMoreInput={addMoreInput}
+                    setAddMoreInput={setAddMoreInput}
+                    addMoreFormatting={addMoreFormatting}
+                    setAddMoreFormatting={setAddMoreFormatting}
                     addMoreRef={addMoreRef}
                     onAddMore={handleAddMore}
                     onQuickAdd={handleQuickAdd}
-                    onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
+                    onCancel={() => {
+                      setShowAddMore(false);
+                      setAddMoreInput("");
+                    }}
                     allCats={allCats}
-                    onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
+                    onFileImport={(file, setter, nameSetter) =>
+                      handleFileImport(file, setter, nameSetter, importCollections)
+                    }
                     existingCount={quotes.length}
                   />
                 </div>
@@ -831,110 +1059,170 @@ export default function ResultsPhase({
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } }}
                 exit={{ opacity: 0, y: -10, transition: { duration: 0.15, ease: "easeIn" } }}
                 style={{
-                  position: "fixed", top: 49, left: 0, right: 0,
-                  zIndex: 59, background: "var(--cp-mini-bg)",
-                  backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)",
-                  padding: isMobile ? "12px 16px" : "12px 32px", borderBottom: "1px solid var(--cp-border)",
+                  position: "fixed",
+                  top: 49,
+                  left: 0,
+                  right: 0,
+                  zIndex: 59,
+                  background: "var(--cp-mini-bg)",
+                  backdropFilter: "blur(16px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                  padding: isMobile ? "12px 16px" : "12px 32px",
+                  borderBottom: "1px solid var(--cp-border)",
                   boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
                 }}
               >
                 <div style={{ maxWidth: 1120, margin: "0 auto" }}>
                   <AddMorePanel
-                    addMoreInput={addMoreInput} setAddMoreInput={setAddMoreInput}
-                    addMoreFormatting={addMoreFormatting} setAddMoreFormatting={setAddMoreFormatting}
+                    addMoreInput={addMoreInput}
+                    setAddMoreInput={setAddMoreInput}
+                    addMoreFormatting={addMoreFormatting}
+                    setAddMoreFormatting={setAddMoreFormatting}
                     addMoreRef={addMoreRef}
                     onAddMore={handleAddMore}
                     onQuickAdd={handleQuickAdd}
-                    onCancel={() => { setShowAddMore(false); setAddMoreInput(""); }}
-                    onFileImport={(file, setter, nameSetter) => handleFileImport(file, setter, nameSetter, importCollections)}
+                    onCancel={() => {
+                      setShowAddMore(false);
+                      setAddMoreInput("");
+                    }}
+                    onFileImport={(file, setter, nameSetter) =>
+                      handleFileImport(file, setter, nameSetter, importCollections)
+                    }
                     existingCount={quotes.length}
                   />
                 </div>
               </motion.div>
-            )
-          )}
-          </AnimatePresence>
+            ))}
+        </AnimatePresence>
 
-          <AnimatePresence>
+        <AnimatePresence>
           {showBulkBar && (
             <motion.div
               key="bulk-bar"
               initial={{ opacity: 0, y: "100%" }}
-              animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 28, mass: 0.8 } }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                transition: { type: "spring", stiffness: 400, damping: 28, mass: 0.8 },
+              }}
               exit={{ opacity: 0, y: "100%", transition: { duration: 0.15, ease: "easeIn" } }}
               style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 500 }}
             >
-            <BulkBar
-              onDelete={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}
-              onBatchReIdentify={() => batchReIdentify(selected)}
-            />
+              <BulkBar
+                onDelete={() => (selected.size > 3 ? setConfirmBulkDel(true) : bulkDel())}
+                onBatchReIdentify={() => batchReIdentify(selected)}
+              />
             </motion.div>
           )}
-          </AnimatePresence>
+        </AnimatePresence>
 
-          <SectionErrorBoundary name="Toolbar">
-            <ToolbarSection
-              catFilter={catFilter}
-              setCatFilter={setCatFilter}
-              favFilter={favFilter}
-              setFavFilter={setFavFilter}
-              favCount={favCount}
-              allCats={allCats}
-              customCats={customCats}
-              cc={cc}
-              quotes={quotes}
-              showNewCat={showNewCat}
-              setShowNewCat={setShowNewCat}
-              newCatName={newCatName}
-              setNewCatName={setNewCatName}
-              addCat={addCat}
-              remCat={remCat}
-              toolbarRef={toolbarRef}
-              catScrollRef={catScrollRef}
-              updateCatFade={updateCatFade}
-              catFade={catFade}
-              getCatColor={getCatColor}
-              search={search}
-              setSearch={setSearch}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              showSort={showSort}
-              setShowSort={setShowSort}
-              hasActiveFilters={hasActiveFilterOrSort}
-              clearFilters={clearFilters}
-              resultCount={collectionFiltered.length}
-              totalCount={quotes.length}
-              isMobile={isMobile}
-            />
-          </SectionErrorBoundary>
+        <SectionErrorBoundary name="Toolbar">
+          <ToolbarSection
+            catFilter={catFilter}
+            setCatFilter={setCatFilter}
+            favFilter={favFilter}
+            setFavFilter={setFavFilter}
+            favCount={favCount}
+            allCats={allCats}
+            customCats={customCats}
+            cc={cc}
+            quotes={quotes}
+            showNewCat={showNewCat}
+            setShowNewCat={setShowNewCat}
+            newCatName={newCatName}
+            setNewCatName={setNewCatName}
+            addCat={addCat}
+            remCat={remCat}
+            toolbarRef={toolbarRef}
+            catScrollRef={catScrollRef}
+            updateCatFade={updateCatFade}
+            catFade={catFade}
+            getCatColor={getCatColor}
+            search={search}
+            setSearch={setSearch}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            showSort={showSort}
+            setShowSort={setShowSort}
+            hasActiveFilters={hasActiveFilterOrSort}
+            clearFilters={clearFilters}
+            resultCount={collectionFiltered.length}
+            totalCount={quotes.length}
+            isMobile={isMobile}
+          />
+        </SectionErrorBoundary>
 
-          <AnimatePresence>
+        <AnimatePresence>
           {showKbHint && !isMobile && quotes.length > 0 && (
             <motion.div
               key="kb-hint"
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto", transition: { duration: 0.25, ease: "easeOut" } }}
+              animate={{
+                opacity: 1,
+                height: "auto",
+                transition: { duration: 0.25, ease: "easeOut" },
+              }}
               exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
               style={{ overflow: "hidden" }}
             >
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "6px 14px", fontSize: 12, color: "var(--cp-text-muted)",
-              }}>
-                <span>Press <kbd style={{ padding: "1px 5px", border: "1px solid var(--cp-border)", borderRadius: 4, fontSize: 11, fontFamily: "inherit", background: "var(--cp-bg-card)" }}>?</kbd> for keyboard shortcuts</span>
-                <button onClick={dismissKbHint} aria-label="Dismiss keyboard shortcuts hint" style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  color: "var(--cp-text-muted)",
+                }}
+              >
+                <span>
+                  Press{" "}
+                  <kbd
+                    style={{
+                      padding: "1px 5px",
+                      border: "1px solid var(--cp-border)",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontFamily: "inherit",
+                      background: "var(--cp-bg-card)",
+                    }}
+                  >
+                    ?
+                  </kbd>{" "}
+                  for keyboard shortcuts
+                </span>
+                <button
+                  onClick={dismissKbHint}
+                  aria-label="Dismiss keyboard shortcuts hint"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--cp-text-faint)",
+                    cursor: "pointer",
+                    padding: "2px 4px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
                   <X size={12} strokeWidth={2} />
                 </button>
               </div>
             </motion.div>
           )}
-          </AnimatePresence>
+        </AnimatePresence>
 
-          {/* Main content area with optional sidebar */}
-          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
+        {/* Main content area with optional sidebar */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={collisionDetection}
+          onDragStart={handleDndStart}
+          onDragOver={handleDndOver}
+          onDragEnd={handleDndEnd}
+        >
           <div style={{ display: "flex", gap: 0 }}>
             {!isMobile ? (
-            <CollectionsSidebar
+              <CollectionsSidebar
                 collections={collections}
                 activeCollectionId={activeCollectionId}
                 setActiveCollectionId={setActiveCollectionId}
@@ -948,304 +1236,439 @@ export default function ResultsPhase({
                 setCollapsed={setSidebarCollapsed}
                 onAutoGroup={handleAutoGroup}
                 onFindDupes={handleFindDupes}
-                uniqueSources={quotes.length > 0 ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
+                uniqueSources={
+                  quotes.length > 0 ? new Set(quotes.map((q) => q.source).filter(Boolean)).size : 0
+                }
                 favCount={favCount}
                 toolbarHeight={toolbarHeight}
                 onExportCollection={handleExportCollection}
-            />
-            ) : (
-            <MobileSheet
-              isOpen={showMobileCollections}
-              onClose={() => setShowMobileCollections(false)}
-            >
-              <CollectionsSidebar
-                collections={collections}
-                activeCollectionId={activeCollectionId}
-                setActiveCollectionId={(id) => { setActiveCollectionId(id); setShowMobileCollections(false); }}
-                createCollection={createCollection}
-                deleteCollection={handleDeleteCollection}
-                renameCollection={renameCollection}
-                updateCollectionIcon={updateCollectionIcon}
-                quoteCounts={quoteCounts}
-                totalQuotes={quotes.length}
-                collapsed={false}
-                setCollapsed={() => {}}
-                onAutoGroup={handleAutoGroup}
-                onFindDupes={handleFindDupes}
-                uniqueSources={quotes.length > 0 ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
-                favCount={favCount}
-                toolbarHeight={0}
-                isMobileSheet
-                onExportCollection={handleExportCollection}
               />
-            </MobileSheet>
+            ) : (
+              <MobileSheet
+                isOpen={showMobileCollections}
+                onClose={() => setShowMobileCollections(false)}
+              >
+                <CollectionsSidebar
+                  collections={collections}
+                  activeCollectionId={activeCollectionId}
+                  setActiveCollectionId={(id) => {
+                    setActiveCollectionId(id);
+                    setShowMobileCollections(false);
+                  }}
+                  createCollection={createCollection}
+                  deleteCollection={handleDeleteCollection}
+                  renameCollection={renameCollection}
+                  updateCollectionIcon={updateCollectionIcon}
+                  quoteCounts={quoteCounts}
+                  totalQuotes={quotes.length}
+                  collapsed={false}
+                  setCollapsed={() => {}}
+                  onAutoGroup={handleAutoGroup}
+                  onFindDupes={handleFindDupes}
+                  uniqueSources={
+                    quotes.length > 0
+                      ? new Set(quotes.map((q) => q.source).filter(Boolean)).size
+                      : 0
+                  }
+                  favCount={favCount}
+                  toolbarHeight={0}
+                  isMobileSheet
+                  onExportCollection={handleExportCollection}
+                />
+              </MobileSheet>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-
-          <AnimatePresence>
-          {showQuickInput && (
-            <motion.div
-              key="quick-add"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto", transition: { duration: 0.2, ease: "easeOut" } }}
-              exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-              style={{ overflow: "hidden" }}
-            >
-            <QuickAddBar
-              onAdd={(text, source, category, opts) => { handleQuickAdd(text, source, category, opts); setShowQuickInput(false); }}
-              onClose={() => setShowQuickInput(false)}
-              allCats={allCats}
-              customCats={customCats}
-              quotes={quotes}
-              isMobile={isMobile}
-            />
-            </motion.div>
-          )}
-          </AnimatePresence>
-
-          {/* Skeleton rows during initial cloud pull */}
-          {initialLoading && quotes.length === 0 && (
-            <div style={{ paddingTop: 8 }}>
-              {Array.from({ length: 6 }, (_, i) => (
-                <div key={i} className="skeleton-row" style={{ opacity: 1 - i * 0.1 }}>
-                  <div style={{ width: 20 }} />
-                  <div style={{ width: 16, height: 16 }} className="skeleton-bar" />
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, padding: "0 16px" }}>
-                    <div className="skeleton-bar" style={{ height: 12, width: `${70 + (i % 3) * 10}%`, borderRadius: 4 }} />
-                    <div className="skeleton-bar" style={{ height: 10, width: `${40 + (i % 2) * 20}%`, borderRadius: 4 }} />
-                  </div>
-                  <div style={{ width: 120, display: "flex", alignItems: "center", paddingLeft: 10, borderLeft: "1px solid var(--cp-border-light)" }}>
-                    <div className="skeleton-bar" style={{ height: 10, width: "80%", borderRadius: 4 }} />
-                  </div>
-                  <div style={{ width: 80, display: "flex", alignItems: "center", paddingLeft: 10, borderLeft: "1px solid var(--cp-border-light)" }}>
-                    <div className="skeleton-bar" style={{ height: 20, width: "70%", borderRadius: 4 }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* TABLE / CARD VIEW — cross-fade on switch */}
-          <AnimatePresence mode="wait" initial={false}>
-          {view === "table" && (
-            <motion.div key="table-view" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.15 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
-            <SectionErrorBoundary name="Table view">
-              <SortableContext items={visible.map(q => q.id)} strategy={verticalListSortingStrategy}>
-              <TableView
-                filtered={visible}
-                toolbarHeight={toolbarHeight}
-                dndReorderRef={dndReorderRef}
-              />
-              </SortableContext>
-            </SectionErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "cards" && (
-            <motion.div key="card-view" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.15 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
-            <SectionErrorBoundary name="Card view">
-              <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
-              {isMobile ? (
-                <MobileCardList
-                  visible={visible}
-                  overDragId={overDragId}
-                  activeDragId={activeDragId}
-                />
-              ) : (
-              <div style={{ columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
-                {visible.map((q, i) => {
-                  const col = getCatColor(q.category, customCats);
-                  const isSel = selected.has(q.id);
-                  const isEd  = editingId === q.id;
-                  const needsAtt = q.confidence === "low" || q.category === "Unknown";
-                  const isInlineEditing = inlineEdit?.id === q.id;
-                  const inlineEditField = isInlineEditing ? inlineEdit.field : null;
-                  const isDeleting = deletingId === q.id;
-                  const isSavedPulse = savedPulse?.id === q.id;
-                  const savedPulseField = isSavedPulse ? savedPulse.field : null;
-                  const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
-                  return (
-                    <motion.div key={q.id} className="qcard-wrap" style={{ breakInside: "avoid", marginBottom: 12 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.6) }}>
-                    <CardItem
-                      q={q}
-                      col={col}
-                      isSel={isSel}
-                      isEd={isEd}
-                      needsAtt={needsAtt}
-                      showConfidence={showConfidence}
-                      sortBy={sortBy}
-                      isMobile={false}
-                      isInlineEditing={isInlineEditing}
-                      inlineEditField={inlineEditField}
-                      isSavedPulse={isSavedPulse}
-                      savedPulseField={savedPulseField}
+              <AnimatePresence>
+                {showQuickInput && (
+                  <motion.div
+                    key="quick-add"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{
+                      opacity: 1,
+                      height: "auto",
+                      transition: { duration: 0.2, ease: "easeOut" },
+                    }}
+                    exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <QuickAddBar
+                      onAdd={(text, source, category, opts) => {
+                        handleQuickAdd(text, source, category, opts);
+                        setShowQuickInput(false);
+                      }}
+                      onClose={() => setShowQuickInput(false)}
                       allCats={allCats}
                       customCats={customCats}
-                      actionProps={actionProps}
-                      toggleSel={toggleSel}
-                      startEditing={startEditing}
-                      startInlineEdit={startInlineEdit}
-                      saveEdit={saveEdit}
-                      saveInlineField={saveInlineField}
-                      setInlineEdit={setInlineEdit}
-                      setEditingId={setEditingId}
-                      isDeleting={isDeleting}
-                      searchTerm={search}
-                      isOverTarget={isOverTarget}
-                      isNewQuote={newQuoteHighlight === q.id}
+                      quotes={quotes}
+                      isMobile={isMobile}
                     />
-                    </motion.div>
-                  );
-                })}
-              </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Skeleton rows during initial cloud pull */}
+              {initialLoading && quotes.length === 0 && (
+                <div style={{ paddingTop: 8 }}>
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <div key={i} className="skeleton-row" style={{ opacity: 1 - i * 0.1 }}>
+                      <div style={{ width: 20 }} />
+                      <div style={{ width: 16, height: 16 }} className="skeleton-bar" />
+                      <div
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 6,
+                          padding: "0 16px",
+                        }}
+                      >
+                        <div
+                          className="skeleton-bar"
+                          style={{ height: 12, width: `${70 + (i % 3) * 10}%`, borderRadius: 4 }}
+                        />
+                        <div
+                          className="skeleton-bar"
+                          style={{ height: 10, width: `${40 + (i % 2) * 20}%`, borderRadius: 4 }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          width: 120,
+                          display: "flex",
+                          alignItems: "center",
+                          paddingLeft: 10,
+                          borderLeft: "1px solid var(--cp-border-light)",
+                        }}
+                      >
+                        <div
+                          className="skeleton-bar"
+                          style={{ height: 10, width: "80%", borderRadius: 4 }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          width: 80,
+                          display: "flex",
+                          alignItems: "center",
+                          paddingLeft: 10,
+                          borderLeft: "1px solid var(--cp-border-light)",
+                        }}
+                      >
+                        <div
+                          className="skeleton-bar"
+                          style={{ height: 20, width: "70%", borderRadius: 4 }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-              </SortableContext>
-            </SectionErrorBoundary>
-            </motion.div>
-          )}
-          </AnimatePresence>
-{hasMore && (
-  <button
-    className="load-more-btn"
-    onClick={loadMore}
-    style={{
-      display: "block",
-      margin: "20px auto",
-      padding: "10px 24px",
-      fontSize: 13,
-      color: "var(--cp-accent)",
-      background: "none",
-      border: "1px solid var(--cp-border)",
-      borderRadius: 6,
-      cursor: "pointer",
-      fontFamily: "inherit",
-      animation: "fadeUp .25s ease",
-    }}
-  >
-    Load more ({remaining} remaining)
-  </button>
-)}
-          <AnimatePresence>
-          {collectionFiltered.length === 0 && (
-            <motion.div
-              key="empty-state"
-              initial={{ opacity: 0, y: 16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }}
-              exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }}
-            >
-            <EmptyState
-              catFilter={catFilter} setCatFilter={setCatFilter}
-              favFilter={favFilter} setFavFilter={setFavFilter}
-              search={search} setSearch={setSearch}
-              setSortBy={setSortBy}
-              customCats={customCats}
-              totalCount={quotes.length}
-              activeCollectionName={activeCollectionId ? collections.find(c => c.id === activeCollectionId)?.name : null}
-              onBrowseAll={activeCollectionId ? () => setActiveCollectionId(null) : null}
-            />
-            </motion.div>
-          )}
-          </AnimatePresence>
 
-          <Footer styles={styles} />
+              {/* TABLE / CARD VIEW — cross-fade on switch */}
+              <AnimatePresence mode="wait" initial={false}>
+                {view === "table" && (
+                  <motion.div
+                    key="table-view"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 0.15 } }}
+                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                  >
+                    <SectionErrorBoundary name="Table view">
+                      <SortableContext
+                        items={visible.map((q) => q.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <TableView
+                          filtered={visible}
+                          toolbarHeight={toolbarHeight}
+                          dndReorderRef={dndReorderRef}
+                        />
+                      </SortableContext>
+                    </SectionErrorBoundary>
+                  </motion.div>
+                )}
 
-          {showBulkBar && <div style={{ height: 64 }} />}
+                {view === "cards" && (
+                  <motion.div
+                    key="card-view"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 0.15 } }}
+                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                  >
+                    <SectionErrorBoundary name="Card view">
+                      <SortableContext
+                        items={visible.map((q) => q.id)}
+                        strategy={rectSortingStrategy}
+                      >
+                        {isMobile ? (
+                          <MobileCardList
+                            visible={visible}
+                            overDragId={overDragId}
+                            activeDragId={activeDragId}
+                          />
+                        ) : (
+                          <div style={{ columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
+                            {visible.map((q, i) => {
+                              const col = getCatColor(q.category, customCats);
+                              const isSel = selected.has(q.id);
+                              const isEd = editingId === q.id;
+                              const needsAtt = q.confidence === "low" || q.category === "Unknown";
+                              const isInlineEditing = inlineEdit?.id === q.id;
+                              const inlineEditField = isInlineEditing ? inlineEdit.field : null;
+                              const isDeleting = deletingId === q.id;
+                              const isSavedPulse = savedPulse?.id === q.id;
+                              const savedPulseField = isSavedPulse ? savedPulse.field : null;
+                              const isOverTarget =
+                                overDragId === q.id && activeDragId && activeDragId !== q.id;
+                              return (
+                                <motion.div
+                                  key={q.id}
+                                  className="qcard-wrap"
+                                  style={{ breakInside: "avoid", marginBottom: 12 }}
+                                  initial={{ opacity: 0, y: 12 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.6) }}
+                                >
+                                  <CardItem
+                                    q={q}
+                                    col={col}
+                                    isSel={isSel}
+                                    isEd={isEd}
+                                    needsAtt={needsAtt}
+                                    showConfidence={showConfidence}
+                                    sortBy={sortBy}
+                                    isMobile={false}
+                                    isInlineEditing={isInlineEditing}
+                                    inlineEditField={inlineEditField}
+                                    isSavedPulse={isSavedPulse}
+                                    savedPulseField={savedPulseField}
+                                    allCats={allCats}
+                                    customCats={customCats}
+                                    actionProps={actionProps}
+                                    toggleSel={toggleSel}
+                                    startEditing={startEditing}
+                                    startInlineEdit={startInlineEdit}
+                                    saveEdit={saveEdit}
+                                    saveInlineField={saveInlineField}
+                                    setInlineEdit={setInlineEdit}
+                                    setEditingId={setEditingId}
+                                    isDeleting={isDeleting}
+                                    searchTerm={search}
+                                    isOverTarget={isOverTarget}
+                                    isNewQuote={newQuoteHighlight === q.id}
+                                  />
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </SortableContext>
+                    </SectionErrorBoundary>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {hasMore && (
+                <button
+                  className="load-more-btn"
+                  onClick={loadMore}
+                  style={{
+                    display: "block",
+                    margin: "20px auto",
+                    padding: "10px 24px",
+                    fontSize: 13,
+                    color: "var(--cp-accent)",
+                    background: "none",
+                    border: "1px solid var(--cp-border)",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    animation: "fadeUp .25s ease",
+                  }}
+                >
+                  Load more ({remaining} remaining)
+                </button>
+              )}
+              <AnimatePresence>
+                {collectionFiltered.length === 0 && (
+                  <motion.div
+                    key="empty-state"
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: { type: "spring", stiffness: 300, damping: 24 },
+                    }}
+                    exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }}
+                  >
+                    <EmptyState
+                      catFilter={catFilter}
+                      setCatFilter={setCatFilter}
+                      favFilter={favFilter}
+                      setFavFilter={setFavFilter}
+                      search={search}
+                      setSearch={setSearch}
+                      setSortBy={setSortBy}
+                      customCats={customCats}
+                      totalCount={quotes.length}
+                      activeCollectionName={
+                        activeCollectionId
+                          ? collections.find((c) => c.id === activeCollectionId)?.name
+                          : null
+                      }
+                      onBrowseAll={activeCollectionId ? () => setActiveCollectionId(null) : null}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            </div>{/* end flex main content */}
-          </div>{/* end flex container with sidebar */}
+              <Footer styles={styles} />
+
+              {showBulkBar && <div style={{ height: 64 }} />}
+            </div>
+            {/* end flex main content */}
+          </div>
+          {/* end flex container with sidebar */}
 
           {/* Persistent help trigger — floating ? button (desktop only) */}
           {!isMobile && (
-          <button
-            className="ui-tip ui-tip-left hdr-btn"
-            data-tip="Help & shortcuts"
-            aria-label="Help & shortcuts"
-            onClick={() => { setShowShortcuts(true); dismissKbHint(); }}
-            style={{
-              position: "fixed", bottom: showBulkBar ? 72 : 20, right: 20,
-              width: 36, height: 36, borderRadius: "50%",
-              border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
-              boxShadow: "var(--cp-shadow-card)", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--cp-text-muted)", zIndex: 59,
-              transition: "bottom .2s ease, box-shadow .15s ease",
-            }}
-          >
-            <CircleQuestionMark size={16} strokeWidth={1.5} />
-          </button>
+            <button
+              className="ui-tip ui-tip-left hdr-btn"
+              data-tip="Help & shortcuts"
+              aria-label="Help & shortcuts"
+              onClick={() => {
+                setShowShortcuts(true);
+                dismissKbHint();
+              }}
+              style={{
+                position: "fixed",
+                bottom: showBulkBar ? 72 : 20,
+                right: 20,
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                border: "1px solid var(--cp-border)",
+                background: "var(--cp-bg-card)",
+                boxShadow: "var(--cp-shadow-card)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--cp-text-muted)",
+                zIndex: 59,
+                transition: "bottom .2s ease, box-shadow .15s ease",
+              }}
+            >
+              <CircleQuestionMark size={16} strokeWidth={1.5} />
+            </button>
           )}
           {/* Scroll-to-top — fades in past ~600px (bottom-left to clear right-side controls) */}
           <ScrollTopButton isMobile={isMobile} bottomOffset={showBulkBar ? 72 : 20} />
           {/* Mobile collections FAB */}
           {isMobile && (
-          <button
-            className="mobile-fab"
-            aria-label="Browse collections"
-            onClick={() => setShowMobileCollections(true)}
-            style={{
-              position: "fixed",
-              // env() folds in the home-bar inset; kept inline (not a stylesheet
-              // !important rule) so the bulk-bar offset can still win.
-              bottom: `calc(${showBulkBar ? 72 : 20}px + env(safe-area-inset-bottom))`,
-              right: 16,
-              width: 44, height: 44, borderRadius: "50%",
-              border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
-              boxShadow: "var(--cp-shadow-md)", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: activeCollectionId ? "var(--cp-accent)" : "var(--cp-text-muted)",
-              zIndex: 59,
-              transition: "bottom .2s ease",
-            }}
-          >
-            <Library size={18} strokeWidth={1.5} />
-            {activeCollectionId && (
-              <span style={{
-                position: "absolute", top: -2, right: -2,
-                width: 8, height: 8, borderRadius: "50%",
-                background: "var(--cp-accent)",
-              }} />
-            )}
-          </button>
+            <button
+              className="mobile-fab"
+              aria-label="Browse collections"
+              onClick={() => setShowMobileCollections(true)}
+              style={{
+                position: "fixed",
+                // env() folds in the home-bar inset; kept inline (not a stylesheet
+                // !important rule) so the bulk-bar offset can still win.
+                bottom: `calc(${showBulkBar ? 72 : 20}px + env(safe-area-inset-bottom))`,
+                right: 16,
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                border: "1px solid var(--cp-border)",
+                background: "var(--cp-bg-card)",
+                boxShadow: "var(--cp-shadow-md)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: activeCollectionId ? "var(--cp-accent)" : "var(--cp-text-muted)",
+                zIndex: 59,
+                transition: "bottom .2s ease",
+              }}
+            >
+              <Library size={18} strokeWidth={1.5} />
+              {activeCollectionId && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -2,
+                    right: -2,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "var(--cp-accent)",
+                  }}
+                />
+              )}
+            </button>
           )}
-          <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }} modifiers={[anchorToCursor]}>
-            {activeDragId ? (() => {
-              const q = quotes.find(x => x.id === activeDragId);
-              if (!q) return null;
-              const count = selected.has(activeDragId) && selected.size > 1 ? selected.size : 1;
-              const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
-              return (
-                <div style={{
-                  position: "relative",
-                  transform: "scale(1.04) rotate(-2deg)",
-                  transition: "transform .2s cubic-bezier(0.16, 1, 0.3, 1)",
-                  filter: "drop-shadow(0 12px 28px rgba(0,0,0,0.18)) drop-shadow(0 4px 10px rgba(0,0,0,0.1))",
-                }}>
-                  {count > 1 && (
-                    <span style={{
-                      position: "absolute", top: -10, left: -10, zIndex: 1,
-                      background: "var(--cp-accent)", color: "#fff",
-                      fontSize: 11, fontWeight: 700, lineHeight: 1,
-                      padding: "4px 8px", borderRadius: 6,
-                      boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
-                      animation: "completePop .3s cubic-bezier(0.16, 1, 0.3, 1) both",
-                    }}>{count}</span>
-                  )}
-                  <div style={{
-                    background: "var(--cp-bg-card)",
-                    border: "1px solid var(--cp-accent)",
-                    borderRadius: 6, padding: "10px 16px", fontSize: 13,
-                    boxShadow: "0 0 0 2px rgba(60,87,117,0.1)",
-                    maxWidth: 320,
-                    color: "var(--cp-text)",
-                  }}>
-                    {preview}
-                  </div>
-                </div>
-              );
-            })() : null}
+          <DragOverlay
+            dropAnimation={{ duration: 180, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }}
+            modifiers={[anchorToCursor]}
+          >
+            {activeDragId
+              ? (() => {
+                  const q = quotes.find((x) => x.id === activeDragId);
+                  if (!q) return null;
+                  const count = selected.has(activeDragId) && selected.size > 1 ? selected.size : 1;
+                  const preview = q.text.length > 60 ? q.text.slice(0, 60) + "\u2026" : q.text;
+                  return (
+                    <div
+                      style={{
+                        position: "relative",
+                        transform: "scale(1.04) rotate(-2deg)",
+                        transition: "transform .2s cubic-bezier(0.16, 1, 0.3, 1)",
+                        filter:
+                          "drop-shadow(0 12px 28px rgba(0,0,0,0.18)) drop-shadow(0 4px 10px rgba(0,0,0,0.1))",
+                      }}
+                    >
+                      {count > 1 && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: -10,
+                            left: -10,
+                            zIndex: 1,
+                            background: "var(--cp-accent)",
+                            color: "#fff",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+                            animation: "completePop .3s cubic-bezier(0.16, 1, 0.3, 1) both",
+                          }}
+                        >
+                          {count}
+                        </span>
+                      )}
+                      <div
+                        style={{
+                          background: "var(--cp-bg-card)",
+                          border: "1px solid var(--cp-accent)",
+                          borderRadius: 6,
+                          padding: "10px 16px",
+                          fontSize: 13,
+                          boxShadow: "0 0 0 2px rgba(60,87,117,0.1)",
+                          maxWidth: 320,
+                          color: "var(--cp-text)",
+                        }}
+                      >
+                        {preview}
+                      </div>
+                    </div>
+                  );
+                })()
+              : null}
           </DragOverlay>
-          </DndContext>
-        </div>
+        </DndContext>
+      </div>
     </ResultsProvider>
   );
 }

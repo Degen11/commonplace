@@ -35,7 +35,7 @@ export default function OnboardingModal() {
   };
 
   const next = () => {
-    if (step < STEPS.length - 1) setStep(s => s + 1);
+    if (step < STEPS.length - 1) setStep((s) => s + 1);
     else dismiss();
   };
 
@@ -49,8 +49,11 @@ export default function OnboardingModal() {
       onClose={dismiss}
       containerExtra={{ fontFamily: FONT_SANS }}
       popupStyle={{
-        background: "var(--cp-bg-card)", borderRadius: 6, padding: 28,
-        maxWidth: 420, width: "100%",
+        background: "var(--cp-bg-card)",
+        borderRadius: 6,
+        padding: 28,
+        maxWidth: 420,
+        width: "100%",
       }}
     >
       <AnimatePresence mode="wait">
@@ -62,47 +65,86 @@ export default function OnboardingModal() {
           transition={{ type: "spring", stiffness: 400, damping: 30, mass: 0.8 }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 6,
-              background: `${CP_ACCENT}14`, display: "flex",
-              alignItems: "center", justifyContent: "center",
-            }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 6,
+                background: `${CP_ACCENT}14`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               {createElement(current.Icon, { size: 20, color: CP_ACCENT, strokeWidth: 1.5 })}
             </div>
-            <Dialog.Title render={<h3 />} style={{ fontSize: 18, fontWeight: 700, color: "var(--cp-text)", letterSpacing: "-0.02em" }}>
+            <Dialog.Title
+              render={<h3 />}
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: "var(--cp-text)",
+                letterSpacing: "-0.02em",
+              }}
+            >
               {current.title}
             </Dialog.Title>
           </div>
-          <Dialog.Description style={{ fontSize: 14, lineHeight: 1.65, color: "var(--cp-text-secondary)", marginBottom: current.example ? 14 : 24 }}>
+          <Dialog.Description
+            style={{
+              fontSize: 14,
+              lineHeight: 1.65,
+              color: "var(--cp-text-secondary)",
+              marginBottom: current.example ? 14 : 24,
+            }}
+          >
             {current.body}
           </Dialog.Description>
           {current.example && (
-            <pre style={{
-              fontSize: 12, lineHeight: 1.6, padding: "10px 12px",
-              background: "var(--cp-bg-panel)", border: "1px solid var(--cp-border-light)",
-              borderRadius: 4, color: "var(--cp-text-muted)", marginBottom: 24,
-              whiteSpace: "pre-wrap", fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
-            }}>
+            <pre
+              style={{
+                fontSize: 12,
+                lineHeight: 1.6,
+                padding: "10px 12px",
+                background: "var(--cp-bg-panel)",
+                border: "1px solid var(--cp-border-light)",
+                borderRadius: 4,
+                color: "var(--cp-text-muted)",
+                marginBottom: 24,
+                whiteSpace: "pre-wrap",
+                fontFamily: "'SF Mono','DM Mono',Menlo,monospace",
+              }}
+            >
               {current.example}
             </pre>
           )}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", gap: 6 }}>
               {STEPS.map((_, i) => (
-                <div key={i} style={{
-                  width: 8, height: 8, borderRadius: "50%",
-                  background: i === step ? CP_ACCENT : "var(--cp-border)",
-                  transition: "background .2s",
-                }} />
+                <div
+                  key={i}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: i === step ? CP_ACCENT : "var(--cp-border)",
+                    transition: "background .2s",
+                  }}
+                />
               ))}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={dismiss}
                 style={{
-                  padding: "8px 14px", borderRadius: 6, border: "1px solid var(--cp-border)",
-                  background: "var(--cp-bg-card)", color: "var(--cp-text-muted)",
-                  fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  border: "1px solid var(--cp-border)",
+                  background: "var(--cp-bg-card)",
+                  color: "var(--cp-text-muted)",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
                 }}
               >
                 Skip
@@ -111,13 +153,29 @@ export default function OnboardingModal() {
                 onClick={next}
                 autoFocus
                 style={{
-                  padding: "8px 18px", borderRadius: 6, border: "none",
-                  background: CP_ACCENT, color: "#fff",
-                  fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "8px 18px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: CP_ACCENT,
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
               >
-                {isLast ? <><CircleCheckBig size={14} strokeWidth={2} /> Got it</> : <>Next <ArrowRight size={14} strokeWidth={2} /></>}
+                {isLast ? (
+                  <>
+                    <CircleCheckBig size={14} strokeWidth={2} /> Got it
+                  </>
+                ) : (
+                  <>
+                    Next <ArrowRight size={14} strokeWidth={2} />
+                  </>
+                )}
               </button>
             </div>
           </div>

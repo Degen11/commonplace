@@ -17,7 +17,8 @@ export function handleRichTextShortcut(e, value, setValue) {
   const before = value.slice(Math.max(0, start - marker.length), start);
   const after = value.slice(end, end + marker.length);
   if (before === marker && after === marker) {
-    const newValue = value.slice(0, start - marker.length) + selected + value.slice(end + marker.length);
+    const newValue =
+      value.slice(0, start - marker.length) + selected + value.slice(end + marker.length);
     setValue(newValue);
     requestAnimationFrame(() => {
       el.selectionStart = start - marker.length;

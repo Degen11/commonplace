@@ -24,12 +24,18 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
 
   // Opening this panel is the user actively engaging with sync — from here on
   // a failed background backup is worth surfacing as an error in the header.
-  useEffect(() => { saveString(LS_SYNC_ENGAGED, "1"); }, []);
+  useEffect(() => {
+    saveString(LS_SYNC_ENGAGED, "1");
+  }, []);
 
   const copyCode = () => {
     if (!deviceId) return;
-    navigator.clipboard.writeText(deviceId)
-      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })
+    navigator.clipboard
+      .writeText(deviceId)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
       .catch(() => showToast?.("Couldn't copy — select the code manually.", null, null, "error"));
   };
 
@@ -52,20 +58,46 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
     window.location.reload();
   };
 
-  const label = { fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--cp-text-muted)", marginBottom: 6 };
+  const label = {
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "var(--cp-text-muted)",
+    marginBottom: 6,
+  };
   const boxRow = { display: "flex", gap: 8, alignItems: "center" };
 
   return (
-    <ModalShell onClose={onClose} popupStyle={{ ...styles.confirmBox, maxWidth: "min(92vw, 440px)" }}>
+    <ModalShell
+      onClose={onClose}
+      popupStyle={{ ...styles.confirmBox, maxWidth: "min(92vw, 440px)" }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 6, background: "var(--cp-bg-tab)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 6,
+            background: "var(--cp-bg-tab)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
           <Cloud size={20} color={CP_ACCENT} strokeWidth={2} />
         </div>
-        <Dialog.Title render={<p />} style={{ fontSize: 15, fontWeight: 600 }}>Cloud sync</Dialog.Title>
+        <Dialog.Title render={<p />} style={{ fontSize: 15, fontWeight: 600 }}>
+          Cloud sync
+        </Dialog.Title>
       </div>
 
-      <Dialog.Description style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 18, lineHeight: 1.5 }}>
-        Your quotes back up to the cloud under an anonymous device code — no account needed. To see them on another device, link it with this code.
+      <Dialog.Description
+        style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 18, lineHeight: 1.5 }}
+      >
+        Your quotes back up to the cloud under an anonymous device code — no account needed. To see
+        them on another device, link it with this code.
       </Dialog.Description>
 
       {deviceId ? (
@@ -73,7 +105,22 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
           <div style={{ marginBottom: 18 }}>
             <div style={label}>This device's code</div>
             <div style={boxRow}>
-              <code style={{ flex: 1, minWidth: 0, fontSize: 12, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", color: "var(--cp-text-secondary)", background: "var(--cp-bg-panel)", border: "1px solid var(--cp-border)", borderRadius: 4, padding: "8px 10px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <code
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 12,
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                  color: "var(--cp-text-secondary)",
+                  background: "var(--cp-bg-panel)",
+                  border: "1px solid var(--cp-border)",
+                  borderRadius: 4,
+                  padding: "8px 10px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {deviceId}
               </code>
               <button
@@ -81,10 +128,21 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
                 aria-label="Copy device code"
                 className="ui-tip ui-tip-below"
                 data-tip={copied ? "Copied" : "Copy"}
-                style={{ ...styles.confirmCancel, padding: "8px 12px", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                style={{
+                  ...styles.confirmCancel,
+                  padding: "8px 12px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  flexShrink: 0,
+                }}
                 onClick={copyCode}
               >
-                {copied ? <Check size={14} strokeWidth={2.5} color="var(--cp-conf-high)" /> : <Copy size={14} strokeWidth={2} />}
+                {copied ? (
+                  <Check size={14} strokeWidth={2.5} color="var(--cp-conf-high)" />
+                ) : (
+                  <Copy size={14} strokeWidth={2} />
+                )}
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
@@ -95,45 +153,105 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
             <div style={boxRow}>
               <input
                 value={code}
-                onChange={e => setCode(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") link(); }}
+                onChange={(e) => setCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") link();
+                }}
                 placeholder="Paste a device code…"
                 aria-label="Device code to link"
                 spellCheck={false}
                 autoCapitalize="off"
                 autoCorrect="off"
-                style={{ ...styles.editIn, flex: 1, minWidth: 0, padding: "8px 10px", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
+                style={{
+                  ...styles.editIn,
+                  flex: 1,
+                  minWidth: 0,
+                  padding: "8px 10px",
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                }}
               />
               <button
                 type="button"
-                style={{ ...styles.confirmYes, background: CP_ACCENT, display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                style={{
+                  ...styles.confirmYes,
+                  background: CP_ACCENT,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  flexShrink: 0,
+                }}
                 onClick={link}
               >
                 <Link2 size={14} strokeWidth={2} /> Link
               </button>
             </div>
-            <p style={{ fontSize: 11.5, color: "var(--cp-text-muted)", marginTop: 8, lineHeight: 1.5 }}>
-              Paste the code from your other device. This device's quotes stay and merge with the linked device's — nothing is deleted. The page will reload to sync.
+            <p
+              style={{
+                fontSize: 11.5,
+                color: "var(--cp-text-muted)",
+                marginTop: 8,
+                lineHeight: 1.5,
+              }}
+            >
+              Paste the code from your other device. This device's quotes stay and merge with the
+              linked device's — nothing is deleted. The page will reload to sync.
             </p>
           </div>
         </>
       ) : (
-        <p style={{ fontSize: 13, color: "var(--cp-warning-text)", background: "var(--cp-warning-bg)", border: "1px solid var(--cp-warning-border)", borderRadius: 4, padding: "10px 12px", lineHeight: 1.5 }}>
-          Cloud sync is unavailable — this browser is blocking local storage (e.g. private mode), so no device code could be created.
+        <p
+          style={{
+            fontSize: 13,
+            color: "var(--cp-warning-text)",
+            background: "var(--cp-warning-bg)",
+            border: "1px solid var(--cp-warning-border)",
+            borderRadius: 4,
+            padding: "10px 12px",
+            lineHeight: 1.5,
+          }}
+        >
+          Cloud sync is unavailable — this browser is blocking local storage (e.g. private mode), so
+          no device code could be created.
         </p>
       )}
 
-      <div style={{ display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 20 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 20,
+        }}
+      >
         {syncStatus === "error" && onRetry ? (
           <button
             type="button"
-            style={{ ...styles.confirmCancel, padding: "8px 14px", display: "inline-flex", alignItems: "center", gap: 6 }}
-            onClick={() => { onRetry(); onClose(); }}
+            style={{
+              ...styles.confirmCancel,
+              padding: "8px 14px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            onClick={() => {
+              onRetry();
+              onClose();
+            }}
           >
             <RefreshCw size={13} strokeWidth={2} /> Retry sync now
           </button>
-        ) : <span />}
-        <button type="button" className="confirm-cancel" style={{ ...styles.confirmCancel, padding: "8px 20px" }} onClick={onClose}>Done</button>
+        ) : (
+          <span />
+        )}
+        <button
+          type="button"
+          className="confirm-cancel"
+          style={{ ...styles.confirmCancel, padding: "8px 20px" }}
+          onClick={onClose}
+        >
+          Done
+        </button>
       </div>
     </ModalShell>
   );

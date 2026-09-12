@@ -19,7 +19,7 @@ describe("mergeByTimestamp", () => {
     const cloud = [{ id: "2", text: "b", updatedAt: 200 }];
     const result = mergeByTimestamp(local, cloud, "updatedAt");
     expect(result).toHaveLength(2);
-    expect(result.find(i => i.id === "2")).toBeTruthy();
+    expect(result.find((i) => i.id === "2")).toBeTruthy();
   });
 
   it("keeps newer cloud item over older local", () => {
@@ -45,7 +45,7 @@ describe("mergeByTimestamp", () => {
     ];
     const cloud = [{ id: "3", text: "c", updatedAt: 200 }];
     const result = mergeByTimestamp(local, cloud, "updatedAt");
-    expect(result.map(i => i.id)).toEqual(["1", "2", "3"]);
+    expect(result.map((i) => i.id)).toEqual(["1", "2", "3"]);
   });
 
   it("handles missing timestamp gracefully", () => {

@@ -5,9 +5,17 @@ import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import {
-  ThemeToggleButton, ThemeMenuItem, ViewToggle, ViewMenuItems,
-  HeaderOverflowMenu, OverflowSection, OverflowDivider,
-  StatsMenuItem, ConfidenceMenuItem, ShortcutsMenuItem, NewBatchMenuItem,
+  ThemeToggleButton,
+  ThemeMenuItem,
+  ViewToggle,
+  ViewMenuItems,
+  HeaderOverflowMenu,
+  OverflowSection,
+  OverflowDivider,
+  StatsMenuItem,
+  ConfidenceMenuItem,
+  ShortcutsMenuItem,
+  NewBatchMenuItem,
 } from "./HeaderControls";
 
 import { Ellipsis, MenuIcon, Plus } from "lucide-react";
@@ -15,9 +23,14 @@ import { Ellipsis, MenuIcon, Plus } from "lucide-react";
 const pillStyles = syncPillStyles.full;
 
 export default function HeaderBar({
-  view, compact, setView, setCompact,
-  showStats, setShowStats,
-  showAddMore, setShowAddMore,
+  view,
+  compact,
+  setView,
+  setCompact,
+  showStats,
+  setShowStats,
+  showAddMore,
+  setShowAddMore,
   isMobile,
   setConfirmClear,
   addMoreRef,
@@ -36,17 +49,32 @@ export default function HeaderBar({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleAddMore = () => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); };
-  const addMoreActive = showAddMore ? { background: "var(--cp-bg-tab)", color: "var(--cp-accent)", borderColor: "var(--cp-accent)" } : {};
+  const toggleAddMore = () => {
+    setShowAddMore(!showAddMore);
+    setTimeout(() => addMoreRef.current?.focus(), 100);
+  };
+  const addMoreActive = showAddMore
+    ? { background: "var(--cp-bg-tab)", color: "var(--cp-accent)", borderColor: "var(--cp-accent)" }
+    : {};
 
   return (
     <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
-      <motion.h1 layoutId="app-logo" style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
+      <motion.h1
+        layoutId="app-logo"
+        style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }}
+        transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}
+      >
         <Logo size={28} />
         <Wordmark height={30} color="var(--cp-text-secondary)" />
       </motion.h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-        <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} onOpenSync={onOpenSync} pillStyles={pillStyles} />
+        <SyncPill
+          syncStatus={syncStatus}
+          lastSynced={lastSynced}
+          onManualSync={onManualSync}
+          onOpenSync={onOpenSync}
+          pillStyles={pillStyles}
+        />
 
         {/* Desktop: show all buttons inline */}
         {!isMobile && (
@@ -54,7 +82,14 @@ export default function HeaderBar({
             <ThemeToggleButton dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
             <ViewToggle view={view} compact={compact} setView={setView} setCompact={setCompact} />
             {exportDropdownContent}
-            <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={{ ...styles.addMoreBtn, ...addMoreActive }} onClick={toggleAddMore}>+ Add more</button>
+            <button
+              className="ui-tip ui-tip-below hdr-btn"
+              data-tip="Add more quotes"
+              style={{ ...styles.addMoreBtn, ...addMoreActive }}
+              onClick={toggleAddMore}
+            >
+              + Add more
+            </button>
           </>
         )}
 
@@ -62,7 +97,16 @@ export default function HeaderBar({
         {isMobile && (
           <button
             className="hdr-btn"
-            style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, display: "inline-flex", alignItems: "center", gap: 4, ...addMoreActive }}
+            style={{
+              ...styles.addMoreBtn,
+              padding: "7px 14px",
+              fontSize: 13,
+              minHeight: 40,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              ...addMoreActive,
+            }}
             onClick={toggleAddMore}
           >
             <Plus size={15} strokeWidth={2} /> Add
@@ -75,7 +119,13 @@ export default function HeaderBar({
           onOpenChange={setMobileMenuOpen}
           triggerTip="More actions"
           triggerStyle={{ ...styles.statsBtn, padding: isMobile ? "7px 10px" : "5px 8px" }}
-          trigger={isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <Ellipsis size={16} strokeWidth={1.5} />}
+          trigger={
+            isMobile ? (
+              <MenuIcon size={18} strokeWidth={1.5} />
+            ) : (
+              <Ellipsis size={16} strokeWidth={1.5} />
+            )
+          }
         >
           {/* Mobile-only: theme + view grouped here */}
           {isMobile && (
@@ -84,13 +134,21 @@ export default function HeaderBar({
               <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
               <OverflowDivider />
               <OverflowSection>Layout</OverflowSection>
-              <ViewMenuItems view={view} compact={compact} setView={setView} setCompact={setCompact} />
+              <ViewMenuItems
+                view={view}
+                compact={compact}
+                setView={setView}
+                setCompact={setCompact}
+              />
               <OverflowDivider />
             </>
           )}
           <OverflowSection>View</OverflowSection>
-          <StatsMenuItem showStats={showStats} onClick={() => setShowStats(s => !s)} />
-          <ConfidenceMenuItem showConfidence={showConfidence} setShowConfidence={setShowConfidence} />
+          <StatsMenuItem showStats={showStats} onClick={() => setShowStats((s) => !s)} />
+          <ConfidenceMenuItem
+            showConfidence={showConfidence}
+            setShowConfidence={setShowConfidence}
+          />
           <OverflowDivider />
           <OverflowSection>Preferences</OverflowSection>
           <ShortcutsMenuItem onShowShortcuts={onShowShortcuts} />

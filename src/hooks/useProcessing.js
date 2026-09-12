@@ -2,7 +2,11 @@ import { useReducer, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
 import { buildValidCats, fallbackCategory, UNKNOWN_SOURCE } from "../data/constants";
 import {
-  makeSimilarityKey, similarityFromKeys, smartParse, smartSplit, basicFormat,
+  makeSimilarityKey,
+  similarityFromKeys,
+  smartParse,
+  smartSplit,
+  basicFormat,
   initProperNouns,
 } from "../utils/textFormatting";
 import { initNlp } from "../utils/smartRestore";
@@ -11,12 +15,16 @@ import { removeFromStorage } from "../utils/storage";
 import { fetchWithTimeout, API_HEADERS } from "../utils/api";
 import { describeApiError } from "../utils/apiErrors";
 import {
-  API_TIMEOUT_MS, AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
-  PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD, LS_DRAFT,
+  API_TIMEOUT_MS,
+  AUTO_GROUP_TIMEOUT_MS,
+  API_BATCH_SIZE,
+  PROCESSING_DONE_MS,
+  DUPE_SIMILARITY_THRESHOLD,
+  LS_DRAFT,
 } from "../config";
 
 // Strip outer ** wrapping that the AI sometimes adds to cleanText
-const stripOuterBold = t => t && t.startsWith("**") && t.endsWith("**") ? t.slice(2, -2) : t;
+const stripOuterBold = (t) => (t && t.startsWith("**") && t.endsWith("**") ? t.slice(2, -2) : t);
 
 // ── State machine ──
 // idle → dupes → processing → done → idle
@@ -73,7 +81,10 @@ export function processingReducer(state, action) {
     case "SHOW_DUPES":
       return { ...state, pendingDupes: action.dupes, dupeDecisions: action.decisions };
     case "SET_DUPE_DECISION":
-      return { ...state, dupeDecisions: { ...state.dupeDecisions, [action.index]: action.decision } };
+      return {
+        ...state,
+        dupeDecisions: { ...state.dupeDecisions, [action.index]: action.decision },
+      };
     case "CLEAR_DUPES":
       return { ...state, pendingDupes: [], dupeDecisions: {} };
     case "DISMISS_ERROR":
@@ -111,30 +122,41 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   // ── API: batch identification ──
   const identifyBatch = async (items, withFormatting = false, externalSignal) => {
     if (items.length === 0) return [];
-    const quotesBlock = items.map((it, i) => {
-      const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
-      return `[${i}] ${it.text}${hintStr}`;
-    }).join("\n");
+    const quotesBlock = items
+      .map((it, i) => {
+        const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
+        return `[${i}] ${it.text}${hintStr}`;
+      })
+      .join("\n");
 
-    const r = await fetchWithTimeout("/api/identify", {
-      method: "POST",
-      headers: API_HEADERS,
-      body: JSON.stringify({
-        formatting: withFormatting,
-        messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
-      }),
-    }, API_TIMEOUT_MS, externalSignal);
+    const r = await fetchWithTimeout(
+      "/api/identify",
+      {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({
+          formatting: withFormatting,
+          messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
+        }),
+      },
+      API_TIMEOUT_MS,
+      externalSignal,
+    );
 
     if (!r.ok) throw new Error(`API returned ${r.status}`);
     const d = await r.json();
     if (d.error) throw new Error(d.error.message || "API error");
     if (!d.content || !Array.isArray(d.content)) throw new Error("Invalid API response structure");
-    const t = d.content.map(x => x.text || "").join("");
+    const t = d.content.map((x) => x.text || "").join("");
     const raw = t.replace(/```json|```/g, "").trim();
     if (!raw) return [];
     const jsonStr = raw.startsWith("[") ? raw : "[" + raw;
     let parsed;
-    try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      throw new Error("API returned malformed JSON");
+    }
     return Array.isArray(parsed) ? parsed : [];
   };
 
@@ -154,12 +176,24 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     if (localMatches.length > 0) {
-      dispatch({ type: "FEED", feed: localMatches.map(m => ({
-        text: useFormatting ? basicFormat(m.text) : m.text,
-        source: m.result.source, category: m.result.category,
-      })) });
+      dispatch({
+        type: "FEED",
+        feed: localMatches.map((m) => ({
+          text: useFormatting ? basicFormat(m.text) : m.text,
+          source: m.result.source,
+          category: m.result.category,
+        })),
+      });
     }
-    dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" } });
+    dispatch({
+      type: "PROGRESS",
+      progress: {
+        total: unique.length,
+        done: localMatches.length,
+        current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`,
+        phase: "local",
+      },
+    });
 
     return { localMatches, needsApi };
   };
@@ -170,8 +204,16 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (needsApi.length === 0) return { lookupResults, stillNeedsApi: [] };
 
     try {
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases...", phase: "lookup" } });
-      const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
+      dispatch({
+        type: "PROGRESS",
+        progress: {
+          total: unique.length,
+          done: localCount,
+          current: "Checking online databases...",
+          phase: "lookup",
+        },
+      });
+      const lookupBody = needsApi.map((p) => ({ text: p.text, hint: p.hint || null }));
       const lr = await fetch("/api/lookup", {
         method: "POST",
         headers: API_HEADERS,
@@ -181,7 +223,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       if (lr.ok) {
         const { results: lResults } = await lr.json();
         if (Array.isArray(lResults)) {
-          lResults.forEach(r => {
+          lResults.forEach((r) => {
             if (r.found) {
               const item = needsApi[r.i];
               if (item) lookupResults.set(item.idx, r);
@@ -194,13 +236,24 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       // Lookup failure is non-critical — fall through to AI
     }
 
-    const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
+    const stillNeedsApi = needsApi.filter((p) => !lookupResults.has(p.idx));
     if (lookupResults.size > 0) {
-      dispatch({ type: "FEED_APPEND", items: [...lookupResults.values()].map(r => {
-        const item = needsApi[r.i];
-        return { text: item?.text || "", source: r.source, category: r.category };
-      }) });
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
+      dispatch({
+        type: "FEED_APPEND",
+        items: [...lookupResults.values()].map((r) => {
+          const item = needsApi[r.i];
+          return { text: item?.text || "", source: r.source, category: r.category };
+        }),
+      });
+      dispatch({
+        type: "PROGRESS",
+        progress: {
+          total: unique.length,
+          done: localCount + lookupResults.size,
+          current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`,
+          phase: "lookup",
+        },
+      });
     }
 
     return { lookupResults, stillNeedsApi };
@@ -223,7 +276,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     // Start first batch
     let pendingFetch = null;
     if (batches.length > 0) {
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone, current: `AI identifying batch 1/${totalBatches}...`, phase: "api" } });
+      dispatch({
+        type: "PROGRESS",
+        progress: {
+          total: unique.length,
+          done: preAiDone,
+          current: `AI identifying batch 1/${totalBatches}...`,
+          phase: "api",
+        },
+      });
       pendingFetch = identifyBatch(batches[0], useFormatting, signal);
     }
 
@@ -239,7 +300,15 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
         // Prefetch next batch while we process current results
         if (b + 1 < batches.length) {
-          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
+          dispatch({
+            type: "PROGRESS",
+            progress: {
+              total: unique.length,
+              done: preAiDone + (b + 1) * API_BATCH_SIZE,
+              current: `AI identifying batch ${b + 2}/${totalBatches}...`,
+              phase: "api",
+            },
+          });
           pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
         }
       } catch (err) {
@@ -255,15 +324,27 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
             if (retryErr.name === "AbortError") return { apiResults, apiFailed: true, failed };
             // Both attempts failed — mark only these items as failed, then continue
             apiFailed = true;
-            chunk.forEach(c => failed.push(c));
+            chunk.forEach((c) => failed.push(c));
             const n = chunk.length;
-            dispatch({ type: "API_ERROR", error: describeApiError(retryErr) + ` (${n} ${n === 1 ? "entry" : "entries"} affected)` });
+            dispatch({
+              type: "API_ERROR",
+              error:
+                describeApiError(retryErr) + ` (${n} ${n === 1 ? "entry" : "entries"} affected)`,
+            });
           }
         }
 
         // Start next batch fetch even after retry failure so remaining batches proceed
         if (b + 1 < batches.length && !signal.aborted) {
-          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
+          dispatch({
+            type: "PROGRESS",
+            progress: {
+              total: unique.length,
+              done: preAiDone + (b + 1) * API_BATCH_SIZE,
+              current: `AI identifying batch ${b + 2}/${totalBatches}...`,
+              phase: "api",
+            },
+          });
           pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
         }
 
@@ -271,17 +352,36 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       }
 
       // Process current batch results
-      results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-      dispatch({ type: "FEED_APPEND", items: results.map(r => {
+      results.forEach((r) => {
         const item = chunk[r.i];
-        return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || UNKNOWN_SOURCE, category: fallbackCategory(r.category, allCats) };
-      }) });
+        if (item) apiResults.set(item.idx, r);
+      });
+      dispatch({
+        type: "FEED_APPEND",
+        items: results.map((r) => {
+          const item = chunk[r.i];
+          return {
+            text: useFormatting && r.cleanText ? stripOuterBold(r.cleanText) : item?.text || "",
+            source: r.source || UNKNOWN_SOURCE,
+            category: fallbackCategory(r.category, allCats),
+          };
+        }),
+      });
       // Cache AI results with known sources (fire-and-forget)
       const cacheItems = results
-        .filter(r => r.source && r.source !== UNKNOWN_SOURCE && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
-        .map(r => ({
-          text: chunk[r.i].text, hint: null,
-          source: r.source, category: r.category, confidence: r.confidence,
+        .filter(
+          (r) =>
+            r.source &&
+            r.source !== UNKNOWN_SOURCE &&
+            chunk[r.i] &&
+            (r.confidence === "high" || r.confidence === "medium"),
+        )
+        .map((r) => ({
+          text: chunk[r.i].text,
+          hint: null,
+          source: r.source,
+          category: r.category,
+          confidence: r.confidence,
         }));
       if (cacheItems.length > 0) {
         fetch("/api/cache", {
@@ -311,33 +411,74 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const { localMatches, needsApi } = await handleLocalLookup(unique, useFormatting);
     if (signal.aborted) return;
 
-    const { lookupResults, stillNeedsApi } = await handleExternalLookup(unique, needsApi, localMatches.length, signal);
+    const { lookupResults, stillNeedsApi } = await handleExternalLookup(
+      unique,
+      needsApi,
+      localMatches.length,
+      signal,
+    );
     if (signal.aborted) return;
 
     const preAiDone = localMatches.length + lookupResults.size;
-    let apiResults = new Map(), apiFailed = false, failed = [];
+    let apiResults = new Map(),
+      apiFailed = false,
+      failed = [];
     if (stillNeedsApi.length > 0) {
-      ({ apiResults, apiFailed, failed } = await handleApiBatch(unique, stillNeedsApi, preAiDone, useFormatting, signal));
+      ({ apiResults, apiFailed, failed } = await handleApiBatch(
+        unique,
+        stillNeedsApi,
+        preAiDone,
+        useFormatting,
+        signal,
+      ));
     }
     if (signal.aborted) return;
     if (failed.length > 0) dispatch({ type: "FAILED_ENTRIES", entries: failed });
 
-    const localByIdx = new Map(localMatches.map(m => [m.idx, m]));
-    const fmt = (t) => useFormatting ? basicFormat(t) : t;
+    const localByIdx = new Map(localMatches.map((m) => [m.idx, m]));
+    const fmt = (t) => (useFormatting ? basicFormat(t) : t);
     const newQuotes = unique.map((p, i) => {
       const local = localByIdx.get(i);
-      if (local) return makeQuote(fmt(p.text), local.result.source, local.result.category, local.result.confidence);
+      if (local)
+        return makeQuote(
+          fmt(p.text),
+          local.result.source,
+          local.result.category,
+          local.result.confidence,
+        );
       const lookup = lookupResults.get(i);
-      if (lookup) return makeQuote(fmt(p.text), lookup.source, fallbackCategory(lookup.category, allCats), lookup.confidence || "medium");
+      if (lookup)
+        return makeQuote(
+          fmt(p.text),
+          lookup.source,
+          fallbackCategory(lookup.category, allCats),
+          lookup.confidence || "medium",
+        );
       const api = apiResults.get(i);
-      if (api) return makeQuote((useFormatting && api.cleanText) ? stripOuterBold(api.cleanText) : p.text, api.source || p.hint, fallbackCategory(api.category, allCats), api.confidence);
+      if (api)
+        return makeQuote(
+          useFormatting && api.cleanText ? stripOuterBold(api.cleanText) : p.text,
+          api.source || p.hint,
+          fallbackCategory(api.category, allCats),
+          api.confidence,
+        );
       return makeQuote(fmt(p.text), p.hint);
     });
 
     if (signal.aborted) return;
-    const validQuotes = newQuotes.filter(q => q.text && q.text.trim());
-    appendMode ? setQuotes(prev => [...prev, ...validQuotes]) : setQuotes(validQuotes);
-    dispatch({ type: "DONE", total: unique.length, stats: { local: localMatches.length, lookup: lookupResults.size, api: apiResults.size, failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0, total: unique.length } });
+    const validQuotes = newQuotes.filter((q) => q.text && q.text.trim());
+    appendMode ? setQuotes((prev) => [...prev, ...validQuotes]) : setQuotes(validQuotes);
+    dispatch({
+      type: "DONE",
+      total: unique.length,
+      stats: {
+        local: localMatches.length,
+        lookup: lookupResults.size,
+        api: apiResults.size,
+        failed: apiFailed ? stillNeedsApi.length - apiResults.size : 0,
+        total: unique.length,
+      },
+    });
     removeFromStorage(LS_DRAFT);
     // Auto-transition after processing completes
     if (autoTransitionRef.current) clearTimeout(autoTransitionRef.current);
@@ -349,20 +490,31 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     }, PROCESSING_DONE_MS);
   };
 
-  const processEntries = async (inputText, appendMode = false, useFormatting = false, preSplitLines = null) => {
+  const processEntries = async (
+    inputText,
+    appendMode = false,
+    useFormatting = false,
+    preSplitLines = null,
+  ) => {
     const lines = preSplitLines || smartSplit(inputText.trim());
     if (!lines.length) return;
 
-    const parsed = lines.map(l => smartParse(l));
+    const parsed = lines.map((l) => smartParse(l));
 
     const unique = [];
     const seen = [];
     const seenExact = new Map();
-    const addSeen = (entry) => { seen.push(entry); seenExact.set(entry.norm, entry); };
+    const addSeen = (entry) => {
+      seen.push(entry);
+      seenExact.set(entry.norm, entry);
+    };
     // Store the precomputed word Set alongside each seen entry so the fuzzy
     // comparison below never rebuilds it — the seen list is scanned once per
     // incoming entry (O(new × existing)).
-    const makeSeen = (text, source) => { const k = makeSimilarityKey(text); return { norm: k.norm, words: k.words, text, source }; };
+    const makeSeen = (text, source) => {
+      const k = makeSimilarityKey(text);
+      return { norm: k.norm, words: k.words, text, source };
+    };
     if (appendMode) {
       for (const q of quotesRef.current) addSeen(makeSeen(q.text, q.source));
     }
@@ -373,19 +525,21 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     }
     const nearDupes = [];
 
-    parsed.forEach(p => {
+    parsed.forEach((p) => {
       const key = makeSimilarityKey(p.text);
       const norm = key.norm;
       let match = seenExact.get(norm);
       if (!match) {
-        match = seen.find(s => similarityFromKeys(s, key, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
+        match = seen.find(
+          (s) => similarityFromKeys(s, key, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD,
+        );
       }
 
       if (match) {
         nearDupes.push({
           incoming: p,
           matchedText: match.text || match.norm,
-          matchedSource: match.source || null
+          matchedSource: match.source || null,
         });
       } else {
         unique.push(p);
@@ -394,8 +548,18 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     });
 
     if (nearDupes.length > 0) {
-      dispatch({ type: "SHOW_DUPES", dupes: nearDupes, decisions: Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])) });
-      pendingContinuationRef.current = { unique, seen, appendMode, totalParsed: parsed.length, useFormatting };
+      dispatch({
+        type: "SHOW_DUPES",
+        dupes: nearDupes,
+        decisions: Object.fromEntries(nearDupes.map((_, i) => [i, "skip"])),
+      });
+      pendingContinuationRef.current = {
+        unique,
+        seen,
+        appendMode,
+        totalParsed: parsed.length,
+        useFormatting,
+      };
       return;
     }
 
@@ -418,9 +582,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         finalUnique.push(dupe.incoming);
         keptCount++;
       } else if (decision === "merge") {
-        const mergedSource = dupe.matchedSource && dupe.incoming.hint
-          ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
-          : dupe.incoming.hint || dupe.matchedSource || "Unknown";
+        const mergedSource =
+          dupe.matchedSource && dupe.incoming.hint
+            ? `${dupe.incoming.hint} / ${dupe.matchedSource}`
+            : dupe.incoming.hint || dupe.matchedSource || "Unknown";
         finalUnique.push({ ...dupe.incoming, hint: mergedSource });
         keptCount++;
       }
@@ -441,7 +606,9 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     dispatch({ type: "API_ERROR", error: null });
 
     const entriesToRetry = [...currentState.failedEntries];
-    const text = entriesToRetry.map(e => `${e.text}${e.hint ? ` \u2014 ${e.hint}` : ""}`).join("\n");
+    const text = entriesToRetry
+      .map((e) => `${e.text}${e.hint ? ` \u2014 ${e.hint}` : ""}`)
+      .join("\n");
 
     try {
       await processEntries(text, true, currentState.formattingEnabled);
@@ -475,11 +642,11 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const feed = stateRef.current.identifiedFeed;
     if (feed.length > 0) {
       const partialQuotes = feed
-        .filter(item => item.text && item.text.trim())
-        .map(item => makeQuote(item.text, item.source, item.category, "medium"));
+        .filter((item) => item.text && item.text.trim())
+        .map((item) => makeQuote(item.text, item.source, item.category, "medium"));
       if (partialQuotes.length > 0) {
         if (appendModeRef.current) {
-          setQuotes(prev => [...prev, ...partialQuotes]);
+          setQuotes((prev) => [...prev, ...partialQuotes]);
         } else {
           setQuotes(partialQuotes);
         }
@@ -492,8 +659,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
   // Reset processing-specific state (called by handleClear in App)
   const resetProcessingState = () => {
-    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
-    if (autoTransitionRef.current) { clearTimeout(autoTransitionRef.current); autoTransitionRef.current = null; }
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    if (autoTransitionRef.current) {
+      clearTimeout(autoTransitionRef.current);
+      autoTransitionRef.current = null;
+    }
     dispatch({ type: "RESET" });
     pendingContinuationRef.current = null;
   };
@@ -502,12 +675,17 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   const autoGroup = async (theme, quotesList, externalSignal) => {
     if (!theme || quotesList.length === 0) return [];
 
-    const quoteTexts = quotesList.map(q => q.text);
-    const r = await fetchWithTimeout("/api/auto-group", {
-      method: "POST",
-      headers: API_HEADERS,
-      body: JSON.stringify({ theme, quotes: quoteTexts }),
-    }, AUTO_GROUP_TIMEOUT_MS, externalSignal);
+    const quoteTexts = quotesList.map((q) => q.text);
+    const r = await fetchWithTimeout(
+      "/api/auto-group",
+      {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({ theme, quotes: quoteTexts }),
+      },
+      AUTO_GROUP_TIMEOUT_MS,
+      externalSignal,
+    );
 
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
@@ -515,7 +693,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     }
 
     const { indices } = await r.json();
-    return indices.map(i => quotesList[i]?.id).filter(Boolean);
+    return indices.map((i) => quotesList[i]?.id).filter(Boolean);
   };
 
   // Expose setters for individual fields still needed by App.jsx
@@ -536,11 +714,18 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   };
 
   const actions = {
-    identifyBatch, autoGroup,
-    processEntries, handleDupesContinue, retryFailed,
-    skipToResults, cancelProcessing, resetProcessingState,
-    setDupeDecision, setFormattingEnabled,
-    dismissApiError, dismissStats,
+    identifyBatch,
+    autoGroup,
+    processEntries,
+    handleDupesContinue,
+    retryFailed,
+    skipToResults,
+    cancelProcessing,
+    resetProcessingState,
+    setDupeDecision,
+    setFormattingEnabled,
+    dismissApiError,
+    dismissStats,
   };
 
   return { ...state, ...actions };

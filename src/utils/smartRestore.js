@@ -16,8 +16,12 @@ export function initNlp() {
   if (nlp) return Promise.resolve();
   if (!nlpPromise) {
     nlpPromise = import("compromise")
-      .then((mod) => { nlp = mod.default || mod; })
-      .catch(() => { nlpPromise = null; });
+      .then((mod) => {
+        nlp = mod.default || mod;
+      })
+      .catch(() => {
+        nlpPromise = null;
+      });
   }
   return nlpPromise;
 }
@@ -25,7 +29,10 @@ export function initNlp() {
 // Unambiguous contractions — the un-apostrophed form isn't a real word.
 // These are safe to restore without NLP context.
 const UNAMBIGUOUS_CONTRACTIONS = [
-  [/\b(don|won|can|couldn|shouldn|wouldn|didn|doesn|isn|aren|wasn|weren|hasn|haven|hadn|mustn|needn|ain)t\b/gi, "$1't"],
+  [
+    /\b(don|won|can|couldn|shouldn|wouldn|didn|doesn|isn|aren|wasn|weren|hasn|haven|hadn|mustn|needn|ain)t\b/gi,
+    "$1't",
+  ],
   [/\b(we|you|they|could|should|would|might)ve\b/gi, "$1've"],
   [/\bive\b/gi, "I've"],
   [/\b(you|they)re\b/gi, "$1're"],
@@ -70,11 +77,10 @@ function disambiguateContractions(text) {
         const prev = i > 0 ? terms[i - 1] : null;
         const prevTags = prev?.tags || [];
         const hasPrecedingSubject =
-          prev && (
-            prevTags.includes("Noun") ||
+          prev &&
+          (prevTags.includes("Noun") ||
             prevTags.includes("Pronoun") ||
-            prevTags.includes("ProperNoun")
-          );
+            prevTags.includes("ProperNoun"));
         if (!hasPrecedingSubject) {
           const re = new RegExp("\\b" + term.text + "\\b");
           result = result.replace(re, term.text[0] === "W" ? "We're" : "we're");
@@ -94,7 +100,11 @@ function disambiguateContractions(text) {
         nextTags.includes("Determiner") ||
         nextTags.includes("Pronoun") ||
         nextTags.includes("Preposition");
-      const isPossessive = nextTags.includes("Noun") && !nextTags.includes("Adjective") && !nextTags.includes("Pronoun") && !nextTags.includes("Preposition");
+      const isPossessive =
+        nextTags.includes("Noun") &&
+        !nextTags.includes("Adjective") &&
+        !nextTags.includes("Pronoun") &&
+        !nextTags.includes("Preposition");
       if (isContraction && !isPossessive) {
         const re = new RegExp("\\b" + term.text + "\\b");
         result = result.replace(re, term.text[0] === "I" ? "It's" : "it's");
@@ -121,10 +131,11 @@ export function smartRestore(text) {
 
   // 2. Capitalize standalone "i" → "I"
   t = t.replace(/\bi\b/g, "I");
-  t = t.replace(/\bI'm\b/gi, "I'm")
-       .replace(/\bI'll\b/gi, "I'll")
-       .replace(/\bI've\b/gi, "I've")
-       .replace(/\bI'd\b/gi, "I'd");
+  t = t
+    .replace(/\bI'm\b/gi, "I'm")
+    .replace(/\bI'll\b/gi, "I'll")
+    .replace(/\bI've\b/gi, "I've")
+    .replace(/\bI'd\b/gi, "I'd");
 
   // 3. Disambiguate ambiguous contractions using POS context
   t = disambiguateContractions(t);
@@ -146,10 +157,11 @@ export function nlpFormat(text) {
 
   // 1. Capitalize pronoun "I"
   t = t.replace(/\bi\b/g, "I");
-  t = t.replace(/\bi'm\b/gi, "I'm")
-       .replace(/\bi'll\b/gi, "I'll")
-       .replace(/\bi've\b/gi, "I've")
-       .replace(/\bi'd\b/gi, "I'd");
+  t = t
+    .replace(/\bi'm\b/gi, "I'm")
+    .replace(/\bi'll\b/gi, "I'll")
+    .replace(/\bi've\b/gi, "I've")
+    .replace(/\bi'd\b/gi, "I'd");
 
   // 2. Restore missing apostrophes in contractions (unambiguous only)
   for (const [re, replacement] of UNAMBIGUOUS_CONTRACTIONS) {

@@ -30,12 +30,7 @@ export default function Logo({ size = 28, color = CP_ACCENT }) {
         fill="none"
       />
       {/* Spine */}
-      <path
-        d="M16 7V28"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+      <path d="M16 7V28" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
       {/* Bookmark ribbon */}
       <path
         d="M21 5V14L23 12.5L25 14V5"

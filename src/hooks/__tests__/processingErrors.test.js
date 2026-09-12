@@ -13,7 +13,12 @@ vi.mock("../../data/localQuotes", () => ({
 // test data). makeSimilarityKey stays real so seenExact norm keys still work.
 vi.mock("../../utils/textFormatting", async (importOriginal) => {
   const mod = await importOriginal();
-  return { ...mod, initProperNouns: vi.fn(), similarity: vi.fn(() => 0), similarityFromKeys: vi.fn(() => 0) };
+  return {
+    ...mod,
+    initProperNouns: vi.fn(),
+    similarity: vi.fn(() => 0),
+    similarityFromKeys: vi.fn(() => 0),
+  };
 });
 
 import useProcessing from "../useProcessing";
@@ -83,7 +88,8 @@ describe("API timeout / network failure — batch retry", () => {
         // Retry attempt: success
         return Promise.resolve(makeApiOk([{ text: "test quote" }]));
       }
-      if (url === "/api/cache") return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      if (url === "/api/cache")
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       return Promise.reject(new Error(`Unexpected fetch: ${url}`));
     });
 
@@ -112,7 +118,8 @@ describe("API timeout / network failure — batch retry", () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: [] }) });
       }
       if (url.includes("/api/identify")) return makeNetworkError();
-      if (url === "/api/cache") return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      if (url === "/api/cache")
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       return Promise.reject(new Error(`Unexpected fetch: ${url}`));
     });
 
@@ -151,7 +158,8 @@ describe("API timeout / network failure — batch retry", () => {
         // Batch 2 (2 items): return 2 successful results
         return Promise.resolve(makeApiOk(Array(2).fill(null)));
       }
-      if (url === "/api/cache") return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      if (url === "/api/cache")
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       return Promise.reject(new Error(`Unexpected fetch: ${url}`));
     });
 
@@ -181,7 +189,8 @@ describe("API timeout / network failure — batch retry", () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: [] }) });
       }
       if (url.includes("/api/identify")) return makeNetworkError();
-      if (url === "/api/cache") return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      if (url === "/api/cache")
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       return Promise.reject(new Error(`Unexpected fetch: ${url}`));
     });
 
@@ -209,7 +218,9 @@ describe("localStorage quota exceeded", () => {
       Object.defineProperty(globalThis, "localStorage", {
         value: {
           getItem: () => null,
-          setItem: () => { throw new DOMException("QuotaExceededError"); },
+          setItem: () => {
+            throw new DOMException("QuotaExceededError");
+          },
           removeItem: () => {},
           clear: () => {},
         },
@@ -232,7 +243,9 @@ describe("localStorage quota exceeded", () => {
     const { loadFromStorage } = await import("../../utils/storage");
     Object.defineProperty(globalThis, "localStorage", {
       value: {
-        getItem: () => { throw new Error("SecurityError"); },
+        getItem: () => {
+          throw new Error("SecurityError");
+        },
         setItem: () => {},
         removeItem: () => {},
         clear: () => {},
@@ -327,7 +340,12 @@ describe("cloud sync — network failure and retry", () => {
         const res = await fetch("/api/sync", {
           method: "POST",
           headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-          body: JSON.stringify({ device_id: "d", quotes: [], customCategories: [], collections: [] }),
+          body: JSON.stringify({
+            device_id: "d",
+            quotes: [],
+            customCategories: [],
+            collections: [],
+          }),
         });
         const data = await res.json();
         results.push({ success: true, data });

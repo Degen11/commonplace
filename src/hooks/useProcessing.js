@@ -113,7 +113,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (items.length === 0) return [];
     const quotesBlock = items.map((it, i) => {
       const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
-      return `[${i}] ${it.text}${hintStr}`;
+      const candidateStr = it.lookupCandidate
+        ? ` (unverified match found online: "${it.lookupCandidate.source}" as ${it.lookupCandidate.category} — confirm if correct, or give the correct source/category if not)`
+        : "";
+      return `[${i}] ${it.text}${hintStr}${candidateStr}`;
     }).join("\n");
 
     const r = await fetchWithTimeout("/api/identify", {
@@ -165,9 +168,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   };
 
   // Phase 2: Check external sources (Wikiquote, Open Library, server cache)
+  // "high" confidence results are trusted outright and skip the AI step below.
+  // "medium" confidence results are only a lead — they're carried forward as a
+  // candidate for the AI to confirm or correct, rather than accepted as-is.
   const handleExternalLookup = async (unique, needsApi, localCount, signal) => {
     const lookupResults = new Map();
-    if (needsApi.length === 0) return { lookupResults, stillNeedsApi: [] };
+    const lookupCandidates = new Map();
+    if (needsApi.length === 0) return { lookupResults, lookupCandidates, stillNeedsApi: [] };
 
     try {
       dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases...", phase: "lookup" } });
@@ -182,10 +189,11 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         const { results: lResults } = await lr.json();
         if (Array.isArray(lResults)) {
           lResults.forEach(r => {
-            if (r.found) {
-              const item = needsApi[r.i];
-              if (item) lookupResults.set(item.idx, r);
-            }
+            if (!r.found) return;
+            const item = needsApi[r.i];
+            if (!item) return;
+            if (r.confidence === "high") lookupResults.set(item.idx, r);
+            else lookupCandidates.set(item.idx, r);
           });
         }
       }
@@ -194,7 +202,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       // Lookup failure is non-critical — fall through to AI
     }
 
-    const stillNeedsApi = needsApi.filter(p => !lookupResults.has(p.idx));
+    const stillNeedsApi = needsApi
+      .filter(p => !lookupResults.has(p.idx))
+      .map(p => {
+        const candidate = lookupCandidates.get(p.idx);
+        return candidate ? { ...p, lookupCandidate: candidate } : p;
+      });
     if (lookupResults.size > 0) {
       dispatch({ type: "FEED_APPEND", items: [...lookupResults.values()].map(r => {
         const item = needsApi[r.i];
@@ -203,7 +216,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
     }
 
-    return { lookupResults, stillNeedsApi };
+    return { lookupResults, lookupCandidates, stillNeedsApi };
   };
 
   // Phase 3: Send remaining entries to Claude for AI identification in batches
@@ -311,7 +324,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const { localMatches, needsApi } = await handleLocalLookup(unique, useFormatting);
     if (signal.aborted) return;
 
-    const { lookupResults, stillNeedsApi } = await handleExternalLookup(unique, needsApi, localMatches.length, signal);
+    const { lookupResults, lookupCandidates, stillNeedsApi } = await handleExternalLookup(unique, needsApi, localMatches.length, signal);
     if (signal.aborted) return;
 
     const preAiDone = localMatches.length + lookupResults.size;
@@ -331,6 +344,10 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
       if (lookup) return makeQuote(fmt(p.text), lookup.source, fallbackCategory(lookup.category, allCats), lookup.confidence || "medium");
       const api = apiResults.get(i);
       if (api) return makeQuote((useFormatting && api.cleanText) ? stripOuterBold(api.cleanText) : p.text, api.source || p.hint, fallbackCategory(api.category, allCats), api.confidence);
+      // AI never returned a result for this item (batch failed outright) — fall
+      // back to the unverified lookup candidate rather than losing it entirely
+      const candidate = lookupCandidates.get(i);
+      if (candidate) return makeQuote(fmt(p.text), candidate.source, fallbackCategory(candidate.category, allCats), "medium");
       return makeQuote(fmt(p.text), p.hint);
     });
 

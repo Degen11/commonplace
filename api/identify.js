@@ -35,6 +35,7 @@ IDENTIFICATION RULES — follow strictly:
 6. NEVER use "Unknown" as a category. When the source is unknown, you MUST pick the best-fitting vibe tag as the category instead.
 7. Be concise with sources: "The Dark Knight (2008) - The Joker" not "The Dark Knight directed by Christopher Nolan".
 8. For Film quotes: ALWAYS include the character who said it when known — "Basic Instinct (1992) - Nick Curran", not just "Basic Instinct (1992)".
+9. Some inputs carry a parenthetical note like "(unverified match found online: "X" as CATEGORY — confirm if correct, or give the correct source/category if not)". This is only a candidate lead from an automated search, not a confirmed fact. Evaluate it against your own knowledge: if you recognize the quote and the given source/category checks out, use it (confidence "high" or "medium" as appropriate); if you know a better or more accurate attribution, use that instead and disregard the suggestion; if you don't recognize the quote at all, treat it exactly as you would any other unknown quote — don't default to repeating the suggestion just because it's there.
 Return exactly one JSON object per input item.
 
 CONFIDENCE GUIDE — use "high" generously for well-known quotes:

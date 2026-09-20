@@ -12,10 +12,12 @@
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#1A1A1A" media="(prefers-color-scheme: dark)" />
-<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
 <style>
+  /* Self-hosted Satoshi — same files as the main app (public/fonts/), no
+     third-party font origin. Keep in sync with the @font-face rules in
+     src/components/styles.js if either changes. */
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
   :root{
     --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-text:#1A1814;--cp-text-secondary:#37352F;
     --cp-border-light:#E8E3DA;--cp-accent:#3C5775;
@@ -34,7 +36,10 @@
   .updated{color:var(--cp-text-secondary);font-size:13px;margin:0 0 32px}
   h2{font-size:15px;font-weight:600;color:var(--cp-text);margin:28px 0 8px}
   p{font-size:14px;margin:0 0 8px}
+  ul{font-size:14px;margin:0 0 8px;padding-left:20px}
+  li{margin:0 0 4px}
   .card{background:var(--cp-bg-card);border:1px solid var(--cp-border-light);border-radius:6px;padding:24px 28px;margin-top:8px}
+  .note{font-size:12.5px;color:var(--cp-text-secondary);opacity:0.85;font-style:italic}
 </style>
 </head>
 <body>
@@ -42,28 +47,68 @@
     <a class="back" href="/">&larr; Back to Commonplace</a>
     <div class="card">
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: March 2026</p>
+      <p class="updated">Last updated: September 2026</p>
 
       <h2>What we collect</h2>
-      <p>Commonplace stores your quotes and collections in your browser's local storage. If you use cloud sync, your data is also stored in our database (Supabase) and associated with an anonymous device ID — no email, name, or account required.</p>
+      <p>Commonplace does not require an account, so we don't collect names, email addresses, or passwords. What we do handle:</p>
+      <ul>
+        <li><strong>Your quotes and collections</strong> — the text you paste or import, along with the source, category, and other metadata identified for it.</li>
+        <li><strong>An anonymous device ID</strong> — a random identifier generated in your browser (not tied to your identity) that ties your data together if you use cloud sync.</li>
+        <li><strong>Basic request metadata</strong> — our serverless functions see the IP address of incoming requests briefly, only to enforce rate limits and block abuse. It is not stored long-term or linked to your quotes.</li>
+        <li><strong>Anonymous, aggregated usage metrics</strong> — via Vercel Analytics and Speed Insights (see "Analytics" below).</li>
+      </ul>
+
+      <h2>User-generated content &amp; file imports</h2>
+      <p>Quotes you paste, and files you import (Kindle highlights, Readwise exports, CSV, JSON, or Markdown), are parsed entirely in your browser. Files themselves are never uploaded to our servers — only the resulting quote text may later be sent to the third parties described below for source identification.</p>
 
       <h2>How we use your data</h2>
-      <p>Your quotes are sent to our AI service (Claude by Anthropic) solely to identify sources and categories. We cache identification results to speed up future lookups. We do not sell, share, or use your data for advertising.</p>
+      <p>Your quotes and collections are saved to your browser's local storage. In the background, Commonplace also automatically backs up that data to our database (Supabase), keyed to the anonymous device ID stored in your browser — there's no separate sign-up step and currently no in-app toggle to turn this off. If local storage is unavailable (e.g. private browsing), cloud backup is skipped and your data stays local for that session only.</p>
+
+      <h2>AI / LLM usage</h2>
+      <p>To identify the source and category of a quote, its text (in batches) is sent to Anthropic's Claude Haiku model via our server. The same applies to the "auto-group by theme" feature, which sends a theme and your quote text to Claude to find matching quotes. No device ID, IP address, or other identifying information is included in these requests — only the quote text itself. Identification results are cached in our database (keyed to the normalized quote text, not to you or your device) so the same quote doesn't need to be re-processed by AI for other users.</p>
+
+      <h2>Other third-party lookups</h2>
+      <p>Before falling back to AI, unmatched quote text may be searched against the public Wikiquote and Open Library APIs to find a known attribution. These are read-only searches; no account or device information is sent, only the quote text (and, for Open Library, a short hint derived from it).</p>
+
+      <h2>Importing from a URL</h2>
+      <p>If you import content by pasting a URL, our server fetches that page on your behalf and extracts text from it. The destination site sees a request from our server, not directly from your device or IP address. We block requests to private/internal network addresses as a security precaution.</p>
+
+      <h2>Shared collections</h2>
+      <p>If you generate a share link for a collection, the quotes and title you choose to share are stored in our database and are viewable by anyone with the link for 30 days, after which the link stops working and the shared copy is removed. Sharing a collection does not affect your own saved copy.</p>
 
       <h2>Analytics</h2>
-      <p>We use Vercel Analytics and Speed Insights to collect anonymous performance metrics (page load times, Web Vitals). No personal information or quote content is included in analytics.</p>
+      <p>We use Vercel Analytics and Speed Insights to collect anonymous, aggregated performance metrics (page views, load times, Web Vitals). This does not include your quote content and is not used to build an individual profile of you.</p>
 
       <h2>Cookies &amp; local storage</h2>
-      <p>We do not use tracking cookies. We use browser local storage to save your quotes, preferences, and theme settings. A random device ID is stored for cloud sync.</p>
+      <p>We do not use tracking or advertising cookies. Commonplace relies on your browser's local storage to save your quotes, preferences, theme, and the anonymous device ID used for cloud sync.</p>
+
+      <h2>Data retention</h2>
+      <p>Local data stays in your browser indefinitely until you clear it. Cloud-synced quotes persist in our database until deleted. When you delete a quote in the app, that deletion is tracked locally for 7 days and propagated to the cloud the next time your device syncs, so the deletion isn't accidentally undone by an older, not-yet-synced copy. Shared collection links expire automatically 30 days after creation and are removed from our database at or shortly after that point.</p>
+
+      <h2>Deleting your data</h2>
+      <p>You can delete individual quotes or your entire collection at any time from within the app; if cloud sync is active, that deletion syncs to our database automatically. To clear everything locally, clear this site's data/local storage in your browser settings. There is currently no self-service option to fully erase a device's cloud-synced record independent of the app — if you'd like us to delete it manually, contact us using the details below.</p>
 
       <h2>Third-party services</h2>
-      <p>Anthropic (AI identification), Supabase (cloud storage), Vercel (hosting and analytics), Google Fonts and Fontshare (web fonts). Each has their own privacy policy.</p>
+      <p>Services that process or store data on our behalf, or that we query on your behalf:</p>
+      <ul>
+        <li><strong>Anthropic (Claude Haiku)</strong> — AI quote identification and theme grouping.</li>
+        <li><strong>Supabase</strong> — our database, for cloud-synced quotes, the shared quote-identification cache, and shared collection links. Accessed only from our server; your browser never talks to Supabase directly.</li>
+        <li><strong>Vercel</strong> — hosting, serverless functions, and the analytics/speed metrics described above.</li>
+        <li><strong>Wikiquote &amp; Open Library</strong> — public reference lookups used to identify quote sources.</li>
+      </ul>
+      <p>We do not use payment processors or third-party authentication providers — Commonplace has no accounts or paid plans. Each listed service has its own privacy policy governing how it handles data on its platform.</p>
 
-      <h2>Data deletion</h2>
-      <p>Clear your browser's local storage to remove all local data. Cloud-synced data can be removed by clearing your collection and syncing, which propagates the deletion.</p>
+      <h2>Storage &amp; security</h2>
+      <p>Our database is accessed only from server-side code using a private service key — it is never exposed to your browser, and Row Level Security is enabled on our tables. API requests are validated (origin checks, a custom header, and rate limiting) to reduce abuse, and our hosting applies standard transport security (HTTPS/HSTS) and a restrictive Content Security Policy. No system is perfectly secure, and we can't guarantee absolute security of data transmitted to us.</p>
+
+      <h2>Your privacy rights</h2>
+      <p>Because Commonplace doesn't use accounts, most of your data already lives under your direct control in your own browser. Depending on where you live, you may have additional rights over data processed during cloud sync (for example, under laws like the GDPR or CCPA) — including access, correction, or deletion. Contact us using the details below to make such a request; we haven't independently verified which specific regional requirements apply to this project, so treat this section as a good-faith starting point rather than a legal determination.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>We may update this policy as the app changes. Material changes will be reflected by updating the "Last updated" date above.</p>
 
       <h2>Contact</h2>
-      <p>Questions? Reach out via <a href="https://www.degenh.com" target="_blank" rel="noopener noreferrer">degenh.com</a>.</p>
+      <p>Questions or data requests? Reach out via <a href="https://www.degenh.com" target="_blank" rel="noopener noreferrer">degenh.com</a>.</p>
     </div>
   </div>
 </body>

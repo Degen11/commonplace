@@ -25,6 +25,6 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Is my quote data private?",
-    a: "Yes. Your quotes are stored locally in your browser's local storage by default. No account is required and no personal data is collected. Cloud sync is optional and uses an anonymous device ID — no email or login needed.",
+    a: "Yes. Your quotes are stored locally in your browser's local storage. Commonplace also automatically backs them up to the cloud under an anonymous device ID, with no account, email, or login involved. See our Privacy Policy for details.",
   },
 ];

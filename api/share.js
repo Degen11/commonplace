@@ -32,8 +32,10 @@ export default withApiHandler(async (req, res, { supabase }) => {
       if (error) throw error;
       if (!data) return res.status(404).json({ error: 'Shared collection not found' });
 
-      // Check expiry
+      // Check expiry — delete the expired row (fire and forget) so expired
+      // shared data doesn't linger in the database indefinitely.
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        supabase.from('shared_collections').delete().eq('id', id).catch(() => {});
         return res.status(410).json({ error: 'This shared link has expired' });
       }
 

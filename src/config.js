@@ -63,6 +63,7 @@ export const LONG_PRESS_MS        = 350;  // ms to trigger long-press (lowered f
 export const LONG_PRESS_MOVE_PX   = 10;   // px movement cancels long-press
 export const INFINITE_SCROLL_PAGE = 100;  // items per page in virtualized list
 export const MOBILE_BREAKPOINT_PX = 640;  // below this: card view, mobile layout
+export const TOP_CATEGORY_PILLS   = 6;    // categories pinned inline before the "More" overflow
 
 // Theme — browser chrome colors. Must match the theme-color metas in index.html,
 // the PWA manifest theme_color in vite.config.js, and --cp-bg in styles.js.

@@ -210,10 +210,12 @@ export const baseCSS = `
   .qrow:hover{background:var(--cp-bg-hover) !important}
   .qrow:hover .checkbox-visual{opacity:1 !important}
 
-  /* Drag handle — visible on row hover */
-  .drag-handle{opacity:0;transition:opacity .12s;cursor:grab;color:var(--cp-text-faint);display:flex;align-items:center}
+  /* Drag handle — faintly visible at rest (matches cardStyles.acts' 0.3
+     resting opacity), sharpens on row hover so it's discoverable without
+     already knowing to hover, not just revealed by it */
+  .drag-handle{opacity:0.35;transition:opacity .12s;cursor:grab;color:var(--cp-text-faint);display:flex;align-items:center}
   .drag-handle:active{cursor:grabbing}
-  .qrow:hover .drag-handle{opacity:0.5}
+  .qrow:hover .drag-handle{opacity:0.7}
   .qrow:hover .drag-handle:hover{opacity:1}
   .qrow:focus-within .drag-handle,.drag-handle:focus-visible{opacity:1}
 
@@ -314,8 +316,8 @@ export const baseCSS = `
   /* Action button hover — driven by --hover-color custom property */
   .act-btn:hover{color:var(--hover-color) !important}
 
-  /* Overflow menu — hidden until row/card hover */
-  .overflow-btn{opacity:0;transition:opacity .12s ease}
+  /* Overflow menu — faintly visible at rest, sharpens on row/card hover */
+  .overflow-btn{opacity:0.45;transition:opacity .12s ease}
   .qrow:hover .overflow-btn{opacity:1}
   .qcard:hover .overflow-btn{opacity:1}
   /* Keyboard reveal: without this, tabbing lands a focus ring on an invisible button */

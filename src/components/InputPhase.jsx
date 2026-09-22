@@ -39,7 +39,9 @@ function useScrollReveal(threshold = 0.15) {
 
 // ── Formatting preview — shows before/after for a sample of entries ──────────
 function FormattingPreview({ rawInput }) {
-  const [expanded, setExpanded] = useState(false);
+  // Open by default — previously required a click to see what formatting
+  // was about to change, so most people never looked.
+  const [expanded, setExpanded] = useState(true);
   const samples = (() => {
     const lines = smartSplit(rawInput.trim()).slice(0, 5);
     const diffs = [];

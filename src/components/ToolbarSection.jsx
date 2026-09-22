@@ -1,18 +1,22 @@
 import { useRef, useEffect, useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import { styles, CP_ACCENT, CLR_AMBER, CLR_ORANGE, CLR_BLUE } from "./styles";
-import { X, Search, ArrowUpDown, TriangleAlert } from "lucide-react";
+import { X, Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { pluralize } from "../utils/helpers";
 import { Z } from "../data/constants";
+import { TOP_CATEGORY_PILLS } from "../config";
 import AnimatedNumber from "./AnimatedNumber";
 
+// `short` is what the trigger shows once a sort is active — always a real word,
+// never a bare icon or an ambiguous abbreviation (previously "Cat", "Short", a
+// lone triangle icon). `label` is the full text shown in the menu itself.
 const SORT_OPTIONS = [
-  { key: "default",    label: "Default order",        badge: null },
-  { key: "confidence", label: "Needs attention first", badge: "alert" },
-  { key: "alpha",      label: "Alphabetical",         badge: "A-Z" },
-  { key: "category",   label: "By category",          badge: "Cat" },
-  { key: "shortest",   label: "Shortest first",       badge: "Short" },
-  { key: "longest",    label: "Longest first",        badge: "Long" },
+  { key: "default",    label: "Default order",        short: null },
+  { key: "confidence", label: "Needs attention first", short: "Needs attention" },
+  { key: "alpha",      label: "Alphabetical",         short: "A–Z" },
+  { key: "category",   label: "By category",          short: "By category" },
+  { key: "shortest",   label: "Shortest first",       short: "Shortest" },
+  { key: "longest",    label: "Longest first",        short: "Longest" },
 ];
 
 export default function ToolbarSection({
@@ -37,6 +41,56 @@ export default function ToolbarSection({
 }) {
   const searchInputRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(() => !!search);
+
+  // ── Category overflow ("More") — pin the most-used categories inline,
+  // tuck the rest behind a searchable dropdown so the row doesn't need to
+  // scroll through 15+ same-weight pills to find one.
+  const [catOverflowOpen, setCatOverflowOpen] = useState(false);
+  const [catOverflowQuery, setCatOverflowQuery] = useState("");
+  const [moreRect, setMoreRect] = useState(null);
+  const moreBtnRef = useRef(null);
+  const catOverflowPanelRef = useRef(null);
+
+  const countedCats = allCats.filter(c => cc[c] || customCats.includes(c));
+  const byCountDesc = [...countedCats].sort((a, b) => (cc[b] || 0) - (cc[a] || 0));
+  const pinnedNames = new Set(byCountDesc.slice(0, TOP_CATEGORY_PILLS));
+  // Keep the active filter visible even if it fell out of the top N by count.
+  if (catFilter !== "All" && countedCats.includes(catFilter)) pinnedNames.add(catFilter);
+  const pinnedCats = byCountDesc.filter(c => pinnedNames.has(c));
+  const overflowCats = byCountDesc.filter(c => !pinnedNames.has(c));
+  const overflowVisible = catOverflowQuery
+    ? overflowCats.filter(c => c.toLowerCase().includes(catOverflowQuery.toLowerCase()))
+    : overflowCats;
+
+  const toggleCatOverflow = () => {
+    if (catOverflowOpen) { setCatOverflowOpen(false); return; }
+    const r = moreBtnRef.current?.getBoundingClientRect();
+    if (r) setMoreRect({ top: r.bottom + 4, left: r.left });
+    setCatOverflowOpen(true);
+  };
+
+  // position:fixed (recomputed on open) so the panel escapes the pill row's
+  // overflowY:hidden scroll container instead of getting clipped.
+  useEffect(() => {
+    if (!catOverflowOpen) return;
+    const close = () => setCatOverflowOpen(false);
+    const onMouseDown = (e) => {
+      if (catOverflowPanelRef.current?.contains(e.target)) return;
+      if (moreBtnRef.current?.contains(e.target)) return;
+      close();
+    };
+    const onKeyDown = (e) => { if (e.key === "Escape") close(); };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [catOverflowOpen]);
 
   // Keep search open when there's a value — use setState-during-render pattern
   if (search && !searchOpen) {
@@ -71,7 +125,7 @@ export default function ToolbarSection({
                   ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
                 </button>
               )}
-              {allCats.filter(c => cc[c] || customCats.includes(c)).map(c => {
+              {pinnedCats.map(c => {
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
                 const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
@@ -83,6 +137,20 @@ export default function ToolbarSection({
                   {customCats.includes(c) && <span title="Remove category" aria-label={`Remove ${c} category`} role="button" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
                 </button>;
               })}
+              {overflowCats.length > 0 && (
+                <button
+                  ref={moreBtnRef}
+                  type="button"
+                  className="cat-pill"
+                  aria-haspopup="true"
+                  aria-expanded={catOverflowOpen}
+                  onClick={toggleCatOverflow}
+                  style={{ ...styles.catPill, ...(catOverflowOpen || overflowCats.includes(catFilter) ? { borderColor: CP_ACCENT, color: CP_ACCENT } : {}) }}
+                >
+                  More <span style={{ opacity: .5, fontSize: 11 }}>{overflowCats.length}</span>
+                  <ChevronDown size={11} strokeWidth={2} style={{ transform: catOverflowOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+                </button>
+              )}
               {showNewCat ? (
                 <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
                   <input style={styles.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
@@ -93,16 +161,65 @@ export default function ToolbarSection({
             {/* Fade overlays — scoped to scroll container */}
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
             <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
+            {/* Fixed positioning (not absolute-in-scroll-container) so the panel escapes .cats' overflowY:hidden */}
+            {catOverflowOpen && moreRect && (
+              <div
+                ref={catOverflowPanelRef}
+                style={{
+                  position: "fixed", top: moreRect.top, left: moreRect.left, width: 240,
+                  background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
+                  boxShadow: "var(--cp-shadow-md)", padding: 6, zIndex: Z.DROPDOWN, animation: "menuIn .14s ease",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid var(--cp-border)", borderRadius: 4, padding: "5px 8px", marginBottom: 4 }}>
+                  <Search size={12} strokeWidth={2} style={{ opacity: .4, flexShrink: 0 }} />
+                  <input
+                    autoFocus
+                    value={catOverflowQuery}
+                    onChange={e => setCatOverflowQuery(e.target.value)}
+                    placeholder="Filter categories..."
+                    aria-label="Filter categories"
+                    style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 12, fontFamily: "inherit", color: "var(--cp-text)", minWidth: 0 }}
+                  />
+                </div>
+                <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                  {overflowVisible.length === 0 && (
+                    <div style={{ padding: "8px 6px", fontSize: 12, color: "var(--cp-text-faint)" }}>No matches</div>
+                  )}
+                  {overflowVisible.map(c => {
+                    const col = getCatColor(c, customCats);
+                    const count = cc[c];
+                    const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        className="dd-opt"
+                        onClick={() => { setCatFilter(c); setFavFilter(false); setCatOverflowOpen(false); setCatOverflowQuery(""); }}
+                        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", border: "none", background: "transparent", padding: "7px 8px", borderRadius: 4, fontSize: 12, color: "var(--cp-text-secondary)", cursor: "pointer", fontFamily: "inherit" }}
+                      >
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />
+                        <span style={{ flex: 1 }}>{c}</span>
+                        {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, flexShrink: 0 }} />}
+                        <span style={{ opacity: .5, fontSize: 11 }}>{count || 0}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Search + Sort — pinned right */}
+          {/* Search + Sort — pinned right. Search stays mounted on desktop
+              (no click-to-reveal icon) since there's room for it; mobile
+              keeps the collapse-behind-an-icon behavior. */}
           <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, paddingRight: 2, paddingLeft: 8 }}>
-            {searchOpen ? (
+            {(!isMobile || searchOpen) && (
               <div style={{
                 display: "flex", alignItems: "center",
                 border: "1px solid var(--cp-border)", borderRadius: 6,
                 background: "var(--cp-bg-card)", overflow: "hidden",
-                width: isMobile ? 160 : 180, transition: "width .15s ease",
+                width: isMobile ? 160 : 220, transition: "width .15s ease",
               }}>
                 <Search size={13} strokeWidth={2} style={{ marginLeft: 8, flexShrink: 0, opacity: 0.4 }} />
                 <input
@@ -148,7 +265,8 @@ export default function ToolbarSection({
                   </span>
                 )}
               </div>
-            ) : (
+            )}
+            {isMobile && !searchOpen && (
               <button
                 className="ui-tip ui-tip-below"
                 data-tip="Search (/)"
@@ -198,11 +316,7 @@ export default function ToolbarSection({
               >
                 <ArrowUpDown size={14} strokeWidth={2} />
                 {sortBy !== "default" && (
-                  <span style={{ letterSpacing: sortBy === "alpha" ? 0.5 : 0, display: "inline-flex", alignItems: "center" }}>
-                    {SORT_OPTIONS.find(o => o.key === sortBy)?.badge === "alert"
-                      ? <TriangleAlert size={12} strokeWidth={2} />
-                      : SORT_OPTIONS.find(o => o.key === sortBy)?.badge}
-                  </span>
+                  <span style={{ whiteSpace: "nowrap" }}>{SORT_OPTIONS.find(o => o.key === sortBy)?.short}</span>
                 )}
               </Menu.Trigger>
               <Menu.Portal>

@@ -165,6 +165,8 @@ export const RATE_LIMITS = {
   CACHE:      60,
   LOOKUP:     60,
   FETCH_URL:  15,
+  OG:        120,
+  SHARE_PAGE: 120,
 };
 
 // ── Standardized error messages ──

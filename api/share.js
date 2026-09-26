@@ -1,9 +1,9 @@
 import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { sharePostSchema, shareGetSchema, parseBody } from './_schemas.js';
+import { loadShare, SITE_URL } from './_shareData.js';
 
 const ID_LENGTH = 8;
 const EXPIRY_DAYS = 30;
-const SHARE_BASE_URL = 'https://commonplace.pro';
 
 // Generate a short URL-safe ID (a-z, 0-9)
 function generateShareId() {
@@ -23,21 +23,10 @@ export default withApiHandler(async (req, res, { supabase }) => {
     const { id } = parsed;
 
     try {
-      const { data, error } = await supabase
-        .from('shared_collections')
-        .select('quotes, title, created_at, expires_at')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) return res.status(404).json({ error: 'Shared collection not found' });
-
-      // Check expiry — delete the expired row (fire and forget) so expired
-      // shared data doesn't linger in the database indefinitely.
-      if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        supabase.from('shared_collections').delete().eq('id', id).catch(() => {});
-        return res.status(410).json({ error: 'This shared link has expired' });
-      }
+      const result = await loadShare(supabase, id);
+      if (result.status === 'not_found') return res.status(404).json({ error: 'Shared collection not found' });
+      if (result.status === 'expired') return res.status(410).json({ error: 'This shared link has expired' });
+      const { data } = result;
 
       // Increment view count (fire and forget)
       supabase.rpc('increment_view_count', { share_id: id }).catch(() => {});
@@ -82,7 +71,7 @@ export default withApiHandler(async (req, res, { supabase }) => {
 
       return res.status(201).json({
         id,
-        url: `${SHARE_BASE_URL}/#p=${id}`,
+        url: `${SITE_URL}/c/${id}`,
         expiresAt,
         count: validated.length,
       });

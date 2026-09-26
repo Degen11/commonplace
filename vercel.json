@@ -2,6 +2,8 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/assets/:path*",
@@ -63,10 +65,13 @@
       ]
     }
   ],
+  "functions": {
+    "api/og.js": {
+      "includeFiles": "api/_fonts/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/((?!api/).*)", "destination": "/" }
+    { "source": "/c/:id", "destination": "/api/share-page?id=:id" }
   ]
 }

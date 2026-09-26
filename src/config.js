@@ -72,7 +72,10 @@ export const THEME_COLOR_DARK  = "#1A1A1A";
 
 // Share link hash prefixes
 export const SHARE_HASH_PREFIX  = "s=";  // base64-encoded share data
-export const PUBLIC_HASH_PREFIX = "p=";  // public collection link
+export const PUBLIC_HASH_PREFIX = "p=";  // public collection link (legacy form)
+// Public collection links live at /c/<id> so each one can carry its own
+// Open Graph tags (api/share-page.js). #p=<id> links still resolve.
+export const PUBLIC_SHARE_PATH  = "/c/";
 
 // localStorage keys (single source of truth)
 export const LS_QUOTES      = "commonplace_quotes";

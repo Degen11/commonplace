@@ -209,7 +209,10 @@ export default function Commonplace() {
       {/* reducedMotion="user" — disables motion/react transforms when the OS requests reduced motion */}
       <MotionConfig reducedMotion="user">
       <LayoutGroup>
-      <AnimatePresence mode="wait">
+      {/* initial={false}: no entrance animation for the first phase on page load.
+          It would fade out the prerendered landing markup the moment React
+          replaces it (see main.jsx); later phase changes still animate. */}
+      <AnimatePresence mode="wait" initial={false}>
       {/* ── Input phase ── */}
       {phase === "input" && (
         <motion.div key="input" variants={phaseVariants} initial="initial" animate="animate" exit="exit">

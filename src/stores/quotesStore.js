@@ -15,18 +15,19 @@ import { mergeByTimestamp } from "../utils/sync";
 import {
   TOMBSTONE_TTL_MS, STORAGE_WARN_BYTES,
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH,
-  LS_QUOTES, LS_CATS, LS_COL_ORDER, LS_DELETED_IDS, LS_COLLECTIONS,
+  LS_QUOTES, LS_CATS, LS_COL_ORDER, LS_DELETED_IDS, LS_COLLECTIONS, LS_DEVICE_ID,
   PERSIST_DEBOUNCE_MS,
   SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
 } from "../config";
-import { loadFromStorage, saveToStorage, saveString, removeFromStorage } from "../utils/storage";
+import { loadFromStorage, loadString, saveToStorage, saveString, removeFromStorage } from "../utils/storage";
+import { isPublicSharePath } from "../utils/shareLinks";
 
 // ── Helpers ──
 
 function isShareHash() {
   if (typeof window === "undefined") return false;
   const hash = window.location.hash.slice(1);
-  return hash.startsWith(SHARE_HASH_PREFIX) || hash.startsWith(PUBLIC_HASH_PREFIX);
+  return hash.startsWith(SHARE_HASH_PREFIX) || hash.startsWith(PUBLIC_HASH_PREFIX) || isPublicSharePath();
 }
 
 function loadDeletedIds() {
@@ -89,7 +90,13 @@ export const useQuotesStore = create(
     // ── Sync state (managed by TanStack Query, exposed here for UI) ──
     syncStatus: "idle",
     lastSynced: null,
-    initialLoading: true,
+    // "Restoring from cloud…" only makes sense if this browser has synced
+    // before, i.e. it already had a device ID when the page loaded. A first
+    // visit has nothing to restore, so it skips the banner: no pop-in/pop-out
+    // layout shift, and the prerendered landing page doesn't ship it. (This
+    // module always evaluates before useSync creates the ID, since useSync
+    // imports it.)
+    initialLoading: !!loadString(LS_DEVICE_ID),
 
     // ── Deletion tombstones ──
     _deletedIds: loadDeletedIds(),

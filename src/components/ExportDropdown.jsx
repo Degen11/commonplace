@@ -10,6 +10,7 @@ import {
 } from "../utils/export";
 import { styles, CLR_EMERALD } from "./styles";
 import { pluralize } from "../utils/helpers";
+import { publicShareUrl } from "../utils/shareLinks";
 import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH, API_TIMEOUT_MS } from "../config";
 
 const menuPopupStyle = {
@@ -91,7 +92,7 @@ export default function ExportDropdown({
         return r.json();
       })
       .then(data => {
-        const url = `${window.location.origin}${window.location.pathname}#p=${data.id}`;
+        const url = publicShareUrl(data.id);
         navigator.clipboard.writeText(url)
           .then(() => showToast(`Public link copied! Expires in 30 days (${pluralize(data.count, "quote")}).`, null, null, "success", { id: toastId }))
           .catch(() => showToast(`Public link created: ${url}`, null, null, "success", { id: toastId }));

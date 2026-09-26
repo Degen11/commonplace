@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Page not found — Commonplace</title>
+<meta name="description" content="This page doesn't exist. Head back to Commonplace, the free AI quote organizer." />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1A1A1A" media="(prefers-color-scheme: dark)" />
+<!-- Served by Vercel with a 404 status for any path that matches no file,
+     rewrite or function (vercel.json no longer rewrites everything to the app). -->
+<style>
+  /* Same self-hosted Satoshi and palette as privacy.html / terms.html. */
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:'Satoshi';src:url('/fonts/Satoshi-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+  :root{
+    --cp-bg:#FAF8F4;--cp-bg-card:#FFFFFF;--cp-text:#1A1814;--cp-text-secondary:#37352F;
+    --cp-border-light:#E8E3DA;--cp-accent:#3C5775;
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --cp-bg:#1A1A1A;--cp-bg-card:#262626;--cp-text:#E8E8E8;--cp-text-secondary:#CCCCCC;
+    --cp-border-light:#343434;--cp-accent:#90B4D4;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cp-bg);color:var(--cp-text-secondary);font-family:'Satoshi',-apple-system,'Segoe UI',sans-serif;line-height:1.7}
+  .wrap{max-width:520px;margin:0 auto;padding:96px 24px 80px;text-align:center}
+  .card{background:var(--cp-bg-card);border:1px solid var(--cp-border-light);border-radius:6px;padding:40px 28px}
+  .code{font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--cp-accent);margin:0 0 8px}
+  h1{font-size:24px;font-weight:700;color:var(--cp-text);letter-spacing:-0.02em;margin:0 0 8px}
+  p{font-size:14px;margin:0 0 24px}
+  .home{display:inline-block;background:var(--cp-text);color:var(--cp-bg);text-decoration:none;font-size:14px;font-weight:700;padding:10px 18px;border-radius:4px}
+  .home:hover{opacity:0.9}
+  .legal-nav{display:flex;gap:16px;justify-content:center;margin-top:24px;font-size:13px}
+  .legal-nav a{color:var(--cp-text-secondary);text-decoration:none}
+  .legal-nav a:hover{color:var(--cp-accent)}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <p class="code">404</p>
+      <h1>This page doesn't exist</h1>
+      <p>The link may be mistyped, or the page may have moved. Shared collections live at links like commonplace.pro/c/… and expire after 30 days.</p>
+      <a class="home" href="/">Go to Commonplace</a>
+    </div>
+    <nav class="legal-nav" aria-label="Site">
+      <a href="/">Commonplace</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -429,7 +429,7 @@ export default function ResultsPhase({
     const catsSnapshot = customCats;
     const clearedIds = quotes.map(q => q.id);
     if (clearedIds.length > 0) trackDeletion(clearedIds);
-    try { window.history.replaceState(null, "", window.location.pathname); } catch {}
+    try { window.history.replaceState(null, "", "/"); } catch {}
     setIsSharedView(false);
     removeFromStorage(LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT);
     setQuotes([]);

@@ -37,7 +37,7 @@ Commonplace is a quote collection organizer. Users paste messy text (or import f
 - **lucide-react** — icons
 - **@supabase/supabase-js 2** — database client (server-side only)
 - **@vercel/analytics + @vercel/speed-insights** — rendered in `App.jsx`
-- **vite-plugin-pwa** — service worker / PWA manifest (precaches the app shell + icons but `globIgnores` the lazy `localQuotes`/`nlp`/`ResultsPhase` chunks, which are instead CacheFirst runtime-cached on first use; fonts are self-hosted under `public/fonts/` so they're precached like any other static asset, not runtime-cached from a third-party origin)
+- **vite-plugin-pwa** — service worker / PWA manifest (precaches the app shell + icons, serves the shell only for `/` and `/c/:id` navigations but `globIgnores` the lazy `localQuotes`/`nlp`/`ResultsPhase` chunks, which are instead CacheFirst runtime-cached on first use; fonts are self-hosted under `public/fonts/` so they're precached like any other static asset, not runtime-cached from a third-party origin)
 - **Vercel** — hosting + serverless functions
 - **Vitest 4** — test runner (configured in `vite.config.js`)
 - **ESLint 10** — flat config (`eslint.config.js`), React Compiler compatibility checks
@@ -52,12 +52,15 @@ public/                       Static assets
   favicon.ico, *.png          Generated icons — regenerate via `npm run icons`, don't hand-edit
   fonts/                      Self-hosted Satoshi + Playfair Display .woff2 files (see @font-face in styles.js)
   og-image.svg, og-image.png  Default share-card image — .png regenerated via `npm run og-image`, don't hand-edit
-  privacy.html, terms.html    Static legal pages (rewritten from /privacy, /terms in vercel.json)
-  robots.txt, sitemap.xml     SEO files
+  privacy.html, terms.html    Static legal pages (served at /privacy, /terms via `cleanUrls` in vercel.json)
+  404.html                    Real 404 page (Vercel serves it for unmatched paths; there's no catch-all rewrite)
+  boot.js                     Render-blocking pre-paint script: saved theme class + hides the prerendered landing markup for returning visitors / share links
+  robots.txt                  SEO file (sitemap.xml is generated at build time — see vite.config.js)
 
 scripts/
   generate-icons.mjs          Renders favicon.svg → PNG/ICO app icons (uses @resvg/resvg-js)
-  generate-og-image.mjs       Renders og-image.svg → og-image.png (uses @resvg/resvg-js)
+  generate-og-image.mjs       Renders og-image.svg → og-image.png in the brand fonts from api/_fonts/ (uses @resvg/resvg-js)
+  prerender.mjs               Post-build step of `npm run build`: renders the landing page into dist/index.html
   generate-wordmark.mjs       Traces "Commonplace" from Playfair Display Bold → wordmarkPath.js (uses opentype.js)
 
 api/                          Vercel serverless functions (Node.js)
@@ -65,15 +68,20 @@ api/                          Vercel serverless functions (Node.js)
   _schemas.js                 Zod schemas for all API endpoints
   identify.js                 POST — proxy to Claude Haiku (claude-haiku-4-5-20251001) for quote identification
   sync.js                     GET/POST — device-based cloud sync via Supabase
+  _shareData.js               Shared-collection lookup + featured-quote helpers (used by share, share-page, og)
+  _fonts/                     TTF copies of the brand fonts (with fixed family names) for satori/resvg
   share.js                    GET/POST — public collection sharing (30-day expiry)
+  share-page.js               GET /c/:id (via vercel.json rewrite) — app shell with per-collection title/description/OG tags, noindex
   auto-group.js               POST — AI-powered thematic quote grouping
   cache.js                    POST — cache AI identification results in Supabase
   lookup.js                   POST — external lookup (Wikiquote, Open Library, cache)
   fetch-url.js                POST — extract content from URLs
-  og.js                       GET — Open Graph image generation
+  og.js                       GET ?id=<shareId> — 1200×630 share card for a public collection (no free-text params)
 
 src/
-  main.jsx                    Entry point — React root, QueryClient, providers, theme init, CSS injection
+  main.jsx                    Entry point — QueryClient, createRoot, CSS injection in dev (prod inlines it)
+  Root.jsx                    Provider tree + <App />, shared by main.jsx and prerender.jsx
+  prerender.jsx               Build-time render of the landing page (see scripts/prerender.mjs)
   config.js                   All tunable constants (timeouts, limits, thresholds, localStorage keys)
 
   stores/
@@ -98,6 +106,7 @@ src/
     CardItem.jsx               Card view (mobile)
     HeaderBar.jsx              Top toolbar — search, filters, view toggles, sync pill
     HeaderControls.jsx         Shared header building blocks (theme/view toggles, overflow-menu items) composed by HeaderBar and MiniHeader
+    ThemeToggleButton.jsx      Icon-button theme toggle — split out of HeaderControls so the landing page doesn't load Base UI
     MiniHeader.jsx             Sticky header on scroll
     BulkBar.jsx                Bulk actions — reassign category/source, delete
     EditForm.jsx               Full quote editor modal
@@ -169,13 +178,14 @@ src/
     richTextKeys.js            Key constants for rich text handling
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
+    shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl
 
-  **/__tests__/                Tests colocated with their modules (31 files, 356 tests)
+  **/__tests__/                Tests colocated with their modules (36 files, 393 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
     stores/                    quotesStore
-    utils/                     export, helpers, parsers, quotes, smartRestore, storage, sync, textFormatting, uuid
+    utils/                     export, helpers, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
 ```
 
 ### App phases
@@ -234,7 +244,7 @@ User input → smartSplit() → deduplicate against existing
 - **`App.jsx`** — Phase orchestrator (~260 lines). Initializes cross-phase hooks (`useProcessing`, `useQuoteActions`, `useTheme`), manages phase state, renders `InputPhase`/`ProcessingPhase`/`ResultsPhase` inside `MotionConfig reducedMotion="user"` → `LayoutGroup` → `AnimatePresence`.
 - **`ResultsPhase.jsx`** — The results phase. Reads state directly from `useQuotesStore`. Initializes `useViewPreferences`, `useEditState`, `useKeyboardShortcuts`, `useDndQuotes` internally. Delegates modals to `ResultsModals`, notification bars to `NotificationBars`.
 - **`quotesStore.js`** — Zustand store with all collection CRUD, cloud merge logic, cross-tab sync, and debounced persistence.
-- **`QuotesContext.jsx`** — Side-effects-only provider. Decodes share links (hash `#s=` for base64, `#p=` for public), kicks off initial cloud pull, schedules debounced push to Supabase. Provides no context value — it just renders `children`.
+- **`QuotesContext.jsx`** — Side-effects-only provider. Decodes share links (hash `#s=` for base64; `/c/<id>` or legacy `#p=<id>` for public), kicks off initial cloud pull, schedules debounced push to Supabase. Provides no context value — it just renders `children`.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Three extracted sub-functions (`handleLocalLookup`, `handleExternalLookup`, `handleApiBatch`) orchestrated by `runProcessing()`. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
 - **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.). Homepage-specific styles live separately in `inputPhaseStyles.js`.
@@ -245,9 +255,9 @@ User input → smartSplit() → deduplicate against existing
 
 ```bash
 npm run dev       # Vite dev server (localhost:5173)
-npm run build     # Production build to dist/
+npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (31 test files, 359 tests across components, hooks, stores, utils)
+npm run test      # vitest run (36 test files, 393 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -258,14 +268,14 @@ vercel dev        # Test serverless functions locally
 ## Code conventions
 
 - **No TypeScript** — entire codebase is plain JavaScript with JSX
-- **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`) injected via `<style>` tag in `main.jsx`
+- **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`), inlined into `index.html` by the build-time prerender (and injected by `main.jsx` in dev)
 - **`color-scheme`** — declared in `baseCSS` (`:root` light, `html.dark` + media-query fallback dark) and as a `<meta>` in `index.html`. This is what makes native UI (select popups, scrollbars, autofill, carets) follow the theme — keep it when touching theme CSS
 - **Reduced motion** — two layers: `MotionConfig reducedMotion="user"` in `App.jsx` disables motion/react transforms, and a `@media(prefers-reduced-motion:reduce)` block at the end of `baseCSS` collapses CSS animations/transitions to .01ms (not 0, so `animationend`/`transitionend` listeners still fire). New animations are covered automatically — don't add per-component reduced-motion checks
 - **Tooltips** — use the `.ui-tip` class with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. Icon-only controls also need `aria-label` (the CSS-pseudo-element tooltip is not a reliable accessible name). Exception: inside clip containers where the tooltip would be cut off (e.g. the horizontally scrolling `.cat-scroll`), native `title` + `aria-label` is acceptable. The `.sidebar-rail:has(.ui-tip:hover)` rule lets collapsed-sidebar tooltips escape its `overflow:hidden`
 - **Native `<select>` styling** — selects spread `SELECT_RESET` (in `styles.js`, also exported as `styles.selectReset`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
 - **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
 - **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle
-- **Fonts** — self-hosted under `public/fonts/` and declared via `@font-face` in `baseCSS` (no third-party font origin). `FONT_SANS` is Satoshi (four weights: 300/400/500/700) and is used for all UI text and headings. Playfair Display (700 normal + 400 italic) is used only by the canvas-based share image generator (`utils/shareImage.js`, `ShareImageModal.jsx`) — the "Commonplace" wordmark itself is a traced SVG path (`Wordmark.jsx` / `wordmarkPath.js`, regenerate via `npm run wordmark`), not styled text, so it needs no font loaded at all. Don't introduce new fonts or expand Playfair usage beyond the share-image generator
+- **Fonts** — self-hosted under `public/fonts/` and declared via `@font-face` in `baseCSS` (no third-party font origin). `FONT_SANS` is Satoshi (four weights: 300/400/500/700) and is used for all UI text and headings. Playfair Display (700 normal + 400 italic) is used only by the canvas-based share image generator (`utils/shareImage.js`, `ShareImageModal.jsx`) — the "Commonplace" wordmark itself is a traced SVG path (`Wordmark.jsx` / `wordmarkPath.js`, regenerate via `npm run wordmark`), not styled text, so it needs no font loaded at all. Don't introduce new fonts or expand Playfair usage beyond share images (the canvas generator and the OG cards)
 - **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, pills, checkboxes, menu items). `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
 - **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
 - **Category pill colors** — desaturated by design (text blended ~25% toward gray, bg at 0.07-0.08 opacity). Don't restore to full Tailwind saturation
@@ -312,7 +322,7 @@ Z.TOAST           2000  Toasts
 - **React Compiler vs TanStack Virtual** — the two components that call `useWindowVirtualizer()` (`TableView` and `MobileCardList` in `ResultsPhase.jsx`) carry a `"use no memo"` directive. The virtualizer is a stable mutable instance, so compiler-memoized `getVirtualItems()` results went stale when it re-rendered without a compiler-visible dep change (symptom: cards→table view switch left the table empty until a window resize). Don't remove the directives; virtualization itself still windows correctly without compiler memoization. ESLint currently reports **zero errors and zero warnings** (`npm run lint`, covering `src/` and `api/`). Note: `eslint-plugin-react-hooks` must be installed separately to run the check
 - **API batch retry** — `useProcessing.js` retries each failed batch exactly once. On retry failure the batch's items are added to `failedEntries` with a count-specific error message and processing continues to the next batch (no early exit). This is intentional: a single-batch failure should never prevent other batches from completing
 - **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty messages array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
-- Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`#p=<id>`) fetch from server. Both are handled in `QuotesContext.jsx` mount effect
+- Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`/c/<id>`, formerly `#p=<id>`, which still works) fetch from server. Both are handled in `QuotesContext.jsx` mount effect. `/c/<id>` is rewritten to `api/share-page.js`, which serves the built index.html with that collection's title, description and `og:image=/api/og?id=<id>` (plus `noindex`), so each shared link unfurls as its own card
 - Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof
 
 ## What to avoid
@@ -322,20 +332,22 @@ Z.TOAST           2000  Toasts
 - **Fonts are self-hosted, not CDN-linked** — Satoshi and Playfair Display `.woff2` files live in `public/fonts/` and are declared via `@font-face` in `baseCSS` (`styles.js`). There's no `fonts.googleapis.com`/`fonts.gstatic.com`/`fontshare.com` in the CSP or `index.html` anymore — don't reintroduce a font `<link>` tag or those origins in the CSP `style-src`/`font-src`. To update a font file (new weight, font swap), fetch the new `.woff2`, drop it into `public/fonts/`, and update the matching `@font-face` rule — no CSP, `vite.config.js`, or Workbox changes needed since same-origin `.woff2` files are already covered by `globPatterns` and the `/fonts/:path*` cache-control rule in `vercel.json`
 - **The "Commonplace" wordmark is a traced SVG path, not styled text** — `Wordmark.jsx` renders `wordmarkPath.js`, generated from Playfair Display Bold by `scripts/generate-wordmark.mjs` (`npm run wordmark`). This is what lets the page avoid loading Playfair Display at all for the four places the wordmark appears (`InputPhase.jsx` nav, `ProcessingPhase.jsx`, `HeaderBar.jsx`, `MiniHeader.jsx` — all share `layoutId="app-logo"` except `MiniHeader.jsx`). Don't hand-edit `wordmarkPath.js`; re-run the script if the wordmark text or source font ever changes
 - **App icons are generated** — `public/favicon.ico`, `apple-touch-icon.png`, and `icon-*.png` come from `npm run icons` (renders `favicon.svg`). Don't hand-edit the PNGs; if the SVG artwork changes, re-run the script (it depends on favicon.svg's structure — 32×32 viewBox, background `<rect>` first)
-- **OG image has a static fallback** — `public/og-image.png` (from `npm run og-image`, rendering `public/og-image.svg`) is what the default `og:image`/`twitter:image`/schema `screenshot` meta tags point to, so social previews don't depend on the `/api/og` serverless function being up. `/api/og` still exists for future dynamic per-quote share cards — if you touch it, note that its `h()` helper must give childless `<div>`s `children: undefined`, not `[]`, or satori throws requiring an explicit `display` style on every such node
+- **OG images** — `public/og-image.png` (from `npm run og-image`, rendering `public/og-image.svg`) is the default `og:image`/`twitter:image` for the homepage and legal pages. `/api/og?id=<shareId>` renders per-collection cards for `/c/:id` pages; it only accepts a share ID (no `text`/`source` params), so it can't be used to mint branded cards with made-up quotes — keep it that way. Both use the TTFs in `api/_fonts/` (satori and resvg can't read `.woff2`; the shipped Satoshi `.woff2` files also report their family as "false", which the copies fix) and the traced wordmark path, never styled text. `vercel.json` `functions.includeFiles` bundles the fonts with `og.js`. In `og.js`, the `h()` helper must give childless nodes `children: undefined`, not `[]`, or satori throws requiring an explicit `display` style on every such node
 - **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use. The module builds `ENTRY_WORDSETS` and `WORD_INDEX` at init time (once); the word-overlap path in `localLookup` uses these to avoid scanning all 3,700 entries — don't remove them
 - **Lazy-load `compromise` (NLP)** — it's ~354KB (~40% of initial JS if static) and is dynamically imported via `initNlp()` in `smartRestore.js`, called at the start of the processing pipeline and pre-warmed alongside localQuotes in `main.jsx`. Until it resolves, `nlpFormat`/`disambiguateContractions` fall back to regex-only. Don't convert to a static import (it's split into the `nlp` chunk and `globIgnore`d from the precache) — doing so puts it back on the critical path
 - **`serialize-javascript` npm override** — `package.json` has an `overrides` entry pinning `serialize-javascript` to `^7.0.5` to resolve a high-severity vulnerability in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain. Don't remove it; doing so re-introduces the vulnerability
-- **`styles.js` is the primary place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is injected once in `main.jsx`. The one exception is `inputPhaseStyles.js`, which holds homepage-specific styles (`HP` object, timeline data, `reveal` helper) extracted from `InputPhase.jsx` to keep it manageable
+- **`styles.js` is the primary place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is inlined once by the prerender (or injected by `main.jsx` in dev). The one exception is `inputPhaseStyles.js`, which holds homepage-specific styles (`HP` object, timeline data, `reveal` helper) extracted from `InputPhase.jsx` to keep it manageable
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy
 - **The assistant prefill** in `identify.js` (`{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
 - **SSRF protection in `fetch-url.js`** — `isPrivateHostname()` blocks requests to private/internal IPs (RFC1918, loopback, link-local, cloud metadata). Manual redirect following validates each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
-- **OG font pinned version** — `og.js` loads Inter font from jsdelivr with a pinned version (`@5.1.1`). Don't change to `@latest` — unpinned CDN URLs risk breakage from upstream changes
-- **Build chunk splitting** — `vite.config.js` uses a function-based `manualChunks` to split `motion`, `@dnd-kit` (`dndkit`), `@base-ui` (`baseui`), and `compromise` (`nlp`) into separate chunks. Don't use object-based config (causes circular chunk warnings between dndkit and tanstack)
+- **Build chunk splitting** — `vite.config.js` uses rolldown `codeSplitting.groups` to split `react`, `motion`, `@dnd-kit` (`dndkit`), `@base-ui` (`baseui`), and `compromise` (`nlp`) into separate chunks. The `react` group has a higher `priority` on purpose: groups capture their dependencies, and under the old `manualChunks` setup `baseui` swallowed React, which put all of Base UI on the landing page's critical path. After changing chunking or landing-page imports, check the `modulepreload` links in `dist/index.html`: `baseui` shouldn't be there
+- **Landing page prerender** — `npm run build` runs `scripts/prerender.mjs`, which renders `<Root>` (as a first-time visitor sees it) into `dist/index.html`'s `#root` and inlines `baseCSS` as `<style id="cp-base-css">`. `main.jsx` uses `createRoot`, which replaces that markup; don't switch to `hydrateRoot` (returning visitors, drafts and share links all render something else first). `public/boot.js` adds `.cp-app` to hide the markup for those visitors — keep its storage keys and share prefixes in sync with `config.js` (`boot.test.js` checks). The handoff is pixel-identical only because nothing above the fold has an entrance animation: don't add CSS or motion `initial` fade-ins to the hero or input card (they'd delay LCP and replay at handoff), and keep `AnimatePresence initial={false}` in `App.jsx`
+- **No catch-all rewrite** — `vercel.json` only rewrites `/api/*` and `/c/:id`; unknown paths get `public/404.html` with a real 404. The service worker's `navigateFallbackAllowlist` likewise only serves the app shell for `/` and `/c/:id`. Don't bring back the `/((?!api/).*)` → `/` rewrite; it turned every mistyped URL into a soft-404 copy of the homepage
+- **Sitemap is generated** — the `generateSitemap` plugin in `vite.config.js` writes `dist/sitemap.xml`, with each page's `<lastmod>` from the last git commit touching its files (omitted when git can't tell, e.g. shallow clones). Add new public pages to `SITEMAP_PAGES`
 - **Onboarding localStorage key** — `LS_ONBOARDED` (`commonplace_onboarded`) tracks whether the user has seen the first-run modal. Don't reset this without user intent
 - **Don't remove `babel-plugin-react-compiler`** from `vite.config.js` — the entire codebase relies on compiler-managed memoization. Removing it would cause performance regressions since manual `memo`/`useCallback`/`useMemo` have been stripped
 - **Don't remove `LayoutGroup`** from `App.jsx` — it wraps `AnimatePresence` and enables shared element transitions (`layoutId`) across phases. Removing it breaks the logo morph and button→ring transitions between input/processing/results. If adding new `layoutId` props, ensure they're unique and only used on elements that should visually connect across phase transitions

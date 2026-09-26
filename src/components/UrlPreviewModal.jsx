@@ -3,13 +3,7 @@ import { X, Check, Eye, Filter } from "lucide-react";
 import { Dialog } from "@base-ui/react/dialog";
 import { styles, CP_ACCENT, CP_ACCENT_10 } from "./styles";
 import ModalShell from "./ModalShell";
-
-const EXTRACT_MODES = [
-  { value: "all", label: "Everything", desc: "All text content from the page" },
-  { value: "quotes", label: "Quotes only", desc: "Blockquotes and quoted passages" },
-  { value: "main", label: "Main content", desc: "Article body, paragraphs, and key sections" },
-  { value: "headings", label: "Headings", desc: "Section headings and titles only" },
-];
+import { EXTRACT_MODES } from "../data/constants";
 
 export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetch, currentMode }) {
   const [selectedLines, setSelectedLines] = useState(() => new Set(preview.lines?.map((_, i) => i) ?? []));
@@ -204,4 +198,3 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
   );
 }
 
-export { EXTRACT_MODES };

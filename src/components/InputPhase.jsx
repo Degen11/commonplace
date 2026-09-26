@@ -17,16 +17,19 @@ import {
   Loader,
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
-import { ThemeToggleButton } from "./HeaderControls";
+import { ThemeToggleButton } from "./ThemeToggleButton";
 import { HP, reveal } from "./inputPhaseStyles";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useScrollReveal(threshold = 0.15) {
   const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
+  // Start revealed where there's no IntersectionObserver, which includes the
+  // build-time prerender, so the static markup shows every section to
+  // crawlers and to visitors before JS loads.
+  const [visible, setVisible] = useState(() => typeof IntersectionObserver === "undefined");
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || typeof IntersectionObserver === "undefined") return;
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold },
@@ -176,8 +179,8 @@ export default function InputPhase({
 
         {/* Left column — headline & value prop */}
         <div style={HP.heroLeft}>
-          <p style={HP.heroProblem}>Never lose a brilliant quote again.</p>
           <h1 className="hp-hero-headline" style={HP.heroHeadline}>
+            <span style={HP.heroProblem}>Free AI quote organizer</span>
             Your personal<br />library of ideas
           </h1>
           <p className="hp-hero-sub" style={HP.heroSub}>
@@ -206,7 +209,9 @@ export default function InputPhase({
             </div>
           )}
 
-          <div style={{ ...styles.inputCard, maxWidth: "100%" }}>
+          {/* No fade-in here (unlike styles.inputCard elsewhere): the card is part of the
+              prerendered first paint, and its placeholder text can be the LCP element. */}
+          <div style={{ ...styles.inputCard, maxWidth: "100%", animation: "none" }}>
             {/* Tab row */}
             <div style={styles.tabRow}>
               <button

@@ -16,9 +16,10 @@ import {
   MAX_QUOTE_TEXT_LENGTH, MAX_SOURCE_LENGTH, MAX_CATEGORY_LENGTH, MAX_SHARE_ITEMS,
   API_TIMEOUT_MS,
   LS_QUOTES, LS_CATS,
-  SHARE_HASH_PREFIX, PUBLIC_HASH_PREFIX,
+  SHARE_HASH_PREFIX,
 } from "../config";
 import { loadString, removeFromStorage } from "../utils/storage";
+import { getPublicShareId } from "../utils/shareLinks";
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -108,60 +109,58 @@ export function QuotesProvider({ children }) {
         return;
       }
       showToast("This shared link couldn\u2019t be loaded \u2014 it may be corrupted.", null, null, "error");
-      try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
+      try { window.history.replaceState(null, "", "/"); } catch { /* ignore */ }
     }
 
-    // 1b. Public collection link
-    if (hash.startsWith(PUBLIC_HASH_PREFIX)) {
-      const shareId = hash.slice(PUBLIC_HASH_PREFIX.length);
-      if (shareId.length >= 4 && shareId.length <= 20) {
-        (async () => {
-          try {
-            const r = await fetchWithTimeout(
-              `/api/share?id=${encodeURIComponent(shareId)}`,
-              {},
-              API_TIMEOUT_MS,
-            );
-            if (r.status === 410) throw new Error("expired");
-            if (r.status === 404) throw new Error("not_found");
-            if (!r.ok) throw new Error("fetch_failed");
+    // 1b. Public collection link (/c/<id>, or legacy #p=<id>)
+    const shareId = getPublicShareId();
+    if (shareId) {
+      (async () => {
+        try {
+          const r = await fetchWithTimeout(
+            `/api/share?id=${encodeURIComponent(shareId)}`,
+            {},
+            API_TIMEOUT_MS,
+          );
+          if (r.status === 410) throw new Error("expired");
+          if (r.status === 404) throw new Error("not_found");
+          if (!r.ok) throw new Error("fetch_failed");
 
-            const data = await r.json();
-            if (!Array.isArray(data.quotes) || data.quotes.length === 0) {
-              throw new Error("empty");
-            }
-
-            const reconstructed = data.quotes.map(q =>
-              Array.isArray(q) ? validateShareQuote(q) : (q.id ? q : null)
-            ).filter(Boolean);
-            if (reconstructed.length === 0) throw new Error("empty");
-
-            setQuotes(reconstructed);
-            setIsSharedView(true);
-            setInitialLoading(false);
-            if (data.title) {
-              document.title = `${data.title} — Commonplace`;
-              const metaDesc = document.querySelector('meta[name="description"]');
-              if (metaDesc) metaDesc.setAttribute("content", `Shared collection: "${data.title}" (${reconstructed.length} quotes) — Commonplace`);
-              showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
-            }
-          } catch (err) {
-            if (err.name === "AbortError") return;
-            const msg = err.message === "expired"
-              ? "This shared link has expired."
-              : err.message === "not_found"
-              ? "Shared collection not found."
-              : err.message === "empty"
-              ? "This shared collection is empty."
-              : "Couldn\u2019t load this shared collection.";
-            showToast(msg, null, null, "error");
-            try { window.history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ }
-            markReady();
-            pull();
+          const data = await r.json();
+          if (!Array.isArray(data.quotes) || data.quotes.length === 0) {
+            throw new Error("empty");
           }
-        })();
-        return;
-      }
+
+          const reconstructed = data.quotes.map(q =>
+            Array.isArray(q) ? validateShareQuote(q) : (q.id ? q : null)
+          ).filter(Boolean);
+          if (reconstructed.length === 0) throw new Error("empty");
+
+          setQuotes(reconstructed);
+          setIsSharedView(true);
+          setInitialLoading(false);
+          if (data.title) {
+            document.title = `${data.title} — Commonplace`;
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.setAttribute("content", `Shared collection: "${data.title}" (${reconstructed.length} quotes) — Commonplace`);
+            showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
+          }
+        } catch (err) {
+          if (err.name === "AbortError") return;
+          const msg = err.message === "expired"
+            ? "This shared link has expired."
+            : err.message === "not_found"
+            ? "Shared collection not found."
+            : err.message === "empty"
+            ? "This shared collection is empty."
+            : "Couldn\u2019t load this shared collection.";
+          showToast(msg, null, null, "error");
+          try { window.history.replaceState(null, "", "/"); } catch { /* ignore */ }
+          markReady();
+          pull();
+        }
+      })();
+      return;
     }
 
     // 2. If quotes were loaded synchronously from localStorage, mark ready

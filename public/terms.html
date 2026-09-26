@@ -7,6 +7,22 @@
 <meta name="description" content="Terms of service for Commonplace: what the service provides, your ownership of your content, acceptable use, and limits of liability." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://commonplace.pro/terms" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Commonplace" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content="Terms of Service — Commonplace" />
+<meta property="og:description" content="Terms of service for Commonplace: what the service provides, your ownership of your content, acceptable use, and limits of liability." />
+<meta property="og:url" content="https://commonplace.pro/terms" />
+<meta property="og:image" content="https://commonplace.pro/og-image.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Commonplace turns messy pasted quotes into an organized collection with sources and categories" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Terms of Service — Commonplace" />
+<meta name="twitter:description" content="Terms of service for Commonplace: what the service provides, your ownership of your content, acceptable use, and limits of liability." />
+<meta name="twitter:image" content="https://commonplace.pro/og-image.png" />
+<meta name="twitter:image:alt" content="Commonplace turns messy pasted quotes into an organized collection with sources and categories" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="color-scheme" content="light dark" />
@@ -32,6 +48,10 @@
   a{color:var(--cp-accent)}
   .back{display:inline-block;margin-bottom:24px;font-size:13px;color:var(--cp-text-secondary);text-decoration:none}
   .back:hover{color:var(--cp-accent)}
+  .legal-nav{display:flex;gap:16px;justify-content:center;margin-top:24px;font-size:13px}
+  .legal-nav a{color:var(--cp-text-secondary);text-decoration:none}
+  .legal-nav a:hover{color:var(--cp-accent)}
+  .legal-nav a[aria-current]{color:var(--cp-text);font-weight:600}
   h1{font-size:24px;font-weight:700;color:var(--cp-text);letter-spacing:-0.02em;margin:0 0 4px}
   .updated{color:var(--cp-text-secondary);font-size:13px;margin:0 0 32px}
   h2{font-size:15px;font-weight:600;color:var(--cp-text);margin:28px 0 8px}
@@ -64,6 +84,11 @@
       <h2>Changes</h2>
       <p>We may update these terms. Continued use of the service constitutes acceptance of updated terms.</p>
     </div>
+    <nav class="legal-nav" aria-label="Site">
+      <a href="/">Commonplace</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms" aria-current="page">Terms</a>
+    </nav>
   </div>
 </body>
 </html>

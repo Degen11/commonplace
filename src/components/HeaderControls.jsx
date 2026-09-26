@@ -6,37 +6,17 @@
 
 import { Menu } from "@base-ui/react/menu";
 import {
-  List, AlignJustify, LayoutGrid, Moon, Sun, Monitor,
+  List, AlignJustify, LayoutGrid,
   ChartColumn, CircleQuestionMark, Trash2, Gauge,
 } from "lucide-react";
 import { styles } from "./styles";
 import { Z } from "../data/constants";
+import { ThemeToggleButton, themeIcon } from "./ThemeToggleButton";
 
-// Icon for the current theme state (auto → monitor, dark → sun, light → moon)
-function themeIcon(themeMode, dark, size, color) {
-  const props = color ? { size, strokeWidth: 1.5, color } : { size, strokeWidth: 1.5 };
-  return themeMode === "auto" ? <Monitor {...props} /> : dark ? <Sun {...props} /> : <Moon {...props} />;
-}
-
-// Tooltip label shows the current mode
-const themeTipLabel = (themeMode, dark) =>
-  themeMode === "auto" ? "Auto (system)" : dark ? "Dark mode" : "Light mode";
-
-// ── Theme toggle (icon button variant) ──
-export function ThemeToggleButton({ dark, themeMode, toggleTheme, iconSize = 16, withTip = true, style }) {
-  const label = themeTipLabel(themeMode, dark);
-  return (
-    <button
-      className={withTip ? "ui-tip ui-tip-below hdr-btn" : "hdr-btn"}
-      data-tip={withTip ? label : undefined}
-      aria-label={label}
-      style={{ ...styles.statsBtn, padding: "5px 8px", ...style }}
-      onClick={toggleTheme}
-    >
-      {themeIcon(themeMode, dark, iconSize)}
-    </button>
-  );
-}
+// The icon-button theme toggle lives in its own module (no Base UI import) so
+// the landing page can use it without loading the Menu chunk; re-exported here
+// so the header code keeps one import site.
+export { ThemeToggleButton };
 
 // ── Theme toggle (overflow menu item variant) ──
 // Label shows the mode a click switches to (except auto, which shows state)

@@ -7,6 +7,22 @@
 <meta name="description" content="How Commonplace handles your quotes and data: what's stored locally, what cloud sync sends, and what third-party services are involved." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://commonplace.pro/privacy" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Commonplace" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content="Privacy Policy — Commonplace" />
+<meta property="og:description" content="How Commonplace handles your quotes and data: what's stored locally, what cloud sync sends, and what third-party services are involved." />
+<meta property="og:url" content="https://commonplace.pro/privacy" />
+<meta property="og:image" content="https://commonplace.pro/og-image.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Commonplace turns messy pasted quotes into an organized collection with sources and categories" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Privacy Policy — Commonplace" />
+<meta name="twitter:description" content="How Commonplace handles your quotes and data: what's stored locally, what cloud sync sends, and what third-party services are involved." />
+<meta name="twitter:image" content="https://commonplace.pro/og-image.png" />
+<meta name="twitter:image:alt" content="Commonplace turns messy pasted quotes into an organized collection with sources and categories" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="color-scheme" content="light dark" />
@@ -32,6 +48,10 @@
   a{color:var(--cp-accent)}
   .back{display:inline-block;margin-bottom:24px;font-size:13px;color:var(--cp-text-secondary);text-decoration:none}
   .back:hover{color:var(--cp-accent)}
+  .legal-nav{display:flex;gap:16px;justify-content:center;margin-top:24px;font-size:13px}
+  .legal-nav a{color:var(--cp-text-secondary);text-decoration:none}
+  .legal-nav a:hover{color:var(--cp-accent)}
+  .legal-nav a[aria-current]{color:var(--cp-text);font-weight:600}
   h1{font-size:24px;font-weight:700;color:var(--cp-text);letter-spacing:-0.02em;margin:0 0 4px}
   .updated{color:var(--cp-text-secondary);font-size:13px;margin:0 0 32px}
   h2{font-size:15px;font-weight:600;color:var(--cp-text);margin:28px 0 8px}
@@ -74,7 +94,7 @@
       <p>If you import content by pasting a URL, our server fetches that page on your behalf and extracts text from it. The destination site sees a request from our server, not directly from your device or IP address. We block requests to private/internal network addresses as a security precaution.</p>
 
       <h2>Shared collections</h2>
-      <p>If you generate a share link for a collection, the quotes and title you choose to share are stored in our database and are viewable by anyone with the link for 30 days, after which the link stops working and the shared copy is removed. Sharing a collection does not affect your own saved copy.</p>
+      <p>If you generate a share link for a collection, the quotes and title you choose to share are stored in our database and are viewable by anyone with the link for 30 days, after which the link stops working and the shared copy is removed. Sharing a collection does not affect your own saved copy. When a share link is posted somewhere that shows link previews (for example Slack, iMessage, or X), the preview shows one quote from the collection, its source, and the number of quotes, and those services may keep their own copy of that preview. Shared collection pages are marked so search engines don't index them.</p>
 
       <h2>Analytics</h2>
       <p>We use Vercel Analytics and Speed Insights to collect anonymous, aggregated performance metrics (page views, load times, Web Vitals). This does not include your quote content and is not used to build an individual profile of you.</p>
@@ -110,6 +130,11 @@
       <h2>Contact</h2>
       <p>Questions or data requests? Reach out via <a href="https://www.degenh.com" target="_blank" rel="noopener noreferrer">degenh.com</a>.</p>
     </div>
+    <nav class="legal-nav" aria-label="Site">
+      <a href="/">Commonplace</a>
+      <a href="/privacy" aria-current="page">Privacy</a>
+      <a href="/terms">Terms</a>
+    </nav>
   </div>
 </body>
 </html>

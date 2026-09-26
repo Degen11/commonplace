@@ -21,44 +21,77 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Commonplace turns messy pasted quotes into an organized collection with sources and categories" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Commonplace — Free AI Quote Organizer" />
     <meta name="twitter:description" content="Paste quotes in any format — AI identifies sources, assigns categories, and builds your searchable collection. Free, no signup." />
     <meta name="twitter:image" content="https://commonplace.pro/og-image.png" />
+    <meta name="twitter:image:alt" content="Commonplace turns messy pasted quotes into an organized collection with sources and categories" />
 
-    <!-- Structured Data: Software Application -->
+    <!-- Structured Data: WebSite + Organization (site name and logo in search
+         results) and the app itself -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": ["SoftwareApplication", "WebApplication"],
-      "name": "Commonplace",
-      "url": "https://commonplace.pro",
-      "description": "Free AI-powered quote organizer. Paste quotes in any format and we identify sources, assign categories, and build your searchable collection. Export as CSV, Markdown, or JSON.",
-      "applicationCategory": "UtilitiesApplication",
-      "applicationSubCategory": "Productivity",
-      "operatingSystem": "Web",
-      "browserRequirements": "Requires JavaScript. Works in Chrome, Firefox, Safari, and Edge.",
-      "featureList": [
-        "AI-powered quote source identification",
-        "Local database of 3,700+ curated quotes",
-        "Import from Kindle highlights, Readwise, CSV, JSON, Markdown",
-        "Export as CSV, Markdown, or JSON",
-        "Custom collections and categories",
-        "Cloud sync across devices",
-        "Duplicate detection",
-        "Fuzzy search"
-      ],
-      "screenshot": "https://commonplace.pro/og-image.png",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "creator": {
-        "@type": "Person",
-        "name": "Degen Hill",
-        "url": "https://www.degenh.com"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://commonplace.pro/#website",
+          "url": "https://commonplace.pro",
+          "name": "Commonplace",
+          "alternateName": "Commonplace Quote Organizer",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://commonplace.pro/#organization" }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://commonplace.pro/#organization",
+          "name": "Commonplace",
+          "url": "https://commonplace.pro",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://commonplace.pro/icon-512.png",
+            "width": 512,
+            "height": 512
+          },
+          "founder": { "@id": "https://www.degenh.com/#person" },
+          "sameAs": ["https://github.com/Degen11"]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://www.degenh.com/#person",
+          "name": "Degen Hill",
+          "url": "https://www.degenh.com"
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://commonplace.pro/#app",
+          "name": "Commonplace",
+          "url": "https://commonplace.pro",
+          "description": "Free AI-powered quote organizer. Paste quotes in any format and we identify sources, assign categories, and build your searchable collection. Export as CSV, Markdown, or JSON.",
+          "applicationCategory": "UtilitiesApplication",
+          "applicationSubCategory": "Productivity",
+          "operatingSystem": "Web",
+          "browserRequirements": "Requires JavaScript. Works in Chrome, Firefox, Safari, and Edge.",
+          "featureList": [
+            "AI-powered quote source identification",
+            "Local database of 3,700+ curated quotes",
+            "Import from Kindle highlights, Readwise, CSV, JSON, Markdown",
+            "Export as CSV, Markdown, or JSON",
+            "Custom collections and categories",
+            "Cloud sync across devices",
+            "Duplicate detection",
+            "Fuzzy search"
+          ],
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "creator": { "@id": "https://www.degenh.com/#person" },
+          "publisher": { "@id": "https://commonplace.pro/#organization" }
+        }
+      ]
     }
     </script>
 
@@ -69,9 +102,16 @@
     <!--FAQ_JSONLD-->
     </script>
 
+    <!-- Pre-paint boot: saved theme class, and hides the prerendered landing
+         markup for returning visitors and shared links (see public/boot.js).
+         Render-blocking on purpose; it's a few hundred bytes. -->
+    <script src="/boot.js"></script>
+
     <!-- Fonts — self-hosted (public/fonts/), declared via @font-face in baseCSS
          (src/components/styles.js). No third-party font origin on the page
-         anymore; preload the two Satoshi weights used above the fold. -->
+         anymore; preload the Satoshi weights used above the fold (Light is
+         the hero subhead). -->
+    <link rel="preload" href="/fonts/Satoshi-Light.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Satoshi-Bold.woff2" as="font" type="font/woff2" crossorigin />
 
@@ -89,28 +129,10 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- #root is filled with the prerendered landing page at build time
+         (scripts/prerender.mjs), so crawlers and no-JS visitors get real content. -->
     <noscript>
-      <div style="max-width:760px;margin:0 auto;padding:40px 24px;font-family:sans-serif;color:#1A1814;line-height:1.7">
-        <h1 style="font-size:2rem;margin-bottom:12px">Commonplace — Free AI Quote Organizer</h1>
-        <p style="font-size:1.1rem;margin-bottom:24px">Paste your messy quotes, phrases, and fragments. Commonplace identifies the sources, assigns categories, and builds your searchable collection. Free. No signup required.</p>
-        <h2 style="font-size:1.25rem;margin-bottom:12px">Features</h2>
-        <ul style="margin-bottom:24px">
-          <li>AI identifies quote sources from a local database of 3,700+ curated quotes</li>
-          <li>Import from Kindle highlights, Readwise, CSV, JSON, and Markdown files</li>
-          <li>Export as CSV, Markdown, or JSON — compatible with Notion and Obsidian</li>
-          <li>Custom collections, categories, and drag-to-reorder</li>
-          <li>Cloud sync across devices with no account required</li>
-          <li>Private: your data stays in your browser by default</li>
-        </ul>
-        <h2 style="font-size:1.25rem;margin-bottom:12px">How it works</h2>
-        <ol style="margin-bottom:24px">
-          <li>Paste or import your quotes in any format</li>
-          <li>AI identifies sources and assigns categories automatically</li>
-          <li>Search, filter, edit, and organize your collection</li>
-          <li>Export to your preferred format</li>
-        </ol>
-        <p><strong>Enable JavaScript to start organizing your quote collection at <a href="https://commonplace.pro">commonplace.pro</a>.</strong></p>
-      </div>
+      <p style="max-width:760px;margin:16px auto;padding:12px 24px;font-family:sans-serif;color:#1A1814;background:#F4EEDF;border-radius:6px">Commonplace needs JavaScript to organize quotes. Enable it to paste, import, and search your collection.</p>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>

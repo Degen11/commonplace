@@ -41,7 +41,7 @@ export default function NotificationBars({
         <motion.div key="shared" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.shareBanner, margin: 0 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({quotesLength} entries)</span>
-            <button style={styles.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", window.location.pathname); } catch {} }}>Make it yours</button>
+            <button style={styles.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", "/"); } catch {} }}>Make it yours</button>
           </div>
         </motion.div>
       )}

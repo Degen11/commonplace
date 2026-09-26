@@ -1,13 +1,7 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import App from './components/App'
-import ErrorBoundary from './components/ErrorBoundary'
-import { ToastProvider } from './contexts/ToastContext'
-import { QuotesProvider } from './contexts/QuotesContext'
+import { QueryClient } from '@tanstack/react-query'
+import Root from './Root'
 import { baseCSS } from './components/styles'
-import { LS_THEME } from './config'
-import { loadString } from './utils/storage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,20 +13,17 @@ const queryClient = new QueryClient({
   },
 })
 
-// Apply theme immediately to prevent flash of wrong theme
-const savedTheme = loadString(LS_THEME);
-if (savedTheme === "dark") {
-  document.documentElement.classList.add("dark");
-} else if (savedTheme === "light") {
-  // Explicit light choice — add "light" class so CSS media-query dark fallback is overridden
-  document.documentElement.classList.add("light");
-}
-// When no saved preference, the CSS @media(prefers-color-scheme:dark) handles it automatically
+// The saved theme class is applied before first paint by public/boot.js.
 
-// Inject global CSS once at app root (was previously injected 3x via <style> tags)
-const style = document.createElement('style')
-style.textContent = baseCSS
-document.head.appendChild(style)
+// Global CSS. Production builds already inline it in <head> (id="cp-base-css",
+// written by scripts/prerender.mjs) so the prerendered markup is styled before
+// any JS runs; the dev server has no prerender, so inject it here.
+if (!document.getElementById('cp-base-css')) {
+  const style = document.createElement('style')
+  style.id = 'cp-base-css'
+  style.textContent = baseCSS
+  document.head.appendChild(style)
+}
 
 // Catch unhandled promise rejections (e.g. failed fetches, async errors)
 window.addEventListener('unhandledrejection', (event) => {
@@ -40,19 +31,12 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('[Commonplace] Unhandled rejection:', event.reason);
 })
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <QuotesProvider>
-            <App />
-          </QuotesProvider>
-        </ToastProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
-)
+// createRoot (not hydrateRoot): #root may hold the prerendered landing page,
+// but returning visitors, shared links and saved drafts all render something
+// else first, so React replaces that markup in its first commit rather than
+// trying to hydrate it. For a first-time visitor the replacement is the same
+// layout, so nothing shifts.
+ReactDOM.createRoot(document.getElementById('root')).render(<Root queryClient={queryClient} />)
 
 // Pre-warm the heavy lazy chunks during idle time so the first processing run
 // doesn't stall on the ~477KB local-quotes DB or the ~354KB compromise NLP import.

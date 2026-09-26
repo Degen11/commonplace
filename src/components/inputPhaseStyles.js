@@ -44,13 +44,14 @@ export const HP = {
     alignItems: "center",
     gap: 10,
   },
+  // No entrance animation on the hero columns: they hold the LCP element (the
+  // h1), and an opacity fade-in held LCP back until it finished (~0.8s). It
+  // would also replay when React swaps in for the prerendered markup.
   heroLeft: {
-    animation: "fadeUp .8s ease",
     position: "relative",
     zIndex: 1,
   },
   heroRight: {
-    animation: "fadeUp .8s .15s ease both",
     position: "relative",
     zIndex: 1,
   },
@@ -87,7 +88,9 @@ export const HP = {
     letterSpacing: -0.2,
   },
   heroProblem: {
+    display: "block",
     fontFamily: FONT_SANS,
+    lineHeight: 1.4,
     fontSize: 14,
     fontWeight: 500,
     letterSpacing: "0.04em",

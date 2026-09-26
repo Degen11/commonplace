@@ -5,7 +5,8 @@ import { pluralize } from "../utils/helpers";
 import { FALLBACK_CATEGORY } from "../data/constants";
 import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
 import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye, Loader } from "lucide-react";
-import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
+import UrlPreviewModal from "./UrlPreviewModal";
+import { EXTRACT_MODES } from "../data/constants";
 
 export default function AddMorePanel({
   addMoreInput, setAddMoreInput,

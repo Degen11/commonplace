@@ -1,8 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { CP_ACCENT, CP_ACCENT_10 } from "./styles";
 import { API_HEADERS } from "../utils/api";
 import { Filter } from "lucide-react";
-import UrlPreviewModal, { EXTRACT_MODES } from "./UrlPreviewModal";
+import { EXTRACT_MODES } from "../data/constants";
+
+// Lazy: the modal pulls in Base UI's Dialog (ModalShell), which the landing
+// page otherwise doesn't need on first load.
+const UrlPreviewModal = lazy(() => import("./UrlPreviewModal"));
 
 export default function UrlImportPanel({ onLoad }) {
   const [url, setUrl] = useState("");
@@ -48,6 +52,7 @@ export default function UrlImportPanel({ onLoad }) {
   return (
     <div style={{ padding: "20px 24px" }}>
       {showModal && preview && (
+        <Suspense fallback={null}>
         <UrlPreviewModal
           preview={preview}
           currentMode={extractMode}
@@ -58,6 +63,7 @@ export default function UrlImportPanel({ onLoad }) {
           onCancel={() => setShowModal(false)}
           onRefetch={handleRefetch}
         />
+        </Suspense>
       )}
       <div style={{ display: "flex", gap: 8 }}>
         <input

@@ -117,3 +117,13 @@ export function fallbackCategory(category, allCats) {
   }
   return FALLBACK_CATEGORY;
 }
+
+// URL import extraction modes (UrlImportPanel + UrlPreviewModal). Kept here
+// rather than in UrlPreviewModal so the landing page can list them without
+// pulling in the lazy-loaded modal (and its Base UI dialog chunks).
+export const EXTRACT_MODES = [
+  { value: "all", label: "Everything", desc: "All text content from the page" },
+  { value: "quotes", label: "Quotes only", desc: "Blockquotes and quoted passages" },
+  { value: "main", label: "Main content", desc: "Article body, paragraphs, and key sections" },
+  { value: "headings", label: "Headings", desc: "Section headings and titles only" },
+];

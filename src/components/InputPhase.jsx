@@ -191,8 +191,9 @@ export default function InputPhase({
             <div style={HP.miniDemoLabel}>See how it works</div>
             <div style={HP.miniDemoRow}>
               <span style={HP.miniDemoBefore}>"be the change — Gandhi"</span>
-              <ArrowRight size={14} color="var(--cp-text-faint)" style={{ flexShrink: 0 }} />
+              {/* Arrow lives inside the result so they wrap together on narrow screens */}
               <span style={HP.miniDemoAfter}>
+                <ArrowRight size={14} color="var(--cp-text-faint)" style={{ flexShrink: 0 }} />
                 <span style={HP.miniDemoTag}>Speech</span>
                 Mahatma Gandhi
               </span>

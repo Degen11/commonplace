@@ -92,3 +92,41 @@ CREATE TABLE IF NOT EXISTS quote_cache (
 ALTER TABLE quote_cache ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_quote_cache_updated_at ON quote_cache(updated_at);
+
+-- Synced collections list (added after the table was first created)
+ALTER TABLE device_data ADD COLUMN IF NOT EXISTS collections JSONB DEFAULT '[]'::jsonb;
+
+-- rate_limits is only touched by the server (secret key), so RLS with no
+-- policies keeps the publishable key out of it.
+ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+
+-- ── Public share links (/c/<id>) ──
+CREATE TABLE IF NOT EXISTS shared_collections (
+  id          TEXT PRIMARY KEY,
+  quotes      JSONB NOT NULL DEFAULT '[]'::jsonb,
+  title       TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  expires_at  TIMESTAMPTZ,
+  view_count  INT DEFAULT 0
+);
+
+-- RLS with no policies: only the server (secret key) can read shares, and
+-- only by exact ID via /api/share, which also enforces expiry. A public
+-- SELECT policy would let anyone holding the publishable key list every
+-- share, expired ones included.
+ALTER TABLE shared_collections ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public can view shared collections" ON shared_collections;
+
+CREATE INDEX IF NOT EXISTS idx_shared_collections_expires ON shared_collections(expires_at);
+
+CREATE OR REPLACE FUNCTION public.increment_view_count(share_id text)
+RETURNS void
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $$
+BEGIN
+  UPDATE public.shared_collections
+  SET view_count = view_count + 1
+  WHERE id = share_id;
+END;
+$$;

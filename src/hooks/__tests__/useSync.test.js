@@ -16,7 +16,7 @@ describe("sync API functions", () => {
   });
 
   describe("fetchSyncData contract", () => {
-    it("calls GET /api/sync with device_id and CSRF header", async () => {
+    it("calls GET /api/sync with device ID and CSRF headers", async () => {
       const mockData = { quotes: [{ id: "1", text: "test" }], customCategories: [], collections: [] };
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -24,15 +24,15 @@ describe("sync API functions", () => {
       });
 
       const deviceId = "test-device-id";
-      const r = await fetch(`/api/sync?device_id=${deviceId}`, {
-        headers: { "X-Requested-With": "CommonplaceApp" },
+      const r = await fetch("/api/sync", {
+        headers: { "X-Requested-With": "CommonplaceApp", "X-Device-Id": deviceId },
       });
       const data = await r.json();
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        `/api/sync?device_id=${deviceId}`,
+        "/api/sync",
         expect.objectContaining({
-          headers: expect.objectContaining({ "X-Requested-With": "CommonplaceApp" }),
+          headers: expect.objectContaining({ "X-Requested-With": "CommonplaceApp", "X-Device-Id": deviceId }),
         }),
       );
       expect(data.quotes).toEqual([{ id: "1", text: "test" }]);

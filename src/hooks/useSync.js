@@ -30,8 +30,10 @@ const deviceId = getOrCreateDeviceId();
 
 async function fetchSyncData() {
   if (!deviceId) return null;
-  const r = await fetch(`/api/sync?device_id=${deviceId}`, {
-    headers: { "X-Requested-With": "CommonplaceApp" },
+  // Header, not query string: the device ID is the credential for this data,
+  // and URLs end up in request logs.
+  const r = await fetch("/api/sync", {
+    headers: { "X-Requested-With": "CommonplaceApp", "X-Device-Id": deviceId },
   });
   if (!r.ok) return null;
   return r.json();

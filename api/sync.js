@@ -34,9 +34,12 @@ function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
 export default withApiHandler(async (req, res, { supabase }) => {
   // ── GET: Fetch quotes for a device ──
   if (req.method === 'GET') {
-    const { ok } = parseBody(uuidV4, req.query.device_id);
+    // The device ID is the only credential for this data, so it's sent as a
+    // header to keep it out of URL logs. The query param is the old form, still
+    // sent by clients running a cached older build.
+    const deviceId = req.headers['x-device-id'] || req.query.device_id;
+    const { ok } = parseBody(uuidV4, deviceId);
     if (!ok) return res.status(400).json({ error: 'Invalid device_id' });
-    const deviceId = req.query.device_id;
 
     try {
       let { data, error } = await supabase

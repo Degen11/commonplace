@@ -12,15 +12,30 @@ export const uuidV4 = z.string().regex(
 
 // ── /api/identify ──
 
+// Structured items: the server builds the prompt from these, so it knows which
+// text each result belongs to and can write the quote cache itself.
+const identifyItem = z.object({
+  text: z.string().min(1).max(10000),
+  // Total prompt size is capped in identify.js, so these are only sanity limits
+  hint: z.string().max(10000).optional().nullable(),
+  candidate: z.object({
+    source: z.string().max(10000),
+    category: z.string().max(10000),
+  }).optional().nullable(),
+});
+
 export const identifySchema = z.object({
+  items: z.array(identifyItem).min(1).max(10).optional(),
+  // Legacy shape, still sent by clients running a cached older build until
+  // their service worker updates. Results from it are never cached.
   messages: z.array(
     z.object({
       role: z.literal('user'),
       content: z.string().min(1).max(10000, 'Input too large. Send fewer quotes per batch.'),
     }),
-  ).min(1).max(1),
+  ).min(1).max(1).optional(),
   formatting: z.boolean().optional(),
-});
+}).refine(b => b.items || b.messages, { message: 'Missing items' });
 
 // ── /api/sync POST ──
 
@@ -112,19 +127,6 @@ export const autoGroupSchema = z.object({
 export const fetchUrlSchema = z.object({
   url: z.string().url('Invalid URL'),
   extractMode: z.enum(['all', 'quotes', 'main', 'headings']).optional().default('all'),
-});
-
-// ── /api/cache ──
-
-const cacheItem = z.object({
-  text: z.string().min(1),
-  source: z.string().min(1),
-  category: z.string().optional(),
-  confidence: confidence.optional(),
-});
-
-export const cacheSchema = z.object({
-  items: z.array(cacheItem).min(1).max(20, 'Invalid items array (1-20)'),
 });
 
 // ── /api/lookup ──

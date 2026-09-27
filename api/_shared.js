@@ -21,12 +21,13 @@ export function getSupabase() {
 const rateMap = new Map();
 const RATE_MAP_MAX_SIZE = 10_000; // prevent unbounded growth from many unique IPs
 
-function checkRateLimitInMemory(ip, limit) {
+function checkRateLimitInMemory(key, limit, windowSec = 60) {
   const now = Date.now();
+  const windowMs = windowSec * 1000;
   // Evict expired entries — full sweep when approaching capacity
   if (rateMap.size > RATE_MAP_MAX_SIZE / 2) {
-    for (const [key, entry] of rateMap) {
-      if (now - entry.start > 60000) rateMap.delete(key);
+    for (const [k, entry] of rateMap) {
+      if (now - entry.start > entry.windowMs) rateMap.delete(k);
     }
   }
   // Hard cap: if still over limit after cleanup, drop oldest entries.
@@ -35,24 +36,27 @@ function checkRateLimitInMemory(ip, limit) {
   if (rateMap.size >= RATE_MAP_MAX_SIZE) {
     const toDelete = rateMap.size - RATE_MAP_MAX_SIZE + 1;
     const keys = Array.from(rateMap.keys()).slice(0, toDelete);
-    for (const key of keys) rateMap.delete(key);
+    for (const k of keys) rateMap.delete(k);
   }
-  const entry = rateMap.get(ip);
-  if (!entry || now - entry.start > 60000) {
-    rateMap.set(ip, { start: now, count: 1 });
+  const entry = rateMap.get(key);
+  if (!entry || now - entry.start > windowMs) {
+    rateMap.set(key, { start: now, count: 1, windowMs });
     return true;
   }
   entry.count++;
   return entry.count <= limit;
 }
 
-export async function checkRateLimit(ip, limit, supabase) {
-  if (!supabase) return checkRateLimitInMemory(ip, limit);
+// `key` names the bucket. Callers scope it per endpoint ("identify:1.2.3.4")
+// so each endpoint's limit applies on its own — a single shared per-IP bucket
+// let whichever endpoint opened the window set the budget for all of them.
+export async function checkRateLimit(key, limit, supabase, windowSec = 60) {
+  if (!supabase) return checkRateLimitInMemory(key, limit, windowSec);
   try {
     const { data, error } = await supabase.rpc('check_rate_limit', {
-      p_ip: ip,
+      p_ip: key,
       p_limit: limit,
-      p_window_sec: 60,
+      p_window_sec: windowSec,
     });
     if (error) throw error;
     return data;
@@ -60,7 +64,7 @@ export async function checkRateLimit(ip, limit, supabase) {
     // Supabase unavailable — still enforce rate limits in-memory.
     // In serverless environments this is per-instance (weaker), but
     // better than allowing unlimited requests through.
-    return checkRateLimitInMemory(ip, limit);
+    return checkRateLimitInMemory(key, limit, windowSec);
   }
 }
 
@@ -79,7 +83,7 @@ export function setCorsHeaders(req, res, methods = 'POST, OPTIONS') {
     res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', methods);
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-Device-Id');
   res.setHeader('Access-Control-Max-Age', '86400');
 }
 
@@ -157,21 +161,38 @@ export async function callAnthropic(payload, { timeoutMs = ANTHROPIC.TIMEOUT_MS 
 }
 
 // ── Per-endpoint rate limits (requests per minute) ──
+// Each has its own bucket per IP (the name keys it).
 export const RATE_LIMITS = {
-  IDENTIFY:   30,
-  SYNC:       60,
-  SHARE:      15,
-  AUTO_GROUP:  15,
-  CACHE:      60,
-  LOOKUP:     60,
-  FETCH_URL:  15,
-  OG:        120,
-  SHARE_PAGE: 120,
+  IDENTIFY:   { name: 'identify',   limit: 30 },
+  SYNC:       { name: 'sync',       limit: 60 },
+  SHARE:      { name: 'share',      limit: 15 },
+  AUTO_GROUP: { name: 'auto-group', limit: 15 },
+  LOOKUP:     { name: 'lookup',     limit: 60 },
+  FETCH_URL:  { name: 'fetch-url',  limit: 15 },
+  OG:         { name: 'og',         limit: 120 },
+  SHARE_PAGE: { name: 'share-page', limit: 120 },
 };
+
+// ── Site-wide daily cap on paid AI calls (identify + auto-group combined) ──
+// Per-IP limits alone don't bound spend: anyone rotating IPs can keep calling.
+// This is a single global bucket with a 24h window, so a flood can cost at
+// most this many calls a day. Override with the AI_DAILY_LIMIT env var.
+const DEFAULT_AI_DAILY_LIMIT = 2000;
+export function aiDailyLimit() {
+  const n = Number.parseInt(process.env.AI_DAILY_LIMIT, 10);
+  return Number.isInteger(n) && n > 0 ? n : DEFAULT_AI_DAILY_LIMIT;
+}
+
+// Call after validating the request body, right before calling Anthropic, so
+// invalid requests (e.g. InputPhase's pre-warm ping) don't use up the cap.
+export function checkAiDailyCap(supabase) {
+  return checkRateLimit('global:ai-daily', aiDailyLimit(), supabase, 86400);
+}
 
 // ── Standardized error messages ──
 export const ERROR_MESSAGES = {
   RATE_LIMITED:        'Too many requests. Please wait a moment and try again.',
+  AI_DAILY_LIMIT:      'AI identification is at capacity for today. Please try again tomorrow.',
   FORBIDDEN:           'Forbidden',
   METHOD_NOT_ALLOWED:  'Method not allowed',
   INVALID_CONTENT_TYPE:'Content-Type must be application/json',
@@ -202,7 +223,8 @@ export function normalizeForCache(text) {
 //   requireJson  — enforce Content-Type: application/json (default: true for POST)
 //   requireAuth  — validate origin + CSRF header (default: true)
 //                   Can be a function (req) => boolean for conditional auth (e.g. share GET)
-//   rateLimit    — requests per minute, or null to skip (default: null)
+//   rateLimit    — { name, limit }: requests per minute per IP, bucketed by
+//                   endpoint name; or null to skip (default: null)
 //   requireSupabase — return error if Supabase is unavailable (default: false)
 //   requireAnthropicKey — return error if ANTHROPIC_API_KEY is missing (default: false)
 //
@@ -254,7 +276,7 @@ export function withApiHandler(handler, {
 
     if (rateLimit) {
       const ip = getClientIp(req);
-      if (!(await checkRateLimit(ip, rateLimit, supabase))) {
+      if (!(await checkRateLimit(`${rateLimit.name}:${ip}`, rateLimit.limit, supabase))) {
         return res.status(429).json({ error: ERROR_MESSAGES.RATE_LIMITED });
       }
     }

@@ -1,4 +1,4 @@
-import { withApiHandler, callAnthropic, ANTHROPIC, RATE_LIMITS } from './_shared.js';
+import { withApiHandler, callAnthropic, checkAiDailyCap, ANTHROPIC, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
 import { autoGroupSchema, parseBody } from './_schemas.js';
 
 const SYSTEM_PROMPT = `You filter quotes by theme. Given a theme and numbered quotes, return a JSON array of matching indices. Example: [0,3,7]
@@ -7,7 +7,7 @@ Rules:
 - Return [] if nothing matches
 - Return ONLY the JSON array, nothing else`;
 
-export default withApiHandler(async (req, res) => {
+export default withApiHandler(async (req, res, { supabase }) => {
   const { ok, data: body, error: validationError } = parseBody(autoGroupSchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
@@ -31,6 +31,10 @@ export default withApiHandler(async (req, res) => {
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userContent }],
   };
+
+  if (!(await checkAiDailyCap(supabase))) {
+    return res.status(429).json({ error: ERROR_MESSAGES.AI_DAILY_LIMIT });
+  }
 
   const result = await callAnthropic(safeBody);
   if (!result.ok) return res.status(result.status).json({ error: result.error });

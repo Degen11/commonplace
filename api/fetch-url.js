@@ -1,3 +1,5 @@
+import { lookup } from 'node:dns/promises';
+import { BlockList, isIP } from 'node:net';
 import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { fetchUrlSchema, parseBody } from './_schemas.js';
 
@@ -5,32 +7,51 @@ const MAX_CONTENT_LENGTH = 500_000; // 500KB text limit
 const FETCH_TIMEOUT = 10_000; // 10s
 const MAX_REDIRECTS = 5;
 
-// Block requests to private/internal IP ranges to prevent SSRF
-function isPrivateHostname(hostname) {
-  // Block obvious private hostnames
-  if (hostname === 'localhost' || hostname === '[::1]') return true;
-  if (hostname.endsWith('.local') || hostname.endsWith('.internal')) return true;
+// ── SSRF protection ──
+// Checking the hostname string alone isn't enough: IPv6 forms like
+// [::ffff:127.0.0.1] or [fd12::1], and public DNS names that resolve to
+// private IPs (127.0.0.1.nip.io), all got past it. So every hop resolves the
+// name and checks each resulting address against these ranges. (BlockList also
+// matches IPv4-mapped IPv6 addresses against the IPv4 rules.)
+const BLOCKED_RANGES = new BlockList();
+for (const [net, prefix] of [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
+  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.168.0.0', 16],
+  ['198.18.0.0', 15], ['224.0.0.0', 4], ['240.0.0.0', 4],
+]) BLOCKED_RANGES.addSubnet(net, prefix, 'ipv4');
+for (const [net, prefix] of [
+  ['::', 128], ['::1', 128], ['64:ff9b::', 96], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8],
+]) BLOCKED_RANGES.addSubnet(net, prefix, 'ipv6');
 
-  // Strip IPv6 brackets
-  const bare = hostname.startsWith('[') ? hostname.slice(1, -1) : hostname;
-
-  // IPv4: 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 127.x.x.x, 169.254.x.x, 0.x.x.x
-  const ipv4 = bare.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (ipv4) {
-    const [, a, b] = ipv4.map(Number);
-    if (a === 10) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a === 127) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 0) return true;
-  }
-
-  // IPv6 loopback and link-local
-  if (bare === '::1' || bare.startsWith('fe80:') || bare.startsWith('fc00:') || bare.startsWith('fd00:')) return true;
-
-  return false;
+export function isPrivateAddress(address) {
+  const family = isIP(address);
+  if (!family) return true;
+  return BLOCKED_RANGES.check(address, family === 6 ? 'ipv6' : 'ipv4');
 }
+
+// Returns an error message if the host must not be fetched, else null.
+// A small window remains between this lookup and fetch's own (DNS rebinding);
+// closing it fully would need pinning the connection to the checked address.
+export async function checkHost(hostname) {
+  const bare = hostname.startsWith('[') ? hostname.slice(1, -1) : hostname;
+  if (bare === 'localhost' || bare.endsWith('.localhost') || bare.endsWith('.local') || bare.endsWith('.internal')) {
+    return PRIVATE_HOST_ERROR;
+  }
+  let addresses;
+  if (isIP(bare)) {
+    addresses = [bare];
+  } else {
+    try {
+      addresses = (await lookup(bare, { all: true, verbatim: true })).map(a => a.address);
+    } catch {
+      return 'Could not resolve that URL\'s host';
+    }
+  }
+  if (addresses.length === 0 || addresses.some(isPrivateAddress)) return PRIVATE_HOST_ERROR;
+  return null;
+}
+
+const PRIVATE_HOST_ERROR = 'URLs pointing to private/internal addresses are not allowed';
 
 export default withApiHandler(async (req, res) => {
   const { ok, data: body, error: validationError } = parseBody(fetchUrlSchema, req.body);
@@ -44,11 +65,6 @@ export default withApiHandler(async (req, res) => {
     return res.status(400).json({ error: 'Only HTTP/HTTPS URLs are supported' });
   }
 
-  // Block private/internal IPs to prevent SSRF
-  if (isPrivateHostname(parsed.hostname)) {
-    return res.status(400).json({ error: 'URLs pointing to private/internal addresses are not allowed' });
-  }
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
@@ -57,6 +73,12 @@ export default withApiHandler(async (req, res) => {
     let response;
     let currentUrl = url;
     for (let hops = 0; hops <= MAX_REDIRECTS; hops++) {
+      // Block private/internal addresses (SSRF), re-checked on every hop
+      const hostError = await checkHost(new URL(currentUrl).hostname);
+      if (hostError) {
+        return res.status(400).json({ error: hops === 0 ? hostError : 'Redirect to private/internal address blocked' });
+      }
+
       response = await fetch(currentUrl, {
         signal: controller.signal,
         headers: {
@@ -74,9 +96,6 @@ export default withApiHandler(async (req, res) => {
       const redirectUrl = new URL(location, currentUrl);
       if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
         return res.status(400).json({ error: 'Redirect to unsupported protocol' });
-      }
-      if (isPrivateHostname(redirectUrl.hostname)) {
-        return res.status(400).json({ error: 'Redirect to private/internal address blocked' });
       }
 
       currentUrl = redirectUrl.href;

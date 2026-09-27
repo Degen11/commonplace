@@ -66,14 +66,13 @@ scripts/
 api/                          Vercel serverless functions (Node.js)
   _shared.js                  Supabase client, CORS, rate limiting, origin validation, withApiHandler middleware
   _schemas.js                 Zod schemas for all API endpoints
-  identify.js                 POST — proxy to Claude Haiku (claude-haiku-4-5-20251001) for quote identification
+  identify.js                 POST — proxy to Claude Haiku (claude-haiku-4-5-20251001) for quote identification; builds the prompt from structured items and writes the quote cache itself
   sync.js                     GET/POST — device-based cloud sync via Supabase
   _shareData.js               Shared-collection lookup + featured-quote helpers (used by share, share-page, og)
   _fonts/                     TTF copies of the brand fonts (with fixed family names) for satori/resvg
   share.js                    GET/POST — public collection sharing (30-day expiry)
   share-page.js               GET /c/:id (via vercel.json rewrite) — app shell with per-collection title/description/OG tags, noindex
   auto-group.js               POST — AI-powered thematic quote grouping
-  cache.js                    POST — cache AI identification results in Supabase
   lookup.js                   POST — external lookup (Wikiquote, Open Library, cache)
   fetch-url.js                POST — extract content from URLs
   og.js                       GET ?id=<shareId> — 1200×630 share card for a public collection (no free-text params)
@@ -180,7 +179,7 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl
 
-  **/__tests__/                Tests colocated with their modules (36 files, 393 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (37 files, 406 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
@@ -206,7 +205,7 @@ User input → smartSplit() → deduplicate against existing
     → matched: added immediately
     → unmatched: POST /api/lookup (Wikiquote, Open Library, server cache)
       → still unmatched: POST /api/identify in batches of 10 (API_BATCH_SIZE)
-        → results cached via POST /api/cache (fire-and-forget)
+        → /api/identify caches its own results in Supabase (never overwrites a high-confidence row)
   → duplicate detection (similarity > 0.55 threshold) → DupeModal
   → quotes added to store → localStorage persist (300ms debounce) → Supabase sync (2s debounce)
 ```
@@ -257,7 +256,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (36 test files, 393 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (37 test files, 406 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -290,7 +289,7 @@ vercel dev        # Test serverless functions locally
 - **Shared element transitions** — `LayoutGroup` wraps `AnimatePresence` in `App.jsx`. Elements with matching `layoutId` props morph across phase transitions: `"app-logo"` on the logo (InputPhase nav → ProcessingPhase nav → HeaderBar title), `"phase-action"` on the process button → progress ring. Use `layoutId` sparingly — only for elements that create meaningful visual continuity between phases
 - **Staggered list entrances** — CSS class `stagger-in` triggers cascading entrance animation on table rows (`.qrow`) and cards (`.qcard`) with 35ms offsets. Applied on mount in `TableView` and `MobileCardList`. The `list-shuffle` class triggers on sort/filter/collection changes via fingerprint detection. Both use the `cubic-bezier(0.16, 1, 0.3, 1)` easing
 - **Drag-and-drop visuals** — dragged items get scale(1.04), rotate(-2deg), elevated drop-shadow, and accent border. Source rows dim to 0.35 opacity with grayscale(0.3) and scale(0.98). Drop targets use `dropGlow` animation with box-shadow pulse. Collection drop targets scale 1.03 on hover
-- **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object
+- **API middleware** — all serverless functions use `withApiHandler()` from `_shared.js` for CORS, auth, rate limiting, and content-type validation. Anthropic model/URL/version are centralized in `ANTHROPIC` constant. Rate limits in `RATE_LIMITS` object, each `{ name, limit }` — the name keys a separate per-IP bucket per endpoint. `/api/identify` and `/api/auto-group` also share a global daily cap (`checkAiDailyCap`, default 2000/day, `AI_DAILY_LIMIT` env var), checked after body validation so the InputPhase pre-warm ping doesn't count
 - **API validation** — all serverless functions use Zod schemas from `_schemas.js`. Filter-style validation: invalid items are silently dropped, not rejected
 - **CSRF protection** — all API calls include `X-Requested-With: CommonplaceApp` header, validated server-side via `withApiHandler`
 - **No mount guards needed** — React 18+ removed the "setState on unmounted component" warning. Don't add mount-guard refs or safe-dispatch wrappers
@@ -334,7 +333,8 @@ Z.TOAST           2000  Toasts
 - **App icons are generated** — `public/favicon.ico`, `apple-touch-icon.png`, and `icon-*.png` come from `npm run icons` (renders `favicon.svg`). Don't hand-edit the PNGs; if the SVG artwork changes, re-run the script (it depends on favicon.svg's structure — 32×32 viewBox, background `<rect>` first)
 - **OG images** — `public/og-image.png` (from `npm run og-image`, rendering `public/og-image.svg`) is the default `og:image`/`twitter:image` for the homepage and legal pages. `/api/og?id=<shareId>` renders per-collection cards for `/c/:id` pages; it only accepts a share ID (no `text`/`source` params), so it can't be used to mint branded cards with made-up quotes — keep it that way. Both use the TTFs in `api/_fonts/` (satori and resvg can't read `.woff2`; the shipped Satoshi `.woff2` files also report their family as "false", which the copies fix) and the traced wordmark path, never styled text. `vercel.json` `functions.includeFiles` bundles the fonts with `og.js`. In `og.js`, the `h()` helper must give childless nodes `children: undefined`, not `[]`, or satori throws requiring an explicit `display` style on every such node
 - **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
-- **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection
+- **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection. It's not authentication, though: scripts can send any header, which is why the paid AI endpoints also have a global daily cap
+- **Sync device ID goes in the `X-Device-Id` header**, not the URL — it's the only credential for a device's data and URLs end up in request logs. `api/sync.js` still accepts `?device_id=` for clients on an old cached build
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use. The module builds `ENTRY_WORDSETS` and `WORD_INDEX` at init time (once); the word-overlap path in `localLookup` uses these to avoid scanning all 3,700 entries — don't remove them
 - **Lazy-load `compromise` (NLP)** — it's ~354KB (~40% of initial JS if static) and is dynamically imported via `initNlp()` in `smartRestore.js`, called at the start of the processing pipeline and pre-warmed alongside localQuotes in `main.jsx`. Until it resolves, `nlpFormat`/`disambiguateContractions` fall back to regex-only. Don't convert to a static import (it's split into the `nlp` chunk and `globIgnore`d from the precache) — doing so puts it back on the critical path
 - **`serialize-javascript` npm override** — `package.json` has an `overrides` entry pinning `serialize-javascript` to `^7.0.5` to resolve a high-severity vulnerability in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain. Don't remove it; doing so re-introduces the vulnerability
@@ -343,7 +343,7 @@ Z.TOAST           2000  Toasts
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy
 - **The assistant prefill** in `identify.js` (`{ role: 'assistant', content: '[' }`) forces Claude to start its response with `[`, ensuring valid JSON array output. Don't remove it
-- **SSRF protection in `fetch-url.js`** — `isPrivateHostname()` blocks requests to private/internal IPs (RFC1918, loopback, link-local, cloud metadata). Manual redirect following validates each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
+- **SSRF protection in `fetch-url.js`** — `checkHost()` resolves the hostname via DNS and blocks any private/internal address (RFC1918, loopback, link-local, CGNAT, IPv4-mapped IPv6, ULA) using a `net.BlockList`. Checking the hostname string alone was bypassable. Manual redirect following re-checks each hop. Don't bypass these checks or switch back to `redirect: 'follow'`
 - **Build chunk splitting** — `vite.config.js` uses rolldown `codeSplitting.groups` to split `react`, `motion`, `@dnd-kit` (`dndkit`), `@base-ui` (`baseui`), and `compromise` (`nlp`) into separate chunks. The `react` group has a higher `priority` on purpose: groups capture their dependencies, and under the old `manualChunks` setup `baseui` swallowed React, which put all of Base UI on the landing page's critical path. After changing chunking or landing-page imports, check the `modulepreload` links in `dist/index.html`: `baseui` shouldn't be there
 - **Landing page prerender** — `npm run build` runs `scripts/prerender.mjs`, which renders `<Root>` (as a first-time visitor sees it) into `dist/index.html`'s `#root` and inlines `baseCSS` as `<style id="cp-base-css">`. `main.jsx` uses `createRoot`, which replaces that markup; don't switch to `hydrateRoot` (returning visitors, drafts and share links all render something else first). `public/boot.js` adds `.cp-app` to hide the markup for those visitors — keep its storage keys and share prefixes in sync with `config.js` (`boot.test.js` checks). The handoff is pixel-identical only because nothing above the fold has an entrance animation: don't add CSS or motion `initial` fade-ins to the hero or input card (they'd delay LCP and replay at handoff), and keep `AnimatePresence initial={false}` in `App.jsx`
 - **No catch-all rewrite** — `vercel.json` only rewrites `/api/*` and `/c/:id`; unknown paths get `public/404.html` with a real 404. The service worker's `navigateFallbackAllowlist` likewise only serves the app shell for `/` and `/c/:id`. Don't bring back the `/((?!api/).*)` → `/` rewrite; it turned every mistyped URL into a soft-404 copy of the homepage

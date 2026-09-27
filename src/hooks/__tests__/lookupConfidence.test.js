@@ -127,9 +127,7 @@ describe("external lookup confidence routing", () => {
 
     // The AI was actually consulted, and told this is only a candidate to verify
     expect(identifyBody).not.toBeNull();
-    expect(identifyBody.messages[0].content).toContain(
-      'unverified match found online: "Guessed Movie (1999)" as Film',
-    );
+    expect(identifyBody.items[0].candidate).toEqual({ source: "Guessed Movie (1999)", category: "Film" });
 
     // The AI's (corrected) answer wins, not the raw medium-confidence guess
     const finalQuotes = setQuotes.mock.calls.at(-1)[0];

@@ -1,4 +1,4 @@
-import { withApiHandler, callAnthropic, ANTHROPIC, RATE_LIMITS } from './_shared.js';
+import { withApiHandler, callAnthropic, checkAiDailyCap, normalizeForCache, ANTHROPIC, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
 import { identifySchema, parseBody } from './_schemas.js';
 
 // ── Server-side system prompt (never exposed to client) ──
@@ -59,20 +59,91 @@ const SYSTEM_PROMPT_WITH_FORMATTING = SYSTEM_PROMPT.replace(
   'Each element: {"i":index,"source":"Source - Speaker/Author","category":"CATEGORY","confidence":"high|medium|low","cleanText":"the text with typos fixed and proper capitalization"}'
 ) + ' For cleanText: fix typos, fix \'i\' → \'I\', capitalize the first word, preserve original meaning. Return plain text only — never wrap in markdown, asterisks, or any formatting markers.';
 
-export default withApiHandler(async (req, res) => {
+const MAX_CONTENT_CHARS = 10000;
+const UNKNOWN_SOURCE = 'Unknown source';
+
+// Same numbered-list format the client used to build before the prompt moved
+// server-side.
+function buildPrompt(items) {
+  const block = items.map((it, i) => {
+    const hintStr = it.hint ? ` (attributed to: ${it.hint})` : '';
+    const candidateStr = it.candidate
+      ? ` (unverified match found online: "${it.candidate.source}" as ${it.candidate.category} — confirm if correct, or give the correct source/category if not)`
+      : '';
+    return `[${i}] ${it.text}${hintStr}${candidateStr}`;
+  }).join('\n');
+  return `Identify these:\n${block}`;
+}
+
+// Parse the model's JSON array (the response continues the '[' prefill).
+function parseResults(data) {
+  const raw = data.content.map(x => x.text || '').join('').replace(/```json|```/g, '').trim();
+  try {
+    const parsed = JSON.parse(raw.startsWith('[') ? raw : '[' + raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+// Cache identified sources so the same quote never costs tokens twice. Written
+// here from the model's own answer rather than accepted from the browser, so
+// clients can't plant arbitrary attributions for every other user. Existing
+// high-confidence rows are never overwritten.
+async function cacheResults(items, results, supabase) {
+  if (!supabase) return;
+  const rows = new Map();
+  for (const r of results) {
+    const item = Number.isInteger(r?.i) ? items[r.i] : null;
+    if (!item || typeof r.source !== 'string' || !r.source || r.source === UNKNOWN_SOURCE) continue;
+    if (r.confidence !== 'high' && r.confidence !== 'medium') continue;
+    const normalized = normalizeForCache(item.text);
+    if (normalized.length <= 5) continue;
+    rows.set(normalized, {
+      normalized_text: normalized,
+      source: r.source.slice(0, 500),
+      category: (typeof r.category === 'string' && r.category ? r.category : 'Reflection').slice(0, 100),
+      confidence: r.confidence,
+      updated_at: new Date().toISOString(),
+    });
+  }
+  if (rows.size === 0) return;
+  try {
+    const { data: locked } = await supabase
+      .from('quote_cache')
+      .select('normalized_text')
+      .in('normalized_text', [...rows.keys()])
+      .eq('confidence', 'high');
+    for (const row of locked || []) rows.delete(row.normalized_text);
+    if (rows.size === 0) return;
+    await supabase.from('quote_cache').upsert([...rows.values()], { onConflict: 'normalized_text' });
+  } catch {
+    // Cache write failure is non-critical
+  }
+}
+
+export default withApiHandler(async (req, res, { supabase }) => {
   const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
-  const firstMsg = body.messages[0];
+  const content = body.items ? buildPrompt(body.items) : body.messages[0].content;
+  if (content.length > MAX_CONTENT_CHARS) {
+    return res.status(400).json({ error: 'Input too large. Send fewer quotes per batch.' });
+  }
   const wantsFormatting = body.formatting === true;
+
+  if (!(await checkAiDailyCap(supabase))) {
+    return res.status(429).json({ error: ERROR_MESSAGES.AI_DAILY_LIMIT });
+  }
 
   const safeBody = {
     model: ANTHROPIC.MODEL,
-    max_tokens: 8192,
+    // 10 quotes (≤10k chars in) with cleanText echoed back fit well within this
+    max_tokens: 4096,
     temperature: 0,
     system: wantsFormatting ? SYSTEM_PROMPT_WITH_FORMATTING : SYSTEM_PROMPT,
     messages: [
-      { role: 'user', content: firstMsg.content },
+      { role: 'user', content },
       { role: 'assistant', content: '[' },
     ],
   };
@@ -87,6 +158,8 @@ export default withApiHandler(async (req, res) => {
     console.error('Anthropic returned unexpected structure:', JSON.stringify(data).slice(0, 200));
     return res.status(502).json({ error: 'AI returned an unexpected response format. Please try again.' });
   }
+
+  if (body.items) await cacheResults(body.items, parseResults(data), supabase);
 
   return res.status(200).json(data);
 }, {

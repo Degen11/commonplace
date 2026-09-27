@@ -111,21 +111,19 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   // ── API: batch identification ──
   const identifyBatch = async (items, withFormatting = false, externalSignal) => {
     if (items.length === 0) return [];
-    const quotesBlock = items.map((it, i) => {
-      const hintStr = it.hint ? ` (attributed to: ${it.hint})` : "";
-      const candidateStr = it.lookupCandidate
-        ? ` (unverified match found online: "${it.lookupCandidate.source}" as ${it.lookupCandidate.category} — confirm if correct, or give the correct source/category if not)`
-        : "";
-      return `[${i}] ${it.text}${hintStr}${candidateStr}`;
-    }).join("\n");
+    // The server builds the prompt from these (and caches the results itself)
+    const payload = items.map(it => ({
+      text: it.text,
+      hint: it.hint || null,
+      candidate: it.lookupCandidate
+        ? { source: String(it.lookupCandidate.source || ""), category: String(it.lookupCandidate.category || "") }
+        : null,
+    }));
 
     const r = await fetchWithTimeout("/api/identify", {
       method: "POST",
       headers: API_HEADERS,
-      body: JSON.stringify({
-        formatting: withFormatting,
-        messages: [{ role: "user", content: `Identify these:\n${quotesBlock}` }],
-      }),
+      body: JSON.stringify({ formatting: withFormatting, items: payload }),
     }, API_TIMEOUT_MS, externalSignal);
 
     if (!r.ok) throw new Error(`API returned ${r.status}`);
@@ -289,20 +287,6 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         const item = chunk[r.i];
         return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || UNKNOWN_SOURCE, category: fallbackCategory(r.category, allCats) };
       }) });
-      // Cache AI results with known sources (fire-and-forget)
-      const cacheItems = results
-        .filter(r => r.source && r.source !== UNKNOWN_SOURCE && chunk[r.i] && (r.confidence === "high" || r.confidence === "medium"))
-        .map(r => ({
-          text: chunk[r.i].text, hint: null,
-          source: r.source, category: r.category, confidence: r.confidence,
-        }));
-      if (cacheItems.length > 0) {
-        fetch("/api/cache", {
-          method: "POST",
-          headers: API_HEADERS,
-          body: JSON.stringify({ items: cacheItems }),
-        }).catch(() => {});
-      }
     }
 
     return { apiResults, apiFailed, failed };

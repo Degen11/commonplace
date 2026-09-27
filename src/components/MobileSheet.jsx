@@ -43,7 +43,8 @@ export default function MobileSheet({ isOpen, onClose, children, snapPoints, ini
             margin: "0 auto", opacity: 0.5,
           }} />
         </Sheet.Header>
-        <Sheet.Content style={{ padding: "0 16px 16px", overflow: "auto" }}>
+        {/* Bottom padding clears the home indicator; the sheet sits flush with the screen edge */}
+        <Sheet.Content style={{ padding: "0 16px calc(16px + env(safe-area-inset-bottom))", overflow: "auto" }}>
           {children}
         </Sheet.Content>
       </Sheet.Container>

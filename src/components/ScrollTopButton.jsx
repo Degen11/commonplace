@@ -30,7 +30,10 @@ export default function ScrollTopButton({ isMobile, bottomOffset = 20 }) {
       onClick={scrollToTop}
       tabIndex={visible ? 0 : -1}
       style={{
-        position: "fixed", bottom: bottomOffset, left: isMobile ? 16 : 20,
+        // env() keeps it clear of the home bar and, in landscape, the notch
+        position: "fixed",
+        bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom))`,
+        left: `calc(${isMobile ? 16 : 20}px + env(safe-area-inset-left))`,
         width: 36, height: 36, borderRadius: "50%",
         border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
         boxShadow: "var(--cp-shadow-card)", cursor: "pointer",

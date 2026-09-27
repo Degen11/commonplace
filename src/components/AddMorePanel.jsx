@@ -4,6 +4,7 @@ import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { pluralize } from "../utils/helpers";
 import { FALLBACK_CATEGORY } from "../data/constants";
 import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
+import { sourceInputProps } from "./InlineEditors";
 import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye, Loader } from "lucide-react";
 import UrlPreviewModal from "./UrlPreviewModal";
 import { EXTRACT_MODES } from "../data/constants";
@@ -211,6 +212,7 @@ export default function AddMorePanel({
               onChange={e => setUrlInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleUrlFetch(); }}
               placeholder="https://example.com/quotes"
+              enterKeyHint="go"
               style={{ flex: 1, padding: "7px 10px", borderRadius: 6, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 12, fontFamily: "inherit", outline: "none" }}
             />
             <button
@@ -316,6 +318,8 @@ export default function AddMorePanel({
               value={quickSource}
               onChange={e => setQuickSource(e.target.value)}
               placeholder="Source (author, film, book...)"
+              {...sourceInputProps}
+              enterKeyHint="done"
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleQuickAdd(); } }}
             />
             <select

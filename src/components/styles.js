@@ -193,8 +193,10 @@ export const baseCSS = `
     padding:2px 0;
     margin:-2px 0;
   }
-  .col-drag-header:hover{
-    background:var(--cp-bg-hover);
+  @media(hover:hover){
+    .col-drag-header:hover{
+      background:var(--cp-bg-hover);
+    }
   }
   .col-drag-header:active{cursor:grabbing}
 
@@ -207,40 +209,56 @@ export const baseCSS = `
 
   /* Row interactions (optimized) */
   .qrow{cursor:default;transition:background 0.1s ease}
-  .qrow:hover{background:var(--cp-bg-hover) !important}
-  .qrow:hover .checkbox-visual{opacity:1 !important}
+  @media(hover:hover){
+    .qrow:hover{background:var(--cp-bg-hover) !important}
+    .qrow:hover .checkbox-visual{opacity:1 !important}
+  }
 
   /* Drag handle — faintly visible at rest (matches cardStyles.acts' 0.3
      resting opacity), sharpens on row hover so it's discoverable without
      already knowing to hover, not just revealed by it */
   .drag-handle{opacity:0.35;transition:opacity .12s;cursor:grab;color:var(--cp-text-faint);display:flex;align-items:center}
   .drag-handle:active{cursor:grabbing}
-  .qrow:hover .drag-handle{opacity:0.7}
-  .qrow:hover .drag-handle:hover{opacity:1}
+  @media(hover:hover){
+    .qrow:hover .drag-handle{opacity:0.7}
+    .qrow:hover .drag-handle:hover{opacity:1}
+  }
   .qrow:focus-within .drag-handle,.drag-handle:focus-visible{opacity:1}
 
   /* Inline edit affordances */
   .inline-src{cursor:text !important;transition:color .12s}
-  .inline-src:hover{color:var(--cp-text-secondary) !important;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:rgba(55,53,47,0.35)}
+  @media(hover:hover){
+    .inline-src:hover{color:var(--cp-text-secondary) !important;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:rgba(55,53,47,0.35)}
+  }
   .inline-cat{cursor:pointer !important;transition:opacity .12s,background .12s}
-  .inline-cat:hover{opacity:0.75 !important;background:rgba(60,87,117,0.08) !important}
+  @media(hover:hover){
+    .inline-cat:hover{opacity:0.75 !important;background:rgba(60,87,117,0.08) !important}
+  }
 
   /* Edit hint icons — appear on hover to signal click-to-edit */
   .edit-hint{opacity:0;transition:opacity .12s;flex-shrink:0;pointer-events:none}
-  .qrow:hover .edit-hint,.qcard:hover .edit-hint{opacity:0.45}
+  @media(hover:hover){
+    .qrow:hover .edit-hint,.qcard:hover .edit-hint{opacity:0.45}
+  }
   @media(max-width:640px){.edit-hint{opacity:0.35}}
 
   /* Checkbox hover affordance */
-  .checkbox-visual:hover{border-color:var(--cp-accent) !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
+  @media(hover:hover){
+    .checkbox-visual:hover{border-color:var(--cp-accent) !important;background:rgba(60,87,117,0.08);transform:scale(1.05)}
 
-  .dd-opt:hover,.dd-opt[data-highlighted]{background:var(--cp-bg-hover) !important}
-  .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
+    .dd-opt:hover,.dd-opt[data-highlighted]{background:var(--cp-bg-hover) !important}
+    .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(55,53,47,.25);transform:translateY(-1px)}
+  }
   .proc-btn{transition:all .15s ease}
-  .try-btn:hover{background:var(--cp-bg-tab) !important}
-  .tab-btn:hover{background:var(--cp-bg-hover) !important}
+  @media(hover:hover){
+    .try-btn:hover{background:var(--cp-bg-tab) !important}
+    .tab-btn:hover{background:var(--cp-bg-hover) !important}
+  }
   .drop-zone{transition:all .2s ease}
   .how-card{transition:background .2s ease,transform .2s ease}
-  .how-card:hover{background:var(--cp-bg-card);transform:translateY(-2px)}
+  @media(hover:hover){
+    .how-card:hover{background:var(--cp-bg-card);transform:translateY(-2px)}
+  }
   /* General-purpose UI tooltip (extends conf-tooltip pattern) */
   .ui-tip{position:relative}
   .ui-tip::after{
@@ -251,18 +269,24 @@ export const baseCSS = `
     opacity:0;pointer-events:none;z-index:200;
     transition:opacity .12s ease .2s;
   }
-  .ui-tip:hover::after{opacity:1}
+  @media(hover:hover){
+    .ui-tip:hover::after{opacity:1}
+  }
   .ui-tip:active::after{opacity:0;transition:none}
   .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
   .ui-tip-left::after{left:auto;right:0;transform:none}
   .ui-tip-right::after{left:calc(100% + 6px);right:auto;bottom:auto;top:50%;transform:translateY(-50%)}
   /* Collapsed sidebar rail clips during its width animation; let tooltips escape while hovered */
-  .sidebar-rail:has(.ui-tip:hover){overflow:visible!important}
-  /* Allow tooltip pseudo-elements to escape overflow:hidden animation wrappers */
-  .notif-bar-wrapper:has(.ui-tip:hover){overflow:visible!important}
+  @media(hover:hover){
+    .sidebar-rail:has(.ui-tip:hover){overflow:visible!important}
+    /* Allow tooltip pseudo-elements to escape overflow:hidden animation wrappers */
+    .notif-bar-wrapper:has(.ui-tip:hover){overflow:visible!important}
+  }
   /* Fade-out is instant (base = after-change on mouse-leave) to avoid overflow:hidden clipping artifact */
   .notif-bar-wrapper .ui-tip::after{transition:opacity 0s}
-  .notif-bar-wrapper .ui-tip:hover::after{transition:opacity .12s ease .15s}
+  @media(hover:hover){
+    .notif-bar-wrapper .ui-tip:hover::after{transition:opacity .12s ease .15s}
+  }
 
   /* Drag insertion indicator — glowing line with spread */
   .drag-insert-above{box-shadow:inset 0 2px 0 var(--cp-drag-insert), 0 -4px 12px rgba(60,87,117,0.1) !important}
@@ -284,53 +308,75 @@ export const baseCSS = `
 
   /* Header button hover states */
   .hdr-btn{transition:all .15s ease}
-  .hdr-btn:hover{background:var(--cp-bg-hover)}
-  .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
-  .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
-  html.dark .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important}
-  .sidebar-dupes-btn:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
+  @media(hover:hover){
+    .hdr-btn:hover{background:var(--cp-bg-hover)}
+    .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
+    .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
+    html.dark .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important}
+    .sidebar-dupes-btn:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
+  }
   .sidebar-dupes-btn:active{background:var(--cp-bg-tab) !important;transform:scale(0.97)}
-  .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
+  @media(hover:hover){
+    .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
+  }
   .load-more-btn{transition:all .15s ease}
-  .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}
+  @media(hover:hover){
+    .load-more-btn:hover{background:rgba(59,130,246,0.08) !important;border-color:rgba(59,130,246,0.3) !important}
+  }
 
   /* Edit form button hovers */
   .edit-save{transition:opacity .12s ease}
-  .edit-save:hover{opacity:.85}
+  @media(hover:hover){
+    .edit-save:hover{opacity:.85}
+  }
   .edit-cancel{transition:color .12s ease}
-  .edit-cancel:hover{color:var(--cp-text-secondary) !important}
+  @media(hover:hover){
+    .edit-cancel:hover{color:var(--cp-text-secondary) !important}
+  }
   .qa-submit:not(:disabled){transition:opacity .12s ease}
-  .qa-submit:not(:disabled):hover{opacity:.85}
+  @media(hover:hover){
+    .qa-submit:not(:disabled):hover{opacity:.85}
 
-  /* Confirm modal button hovers */
-  .confirm-cancel:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
-  .confirm-yes:hover{opacity:.9}
-  .dismiss-link:hover{opacity:.7}
+    /* Confirm modal button hovers */
+    .confirm-cancel:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
+    .confirm-yes:hover{opacity:.9}
+    .dismiss-link:hover{opacity:.7}
+  }
 
   /* Empty state / toolbar — reset and filter chip hover */
   .reset-btn{transition:opacity .12s ease}
-  .reset-btn:hover{opacity:.85}
+  @media(hover:hover){
+    .reset-btn:hover{opacity:.85}
+  }
   .filter-chip{transition:background .12s ease,border-color .12s ease}
-  .filter-chip:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
+  @media(hover:hover){
+    .filter-chip:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
 
-  /* Action button hover — driven by --hover-color custom property */
-  .act-btn:hover{color:var(--hover-color) !important}
+    /* Action button hover — driven by --hover-color custom property */
+    .act-btn:hover{color:var(--hover-color) !important}
+  }
 
   /* Overflow menu — faintly visible at rest, sharpens on row/card hover */
   .overflow-btn{opacity:0.45;transition:opacity .12s ease}
-  .qrow:hover .overflow-btn{opacity:1}
-  .qcard:hover .overflow-btn{opacity:1}
+  @media(hover:hover){
+    .qrow:hover .overflow-btn{opacity:1}
+    .qcard:hover .overflow-btn{opacity:1}
+  }
   /* Keyboard reveal: without this, tabbing lands a focus ring on an invisible button */
   .overflow-btn:focus-visible{opacity:1}
   .qrow:focus-within .overflow-btn,.qcard:focus-within .overflow-btn{opacity:1}
   .overflow-menu-item svg{transition:color .15s ease}
-  .overflow-menu-item:hover{background:var(--cp-bg-hover) !important}
-  .overflow-copy:hover svg{color:#2383E2 !important}
-  .overflow-reidentify:hover svg{color:#EA580C !important}
-  .overflow-share:hover svg{color:#7C3AED !important}
+  @media(hover:hover){
+    .overflow-menu-item:hover{background:var(--cp-bg-hover) !important}
+    .overflow-copy:hover svg{color:#2383E2 !important}
+    .overflow-reidentify:hover svg{color:#EA580C !important}
+    .overflow-share:hover svg{color:#7C3AED !important}
+  }
   .overflow-menu-item-destructive svg{transition:color .15s ease}
-  .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
-  .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
+  @media(hover:hover){
+    .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
+    .overflow-menu-item-destructive:hover svg{color:#DC2626 !important}
+  }
 
   /* Button press feedback — subtle scale on mousedown */
   .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled),.reset-btn:active,.filter-chip:active,.edit-save:active,.edit-cancel:active,.qa-submit:active:not(:disabled),.attention-dismiss:active{transform:scale(0.97) !important;transition:transform .1s ease !important}
@@ -370,10 +416,14 @@ export const baseCSS = `
 
   /* Card hover lift */
   .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}
-  .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--card-stripe,0 0 0 0 transparent),var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
+  @media(hover:hover){
+    .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--card-stripe,0 0 0 0 transparent),var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
+  }
   /* Lift the hovered card-grid wrapper above sibling cards AND sticky category bar (z-index:50) so the tooltip escapes cleanly */
   .qcard-wrap{position:relative}
-  .qcard-wrap:has(.qcard:hover){z-index:100}
+  @media(hover:hover){
+    .qcard-wrap:has(.qcard:hover){z-index:100}
+  }
 
   /* Disabled cursor + smooth opacity transition */
   button:disabled{cursor:not-allowed !important}
@@ -381,31 +431,47 @@ export const baseCSS = `
 
   /* View toggle button hover */
   .view-btn{transition:background .12s ease,color .12s ease}
-  .view-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
+  @media(hover:hover){
+    .view-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
+  }
 
   /* Category pill interactions */
   .cat-pill{transition:background .15s ease,color .15s ease,opacity .15s ease;user-select:none}
-  .cat-pill:hover{border-color:var(--cp-border-dim);background:var(--cp-bg-hover)}
+  @media(hover:hover){
+    .cat-pill:hover{border-color:var(--cp-border-dim);background:var(--cp-bg-hover)}
+  }
 
   /* Filter chip hover (empty state, attention bar) */
   .filter-chip{transition:all .12s ease}
-  .filter-chip:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+  @media(hover:hover){
+    .filter-chip:hover{border-color:var(--cp-border-dim) !important;background:var(--cp-bg-hover) !important}
+  }
 
   /* Bulk bar button hover states (dark-bg context) */
   .bulk-apply{transition:opacity .12s ease}
-  .bulk-apply:hover:not(:disabled){opacity:.85}
+  @media(hover:hover){
+    .bulk-apply:hover:not(:disabled){opacity:.85}
+  }
   .bulk-del{transition:all .12s ease}
-  .bulk-del:hover{background:rgba(248,113,113,0.15) !important;border-color:rgba(248,113,113,0.5) !important}
+  @media(hover:hover){
+    .bulk-del:hover{background:rgba(248,113,113,0.15) !important;border-color:rgba(248,113,113,0.5) !important}
+  }
   .bulk-reidentify{transition:all .12s ease}
-  .bulk-reidentify:hover:not(:disabled){background:rgba(255,255,255,0.08) !important}
+  @media(hover:hover){
+    .bulk-reidentify:hover:not(:disabled){background:rgba(255,255,255,0.08) !important}
+  }
 
   /* Attention bar dismiss hover */
   .attention-dismiss{transition:opacity .12s ease}
-  .attention-dismiss:hover{opacity:1 !important}
+  @media(hover:hover){
+    .attention-dismiss:hover{opacity:1 !important}
+  }
 
   /* Reset/clear filter button hover */
   .reset-btn{transition:all .12s ease}
-  .reset-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
+  @media(hover:hover){
+    .reset-btn:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text-secondary) !important}
+  }
 
   /* Responsive: stack split layout on small screens */
   @media (max-width: 768px) {
@@ -419,10 +485,14 @@ export const baseCSS = `
 
   /* ═══════════ Homepage redesign ═══════════ */
   .hp-primary{transition:all .2s ease}
-  .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.3);transform:translateY(-1px)}
+  @media(hover:hover){
+    .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.3);transform:translateY(-1px)}
+  }
   .hp-feature-card{transition:all .2s ease}
-  .hp-feature-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-  html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
+  @media(hover:hover){
+    .hp-feature-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+    html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
+  }
 
   /* Hero split → stack on tablet */
   @media (max-width: 900px) {
@@ -463,11 +533,13 @@ export const baseCSS = `
   }
 
   /* Dark mode — element-level overrides */
-  html.dark .inline-src:hover{color:var(--cp-text) !important;text-decoration-color:rgba(200,200,200,0.35)}
-  html.dark .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important;border-color:rgba(220,38,38,0.3) !important}
-  html.dark .load-more-btn:hover{background:rgba(90,137,181,0.1) !important;border-color:rgba(90,137,181,0.3) !important}
-  html.dark .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.12) !important}
-  html.dark .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  @media(hover:hover){
+    html.dark .inline-src:hover{color:var(--cp-text) !important;text-decoration-color:rgba(200,200,200,0.35)}
+    html.dark .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important;border-color:rgba(220,38,38,0.3) !important}
+    html.dark .load-more-btn:hover{background:rgba(90,137,181,0.1) !important;border-color:rgba(90,137,181,0.3) !important}
+    html.dark .overflow-menu-item-destructive:hover{background:rgba(220,38,38,0.12) !important}
+    html.dark .proc-btn:hover:not(:disabled){box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  }
   html.dark input,html.dark textarea,html.dark select{background-color:var(--cp-bg-input) !important;color:var(--cp-text) !important}
 
   /* Toast spring entrance animation + type-colored left borders */
@@ -487,6 +559,8 @@ export const baseCSS = `
   /* Safe area insets for notch/home bar devices */
   @supports(padding-bottom:env(safe-area-inset-bottom)){
     .bulk-bar-mobile{padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important}
+    /* Landscape phones: keep content out from under the notch (viewport-fit=cover) */
+    .cp-wrap{padding-left:max(32px,env(safe-area-inset-left)) !important;padding-right:max(32px,env(safe-area-inset-right)) !important}
   }
 
   /* Mobile touch targets — enforce 44px minimum */
@@ -496,17 +570,9 @@ export const baseCSS = `
     .cat-pill{min-height:36px;padding:6px 12px !important}
     .check-div{display:flex;align-items:center;justify-content:center}
     .act-btn{min-height:44px;min-width:44px}
-    .add-cat-btn{min-height:40px !important;min-width:40px !important}
 
     /* Prevent iOS auto-zoom on focus — form controls must be >=16px */
     input,select,textarea{font-size:16px !important}
-
-    /* Show overflow menu + edit hints on mobile (no hover) */
-    .overflow-btn{opacity:1 !important}
-    .edit-hint{opacity:0.4 !important}
-
-    /* Disable hover-lift on cards for mobile (prevents stuck transforms on touch) */
-    .qcard:hover{transform:none !important;box-shadow:var(--cp-shadow-card) !important}
 
     /* Active tap feedback for interactive elements */
     .qcard:active{transform:scale(0.985) !important;transition:transform .1s ease !important}
@@ -521,11 +587,8 @@ export const baseCSS = `
     /* Prevent text selection on interactive mobile elements */
     .qcard,.qrow,.cat-pill,.hdr-btn{-webkit-user-select:none;user-select:none}
 
-    /* Tooltips — hide on mobile (they require hover) */
-    .ui-tip::after{display:none !important}
-
     /* Tighter wrap padding on mobile */
-    .cp-wrap{padding-left:16px !important;padding-right:16px !important}
+    .cp-wrap{padding-left:max(16px,env(safe-area-inset-left)) !important;padding-right:max(16px,env(safe-area-inset-right)) !important}
 
     /* Sort dropdown full width on mobile */
     .mobile-sort-drop{left:auto !important;right:0 !important;min-width:180px !important}
@@ -533,6 +596,29 @@ export const baseCSS = `
     /* BulkBar responsive — allow wrapping on mobile */
     .bulk-bar-mobile{flex-wrap:wrap !important;width:calc(100vw - 16px) !important;gap:6px !important;padding:10px !important;bottom:8px !important}
     .bulk-bar-mobile .bulk-divider-hide{display:none !important}
+  }
+
+  /* Touch-only devices (phones and tablets alike): hover styles above are gated
+     behind @media(hover:hover) so taps don't leave rows/cards stuck highlighted
+     or lifted. Reveal what hover would normally reveal, and drop tooltips. */
+  @media(hover:none){
+    .overflow-btn{opacity:1 !important}
+    .edit-hint{opacity:0.4 !important}
+    .ui-tip::after{display:none !important}
+  }
+
+  /* Coarse pointers (fingers) — 44px tap targets. Small visual controls like
+     checkboxes get an invisible ::before hit area so the layout doesn't shift;
+     rows in menus and the mobile bulk bar grow for real. */
+  @media(pointer:coarse){
+    .check-div,.checkbox-visual,.overflow-btn,.attention-dismiss{position:relative}
+    .check-div::before{content:"";position:absolute;inset:-11px}
+    .checkbox-visual::before{content:"";position:absolute;inset:-14px}
+    .overflow-btn::before,.attention-dismiss::before{content:"";position:absolute;inset:min(0px,calc((44px - 100%) / -2))}
+    .add-cat-btn{min-height:44px !important;min-width:44px !important}
+    .overflow-menu-item,.overflow-menu-item-destructive,.hdr-overflow-item,.dd-opt{min-height:44px}
+    .filter-chip,.reset-btn,.dismiss-link,.load-more-btn{min-height:44px}
+    .bulk-bar-mobile button,.bulk-bar-mobile select{min-height:44px}
   }
 
   /* Small phones (iPhone SE etc) */
@@ -588,7 +674,7 @@ const SELECT_RESET = {
 
 export const styles = {
   // Layout
-  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:FONT_SANS,fontSize:14,color:"var(--cp-text)",minHeight:"100vh",background:"var(--cp-bg)"},
+  wrap:{maxWidth:1120,margin:"0 auto",padding:"0 32px 80px",fontFamily:FONT_SANS,fontSize:14,color:"var(--cp-text)",minHeight:"100dvh",background:"var(--cp-bg)"},
 
   // Nav
   nav:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"26px 0 22px",borderBottom:"1px solid var(--cp-border-light)"},

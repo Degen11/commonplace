@@ -3,12 +3,18 @@ import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
 import { ChevronDown } from "lucide-react";
 
+// Mobile keyboard setup for source fields: capitalize names, and stop iOS
+// autocorrect from "fixing" authors and titles it doesn't know (Nietzsche, Gatsby).
+export const sourceInputProps = { autoCapitalize: "words", autoCorrect: "off", spellCheck: false };
+
 // ── Inline source text input (shared by TableView and CardItem) ──
 export function InlineSourceInput({ initial, onSave, onCancel, showHint = true }) {
   const [val, setVal] = useState(initial);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, animation: "slideD .12s ease" }}>
       <input
+        {...sourceInputProps}
+        enterKeyHint="done"
         style={styles.inlineSrcInput}
         value={val}
         onChange={e => setVal(e.target.value)}

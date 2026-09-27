@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { styles } from "./styles";
+import { sourceInputProps } from "./InlineEditors";
 import { normalize } from "../utils/textFormatting";
 import { smartRestore } from "../utils/smartRestore";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
@@ -150,6 +151,8 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
           value={source}
           onChange={e => setSource(e.target.value)}
           placeholder="Source..."
+          {...sourceInputProps}
+          enterKeyHint="done"
           onKeyDown={e => {
             if (e.key === "Escape") { e.stopPropagation(); onCancel(); }
             if (e.key === "Enter") { e.preventDefault(); onSave(q.id, text, source, category); }

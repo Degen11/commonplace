@@ -72,6 +72,7 @@ export default function UrlImportPanel({ onLoad }) {
           onChange={e => { setUrl(e.target.value); setError(null); }}
           onKeyDown={e => { if (e.key === "Enter") handleFetch(); }}
           placeholder="https://example.com/quotes"
+          enterKeyHint="go"
           style={{ flex: 1, padding: "10px 14px", borderRadius: 6, border: "1px solid var(--cp-border)", background: "var(--cp-bg-input, #fff)", color: "var(--cp-text)", fontSize: 14, fontFamily: "inherit", outline: "none" }}
         />
         <button

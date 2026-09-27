@@ -12,6 +12,9 @@ export function ToastProvider({ children }) {
       {children}
       <Toaster
         position="bottom-center"
+        // Sonner's defaults (24px, 16px under 600px wide) ignore the home bar
+        offset={{ bottom: "calc(24px + env(safe-area-inset-bottom))" }}
+        mobileOffset={{ bottom: "calc(16px + env(safe-area-inset-bottom))" }}
         toastOptions={{
           style: {
             background: "var(--cp-toast-bg)",

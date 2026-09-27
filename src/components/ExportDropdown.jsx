@@ -10,8 +10,10 @@ import {
 } from "../utils/export";
 import { styles, CLR_EMERALD } from "./styles";
 import { pluralize } from "../utils/helpers";
-import { publicShareUrl } from "../utils/shareLinks";
+import { publicShareUrl, canNativeShare, nativeShare } from "../utils/shareLinks";
 import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH, API_TIMEOUT_MS } from "../config";
+
+const SHARE_TITLE = "Quotes from my Commonplace";
 
 const menuPopupStyle = {
   background: "var(--cp-bg-card)",
@@ -66,11 +68,16 @@ export default function ExportDropdown({
     }
 
     close();
-    navigator.clipboard.writeText(url).then(() => {
+    const copyLink = () => navigator.clipboard.writeText(url).then(() => {
       if (url.length <= SHARE_URL_WARN_LENGTH) showToast("Shareable link copied to clipboard!", null, null, "success");
     }).catch(() => {
       showToast("Couldn't copy the link to your clipboard.", "Retry", handleShare, "error");
     });
+    if (canNativeShare({ url })) {
+      nativeShare({ title: SHARE_TITLE, url }).catch(copyLink);
+      return;
+    }
+    copyLink();
   };
 
   const handlePublicLink = () => {
@@ -93,10 +100,17 @@ export default function ExportDropdown({
       })
       .then(data => {
         const url = publicShareUrl(data.id);
-        navigator.clipboard.writeText(url)
+        const copyLink = () => navigator.clipboard.writeText(url)
           .then(() => showToast(`Public link copied! Expires in 30 days (${pluralize(data.count, "quote")}).`, null, null, "success", { id: toastId }))
           .catch(() => showToast(`Public link created: ${url}`, null, null, "success", { id: toastId }));
         close();
+        if (!canNativeShare({ url })) return copyLink();
+        // A cancelled sheet still falls back to copying, so the link isn't lost
+        nativeShare({ title: SHARE_TITLE, url })
+          .then(result => result === "shared"
+            ? showToast(`Public link shared! Expires in 30 days (${pluralize(data.count, "quote")}).`, null, null, "success", { id: toastId })
+            : copyLink())
+          .catch(copyLink);
       })
       .catch(err => {
         const msg = err.name === "AbortError"

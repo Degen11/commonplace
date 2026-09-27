@@ -1187,7 +1187,7 @@ export default function ResultsPhase({
               // env() folds in the home-bar inset; kept inline (not a stylesheet
               // !important rule) so the bulk-bar offset can still win.
               bottom: `calc(${showBulkBar ? 72 : 20}px + env(safe-area-inset-bottom))`,
-              right: 16,
+              right: "calc(16px + env(safe-area-inset-right))",
               width: 44, height: 44, borderRadius: "50%",
               border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
               boxShadow: "var(--cp-shadow-md)", cursor: "pointer",

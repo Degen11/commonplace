@@ -177,9 +177,9 @@ src/
     richTextKeys.js            Key constants for rich text handling
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
-    shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl
+    shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices)
 
-  **/__tests__/                Tests colocated with their modules (37 files, 406 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (37 files, 412 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
@@ -256,7 +256,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (37 test files, 406 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (37 test files, 412 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -298,6 +298,10 @@ vercel dev        # Test serverless functions locally
 - **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
 - **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``
+- **Hover vs. touch** — every `:hover` rule in `baseCSS` sits inside `@media(hover:hover)` so taps don't leave rows/cards stuck highlighted or lifted. Wrap new hover rules the same way. Hover-revealed UI (overflow button, edit hints) is shown via `@media(hover:none)`, and 44px touch targets live in `@media(pointer:coarse)` (small visual controls get an invisible `::before` hit area instead of growing)
+- **Safe areas** — `viewport-fit=cover` is set, so anything fixed to a screen edge (FAB, scroll-to-top, bulk bar, toasts, `MobileSheet`) adds `env(safe-area-inset-*)` to its offset. Use `dvh`, not `vh`, for full-height layouts
+- **Mobile keyboards** — source/author inputs spread `sourceInputProps` from `InlineEditors.jsx` (capitalize words, no autocorrect); give inputs an `enterKeyHint` matching what Enter does
+- **Native share** — link and image sharing call `canNativeShare()`/`nativeShare()` from `utils/shareLinks.js` first on touch devices, falling back to clipboard/download when the sheet is unavailable or refuses (Safari rejects `navigator.share` once the tap is too old)
 - **Responsive breakpoint** — `MOBILE_BREAKPOINT_PX` (640px) from `config.js`. Below this: card view, long-press selection, mobile layouts
 
 ## Z-index scale

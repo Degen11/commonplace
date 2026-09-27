@@ -82,6 +82,7 @@ function CollectionRow({
         <input
           value={editName}
           onChange={e => setEditName(e.target.value)}
+          enterKeyHint="done"
           onKeyDown={e => { if (e.key === "Enter") handleRename(c.id); if (e.key === "Escape") setEditingId(null); }}
           style={{
             flex: 1, padding: "4px 6px", fontSize: 12, fontFamily: "inherit",
@@ -486,6 +487,7 @@ export default function CollectionsSidebar({
                 onChange={e => { setNewName(e.target.value); setCreateError(null); }}
                 onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); setCreateError(null); } }}
                 placeholder="Collection name..."
+                enterKeyHint="done"
                 style={{
                   flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
                   border: "none", outline: "none", background: "transparent",
@@ -540,6 +542,7 @@ export default function CollectionsSidebar({
                     if (e.key === "Escape") { setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null); }
                   }}
                   placeholder='Theme, e.g. "love"'
+                  enterKeyHint="go"
                   disabled={smartGroupLoading}
                   style={{
                     flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",

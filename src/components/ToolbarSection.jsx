@@ -153,7 +153,7 @@ export default function ToolbarSection({
               )}
               {showNewCat ? (
                 <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-                  <input style={styles.newCatIn} value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
+                  <input style={styles.newCatIn} autoCapitalize="words" enterKeyHint="done" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
                   <button style={styles.newCatSv} onClick={addCat}>Add</button>
                 </div>
               ) : <button className="add-cat-btn" title="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
@@ -178,6 +178,10 @@ export default function ToolbarSection({
                     value={catOverflowQuery}
                     onChange={e => setCatOverflowQuery(e.target.value)}
                     placeholder="Filter categories..."
+                    inputMode="search"
+                    enterKeyHint="search"
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     aria-label="Filter categories"
                     style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 12, fontFamily: "inherit", color: "var(--cp-text)", minWidth: 0 }}
                   />
@@ -231,9 +235,16 @@ export default function ToolbarSection({
                     if (e.key === "Escape") {
                       if (search) { setSearch(""); } else { setSearchOpen(false); }
                     }
+                    // Search is live, so the keyboard's "search" key just dismisses the keyboard
+                    if (e.key === "Enter" && isMobile) e.currentTarget.blur();
                   }}
                   onBlur={() => { if (!search) setSearchOpen(false); }}
                   placeholder="Search..."
+                  aria-label="Search quotes"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  autoCapitalize="none"
+                  autoCorrect="off"
                   style={{
                     flex: 1, padding: isMobile ? "8px 6px" : "5px 6px",
                     fontSize: isMobile ? 14 : 12, fontFamily: "inherit",

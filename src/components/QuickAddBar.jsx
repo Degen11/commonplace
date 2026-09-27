@@ -4,6 +4,7 @@ import { makeSimilarityKey, similarityFromKeys } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
 import { getCatColor } from "../data/constants";
 import { styles } from "./styles";
+import { sourceInputProps } from "./InlineEditors";
 import { TriangleAlert, ChevronDown, Plus, X } from "lucide-react";
 
 export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quotes, isMobile }) {
@@ -55,6 +56,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             value={text}
             onChange={e => { setText(e.target.value); setDupeMatch(null); }}
             placeholder="Quote text…"
+            enterKeyHint="done"
             style={{
               flex: 1, minWidth: 0, padding: isMobile ? "10px 12px" : "6px 10px",
               fontSize: isMobile ? 15 : 13, fontFamily: "inherit",
@@ -69,6 +71,8 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
             value={source}
             onChange={e => setSource(e.target.value)}
             placeholder="Source (optional)"
+            {...sourceInputProps}
+            enterKeyHint="done"
             style={{
               width: isMobile ? undefined : 160, flex: isMobile ? 1 : undefined,
               minWidth: isMobile ? 0 : undefined,

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { X, Loader, Download } from "lucide-react";
+import { X, Loader, Download, Share } from "lucide-react";
 import { generateShareImage, IMAGE_STYLES } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
+import { canNativeShare, nativeShare } from "../utils/shareLinks";
 import { Dialog } from "@base-ui/react/dialog";
 import { FONT_SANS } from "./styles";
 import ModalShell from "./ModalShell";
@@ -15,7 +16,16 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
     setGenerating(styleKey);
     try {
       const blob = await generateShareImage(quote, styleKey);
-      downloadBlob(blob, `commonplace-quote-${styleKey}.png`);
+      const name = `commonplace-quote-${styleKey}.png`;
+      const file = new File([blob], name, { type: "image/png" });
+      if (canNativeShare({ files: [file] })) {
+        try {
+          // Cancelled: keep the modal open so another style can be picked
+          if (await nativeShare({ files: [file] }) === "shared") onClose();
+          return;
+        } catch { /* sheet refused (e.g. tap too old after rendering): download instead */ }
+      }
+      downloadBlob(blob, name);
       showToast("Image saved!", null, null, "success");
       onClose();
     } catch {
@@ -24,6 +34,10 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
       setGenerating(null);
     }
   };
+
+  const shareIcon = canNativeShare()
+    ? <Share size={16} strokeWidth={1.5} />
+    : <Download size={16} strokeWidth={1.5} />;
 
   const previewText = (quote.text || "").length > 60
     ? quote.text.slice(0, 60) + "\u2026"
@@ -120,7 +134,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
               <div style={{ flexShrink: 0, color: "var(--cp-text-muted)" }}>
                 {isGenerating
                   ? <Loader size={16} strokeWidth={2} className="spin" />
-                  : <Download size={16} strokeWidth={1.5} />
+                  : shareIcon
                 }
               </div>
             </button>

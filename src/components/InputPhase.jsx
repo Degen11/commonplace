@@ -187,17 +187,6 @@ export default function InputPhase({
             Paste messy quotes, phrases, and fragments.
             We organize everything and identify the sources.
           </p>
-          <div style={HP.heroMiniDemo}>
-            <div style={HP.miniDemoLabel}>See how it works</div>
-            <div style={HP.miniDemoRow}>
-              <span style={HP.miniDemoBefore}>"be the change — Gandhi"</span>
-              <ArrowRight size={14} color="var(--cp-text-faint)" style={{ flexShrink: 0 }} />
-              <span style={HP.miniDemoAfter}>
-                <span style={HP.miniDemoTag}>Speech</span>
-                Mahatma Gandhi
-              </span>
-            </div>
-          </div>
           <p style={HP.heroTrust}>No signup · No account · Stays in your browser · Free</p>
         </div>
 

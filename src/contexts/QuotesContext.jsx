@@ -20,6 +20,7 @@ import {
 } from "../config";
 import { loadString, removeFromStorage } from "../utils/storage";
 import { getPublicShareId } from "../utils/shareLinks";
+import { pluralize } from "../utils/helpers";
 
 function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
@@ -143,7 +144,7 @@ export function QuotesProvider({ children }) {
             document.title = `${data.title} — Commonplace`;
             const metaDesc = document.querySelector('meta[name="description"]');
             if (metaDesc) metaDesc.setAttribute("content", `Shared collection: "${data.title}" (${reconstructed.length} quotes) — Commonplace`);
-            showToast(`Viewing "${data.title}" (${reconstructed.length} entries)`);
+            showToast(`Viewing "${data.title}" (${pluralize(reconstructed.length, "quote")})`);
           }
         } catch (err) {
           if (err.name === "AbortError") return;

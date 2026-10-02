@@ -408,7 +408,7 @@ export default function ResultsPhase({
       const match = quotes.find(q => similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
       if (match) {
         const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
-        showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
+        showToast(`Similar quote exists: "${preview}"`, "Add anyway", addQuote, "error");
         return;
       }
     }
@@ -441,7 +441,7 @@ export default function ResultsPhase({
     onClearReset();
     if (quotesSnapshot.length > 0) {
       showToast(
-        `Cleared ${pluralize(quotesSnapshot.length, "entry", "entries")}`,
+        `Cleared ${pluralize(quotesSnapshot.length, "quote")}`,
         "Undo",
         () => {
           setQuotes(quotesSnapshot);
@@ -472,7 +472,7 @@ export default function ResultsPhase({
       }
     }
     if (target.length < 2) {
-      showToast("Need at least 2 entries to scan for duplicates.", null, null, "error");
+      showToast("Need at least 2 quotes to scan for duplicates.", null, null, "error");
       return;
     }
     const groups = findDuplicateGroups(target, DUPE_SIMILARITY_THRESHOLD);

@@ -8,8 +8,9 @@ import {
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy, Download,
 } from "lucide-react";
-import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_RED, CLR_AMBER, CLR_GREEN } from "./styles";
+import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_AMBER, CLR_GREEN } from "./styles";
 import AnimatedNumber from "./AnimatedNumber";
+import { pluralize } from "../utils/helpers";
 
 // Icon set for the picker
 const ICON_OPTIONS = [
@@ -171,7 +172,7 @@ function CollectionRow({
           <button
             onClick={e => { e.stopPropagation(); deleteCollection(c.id); setConfirmDeleteId(null); }}
             style={{
-              background: "none", border: "none", cursor: "pointer", color: CLR_RED,
+              background: "none", border: "none", cursor: "pointer", color: "var(--cp-danger)",
               padding: "2px 4px", fontSize: 11, fontWeight: 600, fontFamily: "inherit",
             }}
           >
@@ -376,7 +377,7 @@ export default function CollectionsSidebar({
         {/* Collapsed entry count badge */}
         <div
           className="ui-tip ui-tip-right"
-          data-tip={`${totalQuotes} entries`}
+          data-tip={pluralize(totalQuotes, "quote")}
           style={{
             fontSize: 10, fontWeight: 700, color: "var(--cp-text-muted)",
             background: "var(--cp-bg-tab)", borderRadius: 4, padding: "2px 5px",
@@ -444,7 +445,7 @@ export default function CollectionsSidebar({
           )}
         </div>
         <div style={styles.sidebarOverviewRow}>
-          <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Entries</span>
+          <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Quotes</span>
           <span style={styles.sidebarOverviewValue}><AnimatedNumber value={totalQuotes} /></span>
         </div>
         <div style={styles.sidebarOverviewRow}>
@@ -478,7 +479,7 @@ export default function CollectionsSidebar({
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{
               display: "flex", gap: 0, alignItems: "center",
-              border: `1px solid ${createError ? CLR_RED : "var(--cp-accent)"}`, borderRadius: 6,
+              border: `1px solid ${createError ? "var(--cp-danger)" : "var(--cp-accent)"}`, borderRadius: 6,
               background: "var(--cp-bg-card)", overflow: "hidden",
             }}>
               <input
@@ -507,7 +508,7 @@ export default function CollectionsSidebar({
               </button>
             </div>
             {createError && (
-              <span style={{ fontSize: 11, color: CLR_RED, paddingLeft: 2 }}>{createError}</span>
+              <span style={{ fontSize: 11, color: "var(--cp-danger)", paddingLeft: 2 }}>{createError}</span>
             )}
           </div>
         ) : (
@@ -528,7 +529,7 @@ export default function CollectionsSidebar({
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <div style={{
                 display: "flex", gap: 0, alignItems: "center",
-                border: `1px solid ${smartGroupError ? CLR_RED : "var(--cp-accent)"}`,
+                border: `1px solid ${smartGroupError ? "var(--cp-danger)" : "var(--cp-accent)"}`,
                 borderRadius: 6, background: "var(--cp-bg-card)",
                 opacity: smartGroupLoading ? 0.6 : 1,
                 overflow: "hidden",
@@ -566,7 +567,7 @@ export default function CollectionsSidebar({
                 </button>
               </div>
               {smartGroupError && (
-                <span style={{ fontSize: 11, color: CLR_RED, paddingLeft: 2 }}>{smartGroupError}</span>
+                <span style={{ fontSize: 11, color: "var(--cp-danger)", paddingLeft: 2 }}>{smartGroupError}</span>
               )}
             </div>
           ) : (

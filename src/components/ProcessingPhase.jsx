@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_BLUE, CLR_VIOLET } from "./styles";
+import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_VIOLET } from "./styles";
 import { getCatColor } from "../data/constants";
 import { ArrowRight, CircleCheckBig, Database, Globe, Sparkles, TriangleAlert } from "lucide-react";
 import Logo from "./Logo";
@@ -175,7 +175,7 @@ export default function ProcessingPhase({
                 )}
                 {stats.lookup > 0 && (
                   <div style={statChipStyle}>
-                    <Globe size={13} strokeWidth={1.5} color={CLR_BLUE} />
+                    <Globe size={13} strokeWidth={1.5} style={{ color: "var(--cp-info)" }} />
                     {stats.lookup} found online
                   </div>
                 )}

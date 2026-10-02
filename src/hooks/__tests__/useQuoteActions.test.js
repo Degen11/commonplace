@@ -99,7 +99,7 @@ describe("useQuoteActions", () => {
       expect(trackDeletion).toHaveBeenCalledWith(["2"]);
       expect(cleanCollectionRefs).toHaveBeenCalledWith(["2"]);
       expect(showToast).toHaveBeenCalledWith(
-        "Entry deleted",
+        "Quote deleted",
         "Undo",
         expect.any(Function),
       );

@@ -10,7 +10,7 @@ import { displayText } from "../utils/export";
 import { CONF_LABELS } from "../data/constants";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import clsx from "clsx";
-import { styles, cardStyles, CP_ACCENT, CLR_RED } from "./styles";
+import { styles, cardStyles, CP_ACCENT } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
 
@@ -95,7 +95,7 @@ const CardItem = memo(function CardItem({
       {...attributes}
       style={{
         ...cardStyles.card,
-        ...(isSel ? { outline: "2px solid #2383E2", outlineOffset: -2 } : {}),
+        ...(isSel ? { outline: "2px solid var(--cp-info)", outlineOffset: -2 } : {}),
         ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),

@@ -42,8 +42,8 @@ export default function ResultsModals({
           iconBg="var(--cp-warning-bg)"
           borderColor={CLR_ORANGE}
           title="Start fresh?"
-          description={`This will clear all ${quotesLength} entries from this session. You can undo right after, but exporting a backup first is safest.`}
-          cancelLabel="Keep my entries"
+          description={`This will clear all ${pluralize(quotesLength, "quote")} from this session. You can undo right after, but exporting a backup first is safest.`}
+          cancelLabel="Keep my quotes"
           confirmLabel="Clear everything"
           onCancel={() => setConfirmClear(false)}
           onConfirm={handleClear}
@@ -58,10 +58,10 @@ export default function ResultsModals({
           iconColor="#EB5757"
           iconBg="var(--cp-error-bg)"
           borderColor="#EB5757"
-          title={`Delete ${pluralize(selectedSize, "entry", "entries")}?`}
-          description={`This will remove the ${pluralize(selectedSize, "selected entry", "selected entries")}. You can undo immediately after.`}
-          cancelLabel="Keep entries"
-          confirmLabel={`Delete ${pluralize(selectedSize, "entry", "entries")}`}
+          title={`Delete ${pluralize(selectedSize, "quote")}?`}
+          description={`This will remove the ${pluralize(selectedSize, "selected quote")}. You can undo immediately after.`}
+          cancelLabel="Keep quotes"
+          confirmLabel={`Delete ${pluralize(selectedSize, "quote")}`}
           onCancel={() => setConfirmBulkDel(false)}
           onConfirm={bulkDel}
         />

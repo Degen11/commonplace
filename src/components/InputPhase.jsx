@@ -263,7 +263,7 @@ export default function InputPhase({
                 />
                 <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center" }}>
                   {isDragOver
-                    ? <FolderOpen size={32} color="#2383E2" strokeWidth={1.5} />
+                    ? <FolderOpen size={32} style={{ color: "var(--cp-info)" }} strokeWidth={1.5} />
                     : <FileText size={32} color="var(--cp-text-muted)" strokeWidth={1.5} />}
                 </div>
                 <div style={styles.dropTitle}>{isDragOver ? "Drop it!" : "Drop a file to import"}</div>

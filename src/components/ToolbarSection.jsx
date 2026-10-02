@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Menu } from "@base-ui/react/menu";
-import { styles, CP_ACCENT, CLR_AMBER, CLR_ORANGE, CLR_BLUE } from "./styles";
+import { styles, CP_ACCENT, CLR_AMBER, CLR_ORANGE } from "./styles";
 import { X, Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { pluralize } from "../utils/helpers";
 import { Z } from "../data/constants";
@@ -318,7 +318,7 @@ export default function ToolbarSection({
                 aria-label="Sort order"
                 style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: sortBy !== "default" ? CLR_BLUE : "var(--cp-text-muted)",
+                  color: sortBy !== "default" ? "var(--cp-info)" : "var(--cp-text-muted)",
                   padding: isMobile ? "8px" : "4px 6px", display: "flex", alignItems: "center", gap: 3, borderRadius: 6,
                   fontWeight: sortBy !== "default" ? 600 : 400,
                   fontSize: 11,

@@ -4,7 +4,7 @@ import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { pluralize } from "../utils/helpers";
 import { apiRequest } from "../utils/api";
 import { FALLBACK_CATEGORY } from "../data/constants";
-import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
+import { styles, CP_ACCENT, CP_ACCENT_10 } from "./styles";
 import { sourceInputProps } from "./InlineEditors";
 import { Pencil, Bot, FileText, FolderOpen, CircleCheckBig, Link, Eye, Loader } from "lucide-react";
 import UrlPreviewModal from "./UrlPreviewModal";
@@ -176,7 +176,7 @@ export default function AddMorePanel({
             />
             <div style={{ ...styles.dropIcon, display: "flex", justifyContent: "center", marginBottom: 8 }}>
               {isDragOver
-                ? <FolderOpen size={24} color={CLR_BLUE} strokeWidth={1.5} />
+                ? <FolderOpen size={24} style={{ color: "var(--cp-info)" }} strokeWidth={1.5} />
                 : <FileText size={24} color="var(--cp-text-muted)" strokeWidth={1.5} />}
             </div>
             <div style={{ ...styles.dropTitle, fontSize: 13 }}>{isDragOver ? "Drop it!" : "Drop a file or click to browse"}</div>
@@ -239,7 +239,7 @@ export default function AddMorePanel({
             ))}
           </div>
 
-          {urlError && <div style={{ marginTop: 6, fontSize: 11, color: CLR_RED }}>{urlError}</div>}
+          {urlError && <div style={{ marginTop: 6, fontSize: 11, color: "var(--cp-danger)" }}>{urlError}</div>}
 
           {addMoreInput.trim() && (
             <>

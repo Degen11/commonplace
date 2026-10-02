@@ -45,7 +45,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
       setQuotes(p => p.filter(q => q.id !== id));
       trackDeletion([id]);
       if (cleanCollectionRefs) cleanCollectionRefs([id]);
-      showToast("Entry deleted", "Undo", () => {
+      showToast("Quote deleted", "Undo", () => {
         setQuotes(p => {
           const n = [...p];
           const insertAt = neighborId ? n.findIndex(q => q.id === neighborId) + 1 : 0;
@@ -216,7 +216,7 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
 
       clearIds();
       const total = qs.length;
-      showToast(`Re-identified ${total} ${total === 1 ? "entry" : "entries"}`, "Undo", () => {
+      showToast(`Re-identified ${pluralize(total, "quote")}`, "Undo", () => {
         setQuotes(prev => prev.map(q => snapshot.has(q.id) ? snapshot.get(q.id) : q));
       }, "success");
     } catch (err) {

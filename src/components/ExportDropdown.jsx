@@ -59,13 +59,13 @@ export default function ExportDropdown({
     const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
 
     if (url.length > SHARE_URL_MAX_LENGTH) {
-      showToast(`Link is too long for most browsers (${url.length} chars, ${quotes.length} entries). Export a file instead.`, null, null, "error");
+      showToast(`Link is too long for most browsers (${url.length} chars, ${pluralize(quotes.length, "quote")}). Export a file instead.`, null, null, "error");
       close();
       return;
     }
 
     if (url.length > SHARE_URL_WARN_LENGTH) {
-      showToast(`Link copied but may not work in older browsers (${quotes.length} entries, ${url.length} chars). Consider exporting instead.`, null, null, "error");
+      showToast(`Link copied but may not work in older browsers (${pluralize(quotes.length, "quote")}, ${url.length} chars). Consider exporting instead.`, null, null, "error");
     }
 
     close();
@@ -126,7 +126,7 @@ export default function ExportDropdown({
         <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
           <Menu.Popup style={menuPopupStyle}>
             <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
-              Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
+              Exporting all {pluralize(quotes.length, "quote")}
             </div>
             <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyWithToast(() => copyToClipboard(quotes, collections), showToast, `Copied ${pluralize(quotes.length, "quote")}`); close(); }}>
               <ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard
@@ -159,8 +159,8 @@ export default function ExportDropdown({
             </Menu.Item>
             {hasActiveFilters && (<>
               <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
-              <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
-                Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
+              <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-info)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
+                Export filtered only ({pluralize(filtered.length, "quote")})
               </div>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyWithToast(() => copyToClipboard(filtered, collections), showToast, `Copied ${pluralize(filtered.length, "filtered quote")}`); close(); }}>
                 <ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered
@@ -181,7 +181,7 @@ export default function ExportDropdown({
             {selected.size > 0 && (<>
               <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
               <div style={{ padding: "6px 12px 4px", fontSize: 11, color: CLR_EMERALD, borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
-                Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
+                Export selected ({pluralize(selected.size, "quote")})
               </div>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyWithToast(() => copyToClipboard(sel, collections), showToast, `Copied ${pluralize(sel.length, "selected quote")}`); close(); }}>
                 <ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected

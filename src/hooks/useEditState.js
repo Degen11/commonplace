@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
-import { toggleInSet, addAllToSet } from "../utils/helpers";
+import { toggleInSet, addAllToSet, pluralize } from "../utils/helpers";
 
 export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, filterKey, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
   const [editingId, setEditingId]           = useState(null);
@@ -97,7 +97,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
           }
         }, 150);
       } else {
-        showToast("Review complete \u2014 all entries updated!", null, null, "success");
+        showToast("Review complete \u2014 all quotes updated!", null, null, "success");
       }
     }
   };
@@ -161,8 +161,8 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
     const snapMap = new Map(snapshot.map(q => [q.id, q]));
     const msg = changes.length > 0
-      ? `Updated ${count} ${count === 1 ? "entry" : "entries"}: ${changes.join(", ")}`
-      : `${count} ${count === 1 ? "entry" : "entries"} updated`;
+      ? `Updated ${pluralize(count, "quote")}: ${changes.join(", ")}`
+      : `${pluralize(count, "quote")} updated`;
     showToast(msg, "Undo", () => {
       setQuotes(p => p.map(q => snapMap.has(q.id) ? snapMap.get(q.id) : q));
     });
@@ -187,7 +187,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     trackDeletion([...deletedIds]);
     if (cleanCollectionRefs) cleanCollectionRefs([...deletedIds]);
     setSelected(new Set());
-    showToast(`${count} ${count === 1 ? "entry" : "entries"} deleted`, "Undo", () => {
+    showToast(`${pluralize(count, "quote")} deleted`, "Undo", () => {
       setQuotes(p => {
         const restored = [...p];
         // Re-insert in original order (sort by index to avoid shifting issues)

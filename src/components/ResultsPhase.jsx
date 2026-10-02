@@ -21,6 +21,7 @@ import {
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
 } from "../config";
 import { pluralize } from "../utils/helpers";
+import { copyWithToast } from "../utils/shareLinks";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
 import { displayText, exportJSON, exportCSV } from "../utils/export";
 
@@ -595,9 +596,7 @@ export default function ResultsPhase({
   const handleBulkCopy = () => {
     const selectedQuotes = quotes.filter(q => selected.has(q.id));
     const text = selectedQuotes.map(q => `${displayText(q)} — ${q.source}`).join("\n\n");
-    navigator.clipboard.writeText(text)
-      .then(() => showToast(`Copied ${pluralize(selectedQuotes.length, "quote")}`, null, null, "success"))
-      .catch(() => showToast("Couldn’t copy — try manually.", null, null, "error"));
+    copyWithToast(text, showToast, `Copied ${pluralize(selectedQuotes.length, "quote")}`);
   };
 
   const showBulkBar = selected.size > 0;

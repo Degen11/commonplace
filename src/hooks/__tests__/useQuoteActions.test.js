@@ -211,7 +211,7 @@ describe("useQuoteActions", () => {
         await vi.advanceTimersByTimeAsync(0);
       });
 
-      expect(showToast).toHaveBeenCalledWith("Copied!", null, null, "success");
+      expect(showToast).toHaveBeenCalledWith("Quote copied", null, null, "success");
     });
 
     it("shows error toast when clipboard fails", async () => {
@@ -230,7 +230,7 @@ describe("useQuoteActions", () => {
       });
 
       expect(showToast).toHaveBeenCalledWith(
-        "Couldn't copy \u2014 try manually selecting the text.",
+        "Couldn't copy to your clipboard. Try selecting the text manually.",
         null,
         null,
         "error",

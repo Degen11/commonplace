@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { smartSplit } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
 import { pluralize } from "../utils/helpers";
+import { apiRequest } from "../utils/api";
 import { FALLBACK_CATEGORY } from "../data/constants";
 import { styles, CP_ACCENT, CP_ACCENT_10, CLR_BLUE, CLR_RED } from "./styles";
 import { sourceInputProps } from "./InlineEditors";
@@ -70,13 +71,7 @@ export default function AddMorePanel({
     setUrlLoading(true);
     setUrlError(null);
     try {
-      const res = await fetch("/api/fetch-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-        body: JSON.stringify({ url: trimmed, extractMode: useMode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
+      const data = await apiRequest("/api/fetch-url", { body: { url: trimmed, extractMode: useMode } });
       if (!data.lines || data.lines.length === 0) throw new Error("No text content found");
       lastUrlRef.current = trimmed;
       setUrlPreview(data);
@@ -100,13 +95,7 @@ export default function AddMorePanel({
     if (!trimmed) return;
     setExtractMode(newMode);
     try {
-      const res = await fetch("/api/fetch-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-        body: JSON.stringify({ url: trimmed, extractMode: newMode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
+      const data = await apiRequest("/api/fetch-url", { body: { url: trimmed, extractMode: newMode } });
       setUrlPreview(data);
     } catch (e) {
       setUrlError(e.message);

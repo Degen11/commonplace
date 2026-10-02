@@ -6,6 +6,7 @@ import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, 
 import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
 import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } from "../config";
+import { copyWithToast } from "../utils/shareLinks";
 import { describeApiError } from "../utils/apiErrors";
 import { addToSet, removeFromSet, addAllToSet, removeAllFromSet, pluralize } from "../utils/helpers";
 
@@ -63,13 +64,11 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     const text = QUOTED_CATS.has(q.category)
       ? `"${q.text}" \u2014 ${q.source}`
       : `${q.text} \u2014 ${q.source}`;
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        setCopiedId(q.id);
-        setTimeout(() => { setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
-        showToast("Copied!", null, null, "success");
-      })
-      .catch(() => showToast("Couldn't copy \u2014 try manually selecting the text.", null, null, "error"));
+    copyWithToast(text, showToast, "Quote copied").then(ok => {
+      if (!ok) return;
+      setCopiedId(q.id);
+      setTimeout(() => { setCopiedId(prev => prev === q.id ? null : prev); }, COPY_PULSE_MS);
+    });
   };
 
   // ── Share as image ──

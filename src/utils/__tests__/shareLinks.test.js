@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { getPublicShareId, isPublicSharePath, canNativeShare, nativeShare } from "../shareLinks";
+import { getPublicShareId, isPublicSharePath, canNativeShare, nativeShare, copyWithToast, COPY_FAILED_MESSAGE } from "../shareLinks";
 
 const loc = (pathname, hash = "") => ({ pathname, hash });
 
@@ -75,5 +75,39 @@ describe("nativeShare", () => {
   it("rejects on other errors so callers can fall back", async () => {
     vi.stubGlobal("navigator", { share: vi.fn().mockRejectedValue(Object.assign(new Error(), { name: "NotAllowedError" })) });
     await expect(nativeShare({ url: "u" })).rejects.toMatchObject({ name: "NotAllowedError" });
+  });
+});
+
+describe("copyWithToast", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("copies text and shows the success toast", async () => {
+    const writeText = vi.fn().mockResolvedValue();
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const showToast = vi.fn();
+    await expect(copyWithToast("hello", showToast, "Quote copied")).resolves.toBe(true);
+    expect(writeText).toHaveBeenCalledWith("hello");
+    expect(showToast).toHaveBeenCalledWith("Quote copied", null, null, "success");
+  });
+
+  it("runs a custom clipboard write when given a function", async () => {
+    const write = vi.fn().mockResolvedValue();
+    const showToast = vi.fn();
+    await expect(copyWithToast(write, showToast, "Rich text copied")).resolves.toBe(true);
+    expect(write).toHaveBeenCalled();
+  });
+
+  it("shows an error toast instead of failing silently", async () => {
+    vi.stubGlobal("navigator", { clipboard: { writeText: vi.fn().mockRejectedValue(new Error("denied")) } });
+    const showToast = vi.fn();
+    await expect(copyWithToast("hello", showToast, "Copied")).resolves.toBe(false);
+    expect(showToast).toHaveBeenCalledWith(COPY_FAILED_MESSAGE, null, null, "error");
+  });
+
+  it("treats a missing clipboard API as a failure", async () => {
+    vi.stubGlobal("navigator", {});
+    const showToast = vi.fn();
+    await expect(copyWithToast("hello", showToast, "Copied")).resolves.toBe(false);
+    expect(showToast).toHaveBeenCalledWith(COPY_FAILED_MESSAGE, null, null, "error");
   });
 });

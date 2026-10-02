@@ -3,6 +3,7 @@ import { Menu } from "@base-ui/react/menu";
 import clsx from "clsx";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles, CLR_EMERALD } from "./styles";
+import { COPY_PULSE_MS } from "../config";
 
 export function FavBtn({ q, onFav }) {
   const [animating, setAnimating] = useState(false);
@@ -84,13 +85,13 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
                     setLocalCopied(true);
                     setCopyAnim(true);
                     setTimeout(() => setCopyAnim(false), 350);
-                    setTimeout(() => setLocalCopied(false), 2000);
+                    setTimeout(() => setLocalCopied(false), COPY_PULSE_MS);
                     actionProps.onCopy(q);
                   }
                 }}
               >
                 {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} className={clsx({ "copy-push": copyAnim })} />}
-                <span>{localCopied ? "Copied!" : "Copy"}</span>
+                <span>{localCopied ? "Copied" : "Copy"}</span>
               </Menu.Item>
               <Menu.Item
                 className="overflow-menu-item overflow-reidentify"

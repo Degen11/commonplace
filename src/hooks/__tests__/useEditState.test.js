@@ -164,7 +164,7 @@ describe("useEditState", () => {
 
       expect(result.current.reviewQueue).toEqual([]);
       expect(localProps.showToast).toHaveBeenCalledWith(
-        "Review complete — all entries updated!",
+        "Review complete — all quotes updated!",
         null,
         null,
         "success"
@@ -372,7 +372,7 @@ describe("useEditState", () => {
 
       expect(props.showToast).toHaveBeenCalledTimes(1);
       const [msg, undoLabel, undoFn] = props.showToast.mock.calls[0];
-      expect(msg).toContain("Updated 1 entry");
+      expect(msg).toContain("Updated 1 quote");
       expect(msg).toContain("category");
       expect(undoLabel).toBe("Undo");
       expect(typeof undoFn).toBe("function");
@@ -428,7 +428,7 @@ describe("useEditState", () => {
 
       expect(props.showToast).toHaveBeenCalledTimes(1);
       const [msg, undoLabel, undoFn] = props.showToast.mock.calls[0];
-      expect(msg).toContain("1 entry deleted");
+      expect(msg).toContain("1 quote deleted");
       expect(undoLabel).toBe("Undo");
 
       // Execute undo

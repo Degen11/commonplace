@@ -10,8 +10,9 @@ import {
 } from "../utils/export";
 import { styles, CLR_EMERALD } from "./styles";
 import { pluralize } from "../utils/helpers";
-import { publicShareUrl, canNativeShare, nativeShare } from "../utils/shareLinks";
-import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH, API_TIMEOUT_MS } from "../config";
+import { publicShareUrl, canNativeShare, nativeShare, copyWithToast } from "../utils/shareLinks";
+import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH } from "../config";
+import { apiRequest } from "../utils/api";
 
 const SHARE_TITLE = "Quotes from my Commonplace";
 
@@ -58,13 +59,13 @@ export default function ExportDropdown({
     const url = `${window.location.origin}${window.location.pathname}#s=${encoded}`;
 
     if (url.length > SHARE_URL_MAX_LENGTH) {
-      showToast(`Link is too long for most browsers (${url.length} chars, ${quotes.length} entries). Export a file instead.`, null, null, "error");
+      showToast(`Link is too long for most browsers (${url.length} chars, ${pluralize(quotes.length, "quote")}). Export a file instead.`, null, null, "error");
       close();
       return;
     }
 
     if (url.length > SHARE_URL_WARN_LENGTH) {
-      showToast(`Link copied but may not work in older browsers (${quotes.length} entries, ${url.length} chars). Consider exporting instead.`, null, null, "error");
+      showToast(`Link copied but may not work in older browsers (${pluralize(quotes.length, "quote")}, ${url.length} chars). Consider exporting instead.`, null, null, "error");
     }
 
     close();
@@ -85,19 +86,8 @@ export default function ExportDropdown({
     setPublishing(true);
     const toastId = showToast("Creating share link\u2026", null, null, "loading");
     const minimal = quotes.map(q => [q.text || "", q.source || "", q.category || "", q.favorite ? 1 : 0]);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-    fetch("/api/share", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Requested-With": "CommonplaceApp" },
-      body: JSON.stringify({ quotes: minimal }),
-      signal: controller.signal,
-    })
-      .then(r => {
-        if (!r.ok) return r.json().then(d => { throw new Error(d.error || "Failed"); });
-        return r.json();
-      })
+    apiRequest("/api/share", { body: { quotes: minimal } })
       .then(data => {
         const url = publicShareUrl(data.id);
         const copyLink = () => navigator.clipboard.writeText(url)
@@ -113,13 +103,12 @@ export default function ExportDropdown({
           .catch(copyLink);
       })
       .catch(err => {
-        const msg = err.name === "AbortError"
+        const msg = err.name === "TimeoutError"
           ? "Request timed out \u2014 couldn't create public link."
           : (err.message || "Couldn't create public link.");
         showToast(msg, "Retry", handlePublicLink, "error", { id: toastId });
       })
       .finally(() => {
-        clearTimeout(timeout);
         setPublishing(false);
       });
   };
@@ -137,12 +126,12 @@ export default function ExportDropdown({
         <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
           <Menu.Popup style={menuPopupStyle}>
             <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
-              Exporting all {quotes.length} {quotes.length === 1 ? "entry" : "entries"}
+              Exporting all {pluralize(quotes.length, "quote")}
             </div>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyToClipboard(quotes, collections).then(() => showToast(`Copied ${pluralize(quotes.length, "quote")} to clipboard`, null, null, "success")); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyWithToast(() => copyToClipboard(quotes, collections), showToast, `Copied ${pluralize(quotes.length, "quote")}`); close(); }}>
               <ClipboardCopy size={14} strokeWidth={1.5} /> Copy to clipboard
             </Menu.Item>
-            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { richCopyToClipboard(quotes, collections).then(() => showToast(`Rich text copied (${pluralize(quotes.length, "quote")}) \u2014 paste into Notion, Notes, etc.`, null, null, "success")); close(); }}>
+            <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyWithToast(() => richCopyToClipboard(quotes, collections), showToast, `Rich text copied (${pluralize(quotes.length, "quote")}) \u2014 paste into Notion, Notes, etc.`); close(); }}>
               <Sparkles size={14} strokeWidth={1.5} /> Rich copy
             </Menu.Item>
             <Menu.Item className="dd-opt" style={itemStyle} onClick={handleShare}>
@@ -170,10 +159,10 @@ export default function ExportDropdown({
             </Menu.Item>
             {hasActiveFilters && (<>
               <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
-              <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "#2383E2", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
-                Export filtered only ({filtered.length} {filtered.length === 1 ? "entry" : "entries"})
+              <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-info)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
+                Export filtered only ({pluralize(filtered.length, "quote")})
               </div>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyToClipboard(filtered, collections).then(() => showToast(`Copied ${pluralize(filtered.length, "filtered quote")}`, null, null, "success")); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { copyWithToast(() => copyToClipboard(filtered, collections), showToast, `Copied ${pluralize(filtered.length, "filtered quote")}`); close(); }}>
                 <ClipboardCopy size={14} strokeWidth={1.5} /> Copy filtered
               </Menu.Item>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { exportTXT(filtered, collections); showToast(`Exported ${pluralize(filtered.length, "quote")} as TXT`, null, null, "success"); close(); }}>
@@ -192,9 +181,9 @@ export default function ExportDropdown({
             {selected.size > 0 && (<>
               <Menu.Separator style={{ height: 1, background: "var(--cp-border)", margin: "2px 0" }} />
               <div style={{ padding: "6px 12px 4px", fontSize: 11, color: CLR_EMERALD, borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
-                Export selected ({selected.size} {selected.size === 1 ? "entry" : "entries"})
+                Export selected ({pluralize(selected.size, "quote")})
               </div>
-              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyToClipboard(sel, collections).then(() => showToast(`Copied ${pluralize(sel.length, "selected quote")}`, null, null, "success")); close(); }}>
+              <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); copyWithToast(() => copyToClipboard(sel, collections), showToast, `Copied ${pluralize(sel.length, "selected quote")}`); close(); }}>
                 <ClipboardCopy size={14} strokeWidth={1.5} /> Copy selected
               </Menu.Item>
               <Menu.Item className="dd-opt" style={itemStyle} onClick={() => { const sel = quotes.filter(q => selected.has(q.id)); exportCSV(sel, collections); showToast(`Exported ${pluralize(sel.length, "quote")} as CSV`, null, null, "success"); close(); }}>

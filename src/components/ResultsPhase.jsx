@@ -21,6 +21,7 @@ import {
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
 } from "../config";
 import { pluralize } from "../utils/helpers";
+import { copyWithToast } from "../utils/shareLinks";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
 import { displayText, exportJSON, exportCSV } from "../utils/export";
 
@@ -407,7 +408,7 @@ export default function ResultsPhase({
       const match = quotes.find(q => similarityFromKeys(makeSimilarityKey(q.text), incomingKey, DUPE_SIMILARITY_THRESHOLD) > DUPE_SIMILARITY_THRESHOLD);
       if (match) {
         const preview = match.text.length > 60 ? match.text.slice(0, 60) + "…" : match.text;
-        showToast(`Similar entry exists: "${preview}"`, "Add anyway", addQuote, "error");
+        showToast(`Similar quote exists: "${preview}"`, "Add anyway", addQuote, "error");
         return;
       }
     }
@@ -440,7 +441,7 @@ export default function ResultsPhase({
     onClearReset();
     if (quotesSnapshot.length > 0) {
       showToast(
-        `Cleared ${pluralize(quotesSnapshot.length, "entry", "entries")}`,
+        `Cleared ${pluralize(quotesSnapshot.length, "quote")}`,
         "Undo",
         () => {
           setQuotes(quotesSnapshot);
@@ -471,7 +472,7 @@ export default function ResultsPhase({
       }
     }
     if (target.length < 2) {
-      showToast("Need at least 2 entries to scan for duplicates.", null, null, "error");
+      showToast("Need at least 2 quotes to scan for duplicates.", null, null, "error");
       return;
     }
     const groups = findDuplicateGroups(target, DUPE_SIMILARITY_THRESHOLD);
@@ -595,9 +596,7 @@ export default function ResultsPhase({
   const handleBulkCopy = () => {
     const selectedQuotes = quotes.filter(q => selected.has(q.id));
     const text = selectedQuotes.map(q => `${displayText(q)} — ${q.source}`).join("\n\n");
-    navigator.clipboard.writeText(text)
-      .then(() => showToast(`Copied ${pluralize(selectedQuotes.length, "quote")}`, null, null, "success"))
-      .catch(() => showToast("Couldn’t copy — try manually.", null, null, "error"));
+    copyWithToast(text, showToast, `Copied ${pluralize(selectedQuotes.length, "quote")}`);
   };
 
   const showBulkBar = selected.size > 0;

@@ -42,3 +42,21 @@ export async function nativeShare(data) {
     throw err;
   }
 }
+
+export const COPY_FAILED_MESSAGE = "Couldn't copy to your clipboard. Try selecting the text manually.";
+
+// Every copy action goes through here so they all give the same feedback: a
+// success toast, or an error toast when the browser refuses clipboard access
+// (never a silent failure). `content` is the text to copy, or a function that
+// performs a custom clipboard write (e.g. rich copy) and returns its promise.
+// Resolves true when the copy succeeded.
+export async function copyWithToast(content, showToast, successMessage) {
+  try {
+    await (typeof content === "function" ? content() : navigator.clipboard.writeText(content));
+    if (successMessage) showToast(successMessage, null, null, "success");
+    return true;
+  } catch {
+    showToast(COPY_FAILED_MESSAGE, null, null, "error");
+    return false;
+  }
+}

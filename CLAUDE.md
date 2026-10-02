@@ -169,7 +169,7 @@ src/
     quotes.js                  makeQuote factory, findDuplicateGroups
     export.js                  Export generators — CSV, JSON, Markdown, plain text, Anki flashcards
     shareImage.js              Generate quote share images via Canvas (2x resolution)
-    api.js                     fetchWithTimeout, shared API headers
+    api.js                     apiRequest (use for all /api calls: headers, timeout, error message), fetchWithTimeout, shared API headers
     apiErrors.js               Human-readable API error descriptions
     storage.js                 loadFromStorage / saveToStorage — safe localStorage JSON read/write with validation
     helpers.js                 Shared utilities: pluralize, groupBy, countBy, Set helpers (addToSet, removeFromSet, etc.)
@@ -177,14 +177,14 @@ src/
     richTextKeys.js            Key constants for rich text handling
     uuid.js                    UUID v4 generation
     smartRestore.js            Smart session restore logic
-    shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices)
+    shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (37 files, 412 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (38 files, 421 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
     stores/                    quotesStore
-    utils/                     export, helpers, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
+    utils/                     api, export, helpers, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
 ```
 
 ### App phases
@@ -256,7 +256,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (37 test files, 412 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (38 test files, 421 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -277,6 +277,9 @@ vercel dev        # Test serverless functions locally
 - **Fonts** — self-hosted under `public/fonts/` and declared via `@font-face` in `baseCSS` (no third-party font origin). `FONT_SANS` is Satoshi (four weights: 300/400/500/700) and is used for all UI text and headings. Playfair Display (700 normal + 400 italic) is used only by the canvas-based share image generator (`utils/shareImage.js`, `ShareImageModal.jsx`) — the "Commonplace" wordmark itself is a traced SVG path (`Wordmark.jsx` / `wordmarkPath.js`, regenerate via `npm run wordmark`), not styled text, so it needs no font loaded at all. Don't introduce new fonts or expand Playfair usage beyond share images (the canvas generator and the OG cards)
 - **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, pills, checkboxes, menu items). `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
 - **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
+- **Semantic colors follow the theme** — use `var(--cp-info*)` (blue) and `var(--cp-danger*)` (red) for text, borders and tints, not `CLR_BLUE`/`CLR_RED` or hex literals, which keep their light-mode value in dark mode. Solid fills with white text (e.g. the URL Fetch button) can stay fixed. Lucide icons take the token via `style={{ color }}`, since SVG `stroke` attributes don't resolve `var()`
+- **Buttons** — header/toolbar buttons spread `btnSm` and notification-bar buttons spread `btnXs` (both in `styles.js`); a variant only overrides colors, so buttons in a row share padding, radius (4px), size and weight
+- **Wording** — text is an "entry" while it's raw input being split, reviewed or processed (input page, processing, EntryReviewModal, DupeModal), and a "quote" once it's in the collection (results screen, toasts, exports, stats)
 - **Category pill colors** — desaturated by design (text blended ~25% toward gray, bg at 0.07-0.08 opacity). Don't restore to full Tailwind saturation
 - **File naming**: components are PascalCase `.jsx`, hooks are `use*` camelCase `.js`, utils are camelCase `.js`, API routes are kebab-case `.js`, API private modules prefixed with `_`
 - **Hooks own their domain** — each major feature gets a custom hook (`useProcessing`, `useSync`, `useEditState`, etc.) that encapsulates state + logic. App.jsx initializes them and passes props down
@@ -337,6 +340,8 @@ Z.TOAST           2000  Toasts
 - **App icons are generated** — `public/favicon.ico`, `apple-touch-icon.png`, and `icon-*.png` come from `npm run icons` (renders `favicon.svg`). Don't hand-edit the PNGs; if the SVG artwork changes, re-run the script (it depends on favicon.svg's structure — 32×32 viewBox, background `<rect>` first)
 - **OG images** — `public/og-image.png` (from `npm run og-image`, rendering `public/og-image.svg`) is the default `og:image`/`twitter:image` for the homepage and legal pages. `/api/og?id=<shareId>` renders per-collection cards for `/c/:id` pages; it only accepts a share ID (no `text`/`source` params), so it can't be used to mint branded cards with made-up quotes — keep it that way. Both use the TTFs in `api/_fonts/` (satori and resvg can't read `.woff2`; the shipped Satoshi `.woff2` files also report their family as "false", which the copies fix) and the traced wordmark path, never styled text. `vercel.json` `functions.includeFiles` bundles the fonts with `og.js`. In `og.js`, the `h()` helper must give childless nodes `children: undefined`, not `[]`, or satori throws requiring an explicit `display` style on every such node
 - **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
+- **API calls go through `apiRequest()`** (`utils/api.js`), not raw `fetch()`: it adds the shared headers, applies `API_TIMEOUT_MS` (a timeout throws an error named `TimeoutError`; a caller-cancelled `signal` still throws `AbortError`), and throws the server's `error` message with `.status` attached. The InputPhase pre-warm ping and `useProcessing`'s lookup/identify calls are the exceptions (fire-and-forget, or tied to the processing cancel signal)
+- **Clipboard copies go through `copyWithToast()`** (`utils/shareLinks.js`) so every copy shows the same success toast or an error toast, never failing silently. Inline "Copied" feedback on a button lasts `COPY_PULSE_MS`
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection. It's not authentication, though: scripts can send any header, which is why the paid AI endpoints also have a global daily cap
 - **Sync device ID goes in the `X-Device-Id` header**, not the URL — it's the only credential for a device's data and URLs end up in request logs. `api/sync.js` still accepts `?device_id=` for clients on an old cached build
 - **Lazy-load `localQuotes.js`** — it's ~477KB and is dynamically imported in `useProcessing`. Don't convert to a static import. It's pre-warmed via `requestIdleCallback` in `main.jsx` so the module is cached before first use. The module builds `ENTRY_WORDSETS` and `WORD_INDEX` at init time (once); the word-overlap path in `localLookup` uses these to avoid scanning all 3,700 entries — don't remove them

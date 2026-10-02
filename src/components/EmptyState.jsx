@@ -104,7 +104,7 @@ export default function EmptyState({
           <p style={{ fontSize: 13, color: "var(--cp-text-muted)", marginBottom: 16 }}>
             {totalCount > 0
               ? `${pluralize(totalCount, "quote")} hidden by current filters`
-              : "Try removing a filter to see more entries"}
+              : "Try removing a filter to see more quotes"}
           </p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 12 }}>
             {catFilter !== "All" && (

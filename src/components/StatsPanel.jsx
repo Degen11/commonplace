@@ -42,7 +42,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
   const confLabels = { high: "High", medium: "Medium", low: "Low" };
 
   const kpis = [
-    { value: quotes.length, label: "entries", icon: FileText, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
+    { value: quotes.length, label: quotes.length === 1 ? "quote" : "quotes", icon: FileText, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
     { value: stats.uniqueSources, label: "sources", icon: BookOpen, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
     { value: computedStats.avgWords, label: "avg words", icon: Hash, color: "var(--cp-text-muted)", iconColor: "var(--cp-text-muted)" },
     { value: stats.favCount, label: "favorites", icon: Star, color: CLR_AMBER, iconColor: CLR_AMBER },
@@ -209,7 +209,7 @@ const AttentionBanner = ({ count }) => (
     <CircleAlert size={16} color={CLR_ORANGE} style={{ flexShrink: 0 }} />
     <span>
       <strong style={{ fontWeight: 600 }}>{count}</strong>{" "}
-      {count === 1 ? "entry needs" : "entries need"} review
+      {count === 1 ? "quote needs" : "quotes need"} review
     </span>
   </div>
 );

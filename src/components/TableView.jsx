@@ -70,7 +70,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
                 onClick={() => { if (!localCopied) { setLocalCopied(true); actionProps.onCopy(q); } }}
               >
                 {localCopied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.5} />}
-                <span>{localCopied ? "Copied!" : "Copy"}</span>
+                <span>{localCopied ? "Copied" : "Copy"}</span>
               </Menu.Item>
               <Menu.Item
                 className="overflow-menu-item overflow-share"

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
-import { styles, CLR_RED } from "./styles";
+import { styles } from "./styles";
 import { TriangleAlert, Zap, Bot, Globe, CircleX, RefreshCw, Eye, X } from "lucide-react";
+import { pluralize } from "../utils/helpers";
 
 // Shared animation variants for notification bars (slide down in, slide up out)
 const barVariants = {
@@ -40,7 +41,7 @@ export default function NotificationBars({
       {isSharedView && (
         <motion.div key="shared" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
           <div style={{ ...styles.shareBanner, margin: 0 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({quotesLength} entries)</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={15} strokeWidth={1.5} /> You're viewing a shared collection ({pluralize(quotesLength, "quote")})</span>
             <button style={styles.shareBannerBtn} onClick={() => { setIsSharedView(false); try { window.history.replaceState(null, "", "/"); } catch {} }}>Make it yours</button>
           </div>
         </motion.div>
@@ -65,7 +66,7 @@ export default function NotificationBars({
             {stats.lookup > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={13} strokeWidth={2} /> <strong>{stats.lookup}</strong> found online</span></>}
             <span style={styles.statDot} />
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Bot size={13} strokeWidth={2} /> <strong>{stats.api}</strong> identified by AI</span>
-            {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: CLR_RED, display: "inline-flex", alignItems: "center", gap: 4 }}><CircleX size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
+            {stats.failed > 0 && <><span style={styles.statDot} /><span style={{ color: "var(--cp-danger)", display: "inline-flex", alignItems: "center", gap: 4 }}><CircleX size={13} strokeWidth={2} /> <strong>{stats.failed}</strong> failed</span></>}
             {stats.dupes > 0 && <><span style={styles.statDot} /><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><RefreshCw size={13} strokeWidth={2} /> <strong>{stats.dupes}</strong> duplicate{stats.dupes > 1 ? "s" : ""} skipped</span></>}
             <button style={styles.statsDismiss} aria-label="Dismiss processing summary" onClick={dismissStats}><X size={14} strokeWidth={2} /></button>
           </div>
@@ -77,7 +78,7 @@ export default function NotificationBars({
           <div style={{ ...styles.attentionBar, margin: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={styles.attentionCount}>{reviewQueue.length}</span>
-              <span>{reviewQueue.length === 1 ? "entry" : "entries"} remaining in review</span>
+              <span>{reviewQueue.length === 1 ? "quote" : "quotes"} remaining in review</span>
             </div>
             <button style={{ ...styles.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
           </div>
@@ -89,10 +90,10 @@ export default function NotificationBars({
           <div style={{ ...styles.attentionBar, margin: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={styles.attentionCount}>{unknownCount}</span>
-              <span>{unknownCount === 1 ? "entry needs" : "entries need"} your attention — source or category is missing</span>
+              <span>{unknownCount === 1 ? "quote needs" : "quotes need"} your attention — source or category is missing</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button className="ui-tip ui-tip-left" data-tip="Step through entries that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
+              <button className="ui-tip ui-tip-left" data-tip="Step through quotes that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
               <button className="ui-tip ui-tip-left attention-dismiss" data-tip="Dismiss" aria-label="Dismiss review reminder" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
             </div>
           </div>

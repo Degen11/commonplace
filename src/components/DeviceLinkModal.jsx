@@ -4,7 +4,8 @@ import { Cloud, Copy, Check, Link2, RefreshCw } from "lucide-react";
 import ModalShell from "./ModalShell";
 import { styles, CP_ACCENT } from "./styles";
 import { loadString, saveString } from "../utils/storage";
-import { LS_DEVICE_ID, LS_SYNC_ENGAGED } from "../config";
+import { LS_DEVICE_ID, LS_SYNC_ENGAGED, COPY_PULSE_MS } from "../config";
+import { copyWithToast } from "../utils/shareLinks";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,9 +29,11 @@ export default function DeviceLinkModal({ onClose, syncStatus, onRetry, showToas
 
   const copyCode = () => {
     if (!deviceId) return;
-    navigator.clipboard.writeText(deviceId)
-      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })
-      .catch(() => showToast?.("Couldn't copy — select the code manually.", null, null, "error"));
+    copyWithToast(deviceId, showToast ?? (() => {}), "Device code copied").then(ok => {
+      if (!ok) return;
+      setCopied(true);
+      setTimeout(() => setCopied(false), COPY_PULSE_MS);
+    });
   };
 
   const link = () => {

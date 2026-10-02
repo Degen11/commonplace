@@ -15,6 +15,7 @@ import {
   SYNC_ERROR_THROTTLE_MS, LS_DEVICE_ID, LS_SYNC_ENGAGED,
 } from "../config";
 import { loadString, saveString } from "../utils/storage";
+import { apiRequest } from "../utils/api";
 
 function getOrCreateDeviceId() {
   const existing = loadString(LS_DEVICE_ID);
@@ -32,27 +33,16 @@ async function fetchSyncData() {
   if (!deviceId) return null;
   // Header, not query string: the device ID is the credential for this data,
   // and URLs end up in request logs.
-  const r = await fetch("/api/sync", {
-    headers: { "X-Requested-With": "CommonplaceApp", "X-Device-Id": deviceId },
-  });
-  if (!r.ok) return null;
-  return r.json();
+  try {
+    return await apiRequest("/api/sync", { headers: { "X-Device-Id": deviceId } });
+  } catch (err) {
+    if (err.status) return null;
+    throw err;
+  }
 }
 
 async function pushSyncData(payload) {
-  const r = await fetch("/api/sync", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "CommonplaceApp",
-    },
-    body: JSON.stringify({ device_id: deviceId, ...payload }),
-  });
-  if (!r.ok) {
-    const body = await r.text().catch(() => "");
-    throw new Error(`Sync failed (${r.status}): ${body}`);
-  }
-  return r.json();
+  return apiRequest("/api/sync", { body: { device_id: deviceId, ...payload } });
 }
 
 // ── Hook ──

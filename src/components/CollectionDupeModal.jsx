@@ -3,6 +3,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { styles, CP_ACCENT, CP_ACCENT_TEXT, CP_ACCENT_10 } from "./styles";
 import { Search, Trash2, CircleCheckBig } from "lucide-react";
 import ModalShell from "./ModalShell";
+import { pluralize } from "../utils/helpers";
 
 export default function CollectionDupeModal(props) {
   if (props.dupeGroups.length === 0) return null;
@@ -80,8 +81,8 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
           <Dialog.Title render={<div />} style={styles.dupeModalTitle}>Duplicates Found</Dialog.Title>
         </div>
         <Dialog.Description style={styles.dupeModalSub}>
-          Found {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} of similar entries
-          ({totalDupeEntries} duplicate{totalDupeEntries === 1 ? "" : "s"} to resolve).
+          Found {pluralize(dupeGroups.length, "group")} of similar quotes
+          ({pluralize(totalDupeEntries, "duplicate")} to resolve).
         </Dialog.Description>
       </div>
 

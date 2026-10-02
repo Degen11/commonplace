@@ -1,6 +1,6 @@
 import { useState, useRef, lazy, Suspense } from "react";
 import { CP_ACCENT, CP_ACCENT_10 } from "./styles";
-import { API_HEADERS } from "../utils/api";
+import { apiRequest } from "../utils/api";
 import { Filter } from "lucide-react";
 import { EXTRACT_MODES } from "../data/constants";
 
@@ -21,13 +21,7 @@ export default function UrlImportPanel({ onLoad }) {
     if (!trimmed) return;
     if (showLoading) { setLoading(true); setError(null); }
     try {
-      const res = await fetch("/api/fetch-url", {
-        method: "POST",
-        headers: API_HEADERS,
-        body: JSON.stringify({ url: trimmed, extractMode: mode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch URL");
+      const data = await apiRequest("/api/fetch-url", { body: { url: trimmed, extractMode: mode } });
       if (openModal && (!data.lines || data.lines.length === 0)) throw new Error("No text content found on that page");
       lastUrlRef.current = trimmed;
       setPreview(data);

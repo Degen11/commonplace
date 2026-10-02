@@ -179,7 +179,7 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (38 files, 421 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (38 files, 422 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
@@ -256,7 +256,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (38 test files, 421 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (38 test files, 422 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -275,7 +275,8 @@ vercel dev        # Test serverless functions locally
 - **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
 - **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle
 - **Fonts** — self-hosted under `public/fonts/` and declared via `@font-face` in `baseCSS` (no third-party font origin). `FONT_SANS` is Satoshi (four weights: 300/400/500/700) and is used for all UI text and headings. Playfair Display (700 normal + 400 italic) is used only by the canvas-based share image generator (`utils/shareImage.js`, `ShareImageModal.jsx`) — the "Commonplace" wordmark itself is a traced SVG path (`Wordmark.jsx` / `wordmarkPath.js`, regenerate via `npm run wordmark`), not styled text, so it needs no font loaded at all. Don't introduce new fonts or expand Playfair usage beyond share images (the canvas generator and the OG cards)
-- **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, pills, checkboxes, menu items). `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
+- **Border-radius system** — two tiers: `6px` for containers (cards, modals, panels, dropdowns, bars) and `4px` for small elements (buttons, inputs, tags, badges, checkboxes, menu items). The one exception is category filter pills (`styles.catPill` and the matching chips in `EmptyState`), which are fully rounded. `2px` for progress tracks. `50`/`50%` for circles. Don't introduce arbitrary radius values outside this system
+- **Ellipsis** — use the `…` character (or `\u2026`), never three periods, in UI text and placeholders
 - **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
 - **Semantic colors follow the theme** — use `var(--cp-info*)` (blue) and `var(--cp-danger*)` (red) for text, borders and tints, not `CLR_BLUE`/`CLR_RED` or hex literals, which keep their light-mode value in dark mode. Solid fills with white text (e.g. the URL Fetch button) can stay fixed. Lucide icons take the token via `style={{ color }}`, since SVG `stroke` attributes don't resolve `var()`
 - **Buttons** — header/toolbar buttons spread `btnSm` and notification-bar buttons spread `btnXs` (both in `styles.js`); a variant only overrides colors, so buttons in a row share padding, radius (4px), size and weight
@@ -300,8 +301,8 @@ vercel dev        # Test serverless functions locally
 - **Immutable Set updates** — use `addToSet`, `removeFromSet`, `toggleInSet`, `addAllToSet`, `removeAllFromSet` from `utils/helpers.js` instead of inline `new Set(prev)` + mutate patterns
 - **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
-- **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``
-- **Hover vs. touch** — every `:hover` rule in `baseCSS` sits inside `@media(hover:hover)` so taps don't leave rows/cards stuck highlighted or lifted. Wrap new hover rules the same way. Hover-revealed UI (overflow button, edit hints) is shown via `@media(hover:none)`, and 44px touch targets live in `@media(pointer:coarse)` (small visual controls get an invisible `::before` hit area instead of growing)
+- **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``. When the count is rendered separately (styled number), use `pluralWord(count, "quote needs", "quotes need")` for just the word
+- **Hover vs. touch** — don't change hover styles with `onMouseEnter`/`onMouseLeave` (a tap leaves them stuck on touchscreens); use the `.hov-*` helper classes in `baseCSS` or a new `@media(hover:hover)` rule. Every `:hover` rule in `baseCSS` sits inside `@media(hover:hover)` so taps don't leave rows/cards stuck highlighted or lifted. Wrap new hover rules the same way. Hover-revealed UI (overflow button, edit hints) is shown via `@media(hover:none)`, and 44px touch targets live in `@media(pointer:coarse)` (small visual controls get an invisible `::before` hit area instead of growing)
 - **Safe areas** — `viewport-fit=cover` is set, so anything fixed to a screen edge (FAB, scroll-to-top, bulk bar, toasts, `MobileSheet`) adds `env(safe-area-inset-*)` to its offset. Use `dvh`, not `vh`, for full-height layouts
 - **Mobile keyboards** — source/author inputs spread `sourceInputProps` from `InlineEditors.jsx` (capitalize words, no autocorrect); give inputs an `enterKeyHint` matching what Enter does
 - **Native share** — link and image sharing call `canNativeShare()`/`nativeShare()` from `utils/shareLinks.js` first on touch devices, falling back to clipboard/download when the sheet is unavailable or refuses (Safari rejects `navigator.share` once the tap is too old)
@@ -309,13 +310,14 @@ vercel dev        # Test serverless functions locally
 
 ## Z-index scale
 
-Defined as `Z` constants in `src/data/constants.js`:
+Defined as `Z` constants in `src/data/constants.js`. Import them instead of typing the number (in `baseCSS`, interpolate `${Z.X}`); small local values like `1` for stacking inside one component are fine:
 
 ```
 Z.CATEGORY_PILLS  50    Category pills
 Z.OVERLAY         59    Overlays
 Z.MINI_HEADER     60    Mini-header (sticky)
 Z.DROPDOWN        100   Dropdowns
+Z.TOOLTIP         200   Tooltips (.ui-tip), SyncPill popover
 Z.BULK_BAR        500   Bulk action bar
 Z.MODAL           1000  Modals
 Z.TOAST           2000  Toasts

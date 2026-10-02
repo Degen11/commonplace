@@ -108,8 +108,6 @@ const CardItem = memo(function CardItem({
         ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? `inset 0 2px 0 ${CP_ACCENT}` : null].filter(Boolean).join(", ") || undefined },
         ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),
       }}
-      onMouseEnter={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 1; }}
-      onMouseLeave={e => { const a = e.currentTarget.querySelector(".ca"); if (a) a.style.opacity = 0; }}
     >
       <div style={cardStyles.top}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

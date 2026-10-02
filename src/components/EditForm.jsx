@@ -150,7 +150,7 @@ export default function EditForm({ q, allCats, onSave, onCancel, inCard, isMobil
           style={{ ...styles.editIn, ...(isMobile ? { fontSize: 14, padding: "8px 10px" } : {}) }}
           value={source}
           onChange={e => setSource(e.target.value)}
-          placeholder="Source..."
+          placeholder="Source…"
           {...sourceInputProps}
           enterKeyHint="done"
           onKeyDown={e => {

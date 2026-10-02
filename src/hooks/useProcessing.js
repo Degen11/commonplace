@@ -1,3 +1,4 @@
+import { pluralize } from "../utils/helpers";
 import { useReducer, useRef, useEffect } from "react";
 import useLatestRef from "./useLatestRef";
 import { buildValidCats, fallbackCategory, UNKNOWN_SOURCE } from "../data/constants";
@@ -160,7 +161,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         source: m.result.source, category: m.result.category,
       })) });
     }
-    dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup...`, phase: "local" } });
+    dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localMatches.length, current: `${localMatches.length} identified locally, ${needsApi.length} need lookup…`, phase: "local" } });
 
     return { localMatches, needsApi };
   };
@@ -175,7 +176,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (needsApi.length === 0) return { lookupResults, lookupCandidates, stillNeedsApi: [] };
 
     try {
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases...", phase: "lookup" } });
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount, current: "Checking online databases…", phase: "lookup" } });
       const lookupBody = needsApi.map(p => ({ text: p.text, hint: p.hint || null }));
       const lr = await fetch("/api/lookup", {
         method: "POST",
@@ -211,7 +212,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         const item = needsApi[r.i];
         return { text: item?.text || "", source: r.source, category: r.category };
       }) });
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI...`, phase: "lookup" } });
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: localCount + lookupResults.size, current: `${lookupResults.size} found online, ${stillNeedsApi.length} need AI…`, phase: "lookup" } });
     }
 
     return { lookupResults, lookupCandidates, stillNeedsApi };
@@ -234,7 +235,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     // Start first batch
     let pendingFetch = null;
     if (batches.length > 0) {
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone, current: `AI identifying batch 1/${totalBatches}...`, phase: "api" } });
+      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone, current: `AI identifying batch 1/${totalBatches}…`, phase: "api" } });
       pendingFetch = identifyBatch(batches[0], useFormatting, signal);
     }
 
@@ -250,7 +251,7 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
 
         // Prefetch next batch while we process current results
         if (b + 1 < batches.length) {
-          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
+          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}…`, phase: "api" } });
           pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
         }
       } catch (err) {
@@ -268,13 +269,13 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
             apiFailed = true;
             chunk.forEach(c => failed.push(c));
             const n = chunk.length;
-            dispatch({ type: "API_ERROR", error: describeApiError(retryErr) + ` (${n} ${n === 1 ? "entry" : "entries"} affected)` });
+            dispatch({ type: "API_ERROR", error: describeApiError(retryErr) + ` (${pluralize(n, "entry", "entries")} affected)` });
           }
         }
 
         // Start next batch fetch even after retry failure so remaining batches proceed
         if (b + 1 < batches.length && !signal.aborted) {
-          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}...`, phase: "api" } });
+          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}…`, phase: "api" } });
           pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
         }
 

@@ -88,7 +88,7 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
             disabled={isReidentifying}
           >
             <RefreshCw size={12} strokeWidth={2} className={clsx({ spin: isReidentifying })} />
-            {isReidentifying ? "Re-identifying..." : "Re-identify"}
+            {isReidentifying ? "Re-identifying…" : "Re-identify"}
           </button>
 
           {hasCollections && activeCollectionId && (

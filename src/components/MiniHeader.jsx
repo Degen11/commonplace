@@ -3,6 +3,7 @@ import Logo from "./Logo";
 import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
+import { Z } from "../data/constants";
 import {
   ThemeToggleButton, ThemeMenuItem, ViewToggle,
   HeaderOverflowMenu, OverflowSection, OverflowDivider,
@@ -33,7 +34,7 @@ export default function MiniHeader({
 }) {
   return (
     <div className="mini-header-glass" style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 60,
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: Z.MINI_HEADER,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: "var(--cp-mini-bg)", borderBottom: "1px solid var(--cp-border)",
       backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)",

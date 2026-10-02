@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { Star, Copy, Check, RefreshCw, Trash2, Share2, Ellipsis, FolderPlus, FolderMinus, ChevronRight } from "lucide-react";
 import { styles, CLR_EMERALD } from "./styles";
 import { COPY_PULSE_MS } from "../config";
+import { Z } from "../data/constants";
 
 export function FavBtn({ q, onFav }) {
   const [animating, setAnimating] = useState(false);
@@ -49,7 +50,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
     borderRadius: 6,
     boxShadow: "0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",
     minWidth: 172,
-    zIndex: 100,
+    zIndex: Z.DROPDOWN,
     padding: 4,
     animation: "menuIn .14s ease",
     transformOrigin: "var(--transform-origin)",
@@ -74,7 +75,7 @@ export function OverflowMenu({ q, actionProps, isOpen, onToggle }) {
           <Ellipsis size={16} strokeWidth={2} />
         </Menu.Trigger>
         <Menu.Portal>
-          <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+          <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
             <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
               <Menu.Item
                 className="overflow-menu-item overflow-copy"

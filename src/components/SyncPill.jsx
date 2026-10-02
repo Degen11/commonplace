@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { loadString } from "../utils/storage";
 import { LS_SYNC_ENGAGED } from "../config";
+import { Z } from "../data/constants";
 
 function formatRelativeTime(date) {
   if (!date) return null;
@@ -49,7 +50,7 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
     gap: 4,
   };
 
-  const label = isSyncing ? "Saving..."
+  const label = isSyncing ? "Saving…"
     : isError ? "Sync error"
     : "Saved";
 
@@ -97,7 +98,7 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
           background: "var(--cp-toast-bg)",
           padding: "4px 10px",
           borderRadius: 6,
-          zIndex: 200,
+          zIndex: Z.TOOLTIP,
           pointerEvents: "none",
           boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
         }}>

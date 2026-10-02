@@ -4,6 +4,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { styles, CP_ACCENT, CP_ACCENT_10 } from "./styles";
 import ModalShell from "./ModalShell";
 import { EXTRACT_MODES } from "../data/constants";
+import { pluralize } from "../utils/helpers";
 
 export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetch, currentMode }) {
   const [selectedLines, setSelectedLines] = useState(() => new Set(preview.lines?.map((_, i) => i) ?? []));
@@ -105,7 +106,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
             <div style={{ ...styles.dupeList, gap: 2, padding: "8px 12px" }}>
               {refetching ? (
                 <div style={{ textAlign: "center", padding: 32, color: "var(--cp-text-muted)", fontSize: 13 }}>
-                  Re-extracting content...
+                  Re-extracting content…
                 </div>
               ) : lines.length === 0 ? (
                 <div style={{ textAlign: "center", padding: 32, color: "var(--cp-text-muted)", fontSize: 13 }}>
@@ -190,7 +191,7 @@ export default function UrlPreviewModal({ preview, onConfirm, onCancel, onRefetc
                     onConfirm(selected);
                   }}
                 >
-                  Use {selectedCount} {selectedCount === 1 ? "entry" : "entries"}
+                  Use {pluralize(selectedCount, "entry", "entries")}
                 </button>
               </div>
             </div>

@@ -1,17 +1,18 @@
 import { Dialog } from "@base-ui/react/dialog";
+import { Z } from "../data/constants";
 
 const backdropBase = {
   position: "fixed", inset: 0,
   background: "var(--cp-overlay)",
   backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-  zIndex: 1000,
+  zIndex: Z.MODAL,
   animation: "backdropBlurIn .25s ease-out",
 };
 
 const containerBase = {
   position: "fixed", inset: 0,
   display: "flex", alignItems: "center", justifyContent: "center",
-  zIndex: 1000, padding: 20,
+  zIndex: Z.MODAL, padding: 20,
   pointerEvents: "none",
   animation: "modalScaleIn .3s cubic-bezier(0.16,1,0.3,1)",
 };

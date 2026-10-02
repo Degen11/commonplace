@@ -1,7 +1,8 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { styles, CP_ACCENT, CP_ACCENT_TEXT, CP_ACCENT_10, CLR_EMERALD, CLR_GRAY } from "./styles";
+import { styles, CP_ACCENT, CP_ACCENT_10, CLR_EMERALD, CLR_GRAY } from "./styles";
 import { Search } from "lucide-react";
 import ModalShell from "./ModalShell";
+import { pluralize } from "../utils/helpers";
 
 export default function DupeModal(props) {
   if (props.pendingDupes.length === 0) return null;
@@ -23,7 +24,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
           <Dialog.Title render={<div />} style={styles.dupeModalTitle}>Possible Duplicates Detected</Dialog.Title>
         </div>
         <Dialog.Description style={styles.dupeModalSub}>
-          We found {pendingDupes.length} {pendingDupes.length === 1 ? "entry" : "entries"} similar to ones already in your collection.
+          We found {pluralize(pendingDupes.length, "entry", "entries")} similar to ones already in your collection.
         </Dialog.Description>
       </div>
 
@@ -122,8 +123,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
                     borderRight: "1px solid var(--cp-border)",
                     transition: "all 0.15s ease",
                   }}
-                  onMouseEnter={e => !isKeep && (e.currentTarget.style.background = CP_ACCENT_10)}
-                  onMouseLeave={e => !isKeep && (e.currentTarget.style.background = "var(--cp-bg-card)")}
+                  className={isKeep ? undefined : "hov-accent-tint"}
                 >
                   ✓ Keep
                 </button>
@@ -142,10 +142,8 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
                       borderRight: "1px solid var(--cp-border)",
                       transition: "all 0.15s ease",
                     }}
-                    className="ui-tip"
+                    className={isMerge ? "ui-tip" : "ui-tip hov-merge-tint"}
                     data-tip="Keep new entry, combine sources"
-                    onMouseEnter={e => !isMerge && (e.currentTarget.style.background = "rgba(5,150,105,0.10)")}
-                    onMouseLeave={e => !isMerge && (e.currentTarget.style.background = "var(--cp-bg-card)")}
                   >
                     ↻ Merge
                   </button>
@@ -163,8 +161,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
                     cursor: "pointer",
                     transition: "all 0.15s ease",
                   }}
-                  onMouseEnter={e => !isSkip && (e.currentTarget.style.background = "rgba(155,154,151,0.1)")}
-                  onMouseLeave={e => !isSkip && (e.currentTarget.style.background = "var(--cp-bg-card)")}
+                  className={isSkip ? undefined : "hov-neutral-tint"}
                 >
                   ✕ Skip
                 </button>
@@ -189,7 +186,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
           fontWeight: 600,
           background: CP_ACCENT_10,
           padding: "4px 14px",
-          borderRadius: 30,
+          borderRadius: 4,
         }}>
           {keptCount > 0 ? `${keptCount} will be added` : "All will be skipped"}
         </span>
@@ -197,7 +194,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
           onClick={onContinue}
           style={{
             padding: "8px 28px",
-            borderRadius: 30,
+            borderRadius: 4,
             border: "none",
             background: CP_ACCENT,
             color: "white",
@@ -205,8 +202,7 @@ function DupeModalInner({ pendingDupes, dupeDecisions, setDupeDecision, onContin
             fontWeight: 600,
             cursor: "pointer",
           }}
-          onMouseEnter={e => e.currentTarget.style.background = CP_ACCENT_TEXT}
-          onMouseLeave={e => e.currentTarget.style.background = CP_ACCENT}
+          className="hov-accent-solid"
         >
           Continue
         </button>

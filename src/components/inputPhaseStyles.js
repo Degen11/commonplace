@@ -1,4 +1,5 @@
 import { CP_ACCENT, CP_ACCENT_06, FONT_SANS } from "./styles";
+import { Z } from "../data/constants";
 
 // ── Homepage-specific styles ─────────────────────────────────────────────────
 export const HP = {
@@ -33,7 +34,7 @@ export const HP = {
     display: "flex",
     alignItems: "center",
     padding: "16px 32px",
-    zIndex: 100,
+    zIndex: Z.MINI_HEADER,
     background: "var(--cp-mini-bg)",
     backdropFilter: "blur(12px)",
     WebkitBackdropFilter: "blur(12px)",

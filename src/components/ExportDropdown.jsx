@@ -13,6 +13,7 @@ import { pluralize } from "../utils/helpers";
 import { publicShareUrl, canNativeShare, nativeShare, copyWithToast } from "../utils/shareLinks";
 import { SHARE_URL_WARN_LENGTH, SHARE_URL_MAX_LENGTH } from "../config";
 import { apiRequest } from "../utils/api";
+import { Z } from "../data/constants";
 
 const SHARE_TITLE = "Quotes from my Commonplace";
 
@@ -123,7 +124,7 @@ export default function ExportDropdown({
         Export &darr;
       </Menu.Trigger>
       <Menu.Portal>
-        <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+        <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
           <Menu.Popup style={menuPopupStyle}>
             <div style={{ padding: "6px 12px 4px", fontSize: 11, color: "var(--cp-text-muted)", borderBottom: "1px solid var(--cp-border)", marginBottom: 2 }}>
               Exporting all {pluralize(quotes.length, "quote")}

@@ -294,7 +294,7 @@ export default function AddMorePanel({
             style={{ ...styles.textarea, minHeight: 60 }}
             value={quickText}
             onChange={e => setQuickText(e.target.value)}
-            placeholder="Type or paste a single quote..."
+            placeholder="Type or paste a single quote…"
             onKeyDown={e => {
               if (handleRichTextShortcut(e, quickText, setQuickText)) return;
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleQuickAdd(); }
@@ -306,7 +306,7 @@ export default function AddMorePanel({
               style={{ ...styles.editIn, flex: 1, minWidth: 140 }}
               value={quickSource}
               onChange={e => setQuickSource(e.target.value)}
-              placeholder="Source (author, film, book...)"
+              placeholder="Source (author, film, book…)"
               {...sourceInputProps}
               enterKeyHint="done"
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleQuickAdd(); } }}

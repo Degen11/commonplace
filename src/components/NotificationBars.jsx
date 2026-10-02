@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { styles } from "./styles";
 import { TriangleAlert, Zap, Bot, Globe, CircleX, RefreshCw, Eye, X } from "lucide-react";
-import { pluralize } from "../utils/helpers";
+import { pluralize, pluralWord } from "../utils/helpers";
 
 // Shared animation variants for notification bars (slide down in, slide up out)
 const barVariants = {
@@ -78,7 +78,7 @@ export default function NotificationBars({
           <div style={{ ...styles.attentionBar, margin: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={styles.attentionCount}>{reviewQueue.length}</span>
-              <span>{reviewQueue.length === 1 ? "quote" : "quotes"} remaining in review</span>
+              <span>{pluralWord(reviewQueue.length, "quote")} remaining in review</span>
             </div>
             <button style={{ ...styles.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
           </div>
@@ -90,7 +90,7 @@ export default function NotificationBars({
           <div style={{ ...styles.attentionBar, margin: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={styles.attentionCount}>{unknownCount}</span>
-              <span>{unknownCount === 1 ? "quote needs" : "quotes need"} your attention — source or category is missing</span>
+              <span>{pluralWord(unknownCount, "quote needs", "quotes need")} your attention — source or category is missing</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button className="ui-tip ui-tip-left" data-tip="Step through quotes that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>

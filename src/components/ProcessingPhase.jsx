@@ -87,15 +87,15 @@ function phaseSubtitle(progress, doneCount, total) {
   const remaining = total - doneCount;
   switch (progress.phase) {
     case "local":
-      return `Matching ${total} ${total === 1 ? "entry" : "entries"} against known quotes\u2026`;
+      return `Matching ${pluralize(total, "entry", "entries")} against known quotes\u2026`;
     case "lookup":
       return doneCount > 0
         ? `${doneCount} matched \u2014 checking online sources for ${remaining} more\u2026`
-        : `Looking up sources for ${total} ${total === 1 ? "entry" : "entries"}\u2026`;
+        : `Looking up sources for ${pluralize(total, "entry", "entries")}\u2026`;
     case "api":
       return doneCount > 0
         ? `${doneCount} found \u2014 AI identifying ${remaining} remaining\u2026`
-        : `AI identifying ${total} ${total === 1 ? "entry" : "entries"}\u2026`;
+        : `AI identifying ${pluralize(total, "entry", "entries")}\u2026`;
     default:
       return "Identifying entries\u2026";
   }
@@ -201,7 +201,7 @@ export default function ProcessingPhase({
                 <ProgressRing pct={pct} isComplete={false} />
               </motion.div>
             )}
-            <h2 style={styles.procTitle}>Organizing your collection...</h2>
+            <h2 style={styles.procTitle}>Organizing your collection…</h2>
             <p style={styles.procSub} role="status">{phaseSubtitle(progress, doneCount, total)}</p>
           </>
         )}

@@ -1,3 +1,4 @@
+import { pluralWord } from "../utils/helpers";
 import { styles, CLR_AMBER, CLR_ORANGE } from "./styles";
 import { getCatColor, CONF_COLORS } from "../data/constants";
 import { useEffect } from "react";
@@ -42,7 +43,7 @@ export default function StatsPanel({ quotes, computedStats, cc, customCats, onCl
   const confLabels = { high: "High", medium: "Medium", low: "Low" };
 
   const kpis = [
-    { value: quotes.length, label: quotes.length === 1 ? "quote" : "quotes", icon: FileText, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
+    { value: quotes.length, label: pluralWord(quotes.length, "quote"), icon: FileText, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
     { value: stats.uniqueSources, label: "sources", icon: BookOpen, color: "var(--cp-text-secondary)", iconColor: "var(--cp-text-muted)" },
     { value: computedStats.avgWords, label: "avg words", icon: Hash, color: "var(--cp-text-muted)", iconColor: "var(--cp-text-muted)" },
     { value: stats.favCount, label: "favorites", icon: Star, color: CLR_AMBER, iconColor: CLR_AMBER },
@@ -139,7 +140,7 @@ const EmptyState = ({ count, onClose }) => {
         <div style={{ fontWeight: 500, fontSize: 14, color: "var(--cp-text-muted)", marginBottom: 10, textAlign: "center" }}>
           Add at least 10 entries to unlock insights
         </div>
-        <div style={{ background: "var(--cp-bg-tab)", padding: "5px 14px", borderRadius: 100, fontSize: 13, color: "var(--cp-text-muted)", display: "inline-flex", alignItems: "center" }}>
+        <div style={{ background: "var(--cp-bg-tab)", padding: "5px 14px", borderRadius: 4, fontSize: 13, color: "var(--cp-text-muted)", display: "inline-flex", alignItems: "center" }}>
           <FileText size={14} style={{ marginRight: 6, opacity: 0.6 }} />
           {count} {count === 1 ? 'entry' : 'entries'} so far
         </div>
@@ -163,12 +164,10 @@ const PanelHeader = ({ onClose }) => (
         background: "transparent", color: "var(--cp-text-muted)", cursor: "pointer",
         transition: "all 0.2s ease",
       }}
-      className="ui-tip"
+      className="ui-tip hov-tab"
       data-tip="Close (Esc)"
       onClick={onClose}
       aria-label="Close panel"
-      onMouseEnter={e => { e.currentTarget.style.background = "var(--cp-bg-tab)"; e.currentTarget.style.color = "var(--cp-text-secondary)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--cp-text-muted)"; }}
     >
       <X size={16} />
     </button>
@@ -209,7 +208,7 @@ const AttentionBanner = ({ count }) => (
     <CircleAlert size={16} color={CLR_ORANGE} style={{ flexShrink: 0 }} />
     <span>
       <strong style={{ fontWeight: 600 }}>{count}</strong>{" "}
-      {count === 1 ? "quote needs" : "quotes need"} review
+      {pluralWord(count, "quote needs", "quotes need")} review
     </span>
   </div>
 );

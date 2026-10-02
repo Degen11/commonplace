@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  pluralize, groupBy, countBy,
+  pluralize, pluralWord, groupBy, countBy,
   addToSet, removeFromSet, toggleInSet, addAllToSet, removeAllFromSet,
 } from "../helpers";
 
@@ -20,6 +20,14 @@ describe("pluralize", () => {
   it("supports custom plural form", () => {
     expect(pluralize(1, "entry", "entries")).toBe("1 entry");
     expect(pluralize(3, "entry", "entries")).toBe("3 entries");
+  });
+});
+
+describe("pluralWord", () => {
+  it("returns only the word", () => {
+    expect(pluralWord(1, "quote")).toBe("quote");
+    expect(pluralWord(0, "quote")).toBe("quotes");
+    expect(pluralWord(2, "quote needs", "quotes need")).toBe("quotes need");
   });
 });
 

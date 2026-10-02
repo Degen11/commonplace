@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { getCatColor } from "../data/constants";
+import { getCatColor, Z } from "../data/constants";
 import { styles } from "./styles";
 import { ChevronDown } from "lucide-react";
 
@@ -51,7 +51,7 @@ export function InlineCategorySelect({ current, allCats, onSave, onCancel, custo
       ref={boxRef}
       onClick={e => e.stopPropagation()}
       style={{
-        position: "absolute", top: "100%", left: 0, zIndex: 100,
+        position: "absolute", top: "100%", left: 0, zIndex: Z.DROPDOWN,
         background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
         boxShadow: "var(--cp-shadow-md)", padding: 6,
         display: "flex", flexWrap: "wrap", gap: 4, width: "min(220px, 80vw)",

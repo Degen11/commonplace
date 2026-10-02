@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Popover } from "@base-ui/react/popover";
 import { makeSimilarityKey, similarityFromKeys } from "../utils/textFormatting";
 import { DUPE_SIMILARITY_THRESHOLD } from "../config";
-import { getCatColor } from "../data/constants";
+import { getCatColor, Z } from "../data/constants";
 import { styles } from "./styles";
 import { sourceInputProps } from "./InlineEditors";
 import { TriangleAlert, ChevronDown, Plus, X } from "lucide-react";
@@ -101,7 +101,7 @@ export default function QuickAddBar({ onAdd, onClose, allCats, customCats, quote
               <ChevronDown size={12} strokeWidth={2} />
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+              <Popover.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
                 <Popover.Popup
                   onClick={e => e.stopPropagation()}
                   style={{

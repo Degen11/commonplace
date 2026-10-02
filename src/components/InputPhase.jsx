@@ -19,6 +19,7 @@ import {
 import UrlImportPanel from "./UrlImportPanel";
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import { HP, reveal } from "./inputPhaseStyles";
+import { pluralize } from "../utils/helpers";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useScrollReveal(threshold = 0.15) {
@@ -72,7 +73,7 @@ function FormattingPreview({ rawInput }) {
           strokeWidth={2}
           style={{ transform: expanded ? "rotate(180deg)" : "rotate(0)", transition: "transform .15s" }}
         />
-        Preview changes ({samples.length} {samples.length === 1 ? "fix" : "fixes"})
+        Preview changes ({pluralize(samples.length, "fix", "fixes")})
       </button>
       {expanded && (
         <div style={{
@@ -89,7 +90,7 @@ function FormattingPreview({ rawInput }) {
             </div>
           ))}
           {smartSplit(rawInput.trim()).length > 5 && (
-            <div style={{ fontSize: 11, color: "var(--cp-text-faint)", fontStyle: "italic" }}>Showing first 5 entries...</div>
+            <div style={{ fontSize: 11, color: "var(--cp-text-faint)", fontStyle: "italic" }}>Showing first 5 entries…</div>
           )}
         </div>
       )}
@@ -296,7 +297,7 @@ export default function InputPhase({
                   <div className="input-footer-meta" style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
                     <span style={styles.entryMeta}>
                       {count > 0
-                        ? <>{count} {count === 1 ? "entry" : "entries"} detected<span className="input-footer-wordcount" style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
+                        ? <>{pluralize(count, "entry", "entries")} detected<span className="input-footer-wordcount" style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
                         : "Quotes, phrases, expressions \u2014 all welcome"}
                     </span>
                     {count > 50 && (
@@ -349,7 +350,7 @@ export default function InputPhase({
                   {isProcessing ? (
                     <>
                       <Loader size={14} strokeWidth={2} className="spin" />
-                      Processing...
+                      Processing…
                     </>
                   ) : "Organize my collection \u2192"}
                 </motion.button>

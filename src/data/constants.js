@@ -6,6 +6,7 @@ export const Z = {
   OVERLAY:        59,
   MINI_HEADER:    60,
   DROPDOWN:       100,
+  TOOLTIP:        200,
   BULK_BAR:       500,
   MODAL:          1000,
   TOAST:          2000,

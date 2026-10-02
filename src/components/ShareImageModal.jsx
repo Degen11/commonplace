@@ -127,7 +127,7 @@ export default function ShareImageModal({ quote, onClose, showToast }) {
                 </div>
                 {isGenerating && (
                   <div style={{ fontSize: 11, color: "var(--cp-text-muted)", marginTop: 2 }}>
-                    Generating image...
+                    Generating image…
                   </div>
                 )}
               </div>

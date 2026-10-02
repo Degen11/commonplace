@@ -113,7 +113,7 @@ export default function ToolbarSection({
 
   return (
     <>
-      <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
+      <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: Z.CATEGORY_PILLS, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {/* Category pills — scrollable area with fade overlays */}
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
@@ -159,8 +159,8 @@ export default function ToolbarSection({
               ) : <button className="add-cat-btn" title="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
             </div>
             {/* Fade overlays — scoped to scroll container */}
-            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
-            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: 51, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: Z.CATEGORY_PILLS + 1, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
+            <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to left, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: Z.CATEGORY_PILLS + 1, opacity: catFade.right ? 1 : 0, transition: "opacity .15s" }} />
             {/* Fixed positioning (not absolute-in-scroll-container) so the panel escapes .cats' overflowY:hidden */}
             {catOverflowOpen && moreRect && (
               <div
@@ -177,7 +177,7 @@ export default function ToolbarSection({
                     autoFocus
                     value={catOverflowQuery}
                     onChange={e => setCatOverflowQuery(e.target.value)}
-                    placeholder="Filter categories..."
+                    placeholder="Filter categories…"
                     inputMode="search"
                     enterKeyHint="search"
                     autoCapitalize="none"
@@ -239,7 +239,7 @@ export default function ToolbarSection({
                     if (e.key === "Enter" && isMobile) e.currentTarget.blur();
                   }}
                   onBlur={() => { if (!search) setSearchOpen(false); }}
-                  placeholder="Search..."
+                  placeholder="Search…"
                   aria-label="Search quotes"
                   inputMode="search"
                   enterKeyHint="search"

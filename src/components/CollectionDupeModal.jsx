@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { Dialog } from "@base-ui/react/dialog";
-import { styles, CP_ACCENT, CP_ACCENT_TEXT, CP_ACCENT_10 } from "./styles";
+import { styles, CP_ACCENT, CP_ACCENT_10 } from "./styles";
 import { Search, Trash2, CircleCheckBig } from "lucide-react";
 import ModalShell from "./ModalShell";
 import { pluralize } from "../utils/helpers";
@@ -62,7 +62,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
       <CircleCheckBig size={44} color="#059669" strokeWidth={1.5} style={{ marginBottom: 12, animation: "completePop .4s ease both" }} />
       <div style={{ fontSize: 16, fontWeight: 600, color: "var(--cp-text)", marginBottom: 4, animation: "fadeUp .25s .1s ease both" }}>All duplicates resolved</div>
       <div style={{ fontSize: 13, color: "var(--cp-text-muted)", animation: "fadeUp .25s .2s ease both" }}>
-        {dupeGroups.length} {dupeGroups.length === 1 ? "group" : "groups"} handled
+        {pluralize(dupeGroups.length, "group")} handled
       </div>
     </ModalShell>
   );
@@ -106,7 +106,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
                 alignItems: "center",
               }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "var(--cp-text-muted)", letterSpacing: 0.5 }}>
-                  {group.entries.length} SIMILAR ENTRIES
+                  {group.entries.length} SIMILAR QUOTES
                 </span>
                 <span style={{ fontSize: 11, color: "var(--cp-text-faint)" }}>
                   {Math.round(group.minScore * 100)}&ndash;{Math.round(group.maxScore * 100)}% similar
@@ -137,7 +137,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
                     onClick={() => keepOne(groupIndex, entry.id)}
                     style={{
                       padding: "5px 14px",
-                      borderRadius: 20,
+                      borderRadius: 4,
                       border: "none",
                       background: CP_ACCENT,
                       color: "white",
@@ -148,8 +148,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
                       flexShrink: 0,
                       transition: "background 0.15s ease",
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = CP_ACCENT_TEXT}
-                    onMouseLeave={e => e.currentTarget.style.background = CP_ACCENT}
+                    className="hov-accent-solid"
                   >
                     Keep this
                   </button>
@@ -168,7 +167,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
                   onClick={() => ignoreGroup(groupIndex)}
                   style={{
                     padding: "5px 14px",
-                    borderRadius: 20,
+                    borderRadius: 4,
                     border: "none",
                     background: "var(--cp-bg-card)",
                     color: "var(--cp-text-muted)",
@@ -177,8 +176,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
                     cursor: "pointer",
                     transition: "all 0.15s ease",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "var(--cp-bg-hover)"; e.currentTarget.style.color = "var(--cp-text)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "var(--cp-bg-card)"; e.currentTarget.style.color = "var(--cp-text-muted)"; }}
+                  className="hov-subtle"
                 >
                   Ignore group
                 </button>
@@ -202,16 +200,16 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
           fontWeight: 600,
           background: CP_ACCENT_10,
           padding: "4px 14px",
-          borderRadius: 30,
+          borderRadius: 4,
         }}>
-          {pending.length} {pending.length === 1 ? "group" : "groups"} remaining
+          {pluralize(pending.length, "group")} remaining
         </span>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={removeAllDupes}
             style={{
               padding: "8px 20px",
-              borderRadius: 30,
+              borderRadius: 4,
               border: "1px solid #EB5757",
               background: "transparent",
               color: "#EB5757",
@@ -223,8 +221,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
               gap: 6,
               transition: "all 0.15s ease",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(235,87,87,0.08)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+            className="hov-danger-tint"
           >
             <Trash2 size={13} strokeWidth={2} />
             Remove all duplicates
@@ -233,7 +230,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
             onClick={onClose}
             style={{
               padding: "8px 28px",
-              borderRadius: 30,
+              borderRadius: 4,
               border: "none",
               background: CP_ACCENT,
               color: "white",
@@ -241,8 +238,7 @@ function CollectionDupeModalInner({ dupeGroups, onClose, onDeleteQuotes }) {
               fontWeight: 600,
               cursor: "pointer",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = CP_ACCENT_TEXT}
-            onMouseLeave={e => e.currentTarget.style.background = CP_ACCENT}
+            className="hov-accent-solid"
           >
             Done
           </button>

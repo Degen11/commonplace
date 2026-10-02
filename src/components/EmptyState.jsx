@@ -84,7 +84,7 @@ export default function EmptyState({
               onClick={onBrowseAll}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 20px", borderRadius: 100,
+                padding: "8px 20px", borderRadius: 4,
                 border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
                 color: "var(--cp-accent)", fontSize: 13, fontWeight: 500,
                 cursor: "pointer", fontFamily: "inherit",
@@ -124,7 +124,7 @@ export default function EmptyState({
             <button className="reset-btn" style={{
               background: "var(--cp-accent)", border: "none", color: "#fff", cursor: "pointer",
               fontSize: 13, fontFamily: "inherit", fontWeight: 600, padding: "9px 22px",
-              borderRadius: 100, display: "inline-flex", alignItems: "center", gap: 6,
+              borderRadius: 4, display: "inline-flex", alignItems: "center", gap: 6,
             }}
               onClick={() => { setCatFilter("All"); setFavFilter(false); setSearch(""); setSortBy("default"); }}>
               <RotateCcw size={13} strokeWidth={2} />
@@ -136,7 +136,7 @@ export default function EmptyState({
                 onClick={onBrowseAll}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "8px 20px", borderRadius: 100,
+                  padding: "8px 20px", borderRadius: 4,
                   border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
                   color: "var(--cp-accent)", fontSize: 13, fontWeight: 500,
                   cursor: "pointer", fontFamily: "inherit",

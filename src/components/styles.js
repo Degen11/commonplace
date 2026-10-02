@@ -1,3 +1,5 @@
+import { Z } from "../data/constants";
+
 export const CP_ACCENT       = "#3C5775";
 export const CP_ACCENT_MUTED = "rgba(60,87,117,0.12)";
 export const CP_ACCENT_TEXT  = "#2D4259";
@@ -270,9 +272,9 @@ export const baseCSS = `
   .ui-tip::after{
     content:attr(data-tip);
     position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:var(--cp-toast-bg);color:#fff;padding:4px 10px;border-radius:5px;
+    background:var(--cp-toast-bg);color:#fff;padding:4px 10px;border-radius:4px;
     font-size:11px;font-weight:400;white-space:nowrap;
-    opacity:0;pointer-events:none;z-index:200;
+    opacity:0;pointer-events:none;z-index:${Z.TOOLTIP};
     transition:opacity .12s ease .2s;
   }
   @media(hover:hover){
@@ -428,7 +430,7 @@ export const baseCSS = `
   /* Lift the hovered card-grid wrapper above sibling cards AND sticky category bar (z-index:50) so the tooltip escapes cleanly */
   .qcard-wrap{position:relative}
   @media(hover:hover){
-    .qcard-wrap:has(.qcard:hover){z-index:100}
+    .qcard-wrap:has(.qcard:hover){z-index:${Z.DROPDOWN}}
   }
 
   /* Disabled cursor + smooth opacity transition */
@@ -611,6 +613,21 @@ export const baseCSS = `
     .overflow-btn{opacity:1 !important}
     .edit-hint{opacity:0.4 !important}
     .ui-tip::after{display:none !important}
+    .qcard .ca{opacity:1 !important}
+  }
+
+  /* Hover helpers for buttons whose resting colors are inline styles (hence
+     !important). CSS rather than onMouseEnter/Leave, so a tap on a touchscreen
+     can't leave a highlight stuck on. */
+  @media(hover:hover){
+    .qcard:hover .ca,.qcard:focus-within .ca{opacity:1 !important}
+    .hov-accent-solid:hover{background:${CP_ACCENT_TEXT} !important}
+    .hov-accent-tint:hover{background:${CP_ACCENT_10} !important}
+    .hov-merge-tint:hover{background:rgba(5,150,105,0.10) !important}
+    .hov-neutral-tint:hover{background:rgba(155,154,151,0.1) !important}
+    .hov-danger-tint:hover{background:var(--cp-danger-bg) !important}
+    .hov-subtle:hover{background:var(--cp-bg-hover) !important;color:var(--cp-text) !important}
+    .hov-tab:hover{background:var(--cp-bg-tab) !important;color:var(--cp-text-secondary) !important}
   }
 
   /* Coarse pointers (fingers) — 44px tap targets. Small visual controls like
@@ -839,14 +856,14 @@ export const styles = {
   statsSectionTitle:{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em",color:CP_ACCENT,marginBottom:4},
 
   // Dupe modal — #9 removed shadow (overlay provides depth)
-  dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease-out"},
+  dupeModalOverlay:{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:Z.MODAL,padding:20,animation:"fadeUp .15s ease-out"},
   dupeModalBox:{background:"var(--cp-bg-card)",borderRadius:6,padding:0,maxWidth:"min(90vw, 560px)",width:"100%",overflow:"clip",fontFamily:FONT_SANS,maxHeight:"85vh",display:"flex",flexDirection:"column"},
   dupeModalHeader:{padding:"18px 20px 14px",borderBottom:"1px solid var(--cp-border)"},
   dupeModalTitle:{fontSize:16,fontWeight:700,color:"var(--cp-text-secondary)",marginBottom:4,fontFamily:FONT_SANS},
   dupeModalSub:{fontSize:13,color:"var(--cp-text-muted)",fontFamily:FONT_SANS},
   dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
   // Bulk edit — floating pill (dark bg in light mode, light bg in dark mode)
-  bulkBar:{position:"fixed",bottom:16,left:0,right:0,marginInline:"auto",width:"fit-content",display:"flex",alignItems:"center",gap:0,padding:"8px 12px 8px 8px",background:"var(--cp-bulk-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid var(--cp-bulk-border)",borderRadius:6,boxShadow:"0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",zIndex:500,maxWidth:"calc(100vw - 32px)"},
+  bulkBar:{position:"fixed",bottom:16,left:0,right:0,marginInline:"auto",width:"fit-content",display:"flex",alignItems:"center",gap:0,padding:"8px 12px 8px 8px",background:"var(--cp-bulk-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid var(--cp-bulk-border)",borderRadius:6,boxShadow:"0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",zIndex:Z.BULK_BAR,maxWidth:"calc(100vw - 32px)"},
   bulkN:{fontSize:12,fontWeight:600,color:"var(--cp-bulk-badge-text)",whiteSpace:"nowrap",background:"var(--cp-bulk-badge)",padding:"5px 12px",borderRadius:4,lineHeight:1,letterSpacing:0.2},
   bulkDivider:{width:1,height:20,background:"var(--cp-bulk-divider)",margin:"0 10px",flexShrink:0},
   bulkGroup:{display:"flex",gap:5,alignItems:"center",whiteSpace:"nowrap"},
@@ -857,7 +874,7 @@ export const styles = {
   bulkX:{background:"none",border:"none",color:"var(--cp-bulk-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",padding:4,borderRadius:6},
 
   // Header overflow menu
-  hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,maxWidth:"calc(100vw - 24px)",zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,maxWidth:"calc(100vw - 24px)",zIndex:Z.DROPDOWN,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
   hdrOverflowItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
   hdrOverflowDivider:{height:1,background:"var(--cp-border)",margin:"4px 0"},
   hdrOverflowSectionLabel:{padding:"6px 12px 2px",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.04em",color:"var(--cp-text-faint)"},
@@ -883,7 +900,7 @@ export const styles = {
   sortOptOn:{background:"var(--cp-bg-hover)",fontWeight:600},
 
   // Category pills — horizontal scroll with fade
-  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid var(--cp-border)",position:"sticky",top:0,background:"var(--cp-bg)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",zIndex:50,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
+  cats:{display:"flex",gap:6,padding:"10px 0",flexWrap:"nowrap",alignItems:"center",borderBottom:"1px solid var(--cp-border)",position:"sticky",top:0,background:"var(--cp-bg)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",zIndex:Z.CATEGORY_PILLS,overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch"},
   catPill:{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:50,borderWidth:1,borderStyle:"solid",borderColor:"var(--cp-border)",background:"var(--cp-bg-card)",fontSize:12,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",fontWeight:500,letterSpacing:"0.02em",whiteSpace:"nowrap",flexShrink:0,transition:"background .15s ease, color .15s ease, opacity .15s ease"},
   catOn:{background:CP_ACCENT,color:"#fff",borderColor:CP_ACCENT},
   addCatBtn:{width:26,height:26,borderRadius:50,border:"1px dashed var(--cp-border-dim)",background:"transparent",color:"var(--cp-text-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
@@ -905,7 +922,7 @@ export const styles = {
     textAlign:"left",
     position:"sticky",
     top:44,
-    zIndex:49,
+    zIndex:Z.CATEGORY_PILLS - 1,
   },
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .1s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)"},
@@ -921,7 +938,7 @@ export const styles = {
   rowAct:{flex:"0 0 36px",display:"flex",justifyContent:"flex-end",alignItems:"center",position:"relative"},
   actBtn:{background:"none",border:"none",cursor:"pointer",color:"var(--cp-text-faint)",fontSize:14,padding:"4px 5px",borderRadius:4,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,transition:"color .12s, background .12s"},
   overflowWrap:{position:"relative"},
-  overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:100,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
+  overflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",minWidth:172,zIndex:Z.DROPDOWN,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
   overflowMenuItem:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
   overflowMenuDivider:{height:1,background:"var(--cp-border)",margin:"4px 0"},
   overflowMenuItemDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"#EB5757",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease, color .1s ease"},
@@ -939,7 +956,7 @@ export const styles = {
   inlineCatSel:{border:`1px solid ${CP_ACCENT}`,borderRadius:4,padding:"2px 2px",fontSize:11,fontFamily:"inherit",background:"var(--cp-bg-card)",cursor:"pointer",width:78,transition:"border-color .15s ease, box-shadow .15s ease"},
 
   // Modal — #9 removed shadow (overlay provides depth)
-  modalOverlay:{position:"fixed",inset:0,background:"var(--cp-overlay)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,animation:"fadeUp .15s ease-out"},
+  modalOverlay:{position:"fixed",inset:0,background:"var(--cp-overlay)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:Z.MODAL,padding:20,animation:"fadeUp .15s ease-out"},
   confirmBox:{background:"var(--cp-bg-card)",borderRadius:6,padding:24,maxWidth:"min(90vw, 400px)",width:"100%"},
   confirmCancel:{padding:"8px 16px",borderRadius:6,border:"1px solid var(--cp-border)",background:"var(--cp-bg-card)",color:"var(--cp-text-secondary)",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},
   confirmYes:{padding:"8px 16px",borderRadius:6,border:"none",background:"var(--cp-destructive)",color:"#fff",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:500},

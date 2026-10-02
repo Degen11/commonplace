@@ -23,7 +23,7 @@ describe("SyncPill", () => {
 
   it("shows the status label per state", () => {
     const { rerender } = render(<SyncPill syncStatus="syncing" pillStyles={pillStyles} />);
-    expect(screen.getByText("Saving...")).toBeTruthy();
+    expect(screen.getByText("Saving…")).toBeTruthy();
     rerender(<SyncPill syncStatus="synced" lastSynced={new Date()} pillStyles={pillStyles} />);
     expect(screen.getByText("Saved")).toBeTruthy();
     rerender(<SyncPill syncStatus="error" pillStyles={pillStyles} />);
@@ -81,7 +81,7 @@ describe("SyncPill — before the user has engaged with sync", () => {
   it("still shows syncing/synced — those aren't alarming", () => {
     localStorage.removeItem(LS_SYNC_ENGAGED);
     const { rerender } = render(<SyncPill syncStatus="syncing" pillStyles={pillStyles} />);
-    expect(screen.getByText("Saving...")).toBeTruthy();
+    expect(screen.getByText("Saving…")).toBeTruthy();
     rerender(<SyncPill syncStatus="synced" lastSynced={new Date()} pillStyles={pillStyles} />);
     expect(screen.getByText("Saved")).toBeTruthy();
   });

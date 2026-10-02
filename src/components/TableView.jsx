@@ -7,7 +7,7 @@ import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
 import { displayText } from "../utils/export";
-import { getCatColor, CONF_LABELS } from "../data/constants";
+import { getCatColor, CONF_LABELS, Z } from "../data/constants";
 import clsx from "clsx";
 import { styles, CLR_EMERALD, CP_ACCENT_40 } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
@@ -43,7 +43,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
     borderRadius: 6,
     boxShadow: "0 4px 16px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.06)",
     minWidth: 172,
-    zIndex: 100,
+    zIndex: Z.DROPDOWN,
     padding: 4,
     animation: "menuIn .14s ease",
     transformOrigin: "var(--transform-origin)",
@@ -61,7 +61,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
           <Ellipsis size={16} strokeWidth={2} />
         </Menu.Trigger>
         <Menu.Portal>
-          <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: 100 }}>
+          <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
             <Menu.Popup style={menuContentStyle} onClick={e => e.stopPropagation()}>
               <Menu.Item
                 className="overflow-menu-item overflow-copy"

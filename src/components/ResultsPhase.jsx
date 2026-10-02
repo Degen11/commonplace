@@ -12,7 +12,7 @@ import { useToastContext } from "../contexts/ToastContext";
 import { useQuotesStore } from "../stores/quotesStore";
 import { ResultsProvider, useResultsContext } from "../contexts/ResultsContext";
 
-import { getCatColor, sanitizeName, DEFAULT_CATEGORIES, UNKNOWN_SOURCE, FALLBACK_CATEGORY } from "../data/constants";
+import { getCatColor, sanitizeName, DEFAULT_CATEGORIES, UNKNOWN_SOURCE, FALLBACK_CATEGORY, Z } from "../data/constants";
 import { makeSimilarityKey, similarityFromKeys } from "../utils/textFormatting";
 import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
@@ -20,7 +20,7 @@ import {
   DUPE_SIMILARITY_THRESHOLD,
   LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
 } from "../config";
-import { pluralize } from "../utils/helpers";
+import { pluralize, pluralWord } from "../utils/helpers";
 import { copyWithToast } from "../utils/shareLinks";
 import { loadString, saveString, removeFromStorage } from "../utils/storage";
 import { displayText, exportJSON, exportCSV } from "../utils/export";
@@ -551,7 +551,7 @@ export default function ResultsPhase({
     if (col) {
       showToast(
         count > 0
-          ? `Deleted "${col.name}" \u2014 ${pluralize(count, "quote")} ${count === 1 ? "stays" : "stay"} in All Quotes`
+          ? `Deleted "${col.name}" \u2014 ${pluralize(count, "quote")} ${pluralWord(count, "stays", "stay")} in All Quotes`
           : `Deleted "${col.name}"`,
         "Undo",
         () => {
@@ -831,7 +831,7 @@ export default function ResultsPhase({
                 exit={{ opacity: 0, y: -10, transition: { duration: 0.15, ease: "easeIn" } }}
                 style={{
                   position: "fixed", top: 49, left: 0, right: 0,
-                  zIndex: 59, background: "var(--cp-mini-bg)",
+                  zIndex: Z.OVERLAY, background: "var(--cp-mini-bg)",
                   backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)",
                   padding: isMobile ? "12px 16px" : "12px 32px", borderBottom: "1px solid var(--cp-border)",
                   boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
@@ -861,7 +861,7 @@ export default function ResultsPhase({
               initial={{ opacity: 0, y: "100%" }}
               animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 28, mass: 0.8 } }}
               exit={{ opacity: 0, y: "100%", transition: { duration: 0.15, ease: "easeIn" } }}
-              style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 500 }}
+              style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: Z.BULK_BAR }}
             >
             <BulkBar
               onDelete={() => selected.size > 3 ? setConfirmBulkDel(true) : bulkDel()}
@@ -1166,7 +1166,7 @@ export default function ResultsPhase({
               border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
               boxShadow: "var(--cp-shadow-card)", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--cp-text-muted)", zIndex: 59,
+              color: "var(--cp-text-muted)", zIndex: Z.OVERLAY,
               transition: "bottom .2s ease, box-shadow .15s ease",
             }}
           >
@@ -1192,7 +1192,7 @@ export default function ResultsPhase({
               boxShadow: "var(--cp-shadow-md)", cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: activeCollectionId ? "var(--cp-accent)" : "var(--cp-text-muted)",
-              zIndex: 59,
+              zIndex: Z.OVERLAY,
               transition: "bottom .2s ease",
             }}
           >

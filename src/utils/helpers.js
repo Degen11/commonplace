@@ -8,7 +8,15 @@
  * pluralize(1, "entry", "entries") → "1 entry"
  */
 export function pluralize(count, singular, plural = singular + "s") {
-  return `${count} ${count === 1 ? singular : plural}`;
+  return `${count} ${pluralWord(count, singular, plural)}`;
+}
+
+/**
+ * Just the word, for when the count is rendered separately (e.g. styled).
+ * pluralWord(1, "quote needs", "quotes need") → "quote needs"
+ */
+export function pluralWord(count, singular, plural = singular + "s") {
+  return count === 1 ? singular : plural;
 }
 
 /**

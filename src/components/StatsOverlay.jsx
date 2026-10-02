@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import StatsPanel from "./StatsPanel";
 import useScrollLock from "../hooks/useScrollLock";
+import { Z } from "../data/constants";
 
 export default function StatsOverlay({
   quotes, computedStats, cc, customCats,
@@ -22,7 +23,7 @@ export default function StatsOverlay({
       animate={{ opacity: 1, transition: { duration: 0.15, ease: "easeOut" } }}
       exit={{ opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }}
       style={{
-        position: "fixed", inset: 0, zIndex: 1000,
+        position: "fixed", inset: 0, zIndex: Z.MODAL,
         background: "rgba(0,0,0,.4)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24,

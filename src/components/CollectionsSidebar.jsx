@@ -11,6 +11,7 @@ import {
 import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_AMBER, CLR_GREEN } from "./styles";
 import AnimatedNumber from "./AnimatedNumber";
 import { pluralize } from "../utils/helpers";
+import { Z } from "../data/constants";
 
 // Icon set for the picker
 const ICON_OPTIONS = [
@@ -129,7 +130,7 @@ function CollectionRow({
           {createElement(icon, { size: 14, strokeWidth: 1.5, color: isActive ? "var(--cp-accent)" : "var(--cp-text-muted)" })}
         </Popover.Trigger>
         <Popover.Portal>
-          <Popover.Positioner side="top" align="start" sideOffset={6} style={{ zIndex: 100 }}>
+          <Popover.Positioner side="top" align="start" sideOffset={6} style={{ zIndex: Z.DROPDOWN }}>
             <Popover.Popup style={{
               background: "var(--cp-bg-card)", border: "1px solid var(--cp-border)", borderRadius: 6,
               boxShadow: "var(--cp-shadow-md)", padding: 8,
@@ -487,7 +488,7 @@ export default function CollectionsSidebar({
                 value={newName}
                 onChange={e => { setNewName(e.target.value); setCreateError(null); }}
                 onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setIsCreating(false); setNewName(""); setCreateError(null); } }}
-                placeholder="Collection name..."
+                placeholder="Collection name…"
                 enterKeyHint="done"
                 style={{
                   flex: 1, minWidth: 0, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",

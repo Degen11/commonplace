@@ -127,7 +127,8 @@ src/
     ExportDropdown.jsx         Export format menu
     Footer.jsx                 App footer
     HowItWorksAnimation.jsx    Onboarding animation sequence
-    Logo.jsx                   Open-book icon mark
+    Logo.jsx                   Folded speech-bubble icon mark
+    logoPaths.js               Logo mark geometry, shared by Logo.jsx and api/og.js (favicon.svg / og-image.svg carry copies)
     Wordmark.jsx               "Commonplace" wordmark — traced SVG path, not styled text (see wordmarkPath.js)
     MobileSheet.jsx            Mobile bottom sheet overlay
     ShareImageModal.jsx        Share image preview/download

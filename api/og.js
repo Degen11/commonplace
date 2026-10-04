@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { loadShare, pickFeaturedQuote, SHARE_ID_RE } from './_shareData.js';
 import { WORDMARK_PATH, WORDMARK_VIEWBOX, WORDMARK_ASPECT_RATIO } from '../src/components/wordmarkPath.js';
+import { LOGO_BUBBLE_PATH, LOGO_FLAP_PATH, LOGO_FLAP_OPACITY } from '../src/components/logoPaths.js';
 import { CAT_COLORS } from '../src/data/constants.js';
 
 // GET /api/og?id=<shareId> — 1200×630 share card for a public collection,
@@ -50,12 +51,6 @@ function h(type, props, ...children) {
   return { type, props: { ...props, children: kids.length === 0 ? undefined : kids.length === 1 ? kids[0] : kids } };
 }
 
-const BOOK_ICON = [
-  'M16 7C13.5 5.5 10 5 7 5C5.5 5 4 5.8 4 7.5V23.5C4 25 5.5 25.5 7 25.5C10 25.5 13.5 26.2 16 28',
-  'M16 7C18.5 5.5 22 5 25 5C26.5 5 28 5.8 28 7.5V23.5C28 25 26.5 25.5 25 25.5C22 25.5 18.5 26.2 16 28',
-  'M16 7V28',
-];
-
 function card({ text, source, category, count }) {
   const quote = truncate(text, 220);
   const fontSize = quote.length > 160 ? 38 : quote.length > 90 ? 46 : 56;
@@ -69,11 +64,11 @@ function card({ text, source, category, count }) {
       borderBottom: `6px solid ${C.accent}`, padding: '52px 80px 44px',
     },
   },
-    // Brand row: book icon + traced wordmark
+    // Brand row: logo mark + traced wordmark
     h('div', { style: { display: 'flex', alignItems: 'center', gap: 14 } },
       h('svg', { width: 44, height: 44, viewBox: '0 0 32 32', fill: 'none' },
-        ...BOOK_ICON.map(d => h('path', { d, stroke: C.accent, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' })),
-        h('path', { d: 'M21 5V14L23 12.5L25 14V5', fill: C.accent, fillOpacity: 0.2, stroke: C.accent, strokeWidth: 1.4, strokeLinejoin: 'round' }),
+        h('path', { d: LOGO_BUBBLE_PATH, fill: C.accent, fillRule: 'evenodd' }),
+        h('path', { d: LOGO_FLAP_PATH, fill: C.accent, fillOpacity: LOGO_FLAP_OPACITY }),
       ),
       h('svg', { width: Math.round(wordmarkHeight * WORDMARK_ASPECT_RATIO), height: wordmarkHeight, viewBox: WORDMARK_VIEWBOX },
         h('path', { d: WORDMARK_PATH, fill: C.text }),

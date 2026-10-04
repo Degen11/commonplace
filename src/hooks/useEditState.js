@@ -145,19 +145,23 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
     });
   };
 
-  const applyBulk = () => {
+  // Overrides let the bulk bar apply a picked value directly (a category menu
+  // item, the source popover) without first round-tripping it through state.
+  const applyBulk = (overrides = {}) => {
+    const cat = overrides.category ?? bulkEditCat;
+    const src = (overrides.source ?? bulkEditSource).trim();
     const affectedIds = new Set(selected);
     const snapshot = quotes.filter(q => affectedIds.has(q.id)).map(q => ({ ...q }));
     setQuotes(p => p.map(q => {
       if (!selected.has(q.id)) return q;
       const u = { ...q, updatedAt: Date.now() };
-      if (bulkEditCat) u.category = bulkEditCat;
-      if (bulkEditSource.trim()) u.source = bulkEditSource.trim();
-      if (bulkEditCat || bulkEditSource.trim()) u.confidence = "high";
+      if (cat) u.category = cat;
+      if (src) u.source = src;
+      if (cat || src) u.confidence = "high";
       return u;
     }));
     const count = selected.size;
-    const changes = [bulkEditCat && `category \u2192 ${bulkEditCat}`, bulkEditSource.trim() && `source \u2192 ${bulkEditSource.trim()}`].filter(Boolean);
+    const changes = [cat && `category \u2192 ${cat}`, src && `source \u2192 ${src}`].filter(Boolean);
     setSelected(new Set()); setBulkEditCat(""); setBulkEditSource("");
     const snapMap = new Map(snapshot.map(q => [q.id, q]));
     const msg = changes.length > 0

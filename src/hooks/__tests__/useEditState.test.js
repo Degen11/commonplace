@@ -351,6 +351,20 @@ describe("useEditState", () => {
       expect(updated.find((q) => q.id === "q3").category).toBe("Book");
     });
 
+    it("applies a value passed directly, without bulk-field state", () => {
+      const { result } = renderHook(() => useEditState(props));
+
+      act(() => result.current.toggleSel("q1"));
+      act(() => result.current.applyBulk({ source: "  Marcus Aurelius  " }));
+
+      const updated = props.setQuotes.getCurrent();
+      const q1 = updated.find((q) => q.id === "q1");
+      expect(q1.source).toBe("Marcus Aurelius");
+      expect(q1.confidence).toBe("high");
+      // Category untouched when only a source is passed
+      expect(q1.category).toBe(props.quotes.find((q) => q.id === "q1").category);
+    });
+
     it("clears selection and bulk fields after apply", () => {
       const { result } = renderHook(() => useEditState(props));
 

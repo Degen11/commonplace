@@ -283,6 +283,8 @@ export const baseCSS = `
     .ui-tip:hover::after{opacity:1}
   }
   .ui-tip:active::after{opacity:0;transition:none}
+  /* A trigger's tooltip would sit on top of the menu it just opened */
+  .ui-tip[data-popup-open]::after,.ui-tip[aria-haspopup][aria-expanded="true"]::after{opacity:0 !important;transition:none}
   .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
   .ui-tip-left::after{left:auto;right:0;transform:none}
   .ui-tip-right::after{left:calc(100% + 6px);right:auto;bottom:auto;top:50%;transform:translateY(-50%)}
@@ -324,9 +326,8 @@ export const baseCSS = `
     .hdr-overflow-item:hover{background:var(--cp-bg-hover) !important}
     .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.08) !important;color:#DC2626 !important}
     html.dark .hdr-overflow-destructive:hover{background:rgba(220,38,38,0.15) !important;color:#EF4444 !important}
-    .sidebar-dupes-btn:hover{background:var(--cp-bg-hover) !important;border-color:var(--cp-border-dim) !important}
+    .sidebar-row:hover:not(:disabled),.sidebar-icon-btn:hover{background:var(--cp-bg-hover) !important}
   }
-  .sidebar-dupes-btn:active{background:var(--cp-bg-tab) !important;transform:scale(0.97)}
   @media(hover:hover){
     .new-batch-btn.hdr-btn:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:#FECACA}
   }
@@ -390,7 +391,7 @@ export const baseCSS = `
   }
 
   /* Button press feedback — subtle scale on mousedown */
-  .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-del:active,.bulk-reidentify:active:not(:disabled),.reset-btn:active,.filter-chip:active,.edit-save:active,.edit-cancel:active,.qa-submit:active:not(:disabled),.attention-dismiss:active{transform:scale(0.97) !important;transition:transform .1s ease !important}
+  .hdr-btn:active,.proc-btn:active:not(:disabled),.confirm-cancel:active,.confirm-yes:active,.hp-primary:active,.try-btn:active,.bulk-apply:active:not(:disabled),.bulk-btn:active:not(:disabled),.reset-btn:active,.filter-chip:active,.edit-save:active,.edit-cancel:active,.qa-submit:active:not(:disabled),.attention-dismiss:active{transform:scale(0.97) !important;transition:transform .1s ease !important}
   .view-btn:active{transform:scale(0.94) !important;transition:transform .1s ease !important}
 
   /* List shuffle — triggered on sort/filter change for smooth staggered re-entrance */
@@ -463,13 +464,10 @@ export const baseCSS = `
   @media(hover:hover){
     .bulk-apply:hover:not(:disabled){opacity:.85}
   }
-  .bulk-del{transition:all .12s ease}
+  .bulk-btn{transition:background .12s ease}
   @media(hover:hover){
-    .bulk-del:hover{background:rgba(248,113,113,0.15) !important;border-color:rgba(248,113,113,0.5) !important}
-  }
-  .bulk-reidentify{transition:all .12s ease}
-  @media(hover:hover){
-    .bulk-reidentify:hover:not(:disabled){background:rgba(255,255,255,0.08) !important}
+    .bulk-btn:hover:not(:disabled),.bulk-btn[data-popup-open]{background:rgba(255,255,255,0.08) !important}
+    .bulk-del:hover{background:rgba(248,113,113,0.15) !important}
   }
 
   /* Attention bar dismiss hover */
@@ -499,9 +497,7 @@ export const baseCSS = `
   @media(hover:hover){
     .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.3);transform:translateY(-1px)}
   }
-  .hp-feature-card{transition:all .2s ease}
   @media(hover:hover){
-    .hp-feature-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
     html.dark .hp-primary:hover{box-shadow:0 4px 16px rgba(60,87,117,0.5)}
   }
 
@@ -511,12 +507,14 @@ export const baseCSS = `
     .hp-hero-headline{font-size:38px !important;letter-spacing:-1.5px !important}
     .hp-hero-sub{max-width:none !important;font-size:17px !important}
     .hp-mini-demo{text-align:left !important}
-    .hp-features-grid{grid-template-columns:repeat(2, 1fr) !important}
+    .hp-features-split{grid-template-columns:1fr !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
     .hp-section{padding:60px 32px !important}
   }
   @media (max-width: 600px) {
     .hp-features-grid{grid-template-columns:1fr !important}
+    .hp-feature{padding:22px 0 !important;border-right:none !important;border-bottom:1px solid var(--cp-border) !important}
+    .hp-feature:last-child{border-bottom:none !important}
     .hp-hero-sub{max-width:none !important}
     .hp-hero-headline{font-size:32px !important;letter-spacing:-1px !important}
     .hp-hero-sub{font-size:16px !important}
@@ -606,7 +604,6 @@ export const baseCSS = `
 
     /* BulkBar responsive — allow wrapping on mobile */
     .bulk-bar-mobile{flex-wrap:wrap !important;width:calc(100vw - 16px) !important;gap:6px !important;padding:10px !important;bottom:8px !important}
-    .bulk-bar-mobile .bulk-divider-hide{display:none !important}
   }
 
   /* Touch-only devices (phones and tablets alike): hover styles above are gated
@@ -877,15 +874,15 @@ export const styles = {
   dupeModalSub:{fontSize:13,color:"var(--cp-text-muted)",fontFamily:FONT_SANS},
   dupeList:{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10},
   // Bulk edit — floating pill (dark bg in light mode, light bg in dark mode)
-  bulkBar:{position:"fixed",bottom:16,left:0,right:0,marginInline:"auto",width:"fit-content",display:"flex",alignItems:"center",gap:0,padding:"8px 12px 8px 8px",background:"var(--cp-bulk-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid var(--cp-bulk-border)",borderRadius:6,boxShadow:"0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",zIndex:Z.BULK_BAR,maxWidth:"calc(100vw - 32px)"},
-  bulkN:{fontSize:12,fontWeight:600,color:"var(--cp-bulk-badge-text)",whiteSpace:"nowrap",background:"var(--cp-bulk-badge)",padding:"5px 12px",borderRadius:4,lineHeight:1,letterSpacing:0.2},
-  bulkDivider:{width:1,height:20,background:"var(--cp-bulk-divider)",margin:"0 10px",flexShrink:0},
-  bulkGroup:{display:"flex",gap:5,alignItems:"center",whiteSpace:"nowrap"},
-  bulkSel:{...SELECT_RESET,border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 24px 5px 8px",fontSize:12,fontFamily:"inherit",backgroundColor:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
-  bulkIn:{border:"1px solid var(--cp-bulk-input-border)",borderRadius:6,padding:"5px 8px",fontSize:12,fontFamily:"inherit",width:120,background:"var(--cp-bulk-input-bg)",color:"var(--cp-bulk-text)"},
-  bulkApply:{padding:"5px 12px",borderRadius:6,border:"none",background:"#fff",color:CP_ACCENT,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
-  bulkDelBtn:{padding:"5px 10px",borderRadius:6,border:"1px solid rgba(235,87,87,0.4)",background:"transparent",color:"#F87171",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",justifyContent:"center"},
-  bulkX:{background:"none",border:"none",color:"var(--cp-bulk-muted)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",padding:4,borderRadius:6},
+  bulkBar:{position:"fixed",bottom:16,left:0,right:0,marginInline:"auto",width:"fit-content",display:"flex",alignItems:"center",gap:2,padding:"6px 6px 6px 16px",background:"var(--cp-bulk-bg)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",border:"1px solid var(--cp-bulk-border)",borderRadius:6,boxShadow:"0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",zIndex:Z.BULK_BAR,maxWidth:"calc(100vw - 32px)"},
+  bulkN:{fontSize:13,color:"var(--cp-bulk-text)",whiteSpace:"nowrap",marginRight:4},
+  bulkNCount:{fontWeight:700,color:"#fff",fontVariantNumeric:"tabular-nums"},
+  bulkClear:{height:30,padding:"0 8px",border:"none",borderRadius:4,background:"transparent",color:"var(--cp-bulk-muted)",fontSize:13,fontFamily:"inherit",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3},
+  bulkDivider:{width:1,height:18,background:"var(--cp-bulk-divider)",margin:"0 8px",flexShrink:0},
+  bulkBtn:{display:"inline-flex",alignItems:"center",gap:6,height:30,padding:"0 10px",border:"none",borderRadius:4,background:"transparent",color:"var(--cp-bulk-text)",fontSize:13,fontWeight:500,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"},
+  bulkDelBtn:{display:"inline-flex",alignItems:"center",gap:6,height:30,padding:"0 10px",border:"none",borderRadius:4,background:"transparent",color:"#F87171",fontSize:13,fontWeight:500,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"},
+  bulkMenu:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",padding:4,minWidth:180,maxHeight:"min(320px, 50vh)",overflowY:"auto",animation:"menuIn .14s ease"},
+  bulkSrcIn:{flex:1,minWidth:0,border:"1px solid var(--cp-border)",borderRadius:4,padding:"5px 8px",fontSize:13,fontFamily:"inherit",background:"var(--cp-bg-input)",color:"var(--cp-text)"},
 
   // Header overflow menu
   hdrOverflowMenu:{position:"absolute",right:0,top:"calc(100% + 4px)",background:"var(--cp-bg-card)",borderRadius:6,boxShadow:"var(--cp-shadow-md)",border:"1px solid var(--cp-border)",minWidth:200,maxWidth:"calc(100vw - 24px)",zIndex:Z.DROPDOWN,padding:4,animation:"menuIn .14s ease",transformOrigin:"top right"},
@@ -895,13 +892,12 @@ export const styles = {
   hdrOverflowDestructive:{display:"flex",alignItems:"center",gap:10,width:"100%",textAlign:"left",border:"none",background:"transparent",padding:"9px 12px",fontSize:13,color:"var(--cp-danger)",cursor:"pointer",borderRadius:4,fontFamily:"inherit",lineHeight:1,transition:"background .1s ease"},
 
   // Sidebar overview card
-  sidebarOverview:{padding:"12px 8px 12px 0",borderBottom:"1px solid var(--cp-border-light)",marginBottom:4},
-  sidebarOverviewLabel:{fontSize:13,fontWeight:600,color:"var(--cp-accent)"},
-  sidebarOverviewRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",fontSize:12},
-  sidebarOverviewValue:{fontWeight:600,color:"var(--cp-text-secondary)"},
-  sidebarOverviewMuted:{color:"var(--cp-text-muted)"},
-  sidebarActionBtn:{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"6px 10px",border:"none",borderRadius:6,background:"transparent",fontSize:12,fontWeight:500,color:"var(--cp-text-muted)",cursor:"pointer",fontFamily:"inherit",textAlign:"left"},
-  sidebarDupesBtn:{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"6px 10px",border:"1px solid var(--cp-border)",borderRadius:6,background:"var(--cp-bg-card)",fontSize:12,fontWeight:500,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",textAlign:"left",justifyContent:"center"},
+  sidebarHead:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 8px 6px 8px"},
+  sidebarLabel:{fontSize:11,fontWeight:500,letterSpacing:"0.04em",textTransform:"uppercase",color:"var(--cp-text-faint)"},
+  sidebarIconBtn:{width:24,height:24,display:"grid",placeItems:"center",padding:0,border:"none",borderRadius:4,background:"transparent",color:"var(--cp-text-muted)",cursor:"pointer"},
+  sidebarDivider:{height:1,background:"var(--cp-border-light)",margin:"10px 16px 12px 8px"},
+  sidebarToolBtn:{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"8px",border:"none",borderRadius:4,background:"transparent",fontSize:13,color:"var(--cp-text-secondary)",cursor:"pointer",fontFamily:"inherit",textAlign:"left",transition:"background .12s"},
+  sidebarToolIcon:{color:"var(--cp-text-muted)",flexShrink:0},
 
   // Toolbar — #4 matched padding to pills rhythm
   toolbar:{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)"},

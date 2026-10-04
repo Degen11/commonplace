@@ -372,7 +372,7 @@ export default function ResultsPhase({
   const scopeQuotes = activeCollection
     ? (() => { const ids = new Set(activeCollection.quoteIds); return quotes.filter(q => ids.has(q.id)); })()
     : quotes;
-  // Same distinct-source count the sidebar overview and stats panel use
+  // Same distinct-source count the stats panel uses
   const scopeSourceCount = new Set(scopeQuotes.map(q => q.source).filter(Boolean)).size;
 
   // ── Handlers ──
@@ -935,8 +935,6 @@ export default function ResultsPhase({
                 setCollapsed={setSidebarCollapsed}
                 onAutoGroup={handleAutoGroup}
                 onFindDupes={handleFindDupes}
-                uniqueSources={quotes.length > 0 ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
-                favCount={favCount}
                 toolbarHeight={toolbarHeight}
                 onExportCollection={handleExportCollection}
             />
@@ -959,8 +957,6 @@ export default function ResultsPhase({
                 setCollapsed={() => {}}
                 onAutoGroup={handleAutoGroup}
                 onFindDupes={handleFindDupes}
-                uniqueSources={quotes.length > 0 ? new Set(quotes.map(q => q.source).filter(Boolean)).size : 0}
-                favCount={favCount}
                 toolbarHeight={0}
                 isMobileSheet
                 onExportCollection={handleExportCollection}

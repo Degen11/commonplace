@@ -208,43 +208,64 @@ export const HP = {
     maxWidth: "65ch",
   },
 
-  // Features — single row of 4 cards
+  // Features — heading left, 2×2 grid split by hairlines right
+  featuresSplit: {
+    display: "grid",
+    gridTemplateColumns: "340px minmax(0, 1fr)",
+    columnGap: 64,
+    rowGap: 32,
+    alignItems: "start",
+  },
   featuresGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: 16,
-    marginTop: 40,
-    textAlign: "left",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    borderTop: "1px solid var(--cp-border)",
   },
-  featureCard: {
-    background: "var(--cp-bg-card)",
-    border: "1px solid var(--cp-border-light)",
-    borderRadius: 6,
-    padding: "20px 18px",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-  },
-  featureIconWrap: {
-    width: 38,
-    height: 38,
+  feature: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 6,
-    marginBottom: 14,
+    flexDirection: "column",
+    gap: 8,
+    minWidth: 0,
+  },
+  featureLeft: {
+    padding: "26px 28px 28px 0",
+    borderRight: "1px solid var(--cp-border)",
+  },
+  featureRight: {
+    padding: "26px 0 28px 28px",
+  },
+  featureTopRow: {
+    borderBottom: "1px solid var(--cp-border)",
   },
   featureTitle: {
     fontFamily: FONT_SANS,
-    fontSize: 14,
-    fontWeight: 600,
+    fontSize: 16,
+    fontWeight: 700,
+    letterSpacing: "-0.01em",
     color: "var(--cp-text)",
-    marginBottom: 6,
   },
   featureDesc: {
-    fontSize: 13,
-    fontWeight: 300,
-    lineHeight: 1.5,
-    color: "var(--cp-text-muted)",
+    fontSize: 14,
+    lineHeight: 1.6,
+    color: "var(--cp-text-secondary)",
     fontFamily: FONT_SANS,
+  },
+  featureDemo: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+    fontSize: 12,
+    color: "var(--cp-text-muted)",
+  },
+  featureChip: {
+    fontSize: 11,
+    padding: "1px 6px",
+    border: "1px solid var(--cp-border)",
+    borderRadius: 4,
+    background: "var(--cp-bg-card)",
+    color: "var(--cp-text-muted)",
   },
 };
 

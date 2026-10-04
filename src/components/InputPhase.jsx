@@ -8,12 +8,12 @@ import Footer from "./Footer";
 import { styles, CP_ACCENT, FONT_SANS, CLR_EMERALD } from "./styles";
 import { smartSplit, basicFormat } from "../utils/textFormatting";
 import { handleRichTextShortcut } from "../utils/richTextKeys";
-import { EXAMPLE_QUOTES } from "../data/constants";
+import { EXAMPLE_QUOTES, getCatColor } from "../data/constants";
 import { FAQ_ITEMS } from "../data/faq";
 import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
-  Sparkles, PenLine, Download, RefreshCw, Library,
+  Download, RefreshCw, Search, Tag, Folder,
   Loader, Lock,
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
@@ -434,55 +434,78 @@ export default function InputPhase({
         className="hp-section"
         style={{ ...HP.section, ...reveal(featuresVisible) }}
       >
-        <div style={{ ...HP.sectionInner, textAlign: "center" }}>
-          <div style={HP.sectionLabel}>Features</div>
-          <h2 style={HP.sectionHeadline}>Everything you need</h2>
-          <p style={{ ...HP.sectionSub, margin: "0 auto" }}>
-            Simple enough to use in seconds. Powerful enough to manage hundreds of quotes.
-          </p>
+        <div className="hp-features-split" style={{ ...HP.sectionInner, ...HP.featuresSplit }}>
+          <div>
+            <div style={HP.sectionLabel}>Features</div>
+            <h2 style={{ ...HP.sectionHeadline, marginBottom: 0 }}>From a messy paste to a library you can use</h2>
+          </div>
 
           <div className="hp-features-grid" style={HP.featuresGrid}>
             {[
               {
-                icon: Sparkles,
-                title: "Smart organization",
-                desc: "AI identifies sources, assigns categories, and detects duplicates automatically.",
-                color: CP_ACCENT,
+                icon: Search,
+                title: "Finds the source",
+                desc: "Checks 3,700+ known quotes first, then asks Claude about anything it can\u2019t match.",
+                demo: (
+                  <span style={HP.featureDemo}>
+                    <span style={{ color: "var(--cp-text-faint)" }}>you miss 100% of the shots&hellip;</span>
+                    <ArrowRight size={12} strokeWidth={2} aria-hidden="true" />
+                    <span style={{ color: "var(--cp-text)" }}>Wayne Gretzky</span>
+                  </span>
+                ),
               },
               {
-                icon: PenLine,
-                title: "Powerful editing",
-                desc: "Inline editing, drag to reorder, bulk operations, and custom categories.",
-                color: "#7A48CE",
+                icon: Tag,
+                title: "Sorts and tidies",
+                desc: "Gives every quote a category, cleans up quotes and dashes, and catches duplicates.",
+                demo: (
+                  <span style={{ ...HP.featureDemo, gap: 6 }}>
+                    {["Motivational", "Philosophical", "Book"].map(c => {
+                      const col = getCatColor(c, []);
+                      return <span key={c} style={{ ...styles.tag, background: col.bg, color: col.text }}>{c}</span>;
+                    })}
+                  </span>
+                ),
               },
               {
-                icon: Library,
-                title: "Custom collections",
-                desc: "Curate your own collections, or let AI auto-group quotes by theme and topic.",
-                color: "#3967CD",
+                icon: Folder,
+                title: "Collections your way",
+                desc: "Group quotes by hand, or let Smart group sort them by theme.",
+                demo: (
+                  <span style={{ ...HP.featureDemo, gap: 14, color: "var(--cp-text-secondary)" }}>
+                    {[["Stoic mornings", 12], ["Wedding toast", 4], ["Book club", 9]].map(([name, n]) => (
+                      <span key={name}>{name} <span style={{ color: "var(--cp-text-faint)" }}>{n}</span></span>
+                    ))}
+                  </span>
+                ),
               },
               {
                 icon: Download,
-                title: "Flexible export",
-                desc: "Export as CSV, Markdown, or JSON. Compatible with Notion, Obsidian, and more.",
-                color: "#218D6C",
+                title: "Goes where you write",
+                desc: "Export to CSV, Markdown, JSON, plain text or Anki, or share a public link for 30 days.",
+                demo: (
+                  <span style={{ ...HP.featureDemo, gap: 6 }}>
+                    {[".csv", ".md", ".json", "Anki"].map(f => <span key={f} style={HP.featureChip}>{f}</span>)}
+                  </span>
+                ),
               },
             ].map((f, i) => {
               const Icon = f.icon;
               return (
                 <div
                   key={f.title}
-                  className="hp-feature-card"
+                  className={`hp-feature hp-feature-${i % 2 ? "right" : "left"}${i < 2 ? " hp-feature-top" : ""}`}
                   style={{
-                    ...HP.featureCard,
+                    ...HP.feature,
+                    ...(i % 2 ? HP.featureRight : HP.featureLeft),
+                    ...(i < 2 ? HP.featureTopRow : {}),
                     ...reveal(featuresVisible, 0.1 + i * 0.1),
                   }}
                 >
-                  <div style={{ ...HP.featureIconWrap, background: `${f.color}12` }}>
-                    <Icon size={20} color={f.color} strokeWidth={1.5} />
-                  </div>
+                  <Icon size={18} strokeWidth={1.75} style={{ color: "var(--cp-accent)" }} aria-hidden="true" />
                   <h3 style={HP.featureTitle}>{f.title}</h3>
                   <p style={HP.featureDesc}>{f.desc}</p>
+                  {f.demo}
                 </div>
               );
             })}

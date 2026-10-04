@@ -107,10 +107,10 @@ src/
     HeaderControls.jsx         Shared header building blocks (theme/view toggles, overflow-menu items) composed by HeaderBar and MiniHeader
     ThemeToggleButton.jsx      Icon-button theme toggle — split out of HeaderControls so the landing page doesn't load Base UI
     MiniHeader.jsx             Sticky header on scroll
-    BulkBar.jsx                Bulk actions — reassign category/source, delete
+    BulkBar.jsx                Bulk actions — one row of ghost buttons: Category/Collection menus and a Source popover (apply via applyBulk overrides), Favorite/Copy/Re-identify, Delete
     EditForm.jsx               Full quote editor modal
     InlineEditors.jsx          Click-to-edit source/category with autocomplete
-    CollectionsSidebar.jsx     Collection management sidebar
+    CollectionsSidebar.jsx     Collection management sidebar — Collections list (+ / collapse in its header), then a Tools group (Smart group, Find duplicates); quote/source counts live in the results header, not here
     OnboardingModal.jsx        First-run 3-step walkthrough, shown on first arrival at results (not the landing page)
     QuoteActions.jsx           Shared action components (FavBtn, OverflowMenu with pop animation)
     ConfidenceTag.jsx          Small "Check"/"Low" tag beside a source for medium/low matches (high shows nothing); replaced the old full-height confidence stripes
@@ -181,8 +181,8 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (39 files, 429 tests; api/__tests__ and src/__tests__/boot.test.js included)
-    components/                App, AddMorePanel, AttentionNotice, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
+  **/__tests__/                Tests colocated with their modules (40 files, 434 tests; api/__tests__ and src/__tests__/boot.test.js included)
+    components/                App, AddMorePanel, AttentionNotice, BulkBar, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
     stores/                    quotesStore
@@ -258,7 +258,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (39 test files, 429 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (40 test files, 434 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -272,7 +272,7 @@ vercel dev        # Test serverless functions locally
 - **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`), inlined into `index.html` by the build-time prerender (and injected by `main.jsx` in dev)
 - **`color-scheme`** — declared in `baseCSS` (`:root` light, `html.dark` + media-query fallback dark) and as a `<meta>` in `index.html`. This is what makes native UI (select popups, scrollbars, autofill, carets) follow the theme — keep it when touching theme CSS
 - **Reduced motion** — two layers: `MotionConfig reducedMotion="user"` in `App.jsx` disables motion/react transforms, and a `@media(prefers-reduced-motion:reduce)` block at the end of `baseCSS` collapses CSS animations/transitions to .01ms (not 0, so `animationend`/`transitionend` listeners still fire). New animations are covered automatically — don't add per-component reduced-motion checks
-- **Tooltips** — use the `.ui-tip` class with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. Icon-only controls also need `aria-label` (the CSS-pseudo-element tooltip is not a reliable accessible name). Exception: inside clip containers where the tooltip would be cut off (e.g. the horizontally scrolling `.cat-scroll`), native `title` + `aria-label` is acceptable. The `.sidebar-rail:has(.ui-tip:hover)` rule lets collapsed-sidebar tooltips escape its `overflow:hidden`
+- **Tooltips** — use the `.ui-tip` class (hidden automatically while a menu/popover trigger is open, via `[data-popup-open]` / `[aria-haspopup][aria-expanded="true"]`) with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. Icon-only controls also need `aria-label` (the CSS-pseudo-element tooltip is not a reliable accessible name). Exception: inside clip containers where the tooltip would be cut off (e.g. the horizontally scrolling `.cat-scroll`), native `title` + `aria-label` is acceptable. The `.sidebar-rail:has(.ui-tip:hover)` rule lets collapsed-sidebar tooltips escape its `overflow:hidden`
 - **Native `<select>` styling** — selects spread `SELECT_RESET` (in `styles.js`, also exported as `styles.selectReset`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
 - **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
 - **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle

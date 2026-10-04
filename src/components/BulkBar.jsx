@@ -1,17 +1,24 @@
+import { useState } from "react";
 import clsx from "clsx";
+import { Menu } from "@base-ui/react/menu";
+import { Popover } from "@base-ui/react/popover";
 import { styles } from "./styles";
-import { X, RefreshCw, FolderMinus, Trash2, Star, Copy } from "lucide-react";
+import { sourceInputProps } from "./InlineEditors";
+import { Z } from "../data/constants";
+import { X, RefreshCw, FolderMinus, FolderPlus, Folder, Trash2, Star, Copy, Tag, PenLine, ChevronDown } from "lucide-react";
 import { useResultsContext } from "../contexts/ResultsContext";
 
 function Divider() {
-  return <div style={styles.bulkDivider} />;
+  return <div aria-hidden="true" style={styles.bulkDivider} />;
 }
 
+// Bulk actions grouped by job: change fields (category, source, collection),
+// quick actions (favorite, copy, re-identify), then Delete on its own. Every
+// control is the same ghost button; the field changes open small menus so no
+// half-filled input sits in the bar.
 export default function BulkBar({ onDelete, onBatchReIdentify }) {
   const {
     selected, setSelected,
-    bulkEditCat, setBulkEditCat,
-    bulkEditSource, setBulkEditSource,
     allCats, applyBulk,
     reidentifyingIds,
     onFav,
@@ -19,129 +26,131 @@ export default function BulkBar({ onDelete, onBatchReIdentify }) {
     onAddToCollection, onRemoveFromCollection,
     onBulkCopy,
   } = useResultsContext();
+  const [catOpen, setCatOpen] = useState(false);
+  const [colOpen, setColOpen] = useState(false);
+  const [srcOpen, setSrcOpen] = useState(false);
+  const [srcDraft, setSrcDraft] = useState("");
   const isReidentifying = reidentifyingIds.size > 0;
   const hasCollections = collections && collections.length > 0;
+  const iconSize = 14;
 
-  // Shared inline button style for dark-bg context
-  const btnBase = {
-    padding: "5px 10px", borderRadius: 6,
-    border: "1px solid var(--cp-bulk-input-border)",
-    background: "transparent", color: "var(--cp-bulk-text)",
-    fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: "inherit",
-    display: "inline-flex", alignItems: "center", gap: 4,
-    whiteSpace: "nowrap",
+  const applySource = () => {
+    if (!srcDraft.trim()) return;
+    applyBulk({ source: srcDraft });
+    setSrcDraft("");
+    setSrcOpen(false);
   };
 
+  const popupPositioner = { side: "top", align: "start", sideOffset: 8, style: { zIndex: Z.BULK_BAR + 1 } };
+
   return (
-    <div className={clsx({ "bulk-bar-mobile": isMobile })} style={styles.bulkBar}>
-      {/* ── Count badge ── */}
-      <span style={styles.bulkN}>{selected.size} selected</span>
-
-      {!isMobile && <Divider />}
-
-      {/* ── Edit group: category + source + apply ── */}
-      <div style={{ ...styles.bulkGroup, ...(isMobile ? { flex: "1 1 auto", minWidth: 0 } : {}) }}>
-        <select style={{ ...styles.bulkSel, ...(isMobile ? { flex: 1, minWidth: 0 } : {}) }} value={bulkEditCat} onChange={e => setBulkEditCat(e.target.value)}>
-          <option value="">Category</option>
-          {allCats.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        {!isMobile && <input style={styles.bulkIn} placeholder="Source" value={bulkEditSource} onChange={e => setBulkEditSource(e.target.value)} />}
-        <button
-          className="ui-tip bulk-apply"
-          data-tip="Apply to selected"
-          style={{ ...styles.bulkApply, opacity: (!bulkEditCat && !bulkEditSource.trim()) ? .4 : 1 }}
-          onClick={applyBulk}
-          disabled={!bulkEditCat && !bulkEditSource.trim()}
-        >
-          Apply
-        </button>
-      </div>
-
-      {!isMobile && <Divider />}
-
-      {/* ── Actions group: favorite + re-identify + collections ── */}
+    <div className={clsx({ "bulk-bar-mobile": isMobile })} style={styles.bulkBar} role="toolbar" aria-label="Bulk actions">
+      {/* ── Count + clear ── */}
+      <span style={styles.bulkN}><strong style={styles.bulkNCount}>{selected.size}</strong> selected</span>
       {!isMobile && (
-        <div style={styles.bulkGroup}>
-          <button
-            className="ui-tip bulk-fav"
-            data-tip="Toggle favorite on selected"
-            style={btnBase}
-            onClick={() => { for (const id of selected) onFav(id); }}
-          >
-            <Star size={12} strokeWidth={2} />
-            Favorite
-          </button>
-          <button
-            className="ui-tip bulk-copy"
-            data-tip="Copy selected to clipboard"
-            style={btnBase}
-            onClick={onBulkCopy}
-          >
-            <Copy size={12} strokeWidth={2} />
-            Copy
-          </button>
-          <button
-            className="ui-tip bulk-reidentify"
-            data-tip="Re-identify selected with AI"
-            style={{ ...btnBase, opacity: isReidentifying ? 0.5 : 1 }}
-            onClick={onBatchReIdentify}
-            disabled={isReidentifying}
-          >
-            <RefreshCw size={12} strokeWidth={2} className={clsx({ spin: isReidentifying })} />
-            {isReidentifying ? "Re-identifying…" : "Re-identify"}
-          </button>
-
-          {hasCollections && activeCollectionId && (
-            <button
-              className="ui-tip"
-              data-tip="Remove from this collection"
-              style={btnBase}
-              onClick={() => onRemoveFromCollection(activeCollectionId, [...selected])}
-            >
-              <FolderMinus size={12} strokeWidth={2} />
-              Remove
-            </button>
-          )}
-
-          {hasCollections && (
-            <select
-              className="ui-tip"
-              data-tip="Add selected to collection"
-              style={{
-                ...btnBase, ...styles.selectReset, padding: "5px 24px 5px 8px",
-                backgroundColor: "var(--cp-bulk-input-bg)",
-              }}
-              value=""
-              onChange={e => {
-                if (e.target.value) {
-                  onAddToCollection(e.target.value, [...selected]);
-                  e.target.value = "";
-                }
-              }}
-            >
-              <option value="">Add to collection</option>
-              {collections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          )}
-        </div>
+        <button className="bulk-btn" style={styles.bulkClear} onClick={() => setSelected(new Set())}>Clear</button>
       )}
 
       {!isMobile && <Divider />}
 
-      {/* ── Destructive + dismiss ── */}
-      <div style={{ ...styles.bulkGroup, ...(isMobile ? { marginLeft: "auto" } : {}) }}>
-        {isMobile && (
-          <button className="ui-tip bulk-fav" data-tip="Toggle favorite" aria-label="Toggle favorite on selected" style={{ ...styles.bulkX, minHeight: 36, minWidth: 36 }} onClick={() => { for (const id of selected) onFav(id); }}>
-            <Star size={13} strokeWidth={2} />
+      {/* ── Change fields ── */}
+      <Menu.Root open={catOpen} onOpenChange={setCatOpen}>
+        <Menu.Trigger className="bulk-btn" style={styles.bulkBtn}>
+          <Tag size={iconSize} strokeWidth={1.75} /> Category <ChevronDown size={12} strokeWidth={2} style={{ opacity: .5 }} />
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner {...popupPositioner}>
+            <Menu.Popup style={styles.bulkMenu}>
+              {allCats.map(c => (
+                <Menu.Item key={c} className="dd-opt" style={styles.sortOpt} onClick={() => applyBulk({ category: c })}>{c}</Menu.Item>
+              ))}
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+
+      {!isMobile && (
+        <Popover.Root open={srcOpen} onOpenChange={setSrcOpen}>
+          <Popover.Trigger className="bulk-btn" style={styles.bulkBtn}>
+            <PenLine size={iconSize} strokeWidth={1.75} /> Source
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner {...popupPositioner}>
+              <Popover.Popup style={{ ...styles.bulkMenu, padding: 8, display: "flex", gap: 6, width: 280 }}>
+                <input
+                  autoFocus
+                  {...sourceInputProps}
+                  enterKeyHint="done"
+                  aria-label="Source for selected quotes"
+                  placeholder="Author, book, film…"
+                  value={srcDraft}
+                  onChange={e => setSrcDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") applySource(); }}
+                  style={styles.bulkSrcIn}
+                />
+                <button className="bulk-apply" style={{ ...styles.editSave, borderRadius: 4, opacity: srcDraft.trim() ? 1 : .4 }} disabled={!srcDraft.trim()} onClick={applySource}>Apply</button>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      )}
+
+      {!isMobile && hasCollections && (
+        <Menu.Root open={colOpen} onOpenChange={setColOpen}>
+          <Menu.Trigger className="bulk-btn" style={styles.bulkBtn}>
+            <Folder size={iconSize} strokeWidth={1.75} /> Collection <ChevronDown size={12} strokeWidth={2} style={{ opacity: .5 }} />
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner {...popupPositioner}>
+              <Menu.Popup style={styles.bulkMenu}>
+                {collections.map(c => (
+                  <Menu.Item key={c.id} className="dd-opt" style={{ ...styles.sortOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => onAddToCollection(c.id, [...selected])}>
+                    <FolderPlus size={13} strokeWidth={1.5} style={{ opacity: .6, flexShrink: 0 }} />{c.name}
+                  </Menu.Item>
+                ))}
+                {activeCollectionId && (
+                  <>
+                    <div style={styles.overflowMenuDivider} />
+                    <Menu.Item className="dd-opt" style={{ ...styles.sortOpt, display: "flex", alignItems: "center", gap: 8 }} onClick={() => onRemoveFromCollection(activeCollectionId, [...selected])}>
+                      <FolderMinus size={13} strokeWidth={1.5} style={{ opacity: .6, flexShrink: 0 }} />Remove from this collection
+                    </Menu.Item>
+                  </>
+                )}
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      )}
+
+      {!isMobile && <Divider />}
+
+      {/* ── Quick actions ── */}
+      <button className="bulk-btn" aria-label={isMobile ? "Toggle favorite on selected" : undefined} style={styles.bulkBtn} onClick={() => { for (const id of selected) onFav(id); }}>
+        <Star size={iconSize} strokeWidth={1.75} />{!isMobile && " Favorite"}
+      </button>
+      {!isMobile && (
+        <>
+          <button className="bulk-btn" style={styles.bulkBtn} onClick={onBulkCopy}>
+            <Copy size={iconSize} strokeWidth={1.75} /> Copy
           </button>
-        )}
-        <button className="ui-tip bulk-del" data-tip="Delete selected" aria-label="Delete selected" style={{ ...styles.bulkDelBtn, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={onDelete}>
-          <Trash2 size={13} strokeWidth={2} />
+          <button className="bulk-btn" style={{ ...styles.bulkBtn, opacity: isReidentifying ? 0.5 : 1 }} onClick={onBatchReIdentify} disabled={isReidentifying}>
+            <RefreshCw size={iconSize} strokeWidth={1.75} className={clsx({ spin: isReidentifying })} />
+            {isReidentifying ? " Re-identifying…" : " Re-identify"}
+          </button>
+        </>
+      )}
+
+      {!isMobile && <Divider />}
+
+      {/* ── Destructive ── */}
+      <button className="bulk-btn bulk-del" aria-label={isMobile ? "Delete selected" : undefined} style={styles.bulkDelBtn} onClick={onDelete}>
+        <Trash2 size={iconSize} strokeWidth={1.75} />{!isMobile && " Delete"}
+      </button>
+      {isMobile && (
+        <button className="bulk-btn" aria-label="Clear selection" style={styles.bulkBtn} onClick={() => setSelected(new Set())}>
+          <X size={iconSize} strokeWidth={2} />
         </button>
-        <button className="ui-tip" data-tip="Clear selection" aria-label="Clear selection" style={{ ...styles.bulkX, minHeight: isMobile ? 36 : undefined, minWidth: isMobile ? 36 : undefined }} onClick={() => setSelected(new Set())}>
-          <X size={14} strokeWidth={2} />
-        </button>
-      </div>
+      )}
     </div>
   );
 }

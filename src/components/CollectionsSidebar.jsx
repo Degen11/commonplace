@@ -8,7 +8,7 @@ import {
   Coffee, Music, Feather, Leaf, Globe, Sparkles, GraduationCap, Rocket,
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy, Download,
 } from "lucide-react";
-import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_AMBER, CLR_GREEN } from "./styles";
+import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_GREEN } from "./styles";
 import AnimatedNumber from "./AnimatedNumber";
 import { pluralize } from "../utils/helpers";
 import { Z } from "../data/constants";
@@ -255,8 +255,6 @@ export default function CollectionsSidebar({
   setCollapsed,
   onAutoGroup,
   onFindDupes,
-  uniqueSources,
-  favCount,
   toolbarHeight = 44,
   isMobileSheet = false,
   onExportCollection,
@@ -428,55 +426,38 @@ export default function CollectionsSidebar({
       animate={isMobileSheet ? { opacity: 1 } : { width: 220, opacity: 1, transition: { width: { type: "spring", stiffness: 400, damping: 30 }, opacity: { duration: 0.15, delay: 0.05 } } }}
       style={expandedStyle}
     >
-      {/* Overview card */}
-      <div style={styles.sidebarOverview}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={styles.sidebarOverviewLabel}>Overview</span>
+      {/* Header — label, new-collection button, collapse */}
+      <div style={styles.sidebarHead}>
+        <span style={styles.sidebarLabel}>Collections</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <button
+            className="ui-tip ui-tip-below sidebar-icon-btn"
+            data-tip="New collection"
+            aria-label="New collection"
+            onClick={() => setIsCreating(true)}
+            style={styles.sidebarIconBtn}
+          >
+            <Plus size={14} strokeWidth={2} />
+          </button>
           {!isMobileSheet && (
           <button
-            className="ui-tip ui-tip-below"
+            className="ui-tip ui-tip-below sidebar-icon-btn"
             data-tip="Collapse sidebar"
             onClick={() => setCollapsed(true)}
             aria-expanded={true}
             aria-label="Collapse sidebar"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--cp-text-muted)", padding: 1, borderRadius: 4, display: "flex", alignItems: "center" }}
+            style={styles.sidebarIconBtn}
           >
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
           )}
-        </div>
-        <div style={styles.sidebarOverviewRow}>
-          <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Library size={13} strokeWidth={1.5} /> Quotes</span>
-          <span style={styles.sidebarOverviewValue}><AnimatedNumber value={totalQuotes} /></span>
-        </div>
-        <div style={styles.sidebarOverviewRow}>
-          <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Globe size={13} strokeWidth={1.5} /> Sources</span>
-          <span style={styles.sidebarOverviewValue}><AnimatedNumber value={uniqueSources || 0} /></span>
-        </div>
-        {favCount > 0 && (
-          <div style={styles.sidebarOverviewRow}>
-            <span style={{ ...styles.sidebarOverviewMuted, display: "flex", alignItems: "center", gap: 6 }}><Star size={13} strokeWidth={1.5} /> Favorites</span>
-            <span style={{ ...styles.sidebarOverviewValue, color: CLR_AMBER }}><AnimatedNumber value={favCount} /></span>
-          </div>
-        )}
-        {onFindDupes && (
-          <div style={{ marginTop: 6 }}>
-            <button className="sidebar-dupes-btn" style={styles.sidebarDupesBtn} onClick={onFindDupes}>
-              <Copy size={13} strokeWidth={2} />
-              Find duplicates
-            </button>
-          </div>
-        )}
+        </span>
       </div>
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 8px 0" }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cp-accent)" }}>Collections</span>
-      </div>
-
-      {/* Create new — at the top */}
-      <div ref={createWrapRef} style={{ padding: "0 0 6px 0" }}>
-        {isCreating ? (
+      {/* New collection name input — opened from the + button */}
+      {isCreating && (
+      <div ref={createWrapRef} style={{ padding: "0 8px 6px 0" }}>
+        {(
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{
               display: "flex", gap: 0, alignItems: "center",
@@ -512,75 +493,8 @@ export default function CollectionsSidebar({
               <span style={{ fontSize: 11, color: "var(--cp-danger)", paddingLeft: 2 }}>{createError}</span>
             )}
           </div>
-        ) : (
-          <button
-            className="hdr-btn"
-            onClick={() => setIsCreating(true)}
-            style={styles.sidebarActionBtn}
-          >
-            <Plus size={13} strokeWidth={2} /> New collection
-          </button>
         )}
       </div>
-
-      {/* Smart Group — AI auto-collection */}
-      {onAutoGroup && (
-        <div ref={smartWrapRef} style={{ padding: "0 0 6px 0" }}>
-          {isSmartGrouping ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{
-                display: "flex", gap: 0, alignItems: "center",
-                border: `1px solid ${smartGroupError ? "var(--cp-danger)" : "var(--cp-accent)"}`,
-                borderRadius: 6, background: "var(--cp-bg-card)",
-                opacity: smartGroupLoading ? 0.6 : 1,
-                overflow: "hidden",
-              }}>
-                <input
-                  ref={smartInputRef}
-                  value={smartTheme}
-                  onChange={e => { setSmartTheme(e.target.value); setSmartGroupError(null); }}
-                  onKeyDown={e => {
-                    if (e.key === "Enter" && !smartGroupLoading) handleSmartGroup();
-                    if (e.key === "Escape") { setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null); }
-                  }}
-                  placeholder='Theme, e.g. "love"'
-                  enterKeyHint="go"
-                  disabled={smartGroupLoading}
-                  style={{
-                    flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
-                    border: "none", outline: "none", background: "transparent",
-                    color: "var(--cp-text)", minWidth: 0,
-                  }}
-                />
-                <button
-                  onClick={handleSmartGroup}
-                  disabled={smartGroupLoading || !smartTheme.trim()}
-                  style={{
-                    background: "transparent", border: "none",
-                    color: smartGroupLoading || !smartTheme.trim() ? "var(--cp-text-faint)" : "var(--cp-accent)",
-                    padding: "5px 8px",
-                    cursor: smartGroupLoading ? "wait" : "pointer",
-                    display: "flex", alignItems: "center",
-                    flexShrink: 0, transition: "color .12s",
-                  }}
-                >
-                  {smartGroupLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Wand2 size={14} strokeWidth={2} />}
-                </button>
-              </div>
-              {smartGroupError && (
-                <span style={{ fontSize: 11, color: "var(--cp-danger)", paddingLeft: 2 }}>{smartGroupError}</span>
-              )}
-            </div>
-          ) : (
-            <button
-              className="hdr-btn"
-              onClick={() => setIsSmartGrouping(true)}
-              style={styles.sidebarActionBtn}
-            >
-              <Wand2 size={13} strokeWidth={2} /> Smart group
-            </button>
-          )}
-        </div>
       )}
 
       {/* All Quotes */}
@@ -591,13 +505,13 @@ export default function CollectionsSidebar({
             display: "flex", alignItems: "center", gap: 8, width: "100%",
             padding: "8px 8px", border: "none", borderRadius: 6,
             background: activeCollectionId === null ? "var(--cp-bg-hover)" : "transparent",
-            color: activeCollectionId === null ? "var(--cp-accent)" : "var(--cp-text-secondary)",
-            cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: activeCollectionId === null ? 600 : 400,
+            color: activeCollectionId === null ? "var(--cp-text)" : "var(--cp-text-secondary)",
+            cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: activeCollectionId === null ? 500 : 400,
             textAlign: "left", transition: "background .12s",
           }}
         >
           <Library size={15} strokeWidth={1.5} />
-          <span style={{ flex: 1 }}>All Quotes</span>
+          <span style={{ flex: 1 }}>All quotes</span>
           <span style={{ fontSize: 11, color: "var(--cp-text-faint)", minWidth: 20, textAlign: "right" }}><AnimatedNumber value={totalQuotes} /></span>
         </button>
       </div>
@@ -649,6 +563,80 @@ export default function CollectionsSidebar({
           </motion.div>
         ))}
       </div>
+      )}
+
+      {/* Tools */}
+      {(onAutoGroup || onFindDupes) && (
+        <>
+          <div style={styles.sidebarDivider} />
+          <span style={{ ...styles.sidebarLabel, padding: "0 8px 6px" }}>Tools</span>
+        {/* Smart Group — AI auto-collection */}
+        {onAutoGroup && (
+          <div ref={smartWrapRef} style={{ padding: "0 8px 2px 0" }}>
+            {isSmartGrouping ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <div style={{
+                  display: "flex", gap: 0, alignItems: "center",
+                  border: `1px solid ${smartGroupError ? "var(--cp-danger)" : "var(--cp-accent)"}`,
+                  borderRadius: 6, background: "var(--cp-bg-card)",
+                  opacity: smartGroupLoading ? 0.6 : 1,
+                  overflow: "hidden",
+                }}>
+                  <input
+                    ref={smartInputRef}
+                    value={smartTheme}
+                    onChange={e => { setSmartTheme(e.target.value); setSmartGroupError(null); }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && !smartGroupLoading) handleSmartGroup();
+                      if (e.key === "Escape") { setIsSmartGrouping(false); setSmartTheme(""); setSmartGroupError(null); }
+                    }}
+                    placeholder='Theme, e.g. "love"'
+                    enterKeyHint="go"
+                    disabled={smartGroupLoading}
+                    style={{
+                      flex: 1, padding: "5px 8px", fontSize: 12, fontFamily: "inherit",
+                      border: "none", outline: "none", background: "transparent",
+                      color: "var(--cp-text)", minWidth: 0,
+                    }}
+                  />
+                  <button
+                    onClick={handleSmartGroup}
+                    disabled={smartGroupLoading || !smartTheme.trim()}
+                    style={{
+                      background: "transparent", border: "none",
+                      color: smartGroupLoading || !smartTheme.trim() ? "var(--cp-text-faint)" : "var(--cp-accent)",
+                      padding: "5px 8px",
+                      cursor: smartGroupLoading ? "wait" : "pointer",
+                      display: "flex", alignItems: "center",
+                      flexShrink: 0, transition: "color .12s",
+                    }}
+                  >
+                    {smartGroupLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Wand2 size={14} strokeWidth={2} />}
+                  </button>
+                </div>
+                {smartGroupError && (
+                  <span style={{ fontSize: 11, color: "var(--cp-danger)", paddingLeft: 2 }}>{smartGroupError}</span>
+                )}
+              </div>
+            ) : (
+              <button
+                className="sidebar-row"
+                onClick={() => setIsSmartGrouping(true)}
+                style={styles.sidebarToolBtn}
+              >
+                <Wand2 size={14} strokeWidth={1.75} style={styles.sidebarToolIcon} /> Smart group
+              </button>
+            )}
+          </div>
+        )}
+          {onFindDupes && (
+            <div style={{ padding: "0 8px 2px 0" }}>
+              <button className="sidebar-row" style={styles.sidebarToolBtn} onClick={onFindDupes}>
+                <Copy size={14} strokeWidth={1.75} style={styles.sidebarToolIcon} /> Find duplicates
+              </button>
+            </div>
+          )}
+        </>
       )}
 
     </motion.div>

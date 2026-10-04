@@ -3,6 +3,7 @@ import { RefreshCw } from "lucide-react";
 import { loadString } from "../utils/storage";
 import { LS_SYNC_ENGAGED } from "../config";
 import { Z } from "../data/constants";
+import { CLR_GREEN } from "./styles";
 
 function formatRelativeTime(date) {
   if (!date) return null;
@@ -84,6 +85,7 @@ export default function SyncPill({ syncStatus, lastSynced, onManualSync, onOpenS
       onBlur={() => setHovered(false)}
     >
       {isError && <RefreshCw size={10} strokeWidth={2} />}
+      {isSynced && <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_GREEN, flexShrink: 0 }} />}
       {label}
       {hovered && tooltip && (
         <span style={{

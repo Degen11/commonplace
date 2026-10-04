@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Menu } from "@base-ui/react/menu";
-import { styles, CP_ACCENT, CLR_AMBER, CLR_ORANGE } from "./styles";
+import { styles, CP_ACCENT, CLR_AMBER } from "./styles";
 import { X, Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { pluralize } from "../utils/helpers";
 import { Z } from "../data/constants";
@@ -113,26 +113,24 @@ export default function ToolbarSection({
 
   return (
     <>
-      <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: Z.CATEGORY_PILLS, background: "var(--cp-bg)", borderBottom: "1px solid var(--cp-border)" }}>
+      <div ref={toolbarRef} style={{ position: "sticky", top: 0, zIndex: Z.CATEGORY_PILLS, background: "var(--cp-bg)", borderTop: "1px solid var(--cp-border-light)", borderBottom: "1px solid var(--cp-border)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {/* Category pills — scrollable area with fade overlays */}
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
             <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
               style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button className="cat-pill" aria-pressed={catFilter === "All" && !favFilter} onClick={() => setCatFilter("All")} style={{ ...styles.catPill, borderColor: catFilter === "All" && !favFilter ? CP_ACCENT : "var(--cp-border)", ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+              <button className="cat-pill" aria-pressed={catFilter === "All" && !favFilter} onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
               {favCount > 0 && (
-                <button className="cat-pill" aria-pressed={favFilter} onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, borderColor: favFilter ? "rgba(217,119,6,0.25)" : "var(--cp-border)", ...(favFilter ? { background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
-                  ★ Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
+                <button className="cat-pill" aria-pressed={favFilter} onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { borderColor: "rgba(217,119,6,0.25)", background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
+                  <span style={{ color: "var(--cp-fav-accent)" }}>★</span> Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
                 </button>
               )}
               {pinnedCats.map(c => {
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
-                const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
-                return <button key={c} className="cat-pill" aria-pressed={on} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, borderColor: on ? col.bg : "var(--cp-border)", ...(on ? { background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                return <button key={c} className="cat-pill" aria-pressed={on} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { borderColor: col.bg, background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}><AnimatedNumber value={count} /></span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
-                  {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, position: "absolute", top: 2, right: 2 }} />}
                   {/* native title (not .ui-tip): inside the .cat-scroll clip container, a custom tooltip would be cut off */}
                   {customCats.includes(c) && <span title="Remove category" aria-label={`Remove ${c} category`} role="button" style={{ opacity: .4, cursor: "pointer", display: "inline-flex" }} onClick={e => { e.stopPropagation(); remCat(c); }}><X size={10} strokeWidth={2} /></span>}
                 </button>;
@@ -193,7 +191,6 @@ export default function ToolbarSection({
                   {overflowVisible.map(c => {
                     const col = getCatColor(c, customCats);
                     const count = cc[c];
-                    const attCount = quotes.filter(q => q.category === c && (q.confidence === "low" || q.category === "Unknown")).length;
                     return (
                       <button
                         key={c}
@@ -204,7 +201,6 @@ export default function ToolbarSection({
                       >
                         <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />
                         <span style={{ flex: 1 }}>{c}</span>
-                        {attCount > 0 && <span style={{ width: 6, height: 6, borderRadius: "50%", background: CLR_ORANGE, flexShrink: 0 }} />}
                         <span style={{ opacity: .5, fontSize: 11 }}>{count || 0}</span>
                       </button>
                     );
@@ -223,7 +219,7 @@ export default function ToolbarSection({
                 display: "flex", alignItems: "center",
                 border: "1px solid var(--cp-border)", borderRadius: 6,
                 background: "var(--cp-bg-card)", overflow: "hidden",
-                width: isMobile ? 160 : 220, transition: "width .15s ease",
+                width: isMobile ? 160 : 230, transition: "width .15s ease",
               }}>
                 <Search size={13} strokeWidth={2} style={{ marginLeft: 8, flexShrink: 0, opacity: 0.4 }} />
                 <input
@@ -239,7 +235,7 @@ export default function ToolbarSection({
                     if (e.key === "Enter" && isMobile) e.currentTarget.blur();
                   }}
                   onBlur={() => { if (!search) setSearchOpen(false); }}
-                  placeholder="Search…"
+                  placeholder={isMobile ? "Search…" : "Search quotes…"}
                   aria-label="Search quotes"
                   inputMode="search"
                   enterKeyHint="search"
@@ -267,6 +263,9 @@ export default function ToolbarSection({
                 >
                   <X size={12} strokeWidth={2} />
                 </button>
+                {!search && !isMobile && (
+                  <kbd aria-hidden="true" style={styles.searchKbd}>/</kbd>
+                )}
                 {search && resultCount != null && (
                   <span style={{
                     fontSize: 10, fontWeight: 600, color: "var(--cp-text-muted)",

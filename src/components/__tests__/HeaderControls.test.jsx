@@ -36,6 +36,7 @@ function headerProps(overrides = {}) {
     dark: false, toggleTheme: vi.fn(), themeMode: "light",
     showConfidence: true, setShowConfidence: vi.fn(),
     onShowShortcuts: vi.fn(),
+    collectionTitle: "All quotes", quoteCount: 10, sourceCount: 7,
     ...overrides,
   };
 }
@@ -82,10 +83,19 @@ describe("ViewToggle", () => {
 });
 
 describe("HeaderBar", () => {
-  it("desktop: renders theme toggle, view toggle, and overflow menu with all sections", () => {
-    render(<HeaderBar {...headerProps()} />);
-    expect(screen.getByRole("button", { name: "Light mode" })).toBeTruthy();
+  it("desktop: renders collection heading, view toggle, add button, and overflow menu with all sections", () => {
+    const props = headerProps();
+    render(<HeaderBar {...props} />);
+    expect(screen.getByRole("heading", { level: 2, name: "All quotes" })).toBeTruthy();
+    expect(screen.getByText("10 quotes · 7 sources")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Table view" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Add quotes" })).toBeTruthy();
+    // Theme lives in the overflow menu, not the toolbar
+    expect(screen.queryByRole("button", { name: "Light mode" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+    fireEvent.click(screen.getByText("Dark mode"));
+    expect(props.toggleTheme).toHaveBeenCalledOnce();
 
     fireEvent.click(screen.getByRole("button", { name: "More actions" }));
     expect(screen.getByText("Full stats")).toBeTruthy();

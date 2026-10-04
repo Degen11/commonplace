@@ -109,7 +109,7 @@ vi.mock("../HeaderBar", () => ({
   },
 }));
 
-vi.mock("../NotificationBars", () => ({ default: () => null }));
+vi.mock("../NotificationBars", () => ({ default: () => null, AttentionNotice: () => null }));
 vi.mock("../ResultsModals", () => ({ default: () => null }));
 vi.mock("../CollectionsSidebar", () => ({ default: () => null }));
 vi.mock("../MiniHeader", () => ({ default: () => null }));

@@ -122,20 +122,20 @@ describe("InputPhase textarea interaction", () => {
 describe("InputPhase process button", () => {
   it("is disabled when rawInput is empty", () => {
     render(<InputPhase {...makeProps({ rawInput: "" })} />);
-    const btn = screen.getByRole("button", { name: /Organize my collection/i });
+    const btn = screen.getByRole("button", { name: /^Organize/i });
     expect(btn.disabled).toBe(true);
   });
 
   it("is enabled when rawInput has content", () => {
     render(<InputPhase {...makeProps({ rawInput: "some quote text" })} />);
-    const btn = screen.getByRole("button", { name: /Organize my collection/i });
+    const btn = screen.getByRole("button", { name: /^Organize/i });
     expect(btn.disabled).toBe(false);
   });
 
   it("calls onProcess when clicked with content", () => {
     const onProcess = vi.fn();
     render(<InputPhase {...makeProps({ rawInput: "some quote", onProcess })} />);
-    const btn = screen.getByRole("button", { name: /Organize my collection/i });
+    const btn = screen.getByRole("button", { name: /^Organize/i });
     fireEvent.click(btn);
     expect(onProcess).toHaveBeenCalledOnce();
   });
@@ -153,21 +153,21 @@ describe("InputPhase process button", () => {
 });
 
 describe("InputPhase examples button", () => {
-  it("shows 'Try with examples' when input is empty in paste tab", () => {
+  it("shows 'Try examples' when input is empty in paste tab", () => {
     render(<InputPhase {...makeProps({ rawInput: "", inputTab: "paste" })} />);
-    expect(screen.getByRole("button", { name: /Try with examples/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Try examples/i })).toBeDefined();
   });
 
-  it("hides 'Try with examples' when input has content", () => {
+  it("hides 'Try examples' when input has content", () => {
     render(<InputPhase {...makeProps({ rawInput: "something" })} />);
-    const btn = screen.queryByRole("button", { name: /Try with examples/i });
+    const btn = screen.queryByRole("button", { name: /Try examples/i });
     expect(btn).toBeNull();
   });
 
   it("calls setRawInput with example quotes when clicked", () => {
     const setRawInput = vi.fn();
     render(<InputPhase {...makeProps({ rawInput: "", setRawInput })} />);
-    const btn = screen.getByRole("button", { name: /Try with examples/i });
+    const btn = screen.getByRole("button", { name: /Try examples/i });
     fireEvent.click(btn);
     expect(setRawInput).toHaveBeenCalledOnce();
     // Should set a non-empty string of example quotes
@@ -178,18 +178,18 @@ describe("InputPhase examples button", () => {
 });
 
 describe("InputPhase tab switching", () => {
-  it("calls setInputTab('import') when Import File tab is clicked", () => {
+  it("calls setInputTab('import') when Import file tab is clicked", () => {
     const setInputTab = vi.fn();
     render(<InputPhase {...makeProps({ setInputTab })} />);
-    const importTab = screen.getByRole("button", { name: /Import File/i });
+    const importTab = screen.getByRole("tab", { name: /Import file/i });
     fireEvent.click(importTab);
     expect(setInputTab).toHaveBeenCalledWith("import");
   });
 
-  it("calls setInputTab('paste') when Type / Paste tab is clicked", () => {
+  it("calls setInputTab('paste') when Paste tab is clicked", () => {
     const setInputTab = vi.fn();
     render(<InputPhase {...makeProps({ inputTab: "import", setInputTab })} />);
-    const pasteTab = screen.getByRole("button", { name: /Type \/ Paste/i });
+    const pasteTab = screen.getByRole("tab", { name: /Paste/i });
     fireEvent.click(pasteTab);
     expect(setInputTab).toHaveBeenCalledWith("paste");
   });
@@ -210,12 +210,12 @@ describe("InputPhase entry count display", () => {
   it("shows entry count when input contains quotes", () => {
     render(<InputPhase {...makeProps({ rawInput: "First quote\nSecond quote" })} />);
     // smartSplit detects 2 entries
-    expect(screen.getByText(/entries? detected/i)).toBeDefined();
+    expect(screen.getByText(/2 entries/i)).toBeDefined();
   });
 
-  it("shows default prompt when input is empty", () => {
+  it("shows a zero count when input is empty", () => {
     render(<InputPhase {...makeProps({ rawInput: "" })} />);
-    expect(screen.getByText(/Quotes, phrases, expressions/i)).toBeDefined();
+    expect(screen.getByText("0 entries")).toBeDefined();
   });
 });
 

@@ -107,10 +107,12 @@ export const HP = {
     marginTop: 20,
   },
   heroFinePrint: {
+    display: "flex",
+    gap: 8,
     fontSize: 12,
     lineHeight: 1.6,
     color: "var(--cp-text-muted)",
-    maxWidth: 460,
+    maxWidth: 520,
     marginTop: 14,
   },
 

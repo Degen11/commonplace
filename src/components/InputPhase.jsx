@@ -14,7 +14,7 @@ import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
   Sparkles, PenLine, Download, RefreshCw, Library,
-  Loader,
+  Loader, Lock,
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
 import { ThemeToggleButton } from "./ThemeToggleButton";
@@ -201,30 +201,36 @@ export default function InputPhase({
 
           {/* No fade-in here (unlike styles.inputCard elsewhere): the card is part of the
               prerendered first paint, and its placeholder text can be the LCP element. */}
-          <div style={{ ...styles.inputCard, maxWidth: "100%", animation: "none" }}>
+          <div className="input-card" style={{ ...styles.inputCard, maxWidth: "100%", animation: "none" }}>
             {/* Tab row */}
-            <div style={styles.tabRow}>
+            <div role="tablist" aria-label="Add quotes by" style={styles.tabRow}>
               <button
+                role="tab"
+                aria-selected={inputTab === "paste"}
                 className="tab-btn"
-                style={{ ...styles.tabBtn, ...(inputTab === "paste" ? styles.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                style={{ ...styles.tabBtn, ...(inputTab === "paste" ? styles.tabBtnActive : {}) }}
                 onClick={() => setInputTab("paste")}
               >
-                <Pencil size={14} strokeWidth={1.5} /> Type / Paste
+                <Pencil size={14} strokeWidth={1.5} /> Paste
               </button>
               <button
+                role="tab"
+                aria-selected={inputTab === "import"}
                 className="tab-btn"
-                style={{ ...styles.tabBtn, ...(inputTab === "import" ? styles.tabBtnActive : {}), display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                style={{ ...styles.tabBtn, ...(inputTab === "import" ? styles.tabBtnActive : {}) }}
                 onClick={() => setInputTab("import")}
               >
-                <Upload size={14} strokeWidth={1.5} /> Import File
+                <Upload size={14} strokeWidth={1.5} /> Import file
               </button>
+              <span className="input-tab-hint" style={styles.tabHint}>Kindle, Readwise, CSV, Markdown</span>
             </div>
 
             {inputTab === "paste" && (
               <textarea
+                className="paste-area"
                 style={{
                   ...styles.bigTextarea,
-                  ...(isDragOver ? { borderColor: CP_ACCENT, boxShadow: `0 0 0 3px ${CP_ACCENT}22`, background: "var(--cp-bg-selected)" } : {}),
+                  ...(isDragOver ? { boxShadow: `inset 0 0 0 2px ${CP_ACCENT}`, background: "var(--cp-bg-selected)" } : {}),
                 }}
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
@@ -239,14 +245,14 @@ export default function InputPhase({
                 aria-label="Paste your quotes"
                 {...pasteDropHandlers}
                 placeholder={
-                  "Paste everything here \u2014 one per line, messy is fine:\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
+                  "Paste everything here, one per line. Messy is fine.\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
                 }
                 rows={8}
               />
             )}
 
             {inputTab === "import" && (
-              <>
+              <div style={styles.importPane}>
               <div
                 className="drop-zone"
                 style={{ ...styles.dropZone, ...(isDragOver ? styles.dropZoneActive : {}) }}
@@ -283,7 +289,7 @@ export default function InputPhase({
               </div>
 
               <UrlImportPanel onLoad={(text) => { setRawInput(text); setInputTab("paste"); }} />
-              </>
+              </div>
             )}
 
             <div className="input-footer" style={styles.inputFooter}>
@@ -295,11 +301,24 @@ export default function InputPhase({
                 const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
                 return (
                   <div className="input-footer-meta" style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
-                    <span style={styles.entryMeta}>
-                      {count > 0
-                        ? <>{pluralize(count, "entry", "entries")} detected<span className="input-footer-wordcount" style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span></>
-                        : "Quotes, phrases, expressions \u2014 all welcome"}
-                    </span>
+                    <div style={styles.inputFooterRow}>
+                      <span style={styles.entryMeta}>
+                        {pluralize(count, "entry", "entries")}
+                        {count > 0 && <span className="input-footer-wordcount" style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span>}
+                      </span>
+                      <span aria-hidden="true" style={styles.inputFooterSep} />
+                      <label
+                        className="ui-tip ui-tip-below"
+                        data-tip="Normalize quotes, dashes, and whitespace"
+                        style={styles.fmtToggleWrap}
+                        onClick={() => setFormattingEnabled(!formattingEnabled)}
+                      >
+                        <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
+                          <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
+                        </div>
+                        Clean up formatting
+                      </label>
+                    </div>
                     {count > 50 && (
                       <span style={styles.warnBadge}>
                         <TriangleAlert size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment
@@ -317,17 +336,6 @@ export default function InputPhase({
                         Smart quotes detected — enable formatting cleanup?
                       </span>
                     )}
-                    <label
-                      className="ui-tip ui-tip-below"
-                      data-tip="Normalize quotes, dashes, and whitespace"
-                      style={styles.fmtToggleWrap}
-                      onClick={() => setFormattingEnabled(!formattingEnabled)}
-                    >
-                      <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
-                        <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
-                      </div>
-                      Clean up formatting
-                    </label>
                     {formattingEnabled && count > 0 && <FormattingPreview rawInput={rawInput} />}
                   </div>
                 );
@@ -335,14 +343,14 @@ export default function InputPhase({
               <div className="input-footer-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
                 {!rawInput.trim() && inputTab === "paste" && (
                   <button className="try-btn" style={styles.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
-                    Try with examples
+                    Try examples
                   </button>
                 )}
                 <motion.button
                   layoutId="phase-action"
                   className="proc-btn ui-tip ui-tip-below"
                   data-tip="⌘/Ctrl + Enter"
-                  style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, opacity: (!rawInput.trim() || isProcessing) ? 0.4 : 1 }}
+                  style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, ...(!rawInput.trim() ? styles.processBtnIdle : {}), ...(isProcessing ? { opacity: 0.6 } : {}) }}
                   onClick={onProcess}
                   disabled={!rawInput.trim() || isProcessing}
                   transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.9 }}
@@ -352,13 +360,14 @@ export default function InputPhase({
                       <Loader size={14} strokeWidth={2} className="spin" />
                       Processing…
                     </>
-                  ) : "Organize my collection \u2192"}
+                  ) : <>Organize <ArrowRight size={15} strokeWidth={2} /></>}
                 </motion.button>
               </div>
             </div>
           </div>
           <p style={HP.heroFinePrint}>
-            Quotes we can't match locally or online are sent to Claude (by Anthropic) to identify the source. Nothing else leaves your browser unless you turn on cloud sync.
+            <Lock size={13} strokeWidth={1.75} style={{ flexShrink: 0, marginTop: 3 }} />
+            <span>Quotes we can't match are sent to Claude (by Anthropic) to find the source. Nothing else leaves your browser unless you turn on cloud sync.</span>
           </p>
         </div>
       </section>

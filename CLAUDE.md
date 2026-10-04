@@ -95,7 +95,7 @@ src/
     App.jsx                    Root orchestrator — phase management, hook init (useProcessing, useQuoteActions, useTheme)
     ResultsPhase.jsx           Results phase — owns view prefs, edit state, keyboard shortcuts, sidebar, all results UI
     ResultsModals.jsx          All modal dialogs for results phase (shortcuts, share image, confirm clear/delete, dupe modal)
-    NotificationBars.jsx       Status/notification bars (shared view, API errors, processing stats, attention/review)
+    NotificationBars.jsx       Status/notification bars (shared view, API errors, processing stats); also exports AttentionNotice, the quiet one-line attention/review notice rendered under the header title
     QuickAddBar.jsx            Inline quote add form with dupe detection
     InputPhase.jsx             Landing page — text input, file import, scroll-reveal, formatting preview
     inputPhaseStyles.js        Homepage-specific styles (HP object), timeline data, reveal transition helper
@@ -103,7 +103,7 @@ src/
     ProcessingPhase.jsx        AI identification progress display (ring, per-phase subtitle, elapsed time + ETA on long jobs)
     TableView.jsx              Main table view with inline editing and drag-to-reorder
     CardItem.jsx               Card view (mobile)
-    HeaderBar.jsx              Top toolbar — search, filters, view toggles, sync pill
+    HeaderBar.jsx              Results header — logo, toolbar (sync pill, view toggle, export, solid "Add quotes" primary, overflow menu incl. theme), collection title + counts
     HeaderControls.jsx         Shared header building blocks (theme/view toggles, overflow-menu items) composed by HeaderBar and MiniHeader
     ThemeToggleButton.jsx      Icon-button theme toggle — split out of HeaderControls so the landing page doesn't load Base UI
     MiniHeader.jsx             Sticky header on scroll
@@ -113,6 +113,7 @@ src/
     CollectionsSidebar.jsx     Collection management sidebar
     OnboardingModal.jsx        First-run 3-step walkthrough, shown on first arrival at results (not the landing page)
     QuoteActions.jsx           Shared action components (FavBtn, OverflowMenu with pop animation)
+    ConfidenceTag.jsx          Small "Check"/"Low" tag beside a source for medium/low matches (high shows nothing); replaced the old full-height confidence stripes
     HighlightText.jsx          Search term highlighting in table/card views
     AddMorePanel.jsx           Panel for adding more quotes from results
     AnimatedNumber.jsx         Animated number transitions
@@ -180,8 +181,8 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (38 files, 422 tests; api/__tests__ and src/__tests__/boot.test.js included)
-    components/                App, AddMorePanel, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
+  **/__tests__/                Tests colocated with their modules (39 files, 429 tests; api/__tests__ and src/__tests__/boot.test.js included)
+    components/                App, AddMorePanel, AttentionNotice, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
     stores/                    quotesStore
@@ -257,7 +258,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (38 test files, 422 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (39 test files, 429 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path

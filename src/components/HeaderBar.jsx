@@ -4,8 +4,9 @@ import Logo from "./Logo";
 import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
+import { pluralize } from "../utils/helpers";
 import {
-  ThemeToggleButton, ThemeMenuItem, ViewToggle, ViewMenuItems,
+  ThemeMenuItem, ViewToggle, ViewMenuItems,
   HeaderOverflowMenu, OverflowSection, OverflowDivider,
   StatsMenuItem, ConfidenceMenuItem, ShortcutsMenuItem, NewBatchMenuItem,
 } from "./HeaderControls";
@@ -33,17 +34,22 @@ export default function HeaderBar({
   showConfidence,
   setShowConfidence,
   onShowShortcuts,
+  collectionTitle,
+  quoteCount,
+  sourceCount,
+  notice,
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleAddMore = () => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); };
-  const addMoreActive = showAddMore ? { background: "var(--cp-bg-tab)", color: "var(--cp-accent)", borderColor: "var(--cp-accent)" } : {};
+  const addMoreActive = showAddMore ? styles.addMoreBtnActive : {};
 
   return (
-    <div ref={headerRef} style={{ ...styles.header, alignItems: "center" }}>
-      <motion.h1 layoutId="app-logo" style={{ ...styles.title, display: "flex", alignItems: "center", gap: 10 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
-        <Logo size={28} />
-        <Wordmark height={30} color="var(--cp-text-secondary)" />
+    <div ref={headerRef} style={styles.header}>
+      <div style={styles.headerTop}>
+      <motion.h1 layoutId="app-logo" style={{ ...styles.title, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
+        <Logo size={22} />
+        <Wordmark height={20} color="var(--cp-text-secondary)" />
       </motion.h1>
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <SyncPill syncStatus={syncStatus} lastSynced={lastSynced} onManualSync={onManualSync} onOpenSync={onOpenSync} pillStyles={pillStyles} />
@@ -51,18 +57,18 @@ export default function HeaderBar({
         {/* Desktop: show all buttons inline */}
         {!isMobile && (
           <>
-            <ThemeToggleButton dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
             <ViewToggle view={view} compact={compact} setView={setView} setCompact={setCompact} />
             {exportDropdownContent}
-            <button className="ui-tip ui-tip-below hdr-btn" data-tip="Add more quotes" style={{ ...styles.addMoreBtn, ...addMoreActive }} onClick={toggleAddMore}>+ Add more</button>
+            <button className="hdr-btn hdr-primary" aria-expanded={showAddMore} style={{ ...styles.addMoreBtn, ...addMoreActive }} onClick={toggleAddMore}><Plus size={14} strokeWidth={2} /> Add quotes</button>
           </>
         )}
 
         {/* Mobile: add button + hamburger */}
         {isMobile && (
           <button
-            className="hdr-btn"
-            style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, display: "inline-flex", alignItems: "center", gap: 4, ...addMoreActive }}
+            className="hdr-btn hdr-primary"
+            aria-expanded={showAddMore}
+            style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, ...addMoreActive }}
             onClick={toggleAddMore}
           >
             <Plus size={15} strokeWidth={2} /> Add
@@ -74,7 +80,7 @@ export default function HeaderBar({
           open={mobileMenuOpen}
           onOpenChange={setMobileMenuOpen}
           triggerTip="More actions"
-          triggerStyle={{ ...styles.statsBtn, padding: isMobile ? "7px 10px" : "5px 8px" }}
+          triggerStyle={isMobile ? { ...styles.statsBtn, padding: "7px 10px" } : styles.hdrGhostBtn}
           trigger={isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <Ellipsis size={16} strokeWidth={1.5} />}
         >
           {/* Mobile-only: theme + view grouped here */}
@@ -93,6 +99,7 @@ export default function HeaderBar({
           <ConfidenceMenuItem showConfidence={showConfidence} setShowConfidence={setShowConfidence} />
           <OverflowDivider />
           <OverflowSection>Preferences</OverflowSection>
+          {!isMobile && <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />}
           <ShortcutsMenuItem onShowShortcuts={onShowShortcuts} />
           <OverflowDivider />
           <OverflowSection>Data</OverflowSection>
@@ -102,6 +109,15 @@ export default function HeaderBar({
         {/* Mobile-only export dropdown (desktop renders it inline in the toolbar above) */}
         {isMobile && exportDropdownContent}
       </div>
+      </div>
+      <div style={styles.collectionHead}>
+        <h2 style={styles.collectionTitle}>{collectionTitle}</h2>
+        <span style={styles.collectionMeta}>
+          {pluralize(quoteCount, "quote")}
+          {sourceCount > 0 && <> · {pluralize(sourceCount, "source")}</>}
+        </span>
+      </div>
+      {notice}
     </div>
   );
 }

@@ -18,7 +18,7 @@ import { generateId } from "../utils/uuid";
 import { findDuplicateGroups } from "../utils/quotes";
 import {
   DUPE_SIMILARITY_THRESHOLD,
-  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR, LS_KB_HINT,
+  LS_QUOTES, LS_CATS, LS_FILTERS, LS_DRAFT, LS_SIDEBAR,
 } from "../config";
 import { pluralize, pluralWord } from "../utils/helpers";
 import { copyWithToast } from "../utils/shareLinks";
@@ -26,7 +26,7 @@ import { loadString, saveString, removeFromStorage } from "../utils/storage";
 import { displayText, exportJSON, exportCSV } from "../utils/export";
 
 import ResultsModals from "./ResultsModals";
-import NotificationBars from "./NotificationBars";
+import NotificationBars, { AttentionNotice } from "./NotificationBars";
 import TableView from "./TableView";
 import CardItem from "./CardItem";
 import Footer from "./Footer";
@@ -46,7 +46,7 @@ import DeviceLinkModal from "./DeviceLinkModal";
 import ScrollTopButton from "./ScrollTopButton";
 import { styles } from "./styles";
 
-import { X, CircleQuestionMark, Library } from "lucide-react";
+import { CircleQuestionMark, Library } from "lucide-react";
 
 const CARD_HEIGHT_ESTIMATE = 160;
 const CARD_VIRTUALIZER_OVERSCAN = 8;
@@ -275,7 +275,6 @@ export default function ResultsPhase({
   const [showMobileCollections, setShowMobileCollections] = useState(false);
   const [showSync, setShowSync]                 = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => loadString(LS_SIDEBAR) === "1");
-  const [showKbHint, setShowKbHint] = useState(() => !loadString(LS_KB_HINT));
   const [newQuoteHighlight, setNewQuoteHighlight] = useState(null);
 
   // ── Refs ──
@@ -368,10 +367,13 @@ export default function ResultsPhase({
     saveString(LS_SIDEBAR, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
 
-  const dismissKbHint = () => {
-    setShowKbHint(false);
-    saveString(LS_KB_HINT, "1");
-  };
+  // Header title + counts reflect the open collection (or the whole library)
+  const activeCollection = activeCollectionId ? collections.find(c => c.id === activeCollectionId) : null;
+  const scopeQuotes = activeCollection
+    ? (() => { const ids = new Set(activeCollection.quoteIds); return quotes.filter(q => ids.has(q.id)); })()
+    : quotes;
+  // Same distinct-source count the sidebar overview and stats panel use
+  const scopeSourceCount = new Set(scopeQuotes.map(q => q.source).filter(Boolean)).size;
 
   // ── Handlers ──
 
@@ -727,9 +729,6 @@ export default function ResultsPhase({
             isSharedView={isSharedView} setIsSharedView={setIsSharedView} quotesLength={quotes.length}
             apiError={apiError} failedEntries={failedEntries} retryFailed={retryFailed} dismissApiError={dismissApiError}
             stats={stats} dismissStats={dismissStats}
-            unknownCount={unknownCount} reviewQueue={reviewQueue} setReviewQueue={setReviewQueue} setEditingId={setEditingId}
-            sortBy={sortBy} dismissedAtCount={dismissedAtCount} setDismissedAtCount={setDismissedAtCount}
-            handleStartReview={handleStartReview}
           />
 
           <SectionErrorBoundary name="Header">
@@ -756,7 +755,17 @@ export default function ResultsPhase({
               themeMode={themeMode}
               showConfidence={showConfidence}
               setShowConfidence={setShowConfidence}
-              onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
+              onShowShortcuts={() => setShowShortcuts(true)}
+              collectionTitle={activeCollection ? activeCollection.name : "All quotes"}
+              quoteCount={scopeQuotes.length}
+              sourceCount={scopeSourceCount}
+              notice={
+                <AttentionNotice
+                  unknownCount={unknownCount} reviewQueue={reviewQueue} setReviewQueue={setReviewQueue} setEditingId={setEditingId}
+                  sortBy={sortBy} dismissedAtCount={dismissedAtCount} setDismissedAtCount={setDismissedAtCount}
+                  handleStartReview={handleStartReview}
+                />
+              }
             />
           </SectionErrorBoundary>
 
@@ -780,7 +789,7 @@ export default function ResultsPhase({
               showConfidence={showConfidence}
               setShowConfidence={setShowConfidence}
               setConfirmClear={setConfirmClear}
-              onShowShortcuts={() => { setShowShortcuts(true); dismissKbHint(); }}
+              onShowShortcuts={() => setShowShortcuts(true)}
               isMobile={isMobile}
             />
           )}
@@ -907,27 +916,6 @@ export default function ResultsPhase({
             />
           </SectionErrorBoundary>
 
-          <AnimatePresence>
-          {showKbHint && !isMobile && quotes.length > 0 && (
-            <motion.div
-              key="kb-hint"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto", transition: { duration: 0.25, ease: "easeOut" } }}
-              exit={{ opacity: 0, height: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-              style={{ overflow: "hidden" }}
-            >
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "6px 14px", fontSize: 12, color: "var(--cp-text-muted)",
-              }}>
-                <span>Press <kbd style={{ padding: "1px 5px", border: "1px solid var(--cp-border)", borderRadius: 4, fontSize: 11, fontFamily: "inherit", background: "var(--cp-bg-card)" }}>?</kbd> for keyboard shortcuts</span>
-                <button onClick={dismissKbHint} aria-label="Dismiss keyboard shortcuts hint" style={{ background: "none", border: "none", color: "var(--cp-text-faint)", cursor: "pointer", padding: "2px 4px", display: "flex", alignItems: "center" }}>
-                  <X size={12} strokeWidth={2} />
-                </button>
-              </div>
-            </motion.div>
-          )}
-          </AnimatePresence>
 
           {/* Main content area with optional sidebar */}
           <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
@@ -1159,7 +1147,7 @@ export default function ResultsPhase({
             className="ui-tip ui-tip-left hdr-btn"
             data-tip="Help & shortcuts"
             aria-label="Help & shortcuts"
-            onClick={() => { setShowShortcuts(true); dismissKbHint(); }}
+            onClick={() => setShowShortcuts(true)}
             style={{
               position: "fixed", bottom: showBulkBar ? 72 : 20, right: 20,
               width: 36, height: 36, borderRadius: "50%",

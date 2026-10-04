@@ -7,24 +7,25 @@ import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
 import { displayText } from "../utils/export";
-import { getCatColor, CONF_LABELS, Z } from "../data/constants";
+import { getCatColor, UNKNOWN_SOURCE, Z } from "../data/constants";
 import clsx from "clsx";
 import { styles, CLR_EMERALD, CP_ACCENT_40 } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis } from "lucide-react";
 import HighlightText from "./HighlightText";
+import ConfidenceTag from "./ConfidenceTag";
 import { useResultsContext } from "../contexts/ResultsContext";
 
 
 // Column configuration — original flex-based layout
 const COL_BASE = {
   content:  { flex: 1, minWidth: 200, paddingLeft: 0, paddingRight: 16, display: "flex", alignItems: "center" },
-  source:   { flex: "0 1 220px", minWidth: 100, maxWidth: 220, paddingLeft: 10, paddingRight: 12, display: "flex", alignItems: "center", borderLeft: "1px solid var(--cp-border-light)" },
-  category: { flex: "0 1 140px", minWidth: 80, paddingLeft: 10, paddingRight: 8, display: "flex", alignItems: "center", borderLeft: "1px solid var(--cp-border-light)" },
+  source:   { flex: "0 1 220px", minWidth: 100, maxWidth: 220, paddingLeft: 10, paddingRight: 12, display: "flex", alignItems: "center", gap: 6 },
+  category: { flex: "0 1 140px", minWidth: 80, paddingLeft: 10, paddingRight: 8, display: "flex", alignItems: "center" },
 };
 
 const COL_CONFIG = {
-  content:  { label: "Content",  style: { ...COL_BASE.content, textAlign: "left" } },
+  content:  { label: "Quote",  style: { ...COL_BASE.content, textAlign: "left" } },
   source:   { label: "Source",   style: { ...COL_BASE.source, textAlign: "left" } },
   category: { label: "Category", style: { ...COL_BASE.category, textAlign: "left" } },
 };
@@ -98,8 +99,6 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
   );
 }
 
-const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
-
 // React.memo is required here — the compiler's internal caching does NOT prevent
 // useSortable from being called, which returns new transform/transition values for
 // every row during drag. Without memo, all ~15-30 visible rows re-render per drag
@@ -153,9 +152,10 @@ const TableRow = memo(function TableRow({
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
               : compact
-                ? <p title={full} style={{ ...styles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} /></p>
+                ? <p title={full} style={{ ...styles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} />{q.favorite && <Star aria-label="Favorite" size={compact ? 11 : 12} fill="currentColor" strokeWidth={1.5} style={styles.favMark} />}</p>
                 : <p title={truncatable && !expanded ? full : undefined} style={styles.entryText}>
                     <HighlightText text={shown} term={searchTerm} />
+                    {q.favorite && <Star aria-label="Favorite" size={compact ? 11 : 12} fill="currentColor" strokeWidth={1.5} style={styles.favMark} />}
                     {truncatable && (
                       <button
                         onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
@@ -177,10 +177,11 @@ const TableRow = memo(function TableRow({
               : <>
                   <span
                     className="inline-src"
-                    style={{ ...styles.srcText, ...(compact ? { fontSize: 11 } : {}) }}
+                    style={{ ...styles.srcText, flex: "0 1 auto", ...(compact ? { fontSize: 11 } : {}), ...(q.source === UNKNOWN_SOURCE ? styles.srcUnknown : {}) }}
                     title={q.source}
                     onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
                   ><HighlightText text={q.source} term={searchTerm} /></span>
+                  {showConfidence && <ConfidenceTag confidence={q.confidence} />}
                   <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="var(--cp-text-faint)" />
                 </>
             }
@@ -205,18 +206,11 @@ const TableRow = memo(function TableRow({
     }
   };
 
-  // Stripe priority: favorite > confidence (when toggle is on)
-  const stripeColor = q.favorite
-    ? "var(--cp-fav-accent)"
-    : (showConfidence && CONF_STRIPE[q.confidence]) || null;
-  const stripeLabel = !q.favorite && showConfidence ? CONF_LABELS[q.confidence] : null;
-
   return (
     <div
       ref={setNodeRef}
-      className={clsx("qrow", { "ui-tip": stripeLabel, "new-quote-pulse": isNewQuote })}
+      className={clsx("qrow", { "new-quote-pulse": isNewQuote })}
       data-id={q.id}
-      {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...(isMobile ? longPress : {})}
       {...(isMobile || isEd || isInlineEditing ? {} : listeners)}
       {...attributes}
@@ -224,8 +218,6 @@ const TableRow = memo(function TableRow({
         ...sortableStyle,
         ...(compact ? styles.rowCompact : styles.row),
         ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
-        ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
-        ...(stripeColor ? { boxShadow: `inset 3px 0 0 ${stripeColor}` } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .35, zIndex: 1, transform: "scale(0.98)", filter: "grayscale(0.3)", transition: "opacity .2s, transform .2s, filter .2s" } : {}),
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),

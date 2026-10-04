@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { styles } from "./styles";
 import { TriangleAlert, Zap, Bot, Globe, CircleX, RefreshCw, Eye, X } from "lucide-react";
-import { pluralize, pluralWord } from "../utils/helpers";
+import { pluralize } from "../utils/helpers";
 
 // Shared animation variants for notification bars (slide down in, slide up out)
 const barVariants = {
@@ -15,7 +15,9 @@ const barVariants = {
  * - Shared view banner
  * - API error bar
  * - Processing stats bar
- * - Attention/review bar
+ *
+ * The attention/review notice lives in AttentionNotice below, rendered under
+ * the header title rather than above it.
  */
 export default function NotificationBars({
   // Shared view
@@ -24,18 +26,7 @@ export default function NotificationBars({
   apiError, failedEntries, retryFailed, dismissApiError,
   // Stats
   stats, dismissStats,
-  // Attention bar
-  unknownCount, reviewQueue, setReviewQueue, setEditingId,
-  sortBy, dismissedAtCount, setDismissedAtCount,
-  handleStartReview,
 }) {
-  // Whether to show the "needs attention" bar (not in review mode)
-  const showAttention = unknownCount > 0 && reviewQueue.length === 0
-    && sortBy !== "confidence"
-    && (dismissedAtCount === null || unknownCount > dismissedAtCount);
-
-  const showReview = unknownCount > 0 && reviewQueue.length > 0;
-
   return (
     <AnimatePresence initial={false}>
       {isSharedView && (
@@ -73,29 +64,50 @@ export default function NotificationBars({
         </motion.div>
       )}
 
+    </AnimatePresence>
+  );
+}
+
+// Quiet one-line notice for quotes missing a source or category, and the
+// in-progress review state. Deliberately low-key: a dot, a sentence and a
+// text button, not a colored banner.
+const noticeVariants = {
+  initial: { opacity: 0, height: 0, marginTop: 0 },
+  animate: { opacity: 1, height: "auto", marginTop: 10, transition: { duration: 0.25, ease: "easeOut" } },
+  exit: { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.15, ease: "easeIn" } },
+};
+
+export function AttentionNotice({
+  unknownCount, reviewQueue, setReviewQueue, setEditingId,
+  sortBy, dismissedAtCount, setDismissedAtCount,
+  handleStartReview,
+}) {
+  // Whether to show the "needs attention" notice (not in review mode)
+  const showAttention = unknownCount > 0 && reviewQueue.length === 0
+    && sortBy !== "confidence"
+    && (dismissedAtCount === null || unknownCount > dismissedAtCount);
+
+  const showReview = unknownCount > 0 && reviewQueue.length > 0;
+
+  return (
+    <AnimatePresence initial={false}>
       {showReview && (
-        <motion.div key="review" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
-          <div style={{ ...styles.attentionBar, margin: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={styles.attentionCount}>{reviewQueue.length}</span>
-              <span>{pluralWord(reviewQueue.length, "quote")} remaining in review</span>
-            </div>
-            <button style={{ ...styles.attentionBtn, background: "#92400E" }} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
+        <motion.div key="review" className="notif-bar-wrapper" variants={noticeVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+          <div style={styles.attentionBar}>
+            <span style={styles.attentionDot} />
+            <span>{pluralize(reviewQueue.length, "quote")} left to review.</span>
+            <button style={styles.attentionLink} onClick={() => { setReviewQueue([]); setEditingId(null); }}>Exit review</button>
           </div>
         </motion.div>
       )}
 
       {showAttention && (
-        <motion.div key="attention" className="notif-bar-wrapper" variants={barVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
-          <div style={{ ...styles.attentionBar, margin: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={styles.attentionCount}>{unknownCount}</span>
-              <span>{pluralWord(unknownCount, "quote needs", "quotes need")} your attention — source or category is missing</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button className="ui-tip ui-tip-left" data-tip="Step through quotes that need attention" style={styles.attentionBtn} onClick={handleStartReview}>Review now &rarr;</button>
-              <button className="ui-tip ui-tip-left attention-dismiss" data-tip="Dismiss" aria-label="Dismiss review reminder" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}>&times;</button>
-            </div>
+        <motion.div key="attention" className="notif-bar-wrapper" variants={noticeVariants} initial="initial" animate="animate" exit="exit" style={{ overflow: "hidden" }}>
+          <div style={styles.attentionBar}>
+            <span style={styles.attentionDot} />
+            <span>{pluralize(unknownCount, "quote")} {unknownCount === 1 ? "is" : "are"} missing a source or category.</span>
+            <button className="ui-tip" data-tip="Step through quotes that need attention" style={styles.attentionLink} onClick={handleStartReview}>Review</button>
+            <button className="ui-tip attention-dismiss" data-tip="Dismiss" aria-label="Dismiss review reminder" style={styles.attentionDismiss} onClick={() => setDismissedAtCount(unknownCount)}><X size={12} strokeWidth={2} /></button>
           </div>
         </motion.div>
       )}

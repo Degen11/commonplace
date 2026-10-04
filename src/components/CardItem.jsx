@@ -7,14 +7,13 @@ import MobileSheet from "./MobileSheet";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import { FavBtn, OverflowMenu } from "./QuoteActions";
 import { displayText } from "../utils/export";
-import { CONF_LABELS } from "../data/constants";
+import { UNKNOWN_SOURCE } from "../data/constants";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import clsx from "clsx";
 import { styles, cardStyles, CP_ACCENT } from "./styles";
 import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
 import HighlightText from "./HighlightText";
-
-const CONF_STRIPE = { high: "var(--cp-conf-high)", medium: "var(--cp-conf-medium)", low: "var(--cp-conf-low)" };
+import ConfidenceTag from "./ConfidenceTag";
 
 // React.memo is required — same reason as TableRow. During drag, overDragId
 // changes re-render every visible card. Without memo, each calls useSortable()
@@ -53,12 +52,6 @@ const CardItem = memo(function CardItem({
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  // Stripe priority: favorite > confidence (when toggle is on)
-  const stripeColor = q.favorite
-    ? "var(--cp-fav-accent)"
-    : (showConfidence && CONF_STRIPE[q.confidence]) || null;
-  const stripeLabel = !q.favorite && showConfidence ? CONF_LABELS[q.confidence] : null;
-
   // Swipe visual hints
   const isSwipingLeft = offsetX < -20;
   const isSwipingRight = offsetX > 20;
@@ -88,15 +81,13 @@ const CardItem = memo(function CardItem({
         </div>
       )}
     <div
-      className={clsx("qcard", { "ui-tip": stripeLabel, "new-quote-pulse": isNewQuote })}
+      className={clsx("qcard", { "new-quote-pulse": isNewQuote })}
       data-id={q.id}
-      {...(stripeLabel ? { "data-tip": stripeLabel } : {})}
       {...interactionProps}
       {...attributes}
       style={{
         ...cardStyles.card,
         ...(isSel ? { outline: "2px solid var(--cp-info)", outlineOffset: -2 } : {}),
-        ...(q.favorite ? { background: "var(--cp-bg-fav)" } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDeleting ? { animation: "exitSlideLeft .18s ease forwards" } : {}),
         ...(offsetX !== 0 ? { transform: `translateX(${offsetX}px)`, transition: "none" } : { transition: "transform .2s ease" }),
@@ -104,8 +95,7 @@ const CardItem = memo(function CardItem({
         // Horizontal swipe-to-action needs pan-y so the browser keeps vertical
         // scroll but yields horizontal movement to @use-gesture (no scroll jitter).
         ...(swipeEnabled ? { touchAction: "pan-y" } : {}),
-        '--card-stripe': stripeColor ? `inset 3px 0 0 ${stripeColor}` : undefined,
-        ...{ boxShadow: [stripeColor ? `inset 3px 0 0 ${stripeColor}` : null, isOverTarget ? `inset 0 2px 0 ${CP_ACCENT}` : null].filter(Boolean).join(", ") || undefined },
+        ...(isOverTarget ? { boxShadow: `inset 0 2px 0 ${CP_ACCENT}` } : {}),
         ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),
       }}
     >
@@ -156,7 +146,7 @@ const CardItem = memo(function CardItem({
               <span style={{ color: "var(--cp-text-faint)" }}>—</span>
               {isInlineEditing && inlineEditField === "source"
                 ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
-                : <><span className={clsx("inline-src", { "save-pulse": isSavedPulse && savedPulseField === "source" })} style={cardStyles.src} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span><Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
+                : <><span className={clsx("inline-src", { "save-pulse": isSavedPulse && savedPulseField === "source" })} style={{ ...cardStyles.src, ...(q.source === UNKNOWN_SOURCE ? styles.srcUnknown : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span>{showConfidence && <ConfidenceTag confidence={q.confidence} />}<Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
               }
             </div>
           </>

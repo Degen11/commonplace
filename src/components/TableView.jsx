@@ -7,11 +7,12 @@ import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import useLongPress from "../hooks/useLongPress";
 import { displayText } from "../utils/export";
-import { getCatColor, UNKNOWN_SOURCE, Z } from "../data/constants";
+import { getCatColor, Z } from "../data/constants";
 import clsx from "clsx";
 import { styles, CLR_EMERALD, CP_ACCENT_40 } from "./styles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
-import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis } from "lucide-react";
+import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis, Plus } from "lucide-react";
+import { splitSource, isUnknownSource } from "../utils/quotes";
 import HighlightText from "./HighlightText";
 import ConfidenceTag from "./ConfidenceTag";
 import { useResultsContext } from "../contexts/ResultsContext";
@@ -169,24 +170,37 @@ const TableRow = memo(function TableRow({
           </div>
         );
       }
-      case "source":
+      case "source": {
+        const unknown = isUnknownSource(q.source);
+        const { primary, secondary } = splitSource(q.source);
+        const startEdit = e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); };
         return (
           <div key="source" className={clsx("src-col", { "save-pulse": isSavedPulse && savedPulseField === "source" })} style={COL_BASE.source}>
             {isInlineEditing && inlineEditField === "source"
-              ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
-              : <>
-                  <span
-                    className="inline-src"
-                    style={{ ...styles.srcText, flex: "0 1 auto", ...(compact ? { fontSize: 11 } : {}), ...(q.source === UNKNOWN_SOURCE ? styles.srcUnknown : {}) }}
-                    title={q.source}
-                    onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "source" }); }}
-                  ><HighlightText text={q.source} term={searchTerm} /></span>
-                  {showConfidence && <ConfidenceTag confidence={q.confidence} />}
-                  <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="var(--cp-text-faint)" />
-                </>
+              ? <div style={{ flex: 1, minWidth: 0 }}><InlineSourceInput initial={unknown ? "" : q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} /></div>
+              : unknown
+                ? <button className="add-src-btn" style={styles.addSrcBtn} onClick={startEdit}>
+                    <Plus size={11} strokeWidth={2.5} aria-hidden="true" /> Add source
+                  </button>
+                : compact
+                  ? <>
+                      <span className="inline-src" style={{ ...styles.srcText, flex: "0 1 auto", fontSize: 11 }} title={q.source} onClick={startEdit}><HighlightText text={q.source} term={searchTerm} /></span>
+                      {showConfidence && <ConfidenceTag confidence={q.confidence} />}
+                    </>
+                  : <>
+                      <span className="inline-src" style={styles.srcStack} title={q.source} onClick={startEdit}>
+                        <span style={styles.srcPrimary}>
+                          <HighlightText text={primary} term={searchTerm} />
+                          {showConfidence && <ConfidenceTag confidence={q.confidence} />}
+                        </span>
+                        {secondary && <span style={styles.srcSecondary}><HighlightText text={secondary} term={searchTerm} /></span>}
+                      </span>
+                      <Pencil className="edit-hint" size={11} strokeWidth={1.5} color="var(--cp-text-faint)" />
+                    </>
             }
           </div>
         );
+      }
       case "category":
         return (
           <div key="category" className={clsx({ "save-pulse": isSavedPulse && savedPulseField === "category" })} style={{ ...COL_BASE.category, gap: 6, overflow: "visible", position: "relative" }}>
@@ -395,6 +409,7 @@ const TableView = memo(function TableView({
   return (
     <div
       ref={outerRef}
+      className={clsx({ "has-sel": selected.size > 0 })}
       style={
         isMobile
           ? // overflowY must be "hidden" (not the default "visible", which CSS
@@ -407,9 +422,9 @@ const TableView = memo(function TableView({
     >
     <div style={isMobile ? { minWidth: 560 } : undefined}>
       {filtered.length > 0 && (
-        <div style={{ ...styles.tHead, ...(isMobile ? { position: "static" } : { top: toolbarHeight }) }}>
+        <div className="thead-row" style={{ ...styles.tHead, ...(isMobile ? { position: "static" } : { top: toolbarHeight }) }}>
           <div style={{ width: 20, flexShrink: 0 }} />
-          <div className="ui-tip ui-tip-below" data-tip="Select all" style={{ ...styles.chkW, ...(allSelected ? { opacity: 1 } : {}) }}>
+          <div className="thead-chk ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
             <div
               className="checkbox-visual"
               style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}

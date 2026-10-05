@@ -153,27 +153,34 @@ describe("InputPhase process button", () => {
 });
 
 describe("InputPhase examples button", () => {
-  it("shows 'Try examples' when input is empty in paste tab", () => {
+  it("shows 'Try sample quotes' when input is empty in paste tab", () => {
     render(<InputPhase {...makeProps({ rawInput: "", inputTab: "paste" })} />);
-    expect(screen.getByRole("button", { name: /Try examples/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Try sample quotes/i })).toBeDefined();
   });
 
-  it("hides 'Try examples' when input has content", () => {
+  it("hides 'Try sample quotes' when input has content", () => {
     render(<InputPhase {...makeProps({ rawInput: "something" })} />);
-    const btn = screen.queryByRole("button", { name: /Try examples/i });
+    const btn = screen.queryByRole("button", { name: /Try sample quotes/i });
     expect(btn).toBeNull();
   });
 
   it("calls setRawInput with example quotes when clicked", () => {
     const setRawInput = vi.fn();
     render(<InputPhase {...makeProps({ rawInput: "", setRawInput })} />);
-    const btn = screen.getByRole("button", { name: /Try examples/i });
+    const btn = screen.getByRole("button", { name: /Try sample quotes/i });
     fireEvent.click(btn);
     expect(setRawInput).toHaveBeenCalledOnce();
     // Should set a non-empty string of example quotes
     const arg = setRawInput.mock.calls[0][0];
     expect(typeof arg).toBe("string");
     expect(arg.length).toBeGreaterThan(0);
+  });
+
+  it("switches to the import tab from the empty-state import shortcut", () => {
+    const setInputTab = vi.fn();
+    render(<InputPhase {...makeProps({ rawInput: "", inputTab: "paste", setInputTab })} />);
+    fireEvent.click(screen.getByRole("button", { name: /Import from Kindle/i }));
+    expect(setInputTab).toHaveBeenCalledWith("import");
   });
 });
 

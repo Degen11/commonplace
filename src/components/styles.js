@@ -221,19 +221,28 @@ export const baseCSS = `
   .qrow{cursor:default;transition:background 0.1s ease}
   @media(hover:hover){
     .qrow:hover{background:var(--cp-bg-hover) !important}
-    .qrow:hover .checkbox-visual{opacity:1 !important}
   }
 
-  /* Drag handle — faintly visible at rest (matches cardStyles.acts' 0.3
-     resting opacity), sharpens on row hover so it's discoverable without
-     already knowing to hover, not just revealed by it */
-  .drag-handle{opacity:0.35;transition:opacity .12s;cursor:grab;color:var(--cp-text-faint);display:flex;align-items:center}
+  /* Row chrome (drag handle, checkbox, overflow) stays out of the way so the
+     quote leads: hidden at rest on hover devices, shown on row hover or focus,
+     and every checkbox shows once anything is selected. Touch devices keep it
+     all visible since there's no hover to reveal it. */
+  .drag-handle{transition:opacity .12s;cursor:grab;color:var(--cp-text-faint);display:flex;align-items:center}
   .drag-handle:active{cursor:grabbing}
   @media(hover:hover){
+    .qrow .drag-handle,.qrow .checkbox,.qrow .overflow-btn,.thead-chk{opacity:0}
     .qrow:hover .drag-handle{opacity:0.7}
     .qrow:hover .drag-handle:hover{opacity:1}
+    .qrow:hover .checkbox,.qrow:hover .overflow-btn,.thead-row:hover .thead-chk{opacity:1}
   }
-  .qrow:focus-within .drag-handle,.drag-handle:focus-visible{opacity:1}
+  .qrow:focus-within .drag-handle,.drag-handle:focus-visible,.qrow:focus-within .checkbox,.thead-chk:focus-within{opacity:1}
+  .has-sel .qrow .checkbox,.has-sel .thead-chk,.qrow .overflow-btn[data-popup-open]{opacity:1}
+  /* Mobile cards select by long-press, so checkboxes only appear in selection mode */
+  .cards-mobile .card-chk{display:none !important}
+  .cards-mobile.has-sel .card-chk{display:flex !important}
+  @media(hover:hover){
+    .add-src-btn:hover{background:var(--cp-info-bg) !important}
+  }
 
   /* Inline edit affordances */
   .inline-src{cursor:text !important;transition:color .12s}
@@ -507,6 +516,8 @@ export const baseCSS = `
     .hp-hero-headline{font-size:38px !important;letter-spacing:-1.5px !important}
     .hp-hero-sub{max-width:none !important;font-size:17px !important}
     .hp-mini-demo{text-align:left !important}
+    .hp-hero-preview{display:none !important}
+    .hp-hero-trust{justify-content:center}
     .hp-features-split{grid-template-columns:1fr !important}
     .hp-how-split{grid-template-columns:1fr !important;text-align:center;gap:32px !important}
     .hp-section{padding:60px 32px !important}
@@ -536,9 +547,9 @@ export const baseCSS = `
      redundant detail at this width (entry count stays). */
   @media(max-width:640px){
     .input-footer{flex-direction:column;align-items:stretch}
-    .input-footer-wordcount,.input-tab-hint{display:none}
+    .input-footer-wordcount{display:none}
     .input-footer-actions{flex-direction:column;align-items:stretch;width:100%}
-    .input-footer-actions .try-btn,.input-footer-actions .proc-btn{width:100%;justify-content:center}
+    .input-footer-actions .proc-btn{width:100%;justify-content:center}
   }
 
   /* Dark mode — element-level overrides */
@@ -731,7 +742,6 @@ export const styles = {
   tabRow:{display:"flex",alignItems:"center",gap:22,padding:"0 20px",borderBottom:"1px solid var(--cp-border-light)"},
   tabBtn:{display:"inline-flex",alignItems:"center",gap:7,padding:"14px 0 12px",marginBottom:-1,border:"none",borderBottom:"2px solid transparent",borderRadius:0,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",background:"transparent",color:"var(--cp-text-muted)",transition:"color .15s, border-color .15s"},
   tabBtnActive:{color:"var(--cp-text)",borderBottomColor:"var(--cp-text)"},
-  tabHint:{marginLeft:"auto",fontSize:12,color:"var(--cp-text-faint)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",minWidth:0},
   importPane:{padding:20},
 
   // Drop zone
@@ -747,8 +757,9 @@ export const styles = {
   inputFooterRow:{display:"flex",alignItems:"center",flexWrap:"wrap",gap:"6px 14px"},
   inputFooterSep:{width:1,height:14,background:"var(--cp-border)"},
   processBtn:{padding:"10px 24px",border:"none",borderRadius:4,background:CP_ACCENT,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
-  processBtnIdle:{background:"var(--cp-bg-tab)",color:"var(--cp-text-muted)",cursor:"default"},
-  tryBtn:{padding:"8px 12px",border:"1px solid transparent",borderRadius:4,background:"transparent",color:"var(--cp-text-secondary)",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
+  processBtnIdle:{opacity:0.5,cursor:"default"},
+  pasteShortcuts:{position:"absolute",left:20,right:20,bottom:18,display:"flex",flexWrap:"wrap",gap:8},
+  pasteShortcutBtn:{display:"inline-flex",alignItems:"center",gap:7,padding:"8px 12px",border:"1px solid var(--cp-border)",borderRadius:4,background:"var(--cp-bg)",color:"var(--cp-text-secondary)",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
 
   // Restore session banner
   restoreBanner:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"rgba(60,87,117,0.06)",border:"1px solid rgba(60,87,117,0.14)",borderRadius:6,marginBottom:20,fontSize:13,color:CP_ACCENT_TEXT,animation:"slideD .25s ease",flexWrap:"wrap",gap:8,width:"100%",maxWidth:800},
@@ -826,6 +837,12 @@ export const styles = {
   collectionTitle:{margin:0,fontSize:30,lineHeight:1.15,fontWeight:700,letterSpacing:"-0.03em",color:"var(--cp-text)",overflowWrap:"anywhere"},
   collectionMeta:{fontSize:14,color:"var(--cp-text-muted)",fontVariantNumeric:"tabular-nums",letterSpacing:"0.01em"},
   hdrGhostBtn:{...btnSm,padding:"6px 8px",border:"1px solid transparent",background:"transparent",color:"var(--cp-text-muted)"},
+  // Mobile header: 44px icon-only buttons
+  hdrIconBtn:{...btnSm,width:44,height:44,padding:0,display:"inline-flex",alignItems:"center",justifyContent:"center",border:"none",background:"transparent",color:"var(--cp-text-secondary)"},
+  // Mobile: collection title doubles as the collection switcher
+  collectionSwitch:{display:"inline-flex",alignItems:"center",gap:6,padding:0,border:"none",background:"none",cursor:"pointer",fontFamily:"inherit",textAlign:"left",color:"var(--cp-text)"},
+  // Mobile: thumb-reach "Add quotes" button, bottom right
+  addFab:{position:"fixed",right:"calc(16px + env(safe-area-inset-right))",bottom:"calc(20px + env(safe-area-inset-bottom))",height:52,padding:"0 22px 0 18px",border:"none",borderRadius:999,background:CP_ACCENT,color:"#fff",fontSize:15,fontWeight:500,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:8,boxShadow:"0 6px 20px rgba(30,42,56,0.28)",cursor:"pointer",zIndex:Z.OVERLAY},
   title:{color:"var(--cp-text-secondary)"},
   sub:{fontSize:13,color:"var(--cp-text-muted)",marginTop:6,letterSpacing:"0.01em"},
   hdrBtn:btnSm,
@@ -938,18 +955,22 @@ export const styles = {
   },
   row:{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .1s ease, opacity .15s",minHeight:48,background:"var(--cp-bg-card)"},
   rowCompact:{display:"flex",alignItems:"center",padding:"5px 0",borderBottom:"1px solid var(--cp-border)",transition:"background .12s ease, opacity .15s",minHeight:34,background:"var(--cp-bg-card)"},
-  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"flex-start",opacity:0.35,transition:"opacity .15s"},
+  chkW:{width:32,display:"flex",alignItems:"center",justifyContent:"flex-start",transition:"opacity .15s"},
   check:{width:16,height:16,borderRadius:4,border:"1.5px solid var(--cp-border-dim)",borderColor:"var(--cp-border-dim)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"background .12s, border-color .12s",flexShrink:0,outline:"none"},
   checkOn:{background:"var(--cp-accent)",borderColor:"var(--cp-accent)"},
-  entryText:{fontSize:14,lineHeight:1.65,color:"var(--cp-text-secondary)",whiteSpace:"pre-wrap",cursor:"text"},
+  entryText:{fontSize:15,lineHeight:1.6,color:"var(--cp-text)",whiteSpace:"pre-wrap",cursor:"text"},
   entryTextCompact:{fontSize:13,lineHeight:1.35,color:"var(--cp-text-secondary)",whiteSpace:"pre-wrap",cursor:"text"},
   // #8 srcCol flex instead of fixed width
   srcCol:{minWidth:100,maxWidth:220,flex:"0 1 220px",display:"flex",alignItems:"center",paddingLeft:10,paddingRight:12},
   srcText:{fontSize:12,color:"var(--cp-text-muted)",wordWrap:"break-word",whiteSpace:"normal",lineHeight:1.4,flex:1,wordBreak:"break-word"},
   tag:{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:4,letterSpacing:"0.02em",whiteSpace:"nowrap"},
-  confTag:{fontSize:10,fontWeight:500,padding:"1px 6px",borderRadius:4,letterSpacing:"0.02em",whiteSpace:"nowrap",flexShrink:0,lineHeight:1.5},
-  confTagMedium:{color:"var(--cp-warning-text)",background:"var(--cp-warning-bg)"},
-  confTagLow:{color:"var(--cp-danger)",background:"var(--cp-danger-bg)"},
+  confTag:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:400,color:"var(--cp-text-muted)",letterSpacing:"0.01em",whiteSpace:"nowrap",flexShrink:0,lineHeight:1.5},
+  confDot:{width:6,height:6,borderRadius:"50%",flexShrink:0},
+  // Two-line source: primary (author or title) over secondary (work or speaker)
+  srcStack:{display:"flex",flexDirection:"column",gap:1,minWidth:0,flex:"0 1 auto"},
+  srcPrimary:{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap",fontSize:13,fontWeight:500,color:"var(--cp-text-secondary)",lineHeight:1.4},
+  srcSecondary:{fontSize:12,color:"var(--cp-text-muted)",lineHeight:1.4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},
+  addSrcBtn:{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 9px",border:"1px dashed var(--cp-info-border)",borderRadius:4,background:"none",color:"var(--cp-info)",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",transition:"background .12s"},
   srcUnknown:{color:"var(--cp-text-faint)",fontStyle:"italic"},
   favMark:{display:"inline-block",verticalAlign:"-1px",marginLeft:6,color:"var(--cp-fav-accent)"},
   rowAct:{flex:"0 0 36px",display:"flex",justifyContent:"flex-end",alignItems:"center",position:"relative"},
@@ -993,9 +1014,9 @@ export const styles = {
 
 export const cardStyles = {
   card:{background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,padding:16,transition:"border-color .15s, box-shadow .15s",cursor:"grab"},
-  top:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10},
+  foot:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:12},
   acts:{display:"flex",gap:2,opacity:0.3,transition:"opacity .15s"},
-  txt:{fontSize:14,lineHeight:1.6,color:"var(--cp-text-secondary)",marginBottom:10,whiteSpace:"pre-wrap"},
-  srcRow:{display:"flex",alignItems:"center",gap:6},
-  src:{fontSize:12,color:"var(--cp-text-muted)"},
+  txt:{fontSize:15,lineHeight:1.55,color:"var(--cp-text)",marginBottom:10,whiteSpace:"pre-wrap"},
+  txtMobile:{fontSize:17,lineHeight:1.5,letterSpacing:"-0.005em"},
+  srcRow:{display:"flex",alignItems:"center",gap:6,minWidth:0},
 };

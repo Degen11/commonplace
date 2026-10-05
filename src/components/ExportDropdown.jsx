@@ -50,6 +50,7 @@ export default function ExportDropdown({
   quotes, filtered, selected, hasActiveFilters,
   showToast, open, onOpenChange, collections,
   triggerStyle, triggerClassName, triggerTip,
+  triggerContent, triggerLabel,
 }) {
   const [publishing, setPublishing] = useState(false);
 
@@ -119,9 +120,10 @@ export default function ExportDropdown({
       <Menu.Trigger
         className={triggerClassName}
         {...(triggerTip ? { "data-tip": triggerTip } : {})}
+        {...(triggerLabel ? { "aria-label": triggerLabel } : {})}
         style={triggerStyle}
       >
-        Export &darr;
+        {triggerContent ?? <>Export &darr;</>}
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>

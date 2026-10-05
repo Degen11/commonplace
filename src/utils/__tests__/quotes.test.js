@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { makeQuote, findDuplicateGroups } from "../quotes";
+import { makeQuote, findDuplicateGroups, splitSource, isUnknownSource } from "../quotes";
 
 describe("makeQuote", () => {
   it("creates a quote with all fields", () => {
@@ -79,5 +79,49 @@ describe("findDuplicateGroups", () => {
     if (groups.length >= 2) {
       expect(groups[0].maxScore).toBeGreaterThanOrEqual(groups[1].maxScore);
     }
+  });
+});
+
+describe("splitSource", () => {
+  it("splits author and work at a comma", () => {
+    expect(splitSource("J.R.R. Tolkien, The Fellowship of the Ring")).toEqual({ primary: "J.R.R. Tolkien", secondary: "The Fellowship of the Ring" });
+  });
+
+  it("splits at a spaced hyphen or dash", () => {
+    expect(splitSource("Cosmos (1980) - Carl Sagan")).toEqual({ primary: "Cosmos (1980)", secondary: "Carl Sagan" });
+    expect(splitSource("Friedrich Nietzsche \u2014 Twilight of the Idols")).toEqual({ primary: "Friedrich Nietzsche", secondary: "Twilight of the Idols" });
+  });
+
+  it("splits only once", () => {
+    expect(splitSource("A, B, C")).toEqual({ primary: "A", secondary: "B, C" });
+  });
+
+  it("keeps single sources whole", () => {
+    expect(splitSource("Socrates")).toEqual({ primary: "Socrates", secondary: "" });
+    expect(splitSource("Jean-Paul Sartre")).toEqual({ primary: "Jean-Paul Sartre", secondary: "" });
+  });
+
+  it("does not split inside parentheses", () => {
+    const s = "Attributed to various sources (popularized in self-help, literature)";
+    expect(splitSource(s)).toEqual({ primary: s, secondary: "" });
+  });
+
+  it("keeps name suffixes with the name", () => {
+    expect(splitSource("Martin Luther King, Jr.")).toEqual({ primary: "Martin Luther King, Jr.", secondary: "" });
+    expect(splitSource("Martin Luther King, Jr., I Have a Dream")).toEqual({ primary: "Martin Luther King, Jr.", secondary: "I Have a Dream" });
+  });
+
+  it("handles empty input", () => {
+    expect(splitSource("")).toEqual({ primary: "", secondary: "" });
+    expect(splitSource(undefined)).toEqual({ primary: "", secondary: "" });
+  });
+});
+
+describe("isUnknownSource", () => {
+  it("treats the unknown marker and blanks as unknown", () => {
+    expect(isUnknownSource("Unknown source")).toBe(true);
+    expect(isUnknownSource("")).toBe(true);
+    expect(isUnknownSource("   ")).toBe(true);
+    expect(isUnknownSource("Socrates")).toBe(false);
   });
 });

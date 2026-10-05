@@ -59,8 +59,8 @@ describe("ConfidenceTag", () => {
 
   it("labels medium and low matches", () => {
     const { rerender } = render(<ConfidenceTag confidence="medium" />);
-    expect(screen.getByText("Check")).toBeTruthy();
+    expect(screen.getByText("unverified")).toBeTruthy();
     rerender(<ConfidenceTag confidence="low" />);
-    expect(screen.getByText("Low")).toBeTruthy();
+    expect(screen.getByText("needs review")).toBeTruthy();
   });
 });

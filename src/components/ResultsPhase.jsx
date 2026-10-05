@@ -46,7 +46,8 @@ import DeviceLinkModal from "./DeviceLinkModal";
 import ScrollTopButton from "./ScrollTopButton";
 import { styles } from "./styles";
 
-import { CircleQuestionMark, Library } from "lucide-react";
+import { CircleQuestionMark, Download, Plus } from "lucide-react";
+import clsx from "clsx";
 
 const CARD_HEIGHT_ESTIMATE = 160;
 const CARD_VIRTUALIZER_OVERSCAN = 8;
@@ -117,7 +118,7 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
     : 0;
 
   return (
-    <div ref={outerRef} style={{ paddingTop: 8 }}>
+    <div ref={outerRef} className={clsx("cards-mobile", { "has-sel": selected.size > 0 })} style={{ paddingTop: 8 }}>
       <div ref={listRef}>
       {topPad > 0 && <div style={{ height: topPad }} />}
       {virtualItems.map(virtualRow => {
@@ -630,7 +631,7 @@ export default function ResultsPhase({
     showToast(`Exported ${pluralize(colQuotes.length, "quote")} from "${col.name}" as CSV`, null, null, "success");
   };
 
-  const makeExportDropdown = (triggerStyle, triggerClassName, triggerTip) => (
+  const makeExportDropdown = (triggerStyle, triggerClassName, triggerTip, triggerContent, triggerLabel) => (
     <ExportDropdown
       quotes={quotes}
       filtered={collectionFiltered}
@@ -643,6 +644,8 @@ export default function ResultsPhase({
       triggerStyle={triggerStyle}
       triggerClassName={triggerClassName}
       triggerTip={triggerTip}
+      triggerContent={triggerContent}
+      triggerLabel={triggerLabel}
     />
   );
 
@@ -745,7 +748,10 @@ export default function ResultsPhase({
               setConfirmClear={setConfirmClear}
               addMoreRef={addMoreRef}
               headerRef={headerRef}
-              exportDropdownContent={makeExportDropdown(styles.exportBtn, "ui-tip ui-tip-below hdr-btn", "Export or share your collection")}
+              exportDropdownContent={isMobile
+                ? makeExportDropdown(styles.hdrIconBtn, "hdr-btn", undefined, <Download size={19} strokeWidth={1.75} />, "Export or share your collection")
+                : makeExportDropdown(styles.exportBtn, "ui-tip ui-tip-below hdr-btn", "Export or share your collection")}
+              onOpenCollections={() => setShowMobileCollections(true)}
               syncStatus={syncStatus}
               lastSynced={lastSynced}
               onManualSync={manualPush}
@@ -1159,35 +1165,14 @@ export default function ResultsPhase({
           )}
           {/* Scroll-to-top — fades in past ~600px (bottom-left to clear right-side controls) */}
           <ScrollTopButton isMobile={isMobile} bottomOffset={showBulkBar ? 72 : 20} />
-          {/* Mobile collections FAB */}
-          {isMobile && (
+          {/* Mobile "Add quotes" button — thumb reach; steps aside for the bulk bar and the open add panel */}
+          {isMobile && !showBulkBar && !showAddMore && (
           <button
-            className="mobile-fab"
-            aria-label="Browse collections"
-            onClick={() => setShowMobileCollections(true)}
-            style={{
-              position: "fixed",
-              // env() folds in the home-bar inset; kept inline (not a stylesheet
-              // !important rule) so the bulk-bar offset can still win.
-              bottom: `calc(${showBulkBar ? 72 : 20}px + env(safe-area-inset-bottom))`,
-              right: "calc(16px + env(safe-area-inset-right))",
-              width: 44, height: 44, borderRadius: "50%",
-              border: "1px solid var(--cp-border)", background: "var(--cp-bg-card)",
-              boxShadow: "var(--cp-shadow-md)", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: activeCollectionId ? "var(--cp-accent)" : "var(--cp-text-muted)",
-              zIndex: Z.OVERLAY,
-              transition: "bottom .2s ease",
-            }}
+            className="mobile-fab hov-accent-solid"
+            onClick={() => { setShowAddMore(true); setTimeout(() => addMoreRef.current?.focus(), 100); }}
+            style={styles.addFab}
           >
-            <Library size={18} strokeWidth={1.5} />
-            {activeCollectionId && (
-              <span style={{
-                position: "absolute", top: -2, right: -2,
-                width: 8, height: 8, borderRadius: "50%",
-                background: "var(--cp-accent)",
-              }} />
-            )}
+            <Plus size={18} strokeWidth={2.25} aria-hidden="true" /> Add quotes
           </button>
           )}
           <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }} modifiers={[anchorToCursor]}>

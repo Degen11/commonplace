@@ -7,11 +7,11 @@ import MobileSheet from "./MobileSheet";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
 import { FavBtn, OverflowMenu } from "./QuoteActions";
 import { displayText } from "../utils/export";
-import { UNKNOWN_SOURCE } from "../data/constants";
+import { splitSource, isUnknownSource } from "../utils/quotes";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import clsx from "clsx";
 import { styles, cardStyles, CP_ACCENT } from "./styles";
-import { Pencil, ChevronDown, Trash2, Heart, Check } from "lucide-react";
+import { Pencil, ChevronDown, Trash2, Heart, Check, Plus } from "lucide-react";
 import HighlightText from "./HighlightText";
 import ConfidenceTag from "./ConfidenceTag";
 
@@ -50,6 +50,10 @@ const CardItem = memo(function CardItem({
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const unknown = isUnknownSource(q.source);
+  const { primary, secondary } = splitSource(q.source);
+  const startSourceEdit = e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); };
   const [expanded, setExpanded] = useState(false);
 
   // Swipe visual hints
@@ -99,38 +103,6 @@ const CardItem = memo(function CardItem({
         ...(isOverTarget ? { transition: "box-shadow .15s ease" } : {}),
       }}
     >
-      <div style={cardStyles.top}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            className="check-div"
-            style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: isMobile ? 22 : 15, height: isMobile ? 22 : 15, borderRadius: isMobile ? 4 : 3 }}
-            role="checkbox"
-            aria-checked={isSel}
-            aria-label="Select quote"
-            tabIndex={0}
-            onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
-            onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
-            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggleSel(q.id, e.shiftKey); } }}
-          >
-            {isSel && <Check size={isMobile ? 14 : 10} strokeWidth={3} color="#fff" />}
-          </div>
-          <div style={{ position: "relative" }}>
-            <span className={clsx("inline-cat", { "save-pulse": isSavedPulse && savedPulseField === "category" })} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, ...(isMobile ? { padding: "4px 10px", fontSize: 12 } : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
-            {isInlineEditing && inlineEditField === "category" && (
-              <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
-            )}
-          </div>
-        </div>
-        <div className="ca" style={{ ...cardStyles.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
-          <FavBtn q={q} onFav={actionProps.onFav} />
-          <OverflowMenu
-            q={q}
-            actionProps={actionProps}
-            isOpen={menuOpen}
-            onToggle={() => setMenuOpen(prev => !prev)}
-          />
-        </div>
-      </div>
       {isEd && !isMobile
         ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} inCard isMobile={false} />
         : isEd && isMobile
@@ -139,19 +111,66 @@ const CardItem = memo(function CardItem({
           </MobileSheet>
         : (
           <>
-            <p style={{ ...cardStyles.txt, cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>
+            {/* The quote leads; source sits under it, then category and actions */}
+            <p style={{ ...cardStyles.txt, ...(isMobile ? cardStyles.txtMobile : {}), cursor: "text" }} onClick={() => { if (!isEd) startEditing(q.id); }}>
               {(() => { const full = displayText(q); const truncatable = full.length > QUOTE_TRUNCATE_CHARS; const shown = truncatable && !expanded ? full.slice(0, QUOTE_TRUNCATE_CHARS).replace(/\s+\S*$/, "") + "\u2026" : full; return (<><HighlightText text={shown} term={searchTerm} />{truncatable && (<button onClick={e => { e.stopPropagation(); setExpanded(v => !v); }} style={{ background: "none", border: "none", color: "var(--cp-text-muted)", cursor: "pointer", fontSize: 12, fontFamily: "inherit", padding: "0 4px", marginLeft: 4, opacity: 0.7 }}>{expanded ? "less" : "more"}</button>)}</>); })()}
             </p>
-            <div style={cardStyles.srcRow}>
-              <span style={{ color: "var(--cp-text-faint)" }}>—</span>
+            <div className={clsx({ "save-pulse": isSavedPulse && savedPulseField === "source" })} style={cardStyles.srcRow}>
               {isInlineEditing && inlineEditField === "source"
-                ? <InlineSourceInput initial={q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
-                : <><span className={clsx("inline-src", { "save-pulse": isSavedPulse && savedPulseField === "source" })} style={{ ...cardStyles.src, ...(q.source === UNKNOWN_SOURCE ? styles.srcUnknown : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) startInlineEdit(q.id, "source"); }}><HighlightText text={q.source} term={searchTerm} /></span>{showConfidence && <ConfidenceTag confidence={q.confidence} />}<Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" /></>
+                ? <InlineSourceInput initial={unknown ? "" : q.source} onSave={val => saveInlineField(q.id, "source", val)} onCancel={() => setInlineEdit(null)} showHint={false} />
+                : unknown
+                  ? <button className="add-src-btn" style={styles.addSrcBtn} onClick={startSourceEdit}>
+                      <Plus size={11} strokeWidth={2.5} aria-hidden="true" /> Add source
+                    </button>
+                  : <>
+                      <span className="inline-src" style={styles.srcStack} onClick={startSourceEdit}>
+                        <span style={styles.srcPrimary}>
+                          <HighlightText text={primary} term={searchTerm} />
+                          {showConfidence && <ConfidenceTag confidence={q.confidence} />}
+                        </span>
+                        {secondary && <span style={styles.srcSecondary}><HighlightText text={secondary} term={searchTerm} /></span>}
+                      </span>
+                      <Pencil className="edit-hint" size={10} strokeWidth={1.5} color="var(--cp-text-faint)" />
+                    </>
               }
             </div>
           </>
         )
       }
+      {!(isEd && !isMobile) && (
+        <div style={cardStyles.foot}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <div
+              className="check-div card-chk"
+              style={{ ...styles.check, ...(isSel ? styles.checkOn : {}), width: isMobile ? 22 : 15, height: isMobile ? 22 : 15, borderRadius: isMobile ? 4 : 3 }}
+              role="checkbox"
+              aria-checked={isSel}
+              aria-label="Select quote"
+              tabIndex={0}
+              onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
+              onClick={(e) => { e.currentTarget.blur(); toggleSel(q.id, e.shiftKey); }}
+              onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggleSel(q.id, e.shiftKey); } }}
+            >
+              {isSel && <Check size={isMobile ? 14 : 10} strokeWidth={3} color="#fff" />}
+            </div>
+            <div style={{ position: "relative" }}>
+              <span className={clsx("inline-cat", { "save-pulse": isSavedPulse && savedPulseField === "category" })} style={{ ...styles.tag, background: col.bg, color: col.text, display: "inline-flex", alignItems: "center", gap: 2, ...(isMobile ? { padding: "4px 10px", fontSize: 12 } : {}) }} onClick={e => { e.stopPropagation(); if (!isEd) setInlineEdit({ id: q.id, field: "category" }); }} title="Click to change category">{q.category}<ChevronDown className="edit-hint" size={10} strokeWidth={2} color="currentColor" /></span>
+              {isInlineEditing && inlineEditField === "category" && (
+                <InlineCategorySelect current={q.category} allCats={allCats} customCats={customCats} onSave={val => saveInlineField(q.id, "category", val)} onCancel={() => setInlineEdit(null)} />
+              )}
+            </div>
+          </div>
+          <div className="ca" style={{ ...cardStyles.acts, ...(isMobile ? { opacity: 1 } : {}) }}>
+            <FavBtn q={q} onFav={actionProps.onFav} />
+            <OverflowMenu
+              q={q}
+              actionProps={actionProps}
+              isOpen={menuOpen}
+              onToggle={() => setMenuOpen(prev => !prev)}
+            />
+          </div>
+        </div>
+      )}
     </div>
     </div>
   );

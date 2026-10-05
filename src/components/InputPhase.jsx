@@ -14,7 +14,7 @@ import {
   Pencil, Upload, FolderOpen, FileText,
   TriangleAlert, CircleCheckBig, ArrowRight, ChevronDown,
   Download, RefreshCw, Search, Tag, Folder,
-  Loader, Lock,
+  Loader, Lock, Check, ArrowDown, Sparkles,
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
 import { ThemeToggleButton } from "./ThemeToggleButton";
@@ -188,7 +188,29 @@ export default function InputPhase({
             Paste messy quotes, phrases, and fragments.
             We organize everything and identify the sources.
           </p>
-          <p style={HP.heroTrust}>No signup · No account · Stays in your browser · Free</p>
+          <ul className="hp-hero-trust" style={HP.heroTrust}>
+            {["No signup", "Stays in your browser", "Free"].map(t => (
+              <li key={t} style={HP.heroTrustItem}>
+                <Check size={13} strokeWidth={2.25} aria-hidden="true" style={{ color: "var(--cp-accent)" }} /> {t}
+              </li>
+            ))}
+          </ul>
+
+          {/* What you get — a messy line and the quote it turns into */}
+          <div className="hp-hero-preview" style={HP.heroPreview} aria-hidden="true">
+            <span style={HP.heroPreviewRaw}>not all who wander are lost - tolkien</span>
+            <span style={HP.heroPreviewArrow}>
+              <ArrowDown size={13} strokeWidth={2} /> becomes
+            </span>
+            <div style={HP.heroPreviewCard}>
+              <span style={HP.heroPreviewQuote}>&ldquo;Not all those who wander are lost.&rdquo;</span>
+              <span style={HP.heroPreviewMeta}>
+                <span style={{ fontWeight: 500, color: "var(--cp-text-secondary)" }}>J.R.R. Tolkien</span>
+                <span style={{ color: "var(--cp-text-muted)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The Fellowship of the Ring</span>
+                <span style={{ ...styles.tag, background: getCatColor("Book", []).bg, color: getCatColor("Book", []).text }}>Book</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Right column — input card */}
@@ -222,33 +244,43 @@ export default function InputPhase({
               >
                 <Upload size={14} strokeWidth={1.5} /> Import file
               </button>
-              <span className="input-tab-hint" style={styles.tabHint}>Kindle, Readwise, CSV, Markdown</span>
             </div>
 
             {inputTab === "paste" && (
-              <textarea
-                className="paste-area"
-                style={{
-                  ...styles.bigTextarea,
-                  ...(isDragOver ? { boxShadow: `inset 0 0 0 2px ${CP_ACCENT}`, background: "var(--cp-bg-selected)" } : {}),
-                }}
-                value={rawInput}
-                onChange={(e) => setRawInput(e.target.value)}
-                onKeyDown={e => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && rawInput.trim() && !isProcessing) {
-                    e.preventDefault();
-                    onProcess();
-                    return;
-                  }
-                  handleRichTextShortcut(e, rawInput, setRawInput);
-                }}
-                aria-label="Paste your quotes"
-                {...pasteDropHandlers}
-                placeholder={
-                  "Paste everything here, one per line. Messy is fine.\n\nYou can\u2019t handle the truth\nThe world breaks everyone \u2014 Hemingway\n\u201CBe the change\u201D (Gandhi)\nTo infinity and beyond\nNot all those who wander are lost \u2014 Tolkien"
-                }
-                rows={8}
-              />
+              <div style={{ position: "relative" }}>
+                <textarea
+                  className="paste-area"
+                  style={{
+                    ...styles.bigTextarea,
+                    ...(isDragOver ? { boxShadow: `inset 0 0 0 2px ${CP_ACCENT}`, background: "var(--cp-bg-selected)" } : {}),
+                  }}
+                  value={rawInput}
+                  onChange={(e) => setRawInput(e.target.value)}
+                  onKeyDown={e => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && rawInput.trim() && !isProcessing) {
+                      e.preventDefault();
+                      onProcess();
+                      return;
+                    }
+                    handleRichTextShortcut(e, rawInput, setRawInput);
+                  }}
+                  aria-label="Paste your quotes"
+                  {...pasteDropHandlers}
+                  placeholder={"Paste quotes here, one per line. Messy is fine, we\u2019ll clean it up."}
+                  rows={8}
+                />
+                {/* Empty-state shortcuts, sitting where the eye already is */}
+                {!rawInput.trim() && !isDragOver && (
+                  <div className="paste-shortcuts" style={styles.pasteShortcuts}>
+                    <button className="try-btn" style={styles.pasteShortcutBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
+                      <Sparkles size={13} strokeWidth={2} aria-hidden="true" /> Try sample quotes
+                    </button>
+                    <button className="try-btn" style={styles.pasteShortcutBtn} onClick={() => setInputTab("import")}>
+                      <Upload size={13} strokeWidth={2} aria-hidden="true" /> Import from Kindle, Readwise, CSV&hellip;
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {inputTab === "import" && (
@@ -313,7 +345,7 @@ export default function InputPhase({
                         style={styles.fmtToggleWrap}
                         onClick={() => setFormattingEnabled(!formattingEnabled)}
                       >
-                        <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-text)" : "var(--cp-toggle-off)" }}>
+                        <div style={{ ...styles.fmtToggleTrack, background: formattingEnabled ? "var(--cp-accent)" : "var(--cp-toggle-off)" }}>
                           <div style={{ ...styles.fmtToggleThumb, left: formattingEnabled ? 15 : 2 }} />
                         </div>
                         Clean up formatting
@@ -341,11 +373,6 @@ export default function InputPhase({
                 );
               })()}
               <div className="input-footer-actions" style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
-                {!rawInput.trim() && inputTab === "paste" && (
-                  <button className="try-btn" style={styles.tryBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
-                    Try examples
-                  </button>
-                )}
                 <motion.button
                   layoutId="phase-action"
                   className="proc-btn ui-tip ui-tip-below"

@@ -102,8 +102,8 @@ src/
     UrlImportPanel.jsx         URL import panel — fetch URL, extraction mode selector, preview modal
     ProcessingPhase.jsx        AI identification progress display (ring, per-phase subtitle, elapsed time + ETA on long jobs)
     TableView.jsx              Main table view with inline editing and drag-to-reorder
-    CardItem.jsx               Card view (mobile)
-    HeaderBar.jsx              Results header — logo, toolbar (sync pill, view toggle, export, solid "Add quotes" primary, overflow menu incl. theme), collection title + counts
+    CardItem.jsx               Card view — quote first, then source (split into two lines via `splitSource`), then category + actions; mobile hides checkboxes until selection mode (long-press)
+    HeaderBar.jsx              Results header — logo, toolbar (sync pill, view toggle, export, solid "Add quotes" primary, overflow menu incl. theme), collection title + counts. On mobile: icon-only export/overflow, the title doubles as the collection switcher, and "Add quotes" is a floating button rendered by ResultsPhase
     HeaderControls.jsx         Shared header building blocks (theme/view toggles, overflow-menu items) composed by HeaderBar and MiniHeader
     ThemeToggleButton.jsx      Icon-button theme toggle — split out of HeaderControls so the landing page doesn't load Base UI
     MiniHeader.jsx             Sticky header on scroll
@@ -113,7 +113,7 @@ src/
     CollectionsSidebar.jsx     Collection management sidebar — Collections list (+ / collapse in its header), then a Tools group (Smart group, Find duplicates); quote/source counts live in the results header, not here
     OnboardingModal.jsx        First-run 3-step walkthrough, shown on first arrival at results (not the landing page)
     QuoteActions.jsx           Shared action components (FavBtn, OverflowMenu with pop animation)
-    ConfidenceTag.jsx          Small "Check"/"Low" tag beside a source for medium/low matches (high shows nothing); replaced the old full-height confidence stripes
+    ConfidenceTag.jsx          Quiet dot + word beside a source for medium ("unverified") / low ("needs review") matches (high shows nothing)
     HighlightText.jsx          Search term highlighting in table/card views
     AddMorePanel.jsx           Panel for adding more quotes from results
     AnimatedNumber.jsx         Animated number transitions
@@ -168,7 +168,7 @@ src/
   utils/
     textFormatting.js          smartSplit, normalize, similarity + makeSimilarityKey/similarityFromKeys (keyed dupe detection), basicFormat, proper nouns
     parsers.js                 File parsing — Kindle highlights, Readwise, CSV, JSON, Markdown
-    quotes.js                  makeQuote factory, findDuplicateGroups
+    quotes.js                  makeQuote factory, findDuplicateGroups, splitSource (display-only author/work split), isUnknownSource
     export.js                  Export generators — CSV, JSON, Markdown, plain text, Anki flashcards
     shareImage.js              Generate quote share images via Canvas (2x resolution)
     api.js                     apiRequest (use for all /api calls: headers, timeout, error message), fetchWithTimeout, shared API headers
@@ -181,7 +181,7 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (40 files, 434 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (40 files, 443 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, AttentionNotice, BulkBar, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
@@ -258,7 +258,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (40 test files, 434 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (40 test files, 443 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path

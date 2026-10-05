@@ -89,3 +89,41 @@ export function findDuplicateGroups(quotes, threshold) {
   groups.sort((a, b) => b.maxScore - a.maxScore);
   return groups;
 }
+
+// Name suffixes that follow a comma but belong to the name ("Martin Luther King, Jr.")
+const NAME_SUFFIX = /^(jr|sr|ii|iii|iv|phd|md)\.?([\s,]|$)/i;
+
+/**
+ * Split a source into a primary line and an optional secondary line for display,
+ * e.g. "J.R.R. Tolkien, The Fellowship of the Ring" → ["J.R.R. Tolkien", "The Fellowship of the Ring"]
+ * and "Cosmos (1980) - Carl Sagan" → ["Cosmos (1980)", "Carl Sagan"]. Splits once, at the
+ * first top-level " - ", " — " or ", " (never inside parentheses). Display only: the
+ * stored source string is never changed.
+ *
+ * @param {string} source
+ * @returns {{ primary: string, secondary: string }}
+ */
+export function splitSource(source) {
+  const s = (source || "").trim();
+  let depth = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "(" || ch === "[") depth++;
+    else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+    if (depth > 0) continue;
+    let sepLen = 0;
+    if ((ch === "-" || ch === "—" || ch === "–") && s[i - 1] === " " && s[i + 1] === " ") sepLen = 2;
+    else if (ch === "," && s[i + 1] === " " && !NAME_SUFFIX.test(s.slice(i + 2))) sepLen = 2;
+    if (!sepLen) continue;
+    const start = ch === "," ? i : i - 1;
+    const primary = s.slice(0, start).trim();
+    const secondary = s.slice(i + sepLen).trim();
+    if (primary && secondary) return { primary, secondary };
+  }
+  return { primary: s, secondary: "" };
+}
+
+/** True when a quote has no real attribution yet. */
+export function isUnknownSource(source) {
+  return !source || !source.trim() || source === UNKNOWN_SOURCE;
+}

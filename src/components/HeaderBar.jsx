@@ -11,7 +11,7 @@ import {
   StatsMenuItem, ConfidenceMenuItem, ShortcutsMenuItem, NewBatchMenuItem,
 } from "./HeaderControls";
 
-import { Ellipsis, MenuIcon, Plus } from "lucide-react";
+import { Ellipsis, Plus, ChevronDown } from "lucide-react";
 
 const pillStyles = syncPillStyles.full;
 
@@ -38,6 +38,7 @@ export default function HeaderBar({
   quoteCount,
   sourceCount,
   notice,
+  onOpenCollections,
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -63,25 +64,16 @@ export default function HeaderBar({
           </>
         )}
 
-        {/* Mobile: add button + hamburger */}
-        {isMobile && (
-          <button
-            className="hdr-btn hdr-primary"
-            aria-expanded={showAddMore}
-            style={{ ...styles.addMoreBtn, padding: "7px 14px", fontSize: 13, minHeight: 40, ...addMoreActive }}
-            onClick={toggleAddMore}
-          >
-            <Plus size={15} strokeWidth={2} /> Add
-          </button>
-        )}
+        {/* Mobile: export as an icon (Add lives in a floating button, see ResultsPhase) */}
+        {isMobile && exportDropdownContent}
 
         {/* Overflow / hamburger menu — serves both mobile and desktop */}
         <HeaderOverflowMenu
           open={mobileMenuOpen}
           onOpenChange={setMobileMenuOpen}
           triggerTip="More actions"
-          triggerStyle={isMobile ? { ...styles.statsBtn, padding: "7px 10px" } : styles.hdrGhostBtn}
-          trigger={isMobile ? <MenuIcon size={18} strokeWidth={1.5} /> : <Ellipsis size={16} strokeWidth={1.5} />}
+          triggerStyle={isMobile ? styles.hdrIconBtn : styles.hdrGhostBtn}
+          trigger={<Ellipsis size={isMobile ? 19 : 16} strokeWidth={1.75} />}
         >
           {/* Mobile-only: theme + view grouped here */}
           {isMobile && (
@@ -105,13 +97,18 @@ export default function HeaderBar({
           <OverflowSection>Data</OverflowSection>
           <NewBatchMenuItem setConfirmClear={setConfirmClear} />
         </HeaderOverflowMenu>
-
-        {/* Mobile-only export dropdown (desktop renders it inline in the toolbar above) */}
-        {isMobile && exportDropdownContent}
       </div>
       </div>
       <div style={styles.collectionHead}>
-        <h2 style={styles.collectionTitle}>{collectionTitle}</h2>
+        {isMobile && onOpenCollections
+          ? (
+            <h2 style={styles.collectionTitle}>
+              <button style={{ ...styles.collectionSwitch, font: "inherit", letterSpacing: "inherit" }} onClick={onOpenCollections} aria-label={`${collectionTitle}, switch collection`}>
+                {collectionTitle} <ChevronDown size={20} strokeWidth={2} aria-hidden="true" style={{ color: "var(--cp-text-muted)", flexShrink: 0 }} />
+              </button>
+            </h2>
+          )
+          : <h2 style={styles.collectionTitle}>{collectionTitle}</h2>}
         <span style={styles.collectionMeta}>
           {pluralize(quoteCount, "quote")}
           {sourceCount > 0 && <> · {pluralize(sourceCount, "source")}</>}

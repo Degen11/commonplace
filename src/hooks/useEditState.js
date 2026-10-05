@@ -103,9 +103,11 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   };
 
   const saveInlineField = (id, field, value) => {
+    // A blank source (e.g. Enter in an empty "Add source" field) changes nothing
+    if (field === "source" && !value.trim()) { setInlineEdit(null); return; }
     setQuotes(p => p.map(q => {
       if (q.id !== id) return q;
-      const newVal = field === "source" ? (value.trim() || q.source) : value;
+      const newVal = field === "source" ? value.trim() : value;
       return { ...q, [field]: newVal, confidence: "high", updatedAt: Date.now() };
     }));
     setInlineEdit(null);

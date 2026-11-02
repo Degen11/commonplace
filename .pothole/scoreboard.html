@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pothole scoreboard: commonplace</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #fbfaf7;
+  --panel: #ffffff;
+  --ink: #1c1b19;
+  --ink-soft: #55524d;
+  --rule: #ddd8cf;
+  --bar: #7a6a4f;
+  --bar-track: #ece7dd;
+  --warn-bg: #fdf3d8;
+  --warn-ink: #5a4409;
+  --warn-rule: #d8ae3a;
+  --ok-bg: #e6f4e8;
+  --ok-ink: #1f4d2a;
+  --ok-rule: #6aa878;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181a;
+    --panel: #1f2124;
+    --ink: #f0eee9;
+    --ink-soft: #b3aea5;
+    --rule: #3a3d42;
+    --bar: #c9b184;
+    --bar-track: #2b2e33;
+    --warn-bg: #3a2f11;
+    --warn-ink: #f3dc9b;
+    --warn-rule: #a8862c;
+    --ok-bg: #16301d;
+    --ok-ink: #b6e3c0;
+    --ok-rule: #4c8a5c;
+  }
+}
+body {
+  margin: 0;
+  padding: 2rem 1.25rem 4rem;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+main { max-width: 62rem; margin: 0 auto; }
+h1 { font-size: 1.6rem; margin: 0 0 .35rem; }
+h2 { font-size: 1.15rem; margin: 2.2rem 0 .6rem; border-bottom: 1px solid var(--rule); padding-bottom: .3rem; }
+h3 { font-size: 1rem; margin: 1.4rem 0 .4rem; }
+p { margin: .6rem 0; }
+.sub { color: var(--ink-soft); margin: 0 0 1.2rem; }
+.fine { color: var(--ink-soft); font-size: .85rem; }
+.banner { border: 1px solid var(--warn-rule); border-left-width: .35rem; background: var(--warn-bg); color: var(--warn-ink); padding: .9rem 1.1rem; border-radius: .3rem; }
+.banner.ok { border-color: var(--ok-rule); background: var(--ok-bg); color: var(--ok-ink); }
+.banner ul { margin: .6rem 0 0; padding-left: 1.2rem; }
+.banner li { margin: .2rem 0; }
+details { background: var(--panel); border: 1px solid var(--rule); border-radius: .3rem; padding: .6rem .9rem; margin: 1rem 0; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: .3rem; padding: .9rem 1.1rem; margin: 1rem 0; }
+.card h3 { margin: 0 0 .5rem; }
+.card p { margin: .35rem 0; }
+summary { cursor: default; color: var(--ink-soft); }
+details ul { margin: .6rem 0 .2rem; padding-left: 1.2rem; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; background: var(--panel); font-size: .9rem; }
+caption { text-align: left; color: var(--ink-soft); font-size: .85rem; padding: .3rem 0; }
+th, td { border: 1px solid var(--rule); padding: .35rem .55rem; text-align: left; vertical-align: top; }
+th { background: var(--bar-track); font-weight: 600; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+td.z { color: var(--ink-soft); }
+td.u { background: var(--warn-bg); color: var(--warn-ink); font-weight: 600; }
+.track { background: var(--bar-track); border-radius: .15rem; height: .7rem; min-width: 3rem; }
+.fill { background: var(--bar); height: .7rem; border-radius: .15rem; }
+footer { margin-top: 3rem; border-top: 1px solid var(--rule); padding-top: .8rem; color: var(--ink-soft); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>Pothole scoreboard: commonplace</h1>
+<p class="sub">Verified: 38 confirmed, 13 refuted, 0 not verified — 51 finding(s) across 10 category file(s).</p>
+<div class="banner">
+<p><strong>Every RQI below is an upper bound on quality, not a score.</strong> Unmeasured debt cannot lower an RQI, so a good number here means &ldquo;nothing worse was found&rdquo;, never &ldquo;nothing worse is there&rdquo;. What was not measured:</p>
+<ul>
+<li>at least one finding came from a partial detector run, so its slice is a floor rather than a total</li>
+<li>3 category/ies were only partly measured (dependency, security, test), so their slices are floors rather than totals</li>
+<li>deterministic tools were skipped, so the slices they own are unmeasured</li>
+</ul>
+</div>
+<details>
+<summary>What the register itself said it covered</summary>
+<ul>
+<li><code>Verified: 38 confirmed, 13 refuted, 0 not verified — 51 finding(s) across 10 category file(s).</code></li>
+<li><code>Detector coverage: Detector: detect-api. Coverage: all 9 Vercel endpoints in api/ tabulated (identify, auto-group, lookup, fetch-url, sync GET/POST, share GET/POST, og, share-page) for envelope, error shape, pagination and field naming, plus every in-repo consumer (useProcessing, useSync, QuotesContext, ExportDropdown, AddMorePanel, UrlImportPanel, InputPhase pre-warm). Error bodies are uniform {error: string} via withApiHandler and handlers; no list endpoint paginates (all bounded by schema max). Declared migrations (#p= to /c/, ?device_id= to X-Device-Id on sync GET) were not reported. Dropped as too thin: share GET validates id with a loose Zod schema while og.js and share-page.js use SHARE_ID_RE, and og.js collapses expired to 404 where share.js and share-page.js return 410 (no consumer impact found). No tool covers api debt in this phase (no OpenAPI or spectral linting is wired), so this slice is entirely AI-only. [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-architecture. Coverage: madge ran (JS/TS) and reported 0 cycles, so cycle detection is tool-backed and clean; no load-bearing cycle to argue. Drift checked against the CLAUDE.md declarations and layering rules recorded in the survey (supabase server-only, api imports, apiRequest, copyWithToast, storage helpers, lazy localQuotes/compromise, manual memoization, withApiHandler, QuotesContext value-less, normalize twins, lower-layer back-imports): only the two drift items below survived; useSync useCallback and TableView/CardItem memo carry stated compiler/effect-deps justifications and were not reported. Zombie-path and god-module coverage is AI-only: styles.js, config.js, constants.js, helpers.js are libraries (no feature back-imports), so no god module. Out of category: api/og.js and api/share-page.js validate the id with SHARE_ID_RE instead of a Zod schema from _schemas.js (api); ResultsPhase.jsx size and CardItem/TableView co-change are code god-file/twin territory. [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-build. Coverage: .github/workflows/ci.yml, .github/dependabot.yml, .lighthouserc.json, .npmrc, vercel.json, package.json scripts, vite.config.js build plugins, all four scripts/*.mjs, supabase/migration.sql and the README setup/env/deploy sections read end to end; every process.env read in src/, api/, scripts/ and vite.config.js (ANTHROPIC_API_KEY, SUPABASE_SECRET_KEY, AI_DAILY_LIMIT) cross-checked against the only env sample (README.md env block; no .env.example exists). Commit subjects grepped for retry/re-run/flaky/again: no CI retry loops or retry bumps exist (the again hits are UI commits). No tool in this phase reads build inputs, so build coverage is AI-only. Out of category: (dependency) .npmrc sets legacy-peer-deps=true with no comment, added in 5b2f20c (Vite 7 to 8), silently masking an unnamed peer conflict for npm ci and the Vercel install; (signage) README.md:108 says Node.js 18+ while vite/eslint/jsdom require 20.19+, README cites 356 tests vs CLAUDE.md 443, and CLAUDE.md says eslint-plugin-react-hooks must be installed separately though it is a devDependency; (survey question) README.md:144 says push to main deploys on Vercel, and nothing in the repo shows whether production deploys wait for the CI lint/test/Lighthouse job, that gate, if any, lives in the Vercel dashboard. No credentials found in build files. [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-code. Coverage: full sweep of src/, api/, scripts/, public/boot.js for diverged twins (copy-admission grep, keep-in-sync comments, cross-file comparison of pipeline/header/edit/save paths with git -L / -S history) and fossilized markers (zero TODO/FIXME/HACK/XXX in production code; provisional/legacy comments all young or tied to declared migrations). No feature flags exist (no boolean config toggles, no env flags beyond secrets/AI_DAILY_LIMIT), so no flag-gated dead paths. Tool gaps: sonar not configured, semgrep failed, repowise-health truncated at 60/136, so complexity is eslint-sonarjs plus partial repowise only. Deliberately not restated: the jscpd internal reIdentify/batchReIdentify block in useQuoteActions.js, every cognitive-complexity/bumpy-road/large-method finding on ResultsPhase, TableView, CardItem, useProcessing, QuotesContext; ResultsPhase god-component shape is covered by those and acknowledged in CLAUDE.md. Out of category: (swerve/security) api/_schemas.js:29 keeps a legacy free-text messages shape for /api/identify, added 2026-09-27 (db4af86) with no exit criterion and not listed among the survey migrations; (signage) CLAUDE.md declares only two normalize copies that must stay in sync, a third exists in localQuotes.js. Test files were not reviewed for debt (test owns them). [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-dependency. Coverage: all 37 entries of package.json read and import-traced across src/, api/, scripts/, vite.config.js, eslint.config.js and CI; peer graph checked with npm ls; registry metadata (npm view) checked for quiet packages. osv-scanner ran with 0 findings, so no advisory reachability to judge. Unused-dependency and abandonment coverage is AI-only (knip, npm-check-updates and libyear not run). PARTIAL: abandonment check incomplete - @use-gesture/react (last publish 2024-03) and @dnd-kit/core + @dnd-kit/sortable (last publish 2024-12; upstream now ships @dnd-kit/react) are quiet, but GitHub repo pages were unreachable from this session (gh/api.github.com blocked), so archived status was not verified and nothing was filed; quiet is not abandoned. Not filed: babel-plugin-react-compiler exact pin 1.0.0 is the current npm latest, so it is not a fossil; vite-plugin-pwa sits in dependencies though build-only (no shipping effect). No credentials seen in package.json, .npmrc or lockfile. Out-of-category (signage): CLAUDE.md tech-stack line says @use-gesture/react powers useLongPress, but src/hooks/useLongPress.js uses raw touch events and only useSwipe imports @use-gesture. [coverage=partial]</code></li>
+<li><code>Detector coverage: Detector: detect-knowledge. Coverage: no ADR directory exists; CLAUDE.md (sole declaration, treated as intended) memo/sync/env claims checked against code; all 4 process.env reads traced (api/_shared.js); author data from the brief, cross-checked with git shortlog (one human under three identities Degen11/Degen/degen11 plus Claude, so the hotspot authors column overstates diversity). AI-only category, no tool corroborates any of it. Out of category: README.md:131 says 356 tests vs 40 files/443 tests in CLAUDE.md (signage); collections merge on createdAt and have no updatedAt, so collection renames/membership edits on one device can be overwritten by the cloud copy on pull (correctness, likely architecture/bug detector); ?device_id= fallback in api/sync.js has no recorded exit criterion (migration/architecture). [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-security. Coverage: authz/abuse trace over all 9 api/ entry points (identify, auto-group, sync GET/POST, share GET/POST, share-page, og, lookup, fetch-url) through withApiHandler in api/_shared.js; Supabase RLS and function grants in supabase/migration.sql; client XSS sinks and CSP in vercel.json. gitleaks ran (0) so secret coverage is tool-backed; semgrep failed (registry blocked), so known-insecure-pattern coverage is AI-only, hence partial. No user accounts exist by design (device UUID is the credential), so there is no UI-only permission check to find. Did not restate the eslint-sonar hotspots (slow-regex, no-hardcoded-ip in fetch-url, pseudo-random and code-eval in tests); none of them looked reachable enough to raise. Saw and left to api: identify returns the raw Anthropic envelope while other endpoints return shaped JSON. [coverage=partial]</code></li>
+<li><code>Detector coverage: Detector: detect-signage. Coverage: 4 simulated newcomer tasks (add/adjust a results-list component under React Compiler; read or change quote state; add a client API call or clipboard copy; bring the repo up from README setup) plus a name/doc contradiction sweep of CLAUDE.md and README.md claims against code (directory layout, scripts, config constants, Z scale, API middleware/schemas, lazy-load, PWA/chunking, hover rules, helpers) and get*/is*/has*/load*/check* names in src and api. knip/ts-prune are not run in this phase, so dead-export coverage is AI-only; no documented-and-re-exported dead symbol found (no barrel index files exist). Out-of-category (architecture/code, code violating declared CLAUDE.md rules, not signage): CollectionsSidebar.jsx:403 does const Icon = getIcon(c.icon), the exact dynamic-component pattern CLAUDE.md forbids; raw fetchWithTimeout outside apiRequest in QuotesContext.jsx:121 (public share GET, also sends no X-Requested-With header) and useProcessing.js:508 (auto-group, not a listed exception); onMouseEnter/onMouseLeave hover state in SyncPill.jsx:82, CollectionsSidebar.jsx:118, HowItWorksAnimation.jsx:297; raw navigator.clipboard share-link copies in ExportDropdown.jsx:74 and :95 bypass copyWithToast (they do handle errors). Cosmetic, not filed: README test count 356 is stale (actual about 440); quotesStore isShareHash() also matches the /c/ path; CLAUDE.md test-dir list omits lookupConfidence.test.js. No drifted ADRs (none exist). [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-swerve. Coverage: full git history (1108 commits, not shallow) walked for the 24-month window with workaround/revert/again/stale/compiler/z-index/tooltip greps; source grepped for folklore, catch-and-swallow, flags and wrapper chains; hotspots ResultsPhase, TableView, CardItem, useProcessing, QuotesContext, useSync, api/sync.js and styles.js read at the cited lines. No deterministic tool covers swerve debt. No flag graveyard and no catch-and-swallow cluster found (the few empty catches are fire-and-forget prefetch/history calls). Out of category, seen but not reported: (signage) CLAUDE.md says manual memo/useCallback were stripped and one useMemo remains, but TableRow, TableView and CardItem are memo()-wrapped and useSync.js uses useCallback; (code/signage) the apiRequest migration in b9afc5b was left incomplete: useProcessing.js:508 auto-group and QuotesContext.jsx:121 share fetch still hand-roll fetchWithTimeout and status handling and are not among the declared exceptions, and the status 410/404 branching there is api territory. The Feb 2026 TableView padding/scroll revert thrash (b24c1dd, 0b0cfb1, 55bf34f, f39343f) is old layout iteration with no surviving detour. No architecture-level cycle or layer violation observed. [coverage=full]</code></li>
+<li><code>Detector coverage: Detector: detect-test. Coverage: NOT MEASURED. No coverage/lcov.info is committed and Pothole never runs the suite, so there is no hot-and-under-covered tool slice and no percentage is claimed; untested-behaviour findings rest on reading which production modules the 40 test files import and exercise. Assertion, skip, coupling and nondeterminism review is AI-only (no mutation testing, no flake detection, no run history). Read: every test file in src/ and api/. No .skip/.only/.todo/xit/xdescribe exists, and no retry setting in the vitest config (vite.config.js test block is globals only), so no stale-skip or retry findings. Minor nondeterminism noted, not filed: InputPhase.test.jsx and processingErrors.test.js reassign globalThis.requestIdleCallback / globalThis.localStorage without fully restoring them (file-local leakage only). Out of category, for detect-code: (1) src/hooks/useDndQuotes.js:59 undo calls removeFromCollection(collectionId, ids) with all dragged ids, including ones reported as skipped because they were already in the collection, so undo removes pre-existing memberships. (2) src/contexts/QuotesContext.jsx:136 object-form quotes from /api/share pass through unvalidated (q.id ? q : null) while the array form goes through validateShareQuote. (3) api/fetch-url.js checkHost resolves DNS and then fetch resolves again, a DNS-rebinding window (security/code). Signage: CLAUDE.md says manual React.memo was stripped, but TableView.jsx:107 and :280 use memo deliberately (commented in-file). [coverage=partial]</code></li>
+<li><code>Tool coverage: Tools run: eslint-sonar (102 findings), jscpd (78 findings), gitleaks (0 findings), osv-scanner (0 findings), madge (0 findings), repowise-dead-code (8 findings), repowise-health (60 findings). Skipped (not measured): sonar — set SONAR_HOST_URL, SONAR_TOKEN, SONAR_PROJECT_KEY (or sonar-project.properties); semgrep — failed (exit 2; message withheld — tool output can echo repo contents); lcov — no coverage/lcov.info in the repo (Pothole never runs the target&#39;s tests, so it cannot produce one): coverage is not measured. Coverage notes: repowise-health — TRUNCATED at 60 of 136 health findings: coverage is partial.</code></li>
+<li><code>Coverage flags: unverified=0 partial-findings=21 missing-verdicts=0 never-scanned=0 stale-verdicts=0 unparseable=0 tool-coverage=partial</code></li>
+<li><code>Category status: code=verified+full architecture=verified+full test=verified+partial dependency=verified+partial knowledge=verified+full build=verified+full api=verified+full security=verified+partial swerve=verified+full signage=verified+full</code></li>
+<li><code>A category with 0 confirmed findings is &quot;nothing confirmed&quot;, never &quot;no debt&quot;. Read the coverage clauses above before drawing any conclusion from a count.</code></li>
+</ul>
+</details>
+<h2>What is wrong</h2>
+<p class="fine">The 10 most costly of 38 confirmed problem(s), biggest ongoing cost first. Every confirmed finding has its own file under <code>.pothole/issues/</code>, and the ranked repair plan is <code>.pothole/roadwork.md</code>.</p>
+<section class="card">
+<h3>1. styles.js is a god file: every component&#39;s styles, the palette and global CSS in one 1,000-line module that changes with everything</h3>
+<p><strong>Where:</strong> <code>src/components/styles.js:3</code>, <code>src/components/styles.js:31</code>, <code>src/components/styles.js:716</code>, <code>src/components/styles.js:1015</code></p>
+<p><strong>Why it matters:</strong> It is a serious problem that taxes every change to this code, in some of the most-edited code in this repo, so people trip over it constantly. The verifier confirmed it: &ldquo;Facts verified: 1,022 lines; 215 commits in the window, the most of any file per the survey; 4 unrelated export groups (palette at :3, baseCSS at :31 to about :685, syncPillStyles, styles at :716, cardStyles at :1015); survey names it the change-coupling hub. Not generated, vendored or a barrel, so no trap. The CLAUDE.md single-file convention is documented intent but refutes only &#39;accidental&#39;, not the cost claim. Caveat for the gate: about 69% of commits are Claude sessions plus one human, so the cost is mainly two-file edits per UI change and parallel-session conflicts, not a large team serialising.&rdquo;.</p>
+<p><strong>How to fix:</strong> Keep tokens and baseCSS in styles.js, and move each component&#39;s style object next to its component (as inputPhaseStyles.js already does for the landing page), one component per PR.</p>
+<p><strong>Effort:</strong> a large refactor (L). <span class="fine">PH-255 &middot; code &middot; hard-to-work-in code</span></p>
+</section>
+<section class="card">
+<h3>2. Pseudo-element tooltip routed around per clip container with :has() overflow overrides and z-index lifts</h3>
+<p><strong>Where:</strong> <code>src/components/styles.js:302</code>, <code>src/components/styles.js:304</code>, <code>src/components/styles.js:307</code>, <code>src/components/styles.js:446</code>, <code>commit ceba665 Fix tooltip clipping in notification bars</code>, <code>commit c1ac354 Fix tooltip linger artifact in notification bars</code>, <code>commit fcb2fed Fix tooltip fade-out direction</code>, <code>commit d7a5a4d Fix card tooltip being clipped by sibling card stacking contexts</code>, <code>commit fc4cf3f Revert card tooltip to above; bump wrapper z-index above sticky bar</code>, <code>commit 8db8f7d Revert Upgrade tooltips to @floating-ui</code></p>
+<p><strong>Why it matters:</strong> It is a serious problem that taxes every change to this code, in some of the most-edited code in this repo, so people trip over it constantly. The verifier confirmed it: &ldquo;All refs resolve: styles.js:302/304 :has(.ui-tip:hover) overflow:visible!important on sidebar-rail and notif-bar-wrapper, :307 zero-duration fade to hide the clip artifact, :446 qcard-wrap z-index lift; six tooltip-clipping fixes on 2026-04-17 (ceba665,c1ac354,fcb2fed,38cc3f3,d7a5a4d,fc4cf3f) are a workaround cluster on hot styles.js. Not a trap (no exit condition, repeated). CLAUDE.md documents the sidebar-rail rule and the native-title carve-out, which refutes &#39;unexplained&#39; but not the per-container cost claimed. Caveat: 8db8f7d reverted a bundled multi-change commit (054e74e also touched sync, masonry, view transitions), so it is weak evidence that the portal approach itself was rejected.&rdquo;.</p>
+<p><strong>How to fix:</strong> No one-line fix is recorded — the detector&rsquo;s full reasoning is in <code>.pothole/findings/swerve.md</code> under <code>swerve:src/components:ui-tip-clipping-detours</code>.</p>
+<p><strong>Effort:</strong> a medium refactor (M). <span class="fine">PH-349 &middot; swerve</span></p>
+</section>
+<section class="card">
+<h3>3. App.test.jsx mocks every phase and hook and never drives a phase transition in the hottest file</h3>
+<p><strong>Where:</strong> <code>src/components/__tests__/App.test.jsx:36-170</code>, <code>src/components/__tests__/App.test.jsx:214-258</code>, <code>src/components/App.jsx:84</code>, <code>src/components/App.jsx:170</code></p>
+<p><strong>Why it matters:</strong> It is a serious problem that taxes every change to this code, in some of the most-edited code in this repo, so people trip over it constantly. The verifier confirmed it: &ldquo;evidence holds: App.test.jsx has no fireEvent/userEvent/click anywhere; all phase tests assert initial render only (186-213), draft-persistence tests (236-258) assert only render. App.jsx:84 sync-to-results transition is driven only by pre-seeded store. Minor ref note: App.jsx:170 is clearParentState (start fresh -&gt; input), not append mode; core claim unaffected.&rdquo;.</p>
+<p><strong>How to fix:</strong> Add tests that click the mocked process-btn and review-modal Confirm/Cancel buttons already wired in the file and assert which phase renders next, plus the append-mode return to input.</p>
+<p><strong>Effort:</strong> a large refactor (L). <span class="fine">PH-856 &middot; test</span></p>
+</section>
+<section class="card">
+<h3>4. Drag-and-drop list rendering patched around the React Compiler with restored memo() and use-no-memo opt-outs</h3>
+<p><strong>Where:</strong> <code>src/components/TableView.jsx:104</code>, <code>src/components/TableView.jsx:276</code>, <code>src/components/TableView.jsx:289</code>, <code>src/components/CardItem.jsx:18</code>, <code>src/components/ResultsPhase.jsx:60</code>, <code>src/hooks/useDndQuotes.js:38</code>, <code>commit 27e7971 Restore React.memo on TableRow to fix drag jank in table view</code>, <code>commit d581d56 Restore React.memo on CardItem to fix card view drag jank</code>, <code>commit f0d1495 fix: eliminate table shake during drag-and-drop</code>, <code>commit 905154e fix empty virtualized list after view switch</code>, <code>commit 845af57 Fix drag-and-drop gaps caused by virtualizer absolute positioning</code></p>
+<p><strong>Why it matters:</strong> It is a serious problem that taxes every change to this code, in regularly-edited code. The verifier confirmed it: &ldquo;Refs resolve (TableView.jsx:104/276 are the &#39;memo is required&#39; comment heads for memo() at 107/280; 289 and ResultsPhase.jsx:60 are &#39;use no memo&#39;; CardItem.jsx:18 comment + memo at 21; useDndQuotes.js:38 setOverDragId on every dragover, state held at useDndQuotes.js:16 and threaded through ResultsPhase.jsx:253/1040). Commits 27e7971/d581d56/f0d1495 restored memo the day after 86c0c55 stripped it, each citing overDragId re-renders, and the cause was never moved. &#39;use no memo&#39; is documented in CLAUDE.md but memo() restorations contradict the declared policy, so documented route does not apply; hot files, cluster of detours.&rdquo;.</p>
+<p><strong>How to fix:</strong> No one-line fix is recorded — the detector&rsquo;s full reasoning is in <code>.pothole/findings/swerve.md</code> under <code>swerve:src/components:dnd-virtualizer-compiler-optouts</code>.</p>
+<p><strong>Effort:</strong> a large refactor (L). <span class="fine">PH-350 &middot; swerve</span></p>
+</section>
+<section class="card">
+<h3>5. HeaderBar test asserts a hard-coded active style that no longer matches styles.addMoreBtnActive</h3>
+<p><strong>Where:</strong> <code>src/components/__tests__/HeaderBar.test.js:8-33</code>, <code>src/components/styles.js:851</code>, <code>src/components/HeaderBar.jsx:46</code></p>
+<p><strong>Why it matters:</strong> It is a minor problem that adds a little cost to every change, in some of the most-edited code in this repo, so people trip over it constantly. The verifier confirmed it: &ldquo;evidence holds: HeaderBar.test.js:8-33 asserts a local activeOverride with --cp-accent; styles.js:851 addMoreBtnActive is --cp-text/--cp-border and HeaderBar.jsx:46 spreads that, so the test cannot fail and describes the old design.&rdquo;.</p>
+<p><strong>How to fix:</strong> Render HeaderBar with showAddMore true and false and assert the Add quotes button style against styles.addMoreBtnActive, or delete the file.</p>
+<p><strong>Effort:</strong> a small, contained fix (S). <span class="fine">PH-853 &middot; test</span></p>
+</section>
+<section class="card">
+<h3>6. MiniHeader missed the mobile header redesign: duplicate Add button and no layout menu on mobile</h3>
+<p><strong>Where:</strong> <code>src/components/MiniHeader.jsx:59</code>, <code>src/components/HeaderBar.jsx:67</code>, <code>src/components/HeaderBar.jsx:85</code>, <code>src/components/ResultsPhase.jsx:1169</code>, <code>commit b3c39ea Facelift: landing input card, quote table rows, mobile cards</code></p>
+<p><strong>Why it matters:</strong> It is a minor problem that adds a little cost to every change, in regularly-edited code. The verifier confirmed it: &ldquo;MiniHeader.jsx:59 renders &#39;+ Add&#39; unconditionally, including on mobile, while ResultsPhase.jsx:1169 shows the mobile FAB whenever !showBulkBar &amp;&amp; !showAddMore, and MiniHeader renders whenever !headerVisible (ResultsPhase:779), so both appear together after scrolling. HeaderBar (lines 67-68 of the cited area, about 85) has a mobile Layout/ViewMenuItems section that MiniHeader&#39;s mobile overflow (65-71) lacks, and the desktop ViewToggle is hidden on mobile. b3c39ea did not touch MiniHeader.jsx: its last commit is 5147078, from before b3c39ea.&rdquo;.</p>
+<p><strong>How to fix:</strong> Hide MiniHeader&#39;s &quot;+ Add&quot; button when isMobile and add the mobile Layout section (ViewMenuItems) to its overflow menu, ideally by having both headers render one shared overflow-menu component.</p>
+<p><strong>Effort:</strong> a small, contained fix (S). <span class="fine">PH-252 &middot; code &middot; duplicated code</span></p>
+</section>
+<section class="card">
+<h3>7. CLAUDE.md says manual React.memo/useCallback were stripped, but hot list components depend on React.memo</h3>
+<p><strong>Where:</strong> <code>CLAUDE.md:291</code>, <code>CLAUDE.md:365</code>, <code>src/components/TableView.jsx:103</code>, <code>src/components/TableView.jsx:107</code>, <code>src/components/TableView.jsx:280</code>, <code>src/components/CardItem.jsx:21</code>, <code>src/hooks/useSync.js:64</code></p>
+<p><strong>Why it matters:</strong> It is a minor problem that adds a little cost to every change, in regularly-edited code. The verifier confirmed it: &ldquo;evidence resolves: CLAUDE.md:365 says manual memo/useCallback/useMemo have been stripped and :291 names only one surviving useMemo, yet TableView.jsx:107/:280 and CardItem.jsx:21 wrap in memo() and useSync.js:64/69/138/162 use useCallback; trap/documented checked: not jargon, not an ADR. Lowered major-&gt;minor: each memo() carries an adjacent &#39;React.memo is required&#39; comment (TableView.jsx:103,276; CardItem.jsx:18), so the claimed harm of an agent stripping them as stragglers is mitigated in-file; the doc contradiction itself is real.&rdquo;.</p>
+<p><strong>How to fix:</strong> No one-line fix is recorded — the detector&rsquo;s full reasoning is in <code>.pothole/findings/signage.md</code> under <code>signage:CLAUDE.md:claude-md-memo-stripped-claim-false</code>.</p>
+<p><strong>Effort:</strong> a small, contained fix (S). <span class="fine">PH-449 &middot; signage</span></p>
+</section>
+<section class="card">
+<h3>8. CLAUDE.md says manual memoization was stripped, omitting the three React.memo wrappers the drag path depends on</h3>
+<p><strong>Where:</strong> <code>CLAUDE.md:291</code>, <code>CLAUDE.md:365</code>, <code>src/components/TableView.jsx:103</code>, <code>src/components/TableView.jsx:280</code>, <code>src/components/CardItem.jsx:18</code>, <code>86c0c55</code>, <code>27e7971</code>, <code>d581d56</code></p>
+<p><strong>Why it matters:</strong> It is a minor problem that adds a little cost to every change, in regularly-edited code. The verifier confirmed it: &ldquo;All refs resolve: CLAUDE.md:291 forbids manual React.memo and :365 claims manual memo was stripped, yet TableView.jsx:107/280 and CardItem.jsx:21 wrap in memo; commits 86c0c55 (strip) then 27e7971/d581d56 (restore for drag jank) show the cost landed. No trap or ESLint-requirement exception covers it. Lowered major-&gt;minor: read-site comments (TableView.jsx:103, :276, CardItem.jsx:18) state React.memo is required and why, so a reader editing those components is warned; only the project-level doc is stale, not reliably misleading.&rdquo;.</p>
+<p><strong>How to fix:</strong> No one-line fix is recorded — the detector&rsquo;s full reasoning is in <code>.pothole/findings/knowledge.md</code> under <code>knowledge:CLAUDE.md:memo-exceptions-unrecorded</code>.</p>
+<p><strong>Effort:</strong> a small, contained fix (S). <span class="fine">PH-949 &middot; knowledge</span></p>
+</section>
+<section class="card">
+<h3>9. /api/identify proxies the raw Anthropic message envelope while every other endpoint returns its own shape, and its consumer parses model text and an Anthropic error object the server never sends</h3>
+<p><strong>Where:</strong> <code>api/identify.js:164</code>, <code>api/identify.js:79</code>, <code>api/auto-group.js:56</code>, <code>api/lookup.js:214</code>, <code>src/hooks/useProcessing.js:130</code>, <code>src/hooks/useProcessing.js:132</code>, <code>src/hooks/useProcessing.js:516</code></p>
+<p><strong>Why it matters:</strong> It is a serious problem that taxes every change to this code, in occasionally-edited code. The verifier confirmed it: &ldquo;All refs resolve: identify.js:164 returns the raw Anthropic body while auto-group.js:56 returns {indices} and lookup.js:214 {results}; identify.js:79 parseResults already parses the array server-side, and useProcessing.js:134-140 re-implements the same fence-strip and &#39;[&#39; repair. useProcessing.js:132 reads d.error.message, which no server path emits (non-2xx is thrown at :130 as &#39;API returned &lt;status&gt;&#39;, dropping the server&#39;s {error} text), whereas autoGroup at :516 reads err.error. Effect checked in utils/apiErrors.js: the daily-cap 429 is rendered as the generic &#39;Rate limited, wait a moment&#39; message. Not the single-caller trap: the repo itself keeps a legacy identify request shape for cached PWA builds, so client and server do not ship in lockstep. Not documented as intentional; reachable on every AI batch. Major holds: hooks hotspot plus a shipped misleading error.&rdquo;.</p>
+<p><strong>How to fix:</strong> No one-line fix is recorded — the detector&rsquo;s full reasoning is in <code>.pothole/findings/api.md</code> under <code>api:api/identify.js:identify-raw-anthropic-envelope</code>.</p>
+<p><strong>Effort:</strong> a medium refactor (M). <span class="fine">PH-1149 &middot; api</span></p>
+</section>
+<section class="card">
+<h3>10. Batch re-identify never got the pipeline&#39;s retry and failure reporting, and reports success when every batch fails</h3>
+<p><strong>Where:</strong> <code>src/hooks/useQuoteActions.js:212</code>, <code>src/hooks/useQuoteActions.js:219</code>, <code>src/hooks/useQuoteActions.js:128</code>, <code>src/hooks/useProcessing.js:260</code>, <code>src/hooks/useProcessing.js:321</code>, <code>commit e12a8f5 feat: pre-warm API, partial batch retry, and integration tests</code></p>
+<p><strong>Why it matters:</strong> It is a serious problem that taxes every change to this code, in occasionally-edited code. The verifier confirmed it: &ldquo;useQuoteActions.js:212 catch swallows every non-abort batch error (&#39;Continue with remaining batches&#39;) and line 219 shows an unconditional success toast &#39;Re-identified N quotes&#39;, even when every call failed. No retry and no failed-count reporting, unlike useProcessing.js:260-282 (retry once, API_ERROR with affected count) and :321 FAILED_ENTRIES. Single reIdentify (line 128) does nothing visible on an empty result array. Not documented as intentional, reachable from BulkBar Re-identify.&rdquo;.</p>
+<p><strong>How to fix:</strong> Extract the batch-with-retry loop from useProcessing.handleApiBatch into a shared helper that returns {results, failed}, use it in batchReIdentify, and show an error toast for the failed count instead of the unconditional success toast.</p>
+<p><strong>Effort:</strong> a medium refactor (M). <span class="fine">PH-251 &middot; code &middot; duplicated code</span></p>
+</section>
+<h2>What kind of debt</h2>
+<p class="fine">Grouped by the shape of the problem. <strong>Confirmed</strong> counts survived an adversarial verifier; <strong>tool-reported</strong> counts were measured by the deterministic tools this run and never judged — real measurements, weaker claims, and the two are never added together. A 0 in the confirmed column means none <em>confirmed</em> — the categories table below carries what was found but never judged.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>kind of debt</th><th class="n">confirmed findings</th><th class="n">interest</th><th class="n">tool-reported (unjudged)</th><th>what it covers</th></tr></thead>
+<tbody>
+<tr><td>Dead code</td><td class="n">0</td><td class="n">0</td><td class="n">8</td><td class="fine">code that still reads as live but nothing runs it — it misleads every reader until deleted</td></tr>
+<tr><td>Duplicated code</td><td class="n">8</td><td class="n">0.5602</td><td class="n">78</td><td class="fine">the same logic in more than one place, identical or near-identical — a fix lands in one copy and misses the other</td></tr>
+<tr><td class="z">Flaky or fragile behaviour</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="fine">IO on hot paths or in loops, timing-dependent code, tests that fail on rerun</td></tr>
+<tr><td>Hard-to-work-in code</td><td class="n">1</td><td class="n">1.05</td><td class="n">86</td><td class="fine">functions too complex, nested, or overgrown to change safely</td></tr>
+<tr><td>Everything else</td><td class="n">29</td><td class="n">5.0859</td><td class="n">&mdash;</td><td class="fine">debt with none of the four shapes above — API drift, missing knowledge, security exposure, build fragility, …</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Tool-reported counts come from <code>.pothole/tool-findings/</code> — deterministic measurements the AI detectors deliberately do not restate. They are not confirmed findings and carry no interest; read them as &ldquo;the tools saw this much of that shape&rdquo;, with the tool coverage caveats above.</p>
+<h2>Details for engineers and AI agents</h2>
+<p class="fine">Everything above is the summary; everything below is the measurement layer it was computed from — per-module scores, per-category coverage, ranked work zones, and run-over-run deltas. The numbers and caveats here are authoritative: the summary never says more than they do.</p>
+<h2>Modules</h2>
+<p>Repo total: <strong>38 confirmed finding(s), 6.6961 interest</strong> across 9 module(s) and 169 file(s) in the traffic model.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>module</th><th class="n">findings</th><th class="n">interest</th><th>burden</th><th class="n">RQI</th><th class="n">files</th></tr></thead>
+<tbody>
+<tr><td>src/components</td><td class="n">9</td><td class="n">4.2966</td><td><div class="track"><div class="fill" style="width: 100%"></div></div></td><td class="n">94</td><td class="n">67</td></tr>
+<tr><td>. <span class="fine">(unattributed: repo-root files and git-ref evidence &mdash; not a module)</span></td><td class="n">8</td><td class="n">1.0598</td><td><div class="track"><div class="fill" style="width: 25%"></div></div></td><td class="n">91</td><td class="n">11</td></tr>
+<tr><td>src/hooks</td><td class="n">7</td><td class="n">0.5607</td><td><div class="track"><div class="fill" style="width: 13%"></div></div></td><td class="n">98</td><td class="n">23</td></tr>
+<tr><td>api</td><td class="n">8</td><td class="n">0.4731</td><td><div class="track"><div class="fill" style="width: 11%"></div></div></td><td class="n">96</td><td class="n">11</td></tr>
+<tr><td>src/stores</td><td class="n">1</td><td class="n">0.0961</td><td><div class="track"><div class="fill" style="width: 2%"></div></div></td><td class="n">95</td><td class="n">2</td></tr>
+<tr><td>supabase</td><td class="n">2</td><td class="n">0.0704</td><td><div class="track"><div class="fill" style="width: 2%"></div></div></td><td class="n">93</td><td class="n">1</td></tr>
+<tr><td>src/data</td><td class="n">1</td><td class="n">0.0577</td><td><div class="track"><div class="fill" style="width: 1%"></div></div></td><td class="n">98</td><td class="n">3</td></tr>
+<tr><td>src/contexts</td><td class="n">1</td><td class="n">0.0543</td><td><div class="track"><div class="fill" style="width: 1%"></div></div></td><td class="n">98</td><td class="n">3</td></tr>
+<tr><td>src/utils</td><td class="n">1</td><td class="n">0.0274</td><td><div class="track"><div class="fill" style="width: 1%"></div></div></td><td class="n">100</td><td class="n">25</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine"><em>No repo-wide RQI is reported. Density across a whole repo is dominated by its clean files &mdash; every real repo lands at 95 to 100 whatever it carries &mdash; so the number could not move and would read as a clean bill of health. RQI is meaningful per module, where the denominator is the module&rsquo;s own size.</em></p>
+<p class="fine"><em>Ordered by accumulated interest &mdash; the burden &mdash; not by RQI. RQI is a density, so ranking on it puts the smallest directory on top: a two-file deploy directory with one finding outranks a seven-finding module carrying five times the interest. Anchors: one hot major finding per file &asymp; 50, one hot structural per file &asymp; 37.</em></p>
+<h2>Categories</h2>
+<p class="fine">All ten categories, including the ones with nothing in them. Read the columns together: 0 confirmed beside a non-zero <code>found, unjudged</code> is an unfinished inspection, and 0 in both is either a clean slice or an unscanned one, which only the clauses above can tell you.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>category</th><th class="n">confirmed findings</th><th class="n">interest</th><th class="n">found, unjudged</th></tr></thead>
+<tbody>
+<tr><td>code</td><td class="n">7</td><td class="n">1.6033</td><td class="n">0</td></tr>
+<tr><td class="z">architecture</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>test</td><td class="n">14</td><td class="n">1.9123</td><td class="n">0</td></tr>
+<tr><td>dependency</td><td class="n">2</td><td class="n">0.3072</td><td class="n">0</td></tr>
+<tr><td>knowledge</td><td class="n">1</td><td class="n">0.1699</td><td class="n">0</td></tr>
+<tr><td>build</td><td class="n">2</td><td class="n">0.2029</td><td class="n">0</td></tr>
+<tr><td>api</td><td class="n">2</td><td class="n">0.1933</td><td class="n">0</td></tr>
+<tr><td>security</td><td class="n">4</td><td class="n">0.2334</td><td class="n">0</td></tr>
+<tr><td>swerve</td><td class="n">2</td><td class="n">1.6448</td><td class="n">0</td></tr>
+<tr><td>signage</td><td class="n">4</td><td class="n">0.4291</td><td class="n">0</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Work zones</h2>
+<p>Findings are grouped by module, and across modules when git history says their files change together (coupling &ge; 0.5). Close the road once.</p>
+<p><strong>Read the order with its bias in mind.</strong> Zones rank by <em>summed priority</em>, and priority divides interest by repair cost, so this order favours many cheap repairs over one large one: eight hot cosmetic S findings outrank one hot major S, and because <code>XL</code> divides by 20 while <code>S</code> divides by 1, the largest structural work will always appear near the bottom however severe it is. That is the intended reading &mdash; cheap wins first &mdash; but it means <strong>the interest column, not the position, is what says how much a zone actually costs the team.</strong> Where the two disagree, the disagreement is the information.</p>
+<p class="fine">Top 10 of 12 zones. The rest are in <code>roadwork.md</code>.</p>
+<h3>Zone 1: api + src/components + src/hooks + src/utils + supabase &mdash; priority 1.8534, cost L, 27 finding(s)</h3>
+<p class="fine">Why together: coupled &mdash; src/components/App.jsx &harr; src/hooks/useProcessing.js (co 23, strength 0.57); src/components/App.jsx &harr; src/hooks/useQuoteActions.js (co 16, strength 0.70); src/components/App.jsx &harr; src/hooks/useEditState.js (co 16, strength 0.52); api/identify.js &harr; api/sync.js (co 7, strength 0.54); api/sync.js &harr; src/components/App.jsx (co 7, strength 0.54); api/fetch-url.js &harr; src/components/App.jsx (co 6, strength 0.60); api/fetch-url.js &harr; api/sync.js (co 5, strength 0.50); api/_shared.js &harr; api/auto-group.js (co 4, strength 0.67); api/auto-group.js &harr; api/sync.js (co 4, strength 0.67); api/identify.js &harr; supabase/migration.sql (co 4, strength 0.67); src/hooks/useProcessing.js &harr; supabase/migration.sql (co 4, strength 0.67); api/auto-group.js &harr; src/components/App.jsx (co 4, strength 0.67); src/hooks/__tests__/useSync.test.js &harr; src/hooks/useProcessing.js (co 3, strength 1.00); api/lookup.js &harr; supabase/migration.sql (co 3, strength 0.50); src/components/App.jsx &harr; supabase/migration.sql (co 3, strength 0.50).</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-853</td><td>test</td><td>minor &times;amp</td><td class="n">1.00</td><td class="n">0.45</td><td class="n">0.45</td><td>S</td><td>HeaderBar test asserts a hard-coded active style that no longer matches styles.addMoreBtnActive</td></tr>
+<tr><td>PH-349</td><td>swerve</td><td>major &times;amp</td><td class="n">1.00</td><td class="n">1.05</td><td class="n">0.35</td><td>M</td><td>Pseudo-element tooltip routed around per clip container with :has() overflow overrides and z-index lifts</td></tr>
+<tr><td>PH-252</td><td>code</td><td>minor &times;amp</td><td class="n">0.43</td><td class="n">0.1926</td><td class="n">0.1926</td><td>S</td><td>MiniHeader missed the mobile header redesign: duplicate Add button and no layout menu on mobile</td></tr>
+<tr><td>PH-255</td><td>code</td><td>major &times;amp</td><td class="n">1.00</td><td class="n">1.05</td><td class="n">0.1312</td><td>L</td><td>styles.js is a god file: every component&#39;s styles, the palette and global CSS in one 1,000-line module that changes with everything</td></tr>
+<tr><td>PH-856</td><td>test</td><td>major &times;amp</td><td class="n">0.75</td><td class="n">0.7891</td><td class="n">0.0986</td><td>L</td><td>App.test.jsx mocks every phase and hook and never drives a phase transition in the hottest file</td></tr>
+<tr><td>PH-350</td><td>swerve</td><td>major &times;amp</td><td class="n">0.57</td><td class="n">0.5948</td><td class="n">0.0743</td><td>L</td><td>Drag-and-drop list rendering patched around the React Compiler with restored memo() and use-no-memo opt-outs</td></tr>
+<tr><td>PH-254</td><td>code</td><td>minor</td><td class="n">0.22</td><td class="n">0.0663</td><td class="n">0.0663</td><td>S</td><td>identifyBatch discards the server error message, so the AI daily-cap notice shows as a generic &#39;wait a moment&#39; rate limit</td></tr>
+<tr><td>PH-253</td><td>code</td><td>minor</td><td class="n">0.18</td><td class="n">0.0546</td><td class="n">0.0546</td><td>S</td><td>Blank-source guard was added to inline save only; the full editor still saves an empty source as high confidence</td></tr>
+<tr><td>PH-1149</td><td>api</td><td>major</td><td class="n">0.22</td><td class="n">0.1546</td><td class="n">0.0515</td><td>M</td><td>/api/identify proxies the raw Anthropic message envelope while every other endpoint returns its own shape, and its consumer parses model text and an Anthropic error object the server never sends</td></tr>
+<tr><td>PH-251</td><td>code</td><td>major</td><td class="n">0.22</td><td class="n">0.1546</td><td class="n">0.0515</td><td>M</td><td>Batch re-identify never got the pipeline&#39;s retry and failure reporting, and reports success when every batch fails</td></tr>
+<tr><td>PH-549</td><td>security</td><td>major</td><td class="n">0.22</td><td class="n">0.1546</td><td class="n">0.0515</td><td>M</td><td>Client-controlled prompt fields let any caller plant permanent high-confidence attributions in the shared quote cache</td></tr>
+<tr><td>PH-852</td><td>test</td><td>major &times;amp</td><td class="n">0.12</td><td class="n">0.1305</td><td class="n">0.0435</td><td>M</td><td>ResultsPhase filter and sort tests re-implement Array.filter/sort inline; the real sort in useViewPreferences is untested</td></tr>
+<tr><td>PH-1150</td><td>api</td><td>minor</td><td class="n">0.13</td><td class="n">0.0386</td><td class="n">0.0386</td><td>S</td><td>/api/identify accepts two request shapes (items and legacy messages) with no exit condition for the legacy one</td></tr>
+<tr><td>PH-854</td><td>test</td><td>minor &times;amp</td><td class="n">0.08</td><td class="n">0.0375</td><td class="n">0.0375</td><td>S</td><td>CollectionDupeModal test named for the 800ms auto-close only checks the module loads; the rest mirror logic inline</td></tr>
+<tr><td>PH-250</td><td>code</td><td>minor</td><td class="n">0.09</td><td class="n">0.0274</td><td class="n">0.0274</td><td>S</td><td>normalize() exists in three hand-synced copies; the server copy already lagged the client fix for three weeks</td></tr>
+<tr><td>PH-860</td><td>test</td><td>minor</td><td class="n">0.09</td><td class="n">0.0274</td><td class="n">0.0274</td><td>S</td><td>withApiHandler origin and CSRF rejection paths are never exercised; every mock request is valid</td></tr>
+<tr><td>PH-551</td><td>security</td><td>minor</td><td class="n">0.07</td><td class="n">0.0211</td><td class="n">0.0211</td><td>S</td><td>migration.sql cannot be re-applied to an existing database, so later appended security statements only land by hand</td></tr>
+<tr><td>PH-857</td><td>test</td><td>major</td><td class="n">0.22</td><td class="n">0.1546</td><td class="n">0.0193</td><td>L</td><td>useProcessing duplicate-detection pre-pass and handleDupesContinue never run: pipeline tests stub similarity to 0 and localLookup to null</td></tr>
+<tr><td>PH-1049</td><td>build</td><td>major</td><td class="n">0.07</td><td class="n">0.0493</td><td class="n">0.0164</td><td>M</td><td>Supabase schema is applied by hand with no migration tooling; repo lagged production by six months and the file is not re-runnable</td></tr>
+<tr><td>PH-849</td><td>test</td><td>major</td><td class="n">0.17</td><td class="n">0.121</td><td class="n">0.0151</td><td>L</td><td>useSync.test.js never imports useSync: it calls a mocked global fetch and checks config constants</td></tr>
+<tr><td>PH-552</td><td>security</td><td>minor</td><td class="n">0.13</td><td class="n">0.0386</td><td class="n">0.0129</td><td>M</td><td>Global AI daily cap can be exhausted by a single IP, turning the spend guard into a site-wide outage</td></tr>
+<tr><td>PH-550</td><td>security</td><td>minor</td><td class="n">0.06</td><td class="n">0.019</td><td class="n">0.0063</td><td>M</td><td>fetch-url SSRF guard has a check-then-fetch DNS rebinding window and returns the response body</td></tr>
+<tr><td>PH-850</td><td>test</td><td>minor</td><td class="n">0.02</td><td class="n">0.0048</td><td class="n">0.0048</td><td>S</td><td>processingErrors cloud-sync block asserts the behaviour of its own fetch mock, not of any sync code</td></tr>
+<tr><td>PH-851</td><td>test</td><td>minor</td><td class="n">0.02</td><td class="n">0.0048</td><td class="n">0.0048</td><td>S</td><td>batch-continuation test asserts less than its comments claim and stubs a removed /api/cache endpoint</td></tr>
+<tr><td>PH-859</td><td>test</td><td>minor</td><td class="n">0.07</td><td class="n">0.0211</td><td class="n">0.0026</td><td>L</td><td>api/sync.js server-side merge, tombstone deletion and collections-column fallback have no test</td></tr>
+<tr><td>PH-861</td><td>test</td><td>minor</td><td class="n">0.06</td><td class="n">0.019</td><td class="n">0.0024</td><td>L</td><td>fetch-url per-hop SSRF re-check in the manual redirect loop is untested</td></tr>
+<tr><td>PH-855</td><td>test</td><td>minor &times;amp</td><td class="n">0.00</td><td class="n">0.0021</td><td class="n">0.0007</td><td>M</td><td>AddMorePanel, ShareImageModal and TableView tests assert on logic copied into the test file</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>9c63bf5</code>, <code>api/__tests__/security.test.js:154-178</code>, <code>api/__tests__/security.test.js:27-38</code>, <code>api/_schemas.js:17</code>, <code>api/_schemas.js:29</code>, <code>api/_schemas.js:38</code>, <code>api/_shared.js:166</code>, <code>api/_shared.js:180</code>, <code>api/_shared.js:188</code>, <code>api/_shared.js:207</code>, <code>api/_shared.js:253-258</code>, <code>api/_shared.js:90-99</code>, <code>api/auto-group.js:35</code>, <code>api/auto-group.js:56</code>, <code>api/fetch-url.js:149</code>, <code>api/fetch-url.js:33</code>, <code>api/fetch-url.js:72-105</code>, <code>api/fetch-url.js:77</code>, <code>api/fetch-url.js:82</code>, <code>api/identify.js:117</code>, <code>api/identify.js:129</code>, <code>api/identify.js:135</code>, <code>api/identify.js:136</code>, <code>api/identify.js:162</code>, <code>api/identify.js:164</code>, <code>api/identify.js:67</code>, <code>api/identify.js:79</code>, <code>api/identify.js:93</code>, <code>api/lookup.js:185</code>, <code>api/lookup.js:214</code>, <code>api/sync.js:104</code>, <code>api/sync.js:5-31</code>, <code>api/sync.js:51</code>, <code>api/sync.js:80-115</code>, <code>api/sync.js:99</code>, <code>commit 27e7971 Restore React.memo on TableRow to fix drag jank in table view</code>, <code>commit 845af57 Fix drag-and-drop gaps caused by virtualizer absolute positioning</code>, <code>commit 8db8f7d Revert Upgrade tooltips to @floating-ui</code>, <code>commit 905154e fix empty virtualized list after view switch</code>, <code>commit a696b35 Refactor: extract shared hooks, consolidate patterns, break up ResultsPhase</code>, <code>commit b3c39ea Facelift: landing input card, quote table rows, mobile cards</code>, <code>commit c1ac354 Fix tooltip linger artifact in notification bars</code>, <code>commit ceba665 Fix tooltip clipping in notification bars</code>, <code>commit d581d56 Restore React.memo on CardItem to fix card view drag jank</code>, <code>commit d7a5a4d Fix card tooltip being clipped by sibling card stacking contexts</code>, <code>commit db4af86 Security hardening: AI spend cap, per-endpoint rate limits, SSRF, cache poisoning, sync ID</code>, <code>commit e12a8f5 feat: pre-warm API, partial batch retry, and integration tests</code>, <code>commit e985fb1 Helpers update</code>, <code>commit f0d1495 fix: eliminate table shake during drag-and-drop</code>, <code>commit fc4cf3f Revert card tooltip to above; bump wrapper z-index above sticky bar</code>, <code>commit fcb2fed Fix tooltip fade-out direction</code>, <code>db4af86</code>, <code>src/components/App.jsx:170</code>, <code>src/components/App.jsx:84</code>, <code>src/components/CardItem.jsx:18</code>, <code>src/components/CollectionDupeModal.jsx:26-31</code>, <code>src/components/EditForm.jsx:169</code>, <code>src/components/HeaderBar.jsx:46</code>, <code>src/components/HeaderBar.jsx:67</code>, <code>src/components/HeaderBar.jsx:85</code>, <code>src/components/MiniHeader.jsx:59</code>, <code>src/components/ResultsPhase.jsx:1169</code>, <code>src/components/ResultsPhase.jsx:60</code>, <code>src/components/TableView.jsx:104</code>, <code>src/components/TableView.jsx:276</code>, <code>src/components/TableView.jsx:289</code>, <code>src/components/__tests__/AddMorePanel.test.js:12-34</code>, <code>src/components/__tests__/App.test.jsx:214-258</code>, <code>src/components/__tests__/App.test.jsx:36-170</code>, <code>src/components/__tests__/CollectionDupeModal.test.js:16-69</code>, <code>src/components/__tests__/CollectionDupeModal.test.js:5-13</code>, <code>src/components/__tests__/HeaderBar.test.js:8-33</code>, <code>src/components/__tests__/ResultsPhase.test.jsx:260-337</code>, <code>src/components/__tests__/ShareImageModal.test.js:3-38</code>, <code>src/components/__tests__/TableView.test.js:13-37</code>, <code>src/components/styles.js:1015</code>, <code>src/components/styles.js:3</code>, <code>src/components/styles.js:302</code>, <code>src/components/styles.js:304</code>, <code>src/components/styles.js:307</code>, <code>src/components/styles.js:31</code>, <code>src/components/styles.js:446</code>, <code>src/components/styles.js:716</code>, <code>src/components/styles.js:851</code>, <code>src/data/localQuotes.js:3821</code>, <code>src/hooks/__tests__/lookupConfidence.test.js:6-17</code>, <code>src/hooks/__tests__/processingErrors.test.js:152</code>, <code>src/hooks/__tests__/processingErrors.test.js:168-173</code>, <code>src/hooks/__tests__/processingErrors.test.js:248-345</code>, <code>src/hooks/__tests__/processingErrors.test.js:6-17</code>, <code>src/hooks/__tests__/processingErrors.test.js:87</code>, <code>src/hooks/__tests__/useSync.test.js:131-149</code>, <code>src/hooks/__tests__/useSync.test.js:26-38</code>, <code>src/hooks/__tests__/useSync.test.js:3-5</code>, <code>src/hooks/__tests__/useViewPreferences.test.js:13-70</code>, <code>src/hooks/useDndQuotes.js:38</code>, <code>src/hooks/useEditState.js:106</code>, <code>src/hooks/useEditState.js:84</code>, <code>src/hooks/useProcessing.js:130</code>, <code>src/hooks/useProcessing.js:132</code>, <code>src/hooks/useProcessing.js:146-166</code>, <code>src/hooks/useProcessing.js:169</code>, <code>src/hooks/useProcessing.js:260</code>, <code>src/hooks/useProcessing.js:321</code>, <code>src/hooks/useProcessing.js:360-420</code>, <code>src/hooks/useProcessing.js:516</code>, <code>src/hooks/useQuoteActions.js:128</code>, <code>src/hooks/useQuoteActions.js:212</code>, <code>src/hooks/useQuoteActions.js:219</code>, <code>src/hooks/useSync.js:93-159</code>, <code>src/hooks/useViewPreferences.js:120-134</code>, <code>src/utils/api.js:72</code>, <code>src/utils/apiErrors.js:9</code>, <code>src/utils/textFormatting.js:142</code>, <code>supabase/migration.sql:117</code>, <code>supabase/migration.sql:2</code>, <code>supabase/migration.sql:35</code>, <code>supabase/migration.sql:96</code></p>
+<h3>Zone 2: . &mdash; priority 0.1699, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-949</td><td>knowledge</td><td>minor</td><td class="n">0.57</td><td class="n">0.1699</td><td class="n">0.1699</td><td>S</td><td>CLAUDE.md says manual memoization was stripped, omitting the three React.memo wrappers the drag path depends on</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>27e7971</code>, <code>86c0c55</code>, <code>CLAUDE.md:291</code>, <code>CLAUDE.md:365</code>, <code>d581d56</code>, <code>src/components/CardItem.jsx:18</code>, <code>src/components/TableView.jsx:103</code>, <code>src/components/TableView.jsx:280</code></p>
+<h3>Zone 3: . &mdash; priority 0.1699, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-449</td><td>signage</td><td>minor</td><td class="n">0.57</td><td class="n">0.1699</td><td class="n">0.1699</td><td>S</td><td>CLAUDE.md says manual React.memo/useCallback were stripped, but hot list components depend on React.memo</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>CLAUDE.md:291</code>, <code>CLAUDE.md:365</code>, <code>src/components/CardItem.jsx:21</code>, <code>src/components/TableView.jsx:103</code>, <code>src/components/TableView.jsx:107</code>, <code>src/components/TableView.jsx:280</code>, <code>src/hooks/useSync.js:64</code></p>
+<h3>Zone 4: . &mdash; priority 0.1536, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-1051</td><td>build</td><td>minor</td><td class="n">0.51</td><td class="n">0.1536</td><td class="n">0.1536</td><td>S</td><td>Node version is declared nowhere the builders read: no engines field or .nvmrc; CI hard-codes 22 independently</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>.github/workflows/ci.yml:19</code>, <code>README.md:108</code>, <code>package.json:1</code></p>
+<h3>Zone 5: . &mdash; priority 0.1536, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-649</td><td>dependency</td><td>minor</td><td class="n">0.51</td><td class="n">0.1536</td><td class="n">0.1536</td><td>S</td><td>legacy-peer-deps in .npmrc outlived its exit criterion and now masks an invalid peer on the React Compiler build path</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>.npmrc:1</code>, <code>5b2f20c</code>, <code>package.json:55</code>, <code>package.json:58</code>, <code>vite.config.js:3</code>, <code>vite.config.js:81</code></p>
+<h3>Zone 6: . &mdash; priority 0.1536, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-650</td><td>dependency</td><td>minor</td><td class="n">0.51</td><td class="n">0.1536</td><td class="n">0.1536</td><td>S</td><td>@babel/eslint-parser and @babel/preset-react are declared but nothing loads them</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>c75536e</code>, <code>eslint.config.js:7</code>, <code>package.json:53</code>, <code>package.json:54</code>, <code>vite.config.js:82</code></p>
+<h3>Zone 7: . &mdash; priority 0.1536, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-451</td><td>signage</td><td>minor</td><td class="n">0.51</td><td class="n">0.1536</td><td class="n">0.1536</td><td>S</td><td>README prerequisite says Node.js 18+, but Vite 8 requires Node ^20.19 or &gt;=22.12</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>.github/workflows/ci.yml:19</code>, <code>README.md:108</code>, <code>package.json:64</code></p>
+<h3>Zone 8: src/data &mdash; priority 0.0577, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-249</td><td>code</td><td>major</td><td class="n">0.08</td><td class="n">0.0577</td><td class="n">0.0577</td><td>S</td><td>Local quote DB indexes 25 entries by un-normalized text, so their exact lookup can never match</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>commit 2815619 Updated helpers</code>, <code>commit 9b55e90 Added Russian support</code>, <code>src/data/localQuotes.js:2240</code>, <code>src/data/localQuotes.js:3795</code>, <code>src/data/localQuotes.js:3806</code>, <code>src/data/localQuotes.js:3834</code>, <code>src/data/localQuotes.js:694</code></p>
+<h3>Zone 9: . &mdash; priority 0.0543, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-450</td><td>signage</td><td>minor</td><td class="n">0.18</td><td class="n">0.0543</td><td class="n">0.0543</td><td>S</td><td>README points to QuotesContext.jsx as the global quote/collection state, but it provides no value; state lives in the unlisted Zustand store</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>README.md:88</code>, <code>src/contexts/QuotesContext.jsx:1</code>, <code>src/contexts/QuotesContext.jsx:2</code>, <code>src/stores/quotesStore.js:1</code></p>
+<h3>Zone 10: . &mdash; priority 0.0512, cost S, 1 finding(s)</h3>
+<p class="fine">Why together: same module.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>id</th><th>category</th><th>severity</th><th class="n">traffic</th><th class="n">interest</th><th class="n">priority</th><th>cost</th><th>title</th></tr></thead>
+<tbody>
+<tr><td>PH-452</td><td>signage</td><td>cosmetic</td><td class="n">0.51</td><td class="n">0.0512</td><td class="n">0.0512</td><td>S</td><td>CLAUDE.md says eslint-plugin-react-hooks must be installed separately, but it is already a devDependency</td></tr>
+</tbody>
+</table>
+</div>
+<p class="fine">Files this zone opens: <code>CLAUDE.md:332</code>, <code>eslint.config.js:1</code>, <code>package.json:61</code></p>
+<p class="fine">No baseline comparison on this page: run <code>/pothole:resurvey</code> to produce one.</p>
+<h2>Not scored</h2>
+<ul>
+<li><strong>13 refuted</strong> &mdash; judged false positives; kept in the register with their reasons so the same false positive does not return.</li>
+<li><strong>0 unverified</strong> &mdash; never judged. Not absent, not confirmed. Re-run <code>/pothole:verify</code> for those categories before reading any number above as complete.</li>
+</ul>
+<footer>
+<p>Model (<code>lib/scoring.mjs</code>): interest = severity weight &times; traffic &times; amplifier, priority = interest &divide; repair cost, RQI = 100 &times; exp(&minus;interest &divide; files). Severity weights {&quot;cosmetic&quot;:0.1,&quot;minor&quot;:0.3,&quot;major&quot;:0.7,&quot;structural&quot;:1}; cost weights {&quot;S&quot;:1,&quot;M&quot;:3,&quot;L&quot;:8,&quot;XL&quot;:20}; a confirmed swerve or signage finding amplifies its module&rsquo;s other findings &times;1.5, once, never compounded.</p>
+<p>Generated by <code>scripts/build-scoreboard.mjs</code> from <code>.pothole/register.md</code> and <code>.pothole/traffic.json</code> &mdash; never from <code>roadwork.md</code>, so the two cannot drift apart. Regenerated in full on every <code>/pothole:report</code> run: edit the register, not this page.</p>
+</footer>
+</main>
+</body>
+</html>

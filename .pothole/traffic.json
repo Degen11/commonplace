@@ -1,0 +1,2876 @@
+{
+  "generatedAt": "2026-11-02T11:19:10.000Z",
+  "params": {
+    "months": 24,
+    "halfLifeDays": 90,
+    "complexitySource": "scc"
+  },
+  "commitsAnalyzed": 658,
+  "deletedSinceWindow": 37,
+  "files": [
+    {
+      "path": "src/components/styles.js",
+      "commits": 215,
+      "linesChurned": 3700,
+      "weightedChurn": 41.27858354959728,
+      "authors": 4,
+      "topAuthorShare": 0.6744186046511628,
+      "entropy": 0.6116073708932263,
+      "traffic": 1,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/App.jsx",
+      "commits": 192,
+      "linesChurned": 12805,
+      "weightedChurn": 31.022505407495164,
+      "authors": 4,
+      "topAuthorShare": 0.5885416666666666,
+      "entropy": 0.5827483973627723,
+      "traffic": 0.75153996915182,
+      "complexity": 33,
+      "hotspotScore": 0.24314528413735353
+    },
+    {
+      "path": "src/components/TableView.jsx",
+      "commits": 128,
+      "linesChurned": 3580,
+      "weightedChurn": 23.382308913950357,
+      "authors": 4,
+      "topAuthorShare": 0.640625,
+      "entropy": 0.6206834458353929,
+      "traffic": 0.5664513387639842,
+      "complexity": 47,
+      "hotspotScore": 0.26101189139124764
+    },
+    {
+      "path": "package.json",
+      "commits": 63,
+      "linesChurned": 461,
+      "weightedChurn": 21.134402773333186,
+      "authors": 5,
+      "topAuthorShare": 0.5555555555555556,
+      "entropy": 0.7473328999978097,
+      "traffic": 0.5119943795537377,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/ResultsPhase.jsx",
+      "commits": 58,
+      "linesChurned": 2403,
+      "weightedChurn": 17.670873929715583,
+      "authors": 4,
+      "topAuthorShare": 0.6896551724137931,
+      "entropy": 0.6101729102247456,
+      "traffic": 0.42808818545053934,
+      "complexity": 77,
+      "hotspotScore": 0.32316461058521107
+    },
+    {
+      "path": "src/components/InputPhase.jsx",
+      "commits": 67,
+      "linesChurned": 3788,
+      "weightedChurn": 17.41427192121788,
+      "authors": 4,
+      "topAuthorShare": 0.7611940298507462,
+      "entropy": 0.5516044953078422,
+      "traffic": 0.4218718382207612,
+      "complexity": 33,
+      "hotspotScore": 0.13648794765965805
+    },
+    {
+      "path": "CLAUDE.md",
+      "commits": 39,
+      "linesChurned": 816,
+      "weightedChurn": 14.356821312742742,
+      "authors": 4,
+      "topAuthorShare": 0.5897435897435898,
+      "entropy": 0.7547369307364458,
+      "traffic": 0.3478031482231616,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/CollectionsSidebar.jsx",
+      "commits": 59,
+      "linesChurned": 2458,
+      "weightedChurn": 13.21607447336089,
+      "authors": 3,
+      "topAuthorShare": 0.8983050847457628,
+      "entropy": 0.35819866673590883,
+      "traffic": 0.32016782885685596,
+      "complexity": 47,
+      "hotspotScore": 0.14752831329678656
+    },
+    {
+      "path": "src/components/CardItem.jsx",
+      "commits": 60,
+      "linesChurned": 917,
+      "weightedChurn": 12.919877648613516,
+      "authors": 4,
+      "topAuthorShare": 0.8666666666666667,
+      "entropy": 0.3873399615737282,
+      "traffic": 0.3129922719632555,
+      "complexity": 28,
+      "hotspotScore": 0.08591944720559956
+    },
+    {
+      "path": "src/components/ToolbarSection.jsx",
+      "commits": 44,
+      "linesChurned": 1232,
+      "weightedChurn": 10.97352538712258,
+      "authors": 4,
+      "topAuthorShare": 0.7954545454545454,
+      "entropy": 0.5219908877818612,
+      "traffic": 0.2658406477038537,
+      "complexity": 48,
+      "hotspotScore": 0.12510148127240173
+    },
+    {
+      "path": "src/components/HeaderBar.jsx",
+      "commits": 43,
+      "linesChurned": 1528,
+      "weightedChurn": 9.46421708095766,
+      "authors": 4,
+      "topAuthorShare": 0.813953488372093,
+      "entropy": 0.4773208297320106,
+      "traffic": 0.22927669186095398,
+      "complexity": 7,
+      "hotspotScore": 0.015734674931634097
+    },
+    {
+      "path": "src/hooks/useProcessing.js",
+      "commits": 40,
+      "linesChurned": 1645,
+      "weightedChurn": 9.117501864786766,
+      "authors": 3,
+      "topAuthorShare": 0.85,
+      "entropy": 0.47167341781551536,
+      "traffic": 0.22087729473158527,
+      "complexity": 102,
+      "hotspotScore": 0.22087729473158527
+    },
+    {
+      "path": "src/components/QuoteActions.jsx",
+      "commits": 41,
+      "linesChurned": 1118,
+      "weightedChurn": 8.19245901564356,
+      "authors": 4,
+      "topAuthorShare": 0.6829268292682927,
+      "entropy": 0.607736749059206,
+      "traffic": 0.19846754203181682,
+      "complexity": 9,
+      "hotspotScore": 0.01751184194398384
+    },
+    {
+      "path": "src/components/ExportDropdown.jsx",
+      "commits": 24,
+      "linesChurned": 616,
+      "weightedChurn": 8.030009851707922,
+      "authors": 4,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.6934210940655059,
+      "traffic": 0.19453210748037558,
+      "complexity": 14,
+      "hotspotScore": 0.02670048534044371
+    },
+    {
+      "path": "src/components/ProcessingPhase.jsx",
+      "commits": 34,
+      "linesChurned": 642,
+      "weightedChurn": 7.99572215803726,
+      "authors": 4,
+      "topAuthorShare": 0.8235294117647058,
+      "entropy": 0.4648957541578699,
+      "traffic": 0.19370146624411652,
+      "complexity": 39,
+      "hotspotScore": 0.07406232532863279
+    },
+    {
+      "path": "src/components/EditForm.jsx",
+      "commits": 33,
+      "linesChurned": 829,
+      "weightedChurn": 7.516816999238953,
+      "authors": 4,
+      "topAuthorShare": 0.6363636363636364,
+      "entropy": 0.6889614023986596,
+      "traffic": 0.1820996834885893,
+      "complexity": 22,
+      "hotspotScore": 0.03927640232106828
+    },
+    {
+      "path": "src/contexts/QuotesContext.jsx",
+      "commits": 37,
+      "linesChurned": 1568,
+      "weightedChurn": 7.47524551394862,
+      "authors": 3,
+      "topAuthorShare": 0.918918918918919,
+      "entropy": 0.30311976291828074,
+      "traffic": 0.18109258775720635,
+      "complexity": 33,
+      "hotspotScore": 0.058588778392037355
+    },
+    {
+      "path": "src/components/AddMorePanel.jsx",
+      "commits": 24,
+      "linesChurned": 549,
+      "weightedChurn": 7.3791516550328735,
+      "authors": 4,
+      "topAuthorShare": 0.7083333333333334,
+      "entropy": 0.6467178481609384,
+      "traffic": 0.17876465276882947,
+      "complexity": 26,
+      "hotspotScore": 0.045567460509701625
+    },
+    {
+      "path": "src/hooks/useSync.js",
+      "commits": 30,
+      "linesChurned": 766,
+      "weightedChurn": 7.134645373057525,
+      "authors": 4,
+      "topAuthorShare": 0.8,
+      "entropy": 0.5068788391464056,
+      "traffic": 0.1728413322246163,
+      "complexity": 23,
+      "hotspotScore": 0.038974025893786034
+    },
+    {
+      "path": "src/hooks/useEditState.js",
+      "commits": 31,
+      "linesChurned": 649,
+      "weightedChurn": 7.110089346056433,
+      "authors": 4,
+      "topAuthorShare": 0.8709677419354839,
+      "entropy": 0.37416327521902387,
+      "traffic": 0.17224644681699114,
+      "complexity": 48,
+      "hotspotScore": 0.08105715144328994
+    },
+    {
+      "path": "src/components/MiniHeader.jsx",
+      "commits": 31,
+      "linesChurned": 693,
+      "weightedChurn": 6.711142809495548,
+      "authors": 4,
+      "topAuthorShare": 0.8387096774193549,
+      "entropy": 0.4292542814219559,
+      "traffic": 0.16258171265571497,
+      "complexity": 9,
+      "hotspotScore": 0.014345445234327793
+    },
+    {
+      "path": "src/components/inputPhaseStyles.js",
+      "commits": 10,
+      "linesChurned": 777,
+      "weightedChurn": 6.085207341570471,
+      "authors": 3,
+      "topAuthorShare": 0.6,
+      "entropy": 0.8649735207179273,
+      "traffic": 0.1474180269354189,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/BulkBar.jsx",
+      "commits": 24,
+      "linesChurned": 1120,
+      "weightedChurn": 5.811822450978724,
+      "authors": 4,
+      "topAuthorShare": 0.7916666666666666,
+      "entropy": 0.5276766096224922,
+      "traffic": 0.14079510368847006,
+      "complexity": 16,
+      "hotspotScore": 0.02208550646093648
+    },
+    {
+      "path": "src/hooks/useQuoteActions.js",
+      "commits": 23,
+      "linesChurned": 732,
+      "weightedChurn": 5.359692413596964,
+      "authors": 3,
+      "topAuthorShare": 0.8695652173913043,
+      "entropy": 0.4280272187063688,
+      "traffic": 0.12984196531736986,
+      "complexity": 55,
+      "hotspotScore": 0.07001282443583669
+    },
+    {
+      "path": "api/identify.js",
+      "commits": 26,
+      "linesChurned": 880,
+      "weightedChurn": 5.317446887609073,
+      "authors": 4,
+      "topAuthorShare": 0.5769230769230769,
+      "entropy": 0.7232321872603966,
+      "traffic": 0.12881854052041353,
+      "complexity": 23,
+      "hotspotScore": 0.029047317960485403
+    },
+    {
+      "path": "src/hooks/useViewPreferences.js",
+      "commits": 25,
+      "linesChurned": 447,
+      "weightedChurn": 5.128585711993738,
+      "authors": 2,
+      "topAuthorShare": 0.84,
+      "entropy": 0.6343095546405662,
+      "traffic": 0.12424325814938902,
+      "complexity": 44,
+      "hotspotScore": 0.05359513096640311
+    },
+    {
+      "path": "src/components/StatsPanel.jsx",
+      "commits": 24,
+      "linesChurned": 1416,
+      "weightedChurn": 5.040827261809191,
+      "authors": 3,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.75,
+      "traffic": 0.12211725375102825,
+      "complexity": 10,
+      "hotspotScore": 0.011972279779512573
+    },
+    {
+      "path": "src/config.js",
+      "commits": 17,
+      "linesChurned": 131,
+      "weightedChurn": 4.8590183550716635,
+      "authors": 3,
+      "topAuthorShare": 0.7647058823529411,
+      "entropy": 0.6170591141539599,
+      "traffic": 0.11771281708911906,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/QuickAddBar.jsx",
+      "commits": 19,
+      "linesChurned": 800,
+      "weightedChurn": 4.758494653617906,
+      "authors": 4,
+      "topAuthorShare": 0.7894736842105263,
+      "entropy": 0.529138521613167,
+      "traffic": 0.11527756634140444,
+      "complexity": 8,
+      "hotspotScore": 0.009041377752267016
+    },
+    {
+      "path": "index.html",
+      "commits": 20,
+      "linesChurned": 461,
+      "weightedChurn": 4.750363085429864,
+      "authors": 3,
+      "topAuthorShare": 0.55,
+      "entropy": 0.887092015535129,
+      "traffic": 0.11508057391848683,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/NotificationBars.jsx",
+      "commits": 10,
+      "linesChurned": 302,
+      "weightedChurn": 4.691028039519713,
+      "authors": 3,
+      "topAuthorShare": 0.5,
+      "entropy": 0.9372305632161296,
+      "traffic": 0.11364314460750143,
+      "complexity": 14,
+      "hotspotScore": 0.015598078671617844
+    },
+    {
+      "path": "src/components/SyncPill.jsx",
+      "commits": 10,
+      "linesChurned": 144,
+      "weightedChurn": 4.631119346333283,
+      "authors": 3,
+      "topAuthorShare": 0.6,
+      "entropy": 0.8173454221465103,
+      "traffic": 0.11219181832557006,
+      "complexity": 12,
+      "hotspotScore": 0.013199037450067065
+    },
+    {
+      "path": "src/utils/helpers.js",
+      "commits": 27,
+      "linesChurned": 2552,
+      "weightedChurn": 4.605931433958052,
+      "authors": 3,
+      "topAuthorShare": 0.5925925925925926,
+      "entropy": 0.7282023343901067,
+      "traffic": 0.11158162509195371,
+      "complexity": 6,
+      "hotspotScore": 0.006563625005409042
+    },
+    {
+      "path": "src/components/DupeModal.jsx",
+      "commits": 25,
+      "linesChurned": 1500,
+      "weightedChurn": 4.4997193118186685,
+      "authors": 3,
+      "topAuthorShare": 0.68,
+      "entropy": 0.6803454839201114,
+      "traffic": 0.10900856872698018,
+      "complexity": 7,
+      "hotspotScore": 0.007480980206753543
+    },
+    {
+      "path": "vite.config.js",
+      "commits": 17,
+      "linesChurned": 301,
+      "weightedChurn": 4.276418338162023,
+      "authors": 3,
+      "topAuthorShare": 0.5294117647058824,
+      "entropy": 0.9127332405984697,
+      "traffic": 0.10359896029435692,
+      "complexity": 4,
+      "hotspotScore": 0.004062704325268899
+    },
+    {
+      "path": "src/main.jsx",
+      "commits": 19,
+      "linesChurned": 189,
+      "weightedChurn": 4.039809721374248,
+      "authors": 3,
+      "topAuthorShare": 0.47368421052631576,
+      "entropy": 0.922317214818483,
+      "traffic": 0.09786696572377085,
+      "complexity": 3,
+      "hotspotScore": 0.0028784401683462015
+    },
+    {
+      "path": "src/components/InlineEditors.jsx",
+      "commits": 16,
+      "linesChurned": 455,
+      "weightedChurn": 3.9595420610054335,
+      "authors": 4,
+      "topAuthorShare": 0.8125,
+      "entropy": 0.4966963645051813,
+      "traffic": 0.09592243048378687,
+      "complexity": 8,
+      "hotspotScore": 0.007523327881081323
+    },
+    {
+      "path": "api/_shared.js",
+      "commits": 14,
+      "linesChurned": 388,
+      "weightedChurn": 3.7768201437561095,
+      "authors": 3,
+      "topAuthorShare": 0.7857142857142857,
+      "entropy": 0.5970948432879916,
+      "traffic": 0.0914958755602203,
+      "complexity": 48,
+      "hotspotScore": 0.04305688261657426
+    },
+    {
+      "path": "src/components/UrlPreviewModal.jsx",
+      "commits": 12,
+      "linesChurned": 679,
+      "weightedChurn": 3.733458119926664,
+      "authors": 4,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.7091479170272448,
+      "traffic": 0.09044540289132785,
+      "complexity": 9,
+      "hotspotScore": 0.007980476725705399
+    },
+    {
+      "path": "src/components/ShareImageModal.jsx",
+      "commits": 12,
+      "linesChurned": 626,
+      "weightedChurn": 3.7264145273556784,
+      "authors": 3,
+      "topAuthorShare": 0.75,
+      "entropy": 0.6567045482143385,
+      "traffic": 0.09027476737127609,
+      "complexity": 9,
+      "hotspotScore": 0.007965420650406714
+    },
+    {
+      "path": "api/lookup.js",
+      "commits": 15,
+      "linesChurned": 675,
+      "weightedChurn": 3.689802071344003,
+      "authors": 2,
+      "topAuthorShare": 0.8,
+      "entropy": 0.7219280948873623,
+      "traffic": 0.08938780728535926,
+      "complexity": 40,
+      "hotspotScore": 0.03505404207268991
+    },
+    {
+      "path": "src/components/UrlImportPanel.jsx",
+      "commits": 6,
+      "linesChurned": 145,
+      "weightedChurn": 3.689332580134947,
+      "authors": 3,
+      "topAuthorShare": 0.5,
+      "entropy": 0.9206198357143051,
+      "traffic": 0.08937643356153728,
+      "complexity": 15,
+      "hotspotScore": 0.013143593170814306
+    },
+    {
+      "path": "src/data/constants.js",
+      "commits": 14,
+      "linesChurned": 280,
+      "weightedChurn": 3.6548950232246344,
+      "authors": 4,
+      "topAuthorShare": 0.5714285714285714,
+      "entropy": 0.805288621665821,
+      "traffic": 0.0885421617927656,
+      "complexity": 1,
+      "hotspotScore": 0.000868060409732996
+    },
+    {
+      "path": "src/stores/quotesStore.js",
+      "commits": 15,
+      "linesChurned": 585,
+      "weightedChurn": 3.63211049998064,
+      "authors": 3,
+      "topAuthorShare": 0.7333333333333333,
+      "entropy": 0.664357405712226,
+      "traffic": 0.08799019219292169,
+      "complexity": 54,
+      "hotspotScore": 0.046583042925664425
+    },
+    {
+      "path": "src/components/CollectionDupeModal.jsx",
+      "commits": 13,
+      "linesChurned": 1277,
+      "weightedChurn": 3.439933527453502,
+      "authors": 2,
+      "topAuthorShare": 0.8461538461538461,
+      "entropy": 0.6193821946787638,
+      "traffic": 0.08333458252801561,
+      "complexity": 9,
+      "hotspotScore": 0.00735305139953079
+    },
+    {
+      "path": "src/data/localQuotes.js",
+      "commits": 22,
+      "linesChurned": 7588,
+      "weightedChurn": 3.4037724331497397,
+      "authors": 2,
+      "topAuthorShare": 0.5454545454545454,
+      "entropy": 0.9940302114769565,
+      "traffic": 0.08245855696719873,
+      "complexity": 25,
+      "hotspotScore": 0.020210430629215372
+    },
+    {
+      "path": "src/hooks/useTheme.js",
+      "commits": 14,
+      "linesChurned": 445,
+      "weightedChurn": 3.335234653131082,
+      "authors": 2,
+      "topAuthorShare": 0.7857142857142857,
+      "entropy": 0.74959525725948,
+      "traffic": 0.08079818555604534,
+      "complexity": 26,
+      "hotspotScore": 0.020595615926050772
+    },
+    {
+      "path": "src/utils/export.js",
+      "commits": 17,
+      "linesChurned": 651,
+      "weightedChurn": 3.272206312460717,
+      "authors": 3,
+      "topAuthorShare": 0.8235294117647058,
+      "entropy": 0.5264143616682583,
+      "traffic": 0.07927128382516026,
+      "complexity": 22,
+      "hotspotScore": 0.017097727883858094
+    },
+    {
+      "path": "vercel.json",
+      "commits": 13,
+      "linesChurned": 105,
+      "weightedChurn": 3.1228960368487857,
+      "authors": 3,
+      "topAuthorShare": 0.46153846153846156,
+      "entropy": 0.92146324007577,
+      "traffic": 0.07565414721889732,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "api/og.js",
+      "commits": 8,
+      "linesChurned": 779,
+      "weightedChurn": 3.0609308496024923,
+      "authors": 2,
+      "topAuthorShare": 0.625,
+      "entropy": 0.954434002924965,
+      "traffic": 0.07415300105742982,
+      "complexity": 13,
+      "hotspotScore": 0.009450872683790074
+    },
+    {
+      "path": "src/components/EmptyState.jsx",
+      "commits": 11,
+      "linesChurned": 276,
+      "weightedChurn": 3.0257089386994593,
+      "authors": 2,
+      "topAuthorShare": 0.8181818181818182,
+      "entropy": 0.6840384356390417,
+      "traffic": 0.07329972781318894,
+      "complexity": 8,
+      "hotspotScore": 0.005748998259857956
+    },
+    {
+      "path": "api/sync.js",
+      "commits": 13,
+      "linesChurned": 546,
+      "weightedChurn": 2.905290459262827,
+      "authors": 3,
+      "topAuthorShare": 0.8461538461538461,
+      "entropy": 0.4878527713892913,
+      "traffic": 0.07038251338668261,
+      "complexity": 38,
+      "hotspotScore": 0.026220936359744502
+    },
+    {
+      "path": "src/components/HowItWorksAnimation.jsx",
+      "commits": 18,
+      "linesChurned": 635,
+      "weightedChurn": 2.8464084555903817,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.06895605931270264,
+      "complexity": 9,
+      "hotspotScore": 0.006084358174650233
+    },
+    {
+      "path": "src/utils/textFormatting.js",
+      "commits": 13,
+      "linesChurned": 391,
+      "weightedChurn": 2.736881432105039,
+      "authors": 2,
+      "topAuthorShare": 0.8461538461538461,
+      "entropy": 0.6193821946787638,
+      "traffic": 0.066302697349501,
+      "complexity": 30,
+      "hotspotScore": 0.019500793338088532
+    },
+    {
+      "path": "api/share.js",
+      "commits": 8,
+      "linesChurned": 266,
+      "weightedChurn": 2.7156678829442646,
+      "authors": 2,
+      "topAuthorShare": 0.625,
+      "entropy": 0.954434002924965,
+      "traffic": 0.06578878559825872,
+      "complexity": 12,
+      "hotspotScore": 0.007739857129206908
+    },
+    {
+      "path": "api/fetch-url.js",
+      "commits": 10,
+      "linesChurned": 497,
+      "weightedChurn": 2.6172870202522036,
+      "authors": 3,
+      "topAuthorShare": 0.8,
+      "entropy": 0.5816718657178868,
+      "traffic": 0.06340544648552357,
+      "complexity": 36,
+      "hotspotScore": 0.022378392877243615
+    },
+    {
+      "path": "src/components/MobileSheet.jsx",
+      "commits": 6,
+      "linesChurned": 82,
+      "weightedChurn": 2.5267428801705125,
+      "authors": 2,
+      "topAuthorShare": 0.8333333333333334,
+      "entropy": 0.6500224216483541,
+      "traffic": 0.061211956973634185,
+      "complexity": 6,
+      "hotspotScore": 0.003600703351390246
+    },
+    {
+      "path": "src/components/OnboardingModal.jsx",
+      "commits": 10,
+      "linesChurned": 530,
+      "weightedChurn": 2.469008404142569,
+      "authors": 2,
+      "topAuthorShare": 0.8,
+      "entropy": 0.7219280948873623,
+      "traffic": 0.059813302488347056,
+      "complexity": 4,
+      "hotspotScore": 0.0023456197054253745
+    },
+    {
+      "path": "public/og-image.svg",
+      "commits": 8,
+      "linesChurned": 329,
+      "weightedChurn": 2.45007467417926,
+      "authors": 3,
+      "topAuthorShare": 0.375,
+      "entropy": 0.985056822321508,
+      "traffic": 0.059354620810460515,
+      "complexity": 1,
+      "hotspotScore": 0.0005819080471613776
+    },
+    {
+      "path": "src/components/ShortcutsModal.jsx",
+      "commits": 11,
+      "linesChurned": 394,
+      "weightedChurn": 2.3092540876946757,
+      "authors": 2,
+      "topAuthorShare": 0.9090909090909091,
+      "entropy": 0.4394969869215134,
+      "traffic": 0.055943152335158196,
+      "complexity": 2,
+      "hotspotScore": 0.0010969245555913372
+    },
+    {
+      "path": "src/utils/__tests__/shareLinks.test.js",
+      "commits": 3,
+      "linesChurned": 119,
+      "weightedChurn": 2.298537814772546,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.05568354379240736,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/shareLinks.js",
+      "commits": 3,
+      "linesChurned": 62,
+      "weightedChurn": 2.298537814772546,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.05568354379240736,
+      "complexity": 10,
+      "hotspotScore": 0.005459170960039937
+    },
+    {
+      "path": "src/contexts/ToastContext.jsx",
+      "commits": 10,
+      "linesChurned": 73,
+      "weightedChurn": 2.2431965197683192,
+      "authors": 2,
+      "topAuthorShare": 0.9,
+      "entropy": 0.4689955935892812,
+      "traffic": 0.05434286564298072,
+      "complexity": 1,
+      "hotspotScore": 0.0005327731925782424
+    },
+    {
+      "path": "src/components/ResultsModals.jsx",
+      "commits": 6,
+      "linesChurned": 103,
+      "weightedChurn": 2.194962434738634,
+      "authors": 3,
+      "topAuthorShare": 0.5,
+      "entropy": 0.9206198357143051,
+      "traffic": 0.05317436418576064,
+      "complexity": 4,
+      "hotspotScore": 0.002085269183755319
+    },
+    {
+      "path": "public/privacy.html",
+      "commits": 3,
+      "linesChurned": 166,
+      "weightedChurn": 2.113778622141572,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.05120763457403553,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "public/terms.html",
+      "commits": 3,
+      "linesChurned": 100,
+      "weightedChurn": 2.113778622141572,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.05120763457403553,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/ConfirmModal.jsx",
+      "commits": 11,
+      "linesChurned": 275,
+      "weightedChurn": 2.0858054332201665,
+      "authors": 3,
+      "topAuthorShare": 0.8181818181818182,
+      "entropy": 0.5462947022805018,
+      "traffic": 0.050529966240581335,
+      "complexity": 1,
+      "hotspotScore": 0.0004953918258880523
+    },
+    {
+      "path": "src/components/Footer.jsx",
+      "commits": 9,
+      "linesChurned": 325,
+      "weightedChurn": 1.9518866557104042,
+      "authors": 2,
+      "topAuthorShare": 0.8888888888888888,
+      "entropy": 0.5032583347756457,
+      "traffic": 0.04728569848733211,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/SyncPill.test.jsx",
+      "commits": 3,
+      "linesChurned": 101,
+      "weightedChurn": 1.8718930210128146,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.0453478016939144,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/DeviceLinkModal.jsx",
+      "commits": 3,
+      "linesChurned": 155,
+      "weightedChurn": 1.869587793138683,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.04529195607916937,
+      "complexity": 7,
+      "hotspotScore": 0.0031082714956292704
+    },
+    {
+      "path": "src/components/__tests__/InputPhase.test.jsx",
+      "commits": 3,
+      "linesChurned": 339,
+      "weightedChurn": 1.824414516691796,
+      "authors": 3,
+      "topAuthorShare": 0.3333333333333333,
+      "entropy": 1,
+      "traffic": 0.04419760466101544,
+      "complexity": 1,
+      "hotspotScore": 0.0004333098496177984
+    },
+    {
+      "path": "api/auto-group.js",
+      "commits": 6,
+      "linesChurned": 202,
+      "weightedChurn": 1.8037136944282879,
+      "authors": 3,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.7896900821428475,
+      "traffic": 0.04369611404570313,
+      "complexity": 10,
+      "hotspotScore": 0.004283932749578738
+    },
+    {
+      "path": "src/utils/quotes.js",
+      "commits": 4,
+      "linesChurned": 151,
+      "weightedChurn": 1.7955952786341192,
+      "authors": 3,
+      "topAuthorShare": 0.5,
+      "entropy": 0.9463946303571862,
+      "traffic": 0.043499440247911254,
+      "complexity": 35,
+      "hotspotScore": 0.014926278516440137
+    },
+    {
+      "path": "src/hooks/__tests__/useEditState.test.js",
+      "commits": 3,
+      "linesChurned": 621,
+      "weightedChurn": 1.7813633875500396,
+      "authors": 3,
+      "topAuthorShare": 0.3333333333333333,
+      "entropy": 1,
+      "traffic": 0.04315466361411568,
+      "complexity": 3,
+      "hotspotScore": 0.0012692548121798729
+    },
+    {
+      "path": "src/hooks/__tests__/useQuoteActions.test.js",
+      "commits": 3,
+      "linesChurned": 387,
+      "weightedChurn": 1.7683541798274385,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.042839507264165584,
+      "complexity": 13,
+      "hotspotScore": 0.005459937200334829
+    },
+    {
+      "path": "src/hooks/useToasts.js",
+      "commits": 10,
+      "linesChurned": 100,
+      "weightedChurn": 1.7633304672475747,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.042717804624494635,
+      "complexity": 5,
+      "hotspotScore": 0.002094010030612482
+    },
+    {
+      "path": "README.md",
+      "commits": 9,
+      "linesChurned": 605,
+      "weightedChurn": 1.734186440121979,
+      "authors": 3,
+      "topAuthorShare": 0.4444444444444444,
+      "entropy": 0.8783471047618534,
+      "traffic": 0.04201177198917956,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/StatsOverlay.jsx",
+      "commits": 6,
+      "linesChurned": 71,
+      "weightedChurn": 1.6314210394412547,
+      "authors": 2,
+      "topAuthorShare": 0.8333333333333334,
+      "entropy": 0.6500224216483541,
+      "traffic": 0.039522214648694536,
+      "complexity": 10,
+      "hotspotScore": 0.0038747269263426014
+    },
+    {
+      "path": "src/components/ConfidenceTag.jsx",
+      "commits": 2,
+      "linesChurned": 31,
+      "weightedChurn": 1.60553621074117,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.03889513817285123,
+      "complexity": 1,
+      "hotspotScore": 0.00038132488404756106
+    },
+    {
+      "path": "src/components/__tests__/AttentionNotice.test.jsx",
+      "commits": 2,
+      "linesChurned": 70,
+      "weightedChurn": 1.60553621074117,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.03889513817285123,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "supabase/migration.sql",
+      "commits": 6,
+      "linesChurned": 210,
+      "weightedChurn": 1.5362602654119901,
+      "authors": 2,
+      "topAuthorShare": 0.8333333333333334,
+      "entropy": 0.6500224216483541,
+      "traffic": 0.037216884236498424,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/useInfiniteScroll.js",
+      "commits": 10,
+      "linesChurned": 326,
+      "weightedChurn": 1.5081822738131219,
+      "authors": 2,
+      "topAuthorShare": 0.7,
+      "entropy": 0.8812908992306927,
+      "traffic": 0.03653667699137501,
+      "complexity": 1,
+      "hotspotScore": 0.00035820271560171575
+    },
+    {
+      "path": "public/favicon.svg",
+      "commits": 6,
+      "linesChurned": 37,
+      "weightedChurn": 1.5053494144264121,
+      "authors": 3,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.7896900821428475,
+      "traffic": 0.03646804916689295,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/useKeyboardShortcuts.js",
+      "commits": 7,
+      "linesChurned": 205,
+      "weightedChurn": 1.489727385649285,
+      "authors": 2,
+      "topAuthorShare": 0.8571428571428571,
+      "entropy": 0.5916727785823275,
+      "traffic": 0.036089595561323934,
+      "complexity": 50,
+      "hotspotScore": 0.017690978216335262
+    },
+    {
+      "path": "api/_schemas.js",
+      "commits": 4,
+      "linesChurned": 190,
+      "weightedChurn": 1.4837264613227792,
+      "authors": 3,
+      "topAuthorShare": 0.5,
+      "entropy": 0.9463946303571862,
+      "traffic": 0.035944219344155634,
+      "complexity": 4,
+      "hotspotScore": 0.001409577229182574
+    },
+    {
+      "path": "src/hooks/__tests__/lookupConfidence.test.js",
+      "commits": 2,
+      "linesChurned": 176,
+      "weightedChurn": 1.4316616724514446,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.03468291664444509,
+      "complexity": 9,
+      "hotspotScore": 0.0030602573509804494
+    },
+    {
+      "path": "scripts/generate-og-image.mjs",
+      "commits": 2,
+      "linesChurned": 72,
+      "weightedChurn": 1.3956176073695783,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.03380972619113027,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/data/faq.js",
+      "commits": 2,
+      "linesChurned": 32,
+      "weightedChurn": 1.3608742301045786,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.03296804572931756,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/__tests__/helpers.test.js",
+      "commits": 4,
+      "linesChurned": 296,
+      "weightedChurn": 1.32432369389929,
+      "authors": 2,
+      "topAuthorShare": 0.75,
+      "entropy": 0.8112781244591328,
+      "traffic": 0.03208258569018196,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/shareImage.js",
+      "commits": 8,
+      "linesChurned": 388,
+      "weightedChurn": 1.2906174695526356,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.031266030918961296,
+      "complexity": 10,
+      "hotspotScore": 0.003065297148917774
+    },
+    {
+      "path": "src/components/Logo.jsx",
+      "commits": 4,
+      "linesChurned": 95,
+      "weightedChurn": 1.2803562785018894,
+      "authors": 2,
+      "topAuthorShare": 0.75,
+      "entropy": 0.8112781244591328,
+      "traffic": 0.031017447024641927,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/useLongPress.js",
+      "commits": 6,
+      "linesChurned": 110,
+      "weightedChurn": 1.2603044387379814,
+      "authors": 2,
+      "topAuthorShare": 0.8333333333333334,
+      "entropy": 0.6500224216483541,
+      "traffic": 0.03053167842408384,
+      "complexity": 9,
+      "hotspotScore": 0.0026939716256544565
+    },
+    {
+      "path": "src/components/__tests__/App.test.jsx",
+      "commits": 3,
+      "linesChurned": 303,
+      "weightedChurn": 1.1918627319854043,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.028873634449044273,
+      "complexity": 4,
+      "hotspotScore": 0.0011322993901585988
+    },
+    {
+      "path": "src/components/__tests__/HeaderControls.test.jsx",
+      "commits": 2,
+      "linesChurned": 174,
+      "weightedChurn": 1.1886306408997938,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.028795334982161476,
+      "complexity": 1,
+      "hotspotScore": 0.00028230720570746547
+    },
+    {
+      "path": "src/utils/smartRestore.js",
+      "commits": 4,
+      "linesChurned": 225,
+      "weightedChurn": 1.1631073005937562,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.02817701579309893,
+      "complexity": 21,
+      "hotspotScore": 0.005801150310343897
+    },
+    {
+      "path": "src/components/ModalShell.jsx",
+      "commits": 3,
+      "linesChurned": 56,
+      "weightedChurn": 1.1625676077909963,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.028163941390918646,
+      "complexity": 2,
+      "hotspotScore": 0.0005522341449199735
+    },
+    {
+      "path": "src/components/HeaderControls.jsx",
+      "commits": 2,
+      "linesChurned": 196,
+      "weightedChurn": 1.1405847528193251,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.027631392716004493,
+      "complexity": 5,
+      "hotspotScore": 0.0013544800350982595
+    },
+    {
+      "path": "src/hooks/__tests__/useSync.test.js",
+      "commits": 3,
+      "linesChurned": 196,
+      "weightedChurn": 1.1184617274272695,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.027095448323303267,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/DeviceLinkModal.test.jsx",
+      "commits": 2,
+      "linesChurned": 94,
+      "weightedChurn": 1.0838044657933863,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.02625585406754976,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/ScrollTopButton.jsx",
+      "commits": 2,
+      "linesChurned": 53,
+      "weightedChurn": 1.0576418474507572,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.025622047960535597,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/__tests__/export.test.js",
+      "commits": 3,
+      "linesChurned": 139,
+      "weightedChurn": 1.047542598077993,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.025377387206596946,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/HighlightText.jsx",
+      "commits": 5,
+      "linesChurned": 109,
+      "weightedChurn": 1.037622697363794,
+      "authors": 2,
+      "topAuthorShare": 0.8,
+      "entropy": 0.7219280948873623,
+      "traffic": 0.02513707128823991,
+      "complexity": 15,
+      "hotspotScore": 0.0036966281306235163
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "commits": 2,
+      "linesChurned": 62,
+      "weightedChurn": 1.0353055345368318,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.02508093654165448,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/ResultsPhase.test.jsx",
+      "commits": 2,
+      "linesChurned": 339,
+      "weightedChurn": 1.0198285860680882,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.024705997599039173,
+      "complexity": 3,
+      "hotspotScore": 0.0007266469882070345
+    },
+    {
+      "path": "src/hooks/useSwipe.js",
+      "commits": 6,
+      "linesChurned": 176,
+      "weightedChurn": 1.016202794955813,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.02461816049804178,
+      "complexity": 10,
+      "hotspotScore": 0.002413545146866841
+    },
+    {
+      "path": ".gitignore",
+      "commits": 4,
+      "linesChurned": 28,
+      "weightedChurn": 0.9855186376642967,
+      "authors": 2,
+      "topAuthorShare": 0.75,
+      "entropy": 0.8112781244591328,
+      "traffic": 0.023874817227683472,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/__tests__/quotes.test.js",
+      "commits": 2,
+      "linesChurned": 129,
+      "weightedChurn": 0.968205787937704,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.02345540240678026,
+      "complexity": 1,
+      "hotspotScore": 0.0002299549255566692
+    },
+    {
+      "path": "src/utils/api.js",
+      "commits": 2,
+      "linesChurned": 77,
+      "weightedChurn": 0.9504035378461622,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.02302413155006222,
+      "complexity": 7,
+      "hotspotScore": 0.0015800874593179957
+    },
+    {
+      "path": "src/hooks/useScrollLock.js",
+      "commits": 5,
+      "linesChurned": 80,
+      "weightedChurn": 0.8399596114406241,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.02034855702912846,
+      "complexity": 6,
+      "hotspotScore": 0.0011969739428899094
+    },
+    {
+      "path": "src/components/EntryReviewModal.jsx",
+      "commits": 2,
+      "linesChurned": 213,
+      "weightedChurn": 0.8265555619952105,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.020023835386746805,
+      "complexity": 3,
+      "hotspotScore": 0.0005889363349043178
+    },
+    {
+      "path": "src/components/__tests__/BulkBar.test.jsx",
+      "commits": 1,
+      "linesChurned": 57,
+      "weightedChurn": 0.8010307476154033,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.019405480487307523,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/logoPaths.js",
+      "commits": 1,
+      "linesChurned": 18,
+      "weightedChurn": 0.7994998258059273,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.019368392930569134,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/parsers.js",
+      "commits": 5,
+      "linesChurned": 203,
+      "weightedChurn": 0.7885089001929408,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.019102130751301752,
+      "complexity": 79,
+      "hotspotScore": 0.014794787542674886
+    },
+    {
+      "path": "src/utils/__tests__/api.test.js",
+      "commits": 1,
+      "linesChurned": 63,
+      "weightedChurn": 0.7880215398928021,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.019090324137357426,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/__tests__/textFormatting.test.js",
+      "commits": 3,
+      "linesChurned": 197,
+      "weightedChurn": 0.7731799760953558,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.01873077779343761,
+      "complexity": 2,
+      "hotspotScore": 0.0003672701528125022
+    },
+    {
+      "path": "api/__tests__/security.test.js",
+      "commits": 1,
+      "linesChurned": 178,
+      "weightedChurn": 0.7564460133363351,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.01832538687834203,
+      "complexity": 2,
+      "hotspotScore": 0.0003593213113400398
+    },
+    {
+      "path": "api/__tests__/sharePage.test.js",
+      "commits": 1,
+      "linesChurned": 62,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 1,
+      "hotspotScore": 0.0001788194984776272
+    },
+    {
+      "path": "api/_shareData.js",
+      "commits": 1,
+      "linesChurned": 51,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 16,
+      "hotspotScore": 0.002861111975642035
+    },
+    {
+      "path": "api/share-page.js",
+      "commits": 1,
+      "linesChurned": 160,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 3,
+      "hotspotScore": 0.0005364584954328815
+    },
+    {
+      "path": "public/404.html",
+      "commits": 1,
+      "linesChurned": 57,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "public/boot.js",
+      "commits": 1,
+      "linesChurned": 28,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 8,
+      "hotspotScore": 0.0014305559878210175
+    },
+    {
+      "path": "scripts/prerender.mjs",
+      "commits": 1,
+      "linesChurned": 68,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 3,
+      "hotspotScore": 0.0005364584954328815
+    },
+    {
+      "path": "src/Root.jsx",
+      "commits": 1,
+      "linesChurned": 25,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/__tests__/boot.test.js",
+      "commits": 1,
+      "linesChurned": 64,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/ThemeToggleButton.jsx",
+      "commits": 1,
+      "linesChurned": 32,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/prerender.jsx",
+      "commits": 1,
+      "linesChurned": 11,
+      "weightedChurn": 0.7529043920369934,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.018239588844717974,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/storage.js",
+      "commits": 3,
+      "linesChurned": 83,
+      "weightedChurn": 0.7161920533824264,
+      "authors": 2,
+      "topAuthorShare": 0.6666666666666666,
+      "entropy": 0.9182958340544896,
+      "traffic": 0.01735020903810576,
+      "complexity": 6,
+      "hotspotScore": 0.00102060053165328
+    },
+    {
+      "path": "src/hooks/useDndQuotes.js",
+      "commits": 4,
+      "linesChurned": 117,
+      "weightedChurn": 0.7159647435452449,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.01734470231239875,
+      "complexity": 14,
+      "hotspotScore": 0.0023806454154272796
+    },
+    {
+      "path": "api/__tests__/lookup.test.js",
+      "commits": 1,
+      "linesChurned": 132,
+      "weightedChurn": 0.6752156591151095,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.01635752976610306,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/__tests__/processingErrors.test.js",
+      "commits": 2,
+      "linesChurned": 349,
+      "weightedChurn": 0.6599182093552116,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.015986939294133067,
+      "complexity": 17,
+      "hotspotScore": 0.002664489882355511
+    },
+    {
+      "path": "scripts/generate-wordmark.mjs",
+      "commits": 1,
+      "linesChurned": 68,
+      "weightedChurn": 0.6427132153325847,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.015570137346412294,
+      "complexity": 5,
+      "hotspotScore": 0.0007632420267849163
+    },
+    {
+      "path": "src/components/Wordmark.jsx",
+      "commits": 1,
+      "linesChurned": 19,
+      "weightedChurn": 0.6427132153325847,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.015570137346412294,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/wordmarkPath.js",
+      "commits": 1,
+      "linesChurned": 7,
+      "weightedChurn": 0.6427132153325847,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.015570137346412294,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/SectionErrorBoundary.jsx",
+      "commits": 4,
+      "linesChurned": 53,
+      "weightedChurn": 0.6372540448708839,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.015437885461966174,
+      "complexity": 1,
+      "hotspotScore": 0.00015135181825457034
+    },
+    {
+      "path": "src/utils/__tests__/smartRestore.test.js",
+      "commits": 2,
+      "linesChurned": 80,
+      "weightedChurn": 0.6063445004821625,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.014689082045502457,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "eslint.config.js",
+      "commits": 2,
+      "linesChurned": 46,
+      "weightedChurn": 0.56453354728496,
+      "authors": 2,
+      "topAuthorShare": 0.5,
+      "entropy": 1,
+      "traffic": 0.013676185051424025,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/ProcessingPhase.test.js",
+      "commits": 2,
+      "linesChurned": 119,
+      "weightedChurn": 0.5473744986014046,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.013260496158830647,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "LICENSE",
+      "commits": 1,
+      "linesChurned": 27,
+      "weightedChurn": 0.5472625019417395,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.013257782968356693,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": ".lighthouserc.json",
+      "commits": 1,
+      "linesChurned": 23,
+      "weightedChurn": 0.5431747894333572,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.013158755527081463,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/sync.js",
+      "commits": 3,
+      "linesChurned": 41,
+      "weightedChurn": 0.5023433388286836,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.012169587607702315,
+      "complexity": 8,
+      "hotspotScore": 0.0009544774594276325
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "commits": 1,
+      "linesChurned": 20,
+      "weightedChurn": 0.49213074510347476,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.011922181014573017,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/MobileSheet.test.js",
+      "commits": 1,
+      "linesChurned": 44,
+      "weightedChurn": 0.4410912504608016,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.010685716721137467,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/__tests__/useLongPress.test.js",
+      "commits": 1,
+      "linesChurned": 74,
+      "weightedChurn": 0.4410912504608016,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.010685716721137467,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/__tests__/useViewPreferences.test.js",
+      "commits": 1,
+      "linesChurned": 70,
+      "weightedChurn": 0.4410912504608016,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.010685716721137467,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/stores/__tests__/quotesStore.test.js",
+      "commits": 1,
+      "linesChurned": 74,
+      "weightedChurn": 0.4410912504608016,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.010685716721137467,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/useAnimatedNumber.js",
+      "commits": 2,
+      "linesChurned": 59,
+      "weightedChurn": 0.35369239689946197,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.00856842378020291,
+      "complexity": 6,
+      "hotspotScore": 0.00050402492824723
+    },
+    {
+      "path": "src/utils/__tests__/uuid.test.js",
+      "commits": 2,
+      "linesChurned": 66,
+      "weightedChurn": 0.3373002500897646,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.00817131357437422,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "scripts/generate-icons.mjs",
+      "commits": 1,
+      "linesChurned": 64,
+      "weightedChurn": 0.33027121070219345,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.00800103061446777,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/apiErrors.js",
+      "commits": 2,
+      "linesChurned": 23,
+      "weightedChurn": 0.330019847225103,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.007994941174000694,
+      "complexity": 14,
+      "hotspotScore": 0.0010973448670197033
+    },
+    {
+      "path": "src/utils/uuid.js",
+      "commits": 2,
+      "linesChurned": 27,
+      "weightedChurn": 0.32738169781465054,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.007931030322813597,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/ErrorBoundary.jsx",
+      "commits": 2,
+      "linesChurned": 59,
+      "weightedChurn": 0.30546964280238875,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.007400196822048391,
+      "complexity": 2,
+      "hotspotScore": 0.00014510189847153707
+    },
+    {
+      "path": "src/components/__tests__/AddMorePanel.test.js",
+      "commits": 1,
+      "linesChurned": 35,
+      "weightedChurn": 0.19195254996056882,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.0046501728851701726,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/CollectionDupeModal.test.js",
+      "commits": 1,
+      "linesChurned": 71,
+      "weightedChurn": 0.19195254996056882,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.0046501728851701726,
+      "complexity": 2,
+      "hotspotScore": 0.0000911798604935328
+    },
+    {
+      "path": "src/components/__tests__/HeaderBar.test.js",
+      "commits": 1,
+      "linesChurned": 42,
+      "weightedChurn": 0.19195254996056882,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.0046501728851701726,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/ShareImageModal.test.js",
+      "commits": 1,
+      "linesChurned": 39,
+      "weightedChurn": 0.19195254996056882,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.0046501728851701726,
+      "complexity": 2,
+      "hotspotScore": 0.0000911798604935328
+    },
+    {
+      "path": "src/components/__tests__/styles.test.js",
+      "commits": 1,
+      "linesChurned": 45,
+      "weightedChurn": 0.19195254996056882,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.0046501728851701726,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": ".claude/hooks/session-start.sh",
+      "commits": 1,
+      "linesChurned": 10,
+      "weightedChurn": 0.1908047826042254,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004622367489305164,
+      "complexity": 2,
+      "hotspotScore": 0.00009063465665304242
+    },
+    {
+      "path": ".claude/settings.json",
+      "commits": 1,
+      "linesChurned": 14,
+      "weightedChurn": 0.1908047826042254,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004622367489305164,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/contexts/ResultsContext.jsx",
+      "commits": 1,
+      "linesChurned": 17,
+      "weightedChurn": 0.1820139927792193,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004409405002003638,
+      "complexity": 1,
+      "hotspotScore": 0.00004322946080395723
+    },
+    {
+      "path": "src/hooks/useLatestRef.js",
+      "commits": 1,
+      "linesChurned": 12,
+      "weightedChurn": 0.1820139927792193,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004409405002003638,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/__tests__/TableView.test.js",
+      "commits": 1,
+      "linesChurned": 38,
+      "weightedChurn": 0.1781195399102697,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004315059398689262,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": ".npmrc",
+      "commits": 1,
+      "linesChurned": 1,
+      "weightedChurn": 0.17689203236627732,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004285322245947151,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/components/AnimatedNumber.jsx",
+      "commits": 1,
+      "linesChurned": 10,
+      "weightedChurn": 0.17675907900938556,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004282101366123791,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/hooks/__tests__/useProcessing.test.js",
+      "commits": 1,
+      "linesChurned": 228,
+      "weightedChurn": 0.16972070001755868,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004111592148350607,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "public/robots.txt",
+      "commits": 1,
+      "linesChurned": 4,
+      "weightedChurn": 0.1697116078618982,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004111371885083832,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/__tests__/storage.test.js",
+      "commits": 1,
+      "linesChurned": 91,
+      "weightedChurn": 0.16749146256886635,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.004057587450102813,
+      "complexity": 3,
+      "hotspotScore": 0.00011934080735596509
+    },
+    {
+      "path": "src/utils/__tests__/parsers.test.js",
+      "commits": 1,
+      "linesChurned": 199,
+      "weightedChurn": 0.1636198573139962,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.003963795344803988,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/__tests__/sync.test.js",
+      "commits": 1,
+      "linesChurned": 65,
+      "weightedChurn": 0.1636198573139962,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.003963795344803988,
+      "complexity": 0,
+      "hotspotScore": 0
+    },
+    {
+      "path": "src/utils/richTextKeys.js",
+      "commits": 1,
+      "linesChurned": 44,
+      "weightedChurn": 0.15852269634908894,
+      "authors": 1,
+      "topAuthorShare": 1,
+      "entropy": 0,
+      "traffic": 0.0038403133711848387,
+      "complexity": 7,
+      "hotspotScore": 0.0002635509176303321
+    }
+  ],
+  "coupling": [
+    {
+      "a": "src/components/InputPhase.jsx",
+      "b": "src/components/styles.js",
+      "co": 41,
+      "strength": 0.6119402985074627
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/components/TableView.jsx",
+      "co": 38,
+      "strength": 0.6333333333333333
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/components/styles.js",
+      "co": 30,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/components/CardItem.jsx",
+      "co": 30,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/contexts/QuotesContext.jsx",
+      "co": 26,
+      "strength": 0.7027027027027027
+    },
+    {
+      "a": "src/components/ToolbarSection.jsx",
+      "b": "src/components/styles.js",
+      "co": 26,
+      "strength": 0.5909090909090909
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useProcessing.js",
+      "co": 23,
+      "strength": 0.575
+    },
+    {
+      "a": "src/components/QuoteActions.jsx",
+      "b": "src/components/styles.js",
+      "co": 23,
+      "strength": 0.5609756097560976
+    },
+    {
+      "a": "src/components/HeaderBar.jsx",
+      "b": "src/components/styles.js",
+      "co": 23,
+      "strength": 0.5348837209302325
+    },
+    {
+      "a": "src/components/HeaderBar.jsx",
+      "b": "src/components/MiniHeader.jsx",
+      "co": 21,
+      "strength": 0.6774193548387096
+    },
+    {
+      "a": "src/components/ProcessingPhase.jsx",
+      "b": "src/components/styles.js",
+      "co": 19,
+      "strength": 0.5588235294117647
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/components/ProcessingPhase.jsx",
+      "co": 19,
+      "strength": 0.5588235294117647
+    },
+    {
+      "a": "src/components/DupeModal.jsx",
+      "b": "src/components/styles.js",
+      "co": 18,
+      "strength": 0.72
+    },
+    {
+      "a": "src/contexts/QuotesContext.jsx",
+      "b": "src/hooks/useSync.js",
+      "co": 18,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useSync.js",
+      "co": 17,
+      "strength": 0.5666666666666667
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useQuoteActions.js",
+      "co": 16,
+      "strength": 0.6956521739130435
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/utils/helpers.js",
+      "co": 16,
+      "strength": 0.5925925925925926
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useEditState.js",
+      "co": 16,
+      "strength": 0.5161290322580645
+    },
+    {
+      "a": "src/components/BulkBar.jsx",
+      "b": "src/components/styles.js",
+      "co": 15,
+      "strength": 0.625
+    },
+    {
+      "a": "src/components/StatsPanel.jsx",
+      "b": "src/components/styles.js",
+      "co": 14,
+      "strength": 0.5833333333333334
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useViewPreferences.js",
+      "co": 14,
+      "strength": 0.56
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/components/DupeModal.jsx",
+      "co": 13,
+      "strength": 0.52
+    },
+    {
+      "a": "package.json",
+      "b": "vite.config.js",
+      "co": 12,
+      "strength": 0.7058823529411765
+    },
+    {
+      "a": "src/components/InputPhase.jsx",
+      "b": "src/components/StatsPanel.jsx",
+      "co": 12,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/utils/export.js",
+      "co": 11,
+      "strength": 0.6470588235294118
+    },
+    {
+      "a": "src/components/QuickAddBar.jsx",
+      "b": "src/components/ResultsPhase.jsx",
+      "co": 11,
+      "strength": 0.5789473684210527
+    },
+    {
+      "a": "src/components/QuickAddBar.jsx",
+      "b": "src/components/styles.js",
+      "co": 11,
+      "strength": 0.5789473684210527
+    },
+    {
+      "a": "src/components/HowItWorksAnimation.jsx",
+      "b": "src/components/InputPhase.jsx",
+      "co": 10,
+      "strength": 0.5555555555555556
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/data/constants.js",
+      "co": 9,
+      "strength": 0.6428571428571429
+    },
+    {
+      "a": "src/components/ResultsPhase.jsx",
+      "b": "src/stores/quotesStore.js",
+      "co": 9,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/InlineEditors.jsx",
+      "b": "src/components/ResultsPhase.jsx",
+      "co": 9,
+      "strength": 0.5625
+    },
+    {
+      "a": "src/components/styles.js",
+      "b": "src/config.js",
+      "co": 9,
+      "strength": 0.5294117647058824
+    },
+    {
+      "a": "src/components/styles.js",
+      "b": "src/hooks/useTheme.js",
+      "co": 8,
+      "strength": 0.5714285714285714
+    },
+    {
+      "a": "api/identify.js",
+      "b": "api/lookup.js",
+      "co": 8,
+      "strength": 0.5333333333333333
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/stores/quotesStore.js",
+      "co": 8,
+      "strength": 0.5333333333333333
+    },
+    {
+      "a": "src/components/InlineEditors.jsx",
+      "b": "src/components/styles.js",
+      "co": 8,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/components/InlineEditors.jsx",
+      "co": 8,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useInfiniteScroll.js",
+      "co": 7,
+      "strength": 0.7
+    },
+    {
+      "a": "src/components/ConfirmModal.jsx",
+      "b": "src/components/styles.js",
+      "co": 7,
+      "strength": 0.6363636363636364
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/components/EmptyState.jsx",
+      "co": 7,
+      "strength": 0.6363636363636364
+    },
+    {
+      "a": "src/components/ShareImageModal.jsx",
+      "b": "src/components/styles.js",
+      "co": 7,
+      "strength": 0.5833333333333334
+    },
+    {
+      "a": "api/identify.js",
+      "b": "api/sync.js",
+      "co": 7,
+      "strength": 0.5384615384615384
+    },
+    {
+      "a": "index.html",
+      "b": "vercel.json",
+      "co": 7,
+      "strength": 0.5384615384615384
+    },
+    {
+      "a": "api/sync.js",
+      "b": "src/components/App.jsx",
+      "co": 7,
+      "strength": 0.5384615384615384
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useTheme.js",
+      "co": 7,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/InputPhase.jsx",
+      "b": "src/components/inputPhaseStyles.js",
+      "co": 6,
+      "strength": 0.6
+    },
+    {
+      "a": "api/fetch-url.js",
+      "b": "api/identify.js",
+      "co": 6,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/OnboardingModal.jsx",
+      "b": "src/components/ResultsPhase.jsx",
+      "co": 6,
+      "strength": 0.6
+    },
+    {
+      "a": "api/fetch-url.js",
+      "b": "src/components/App.jsx",
+      "co": 6,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/EmptyState.jsx",
+      "b": "src/components/styles.js",
+      "co": 6,
+      "strength": 0.5454545454545454
+    },
+    {
+      "a": "src/components/ConfirmModal.jsx",
+      "b": "src/components/HeaderBar.jsx",
+      "co": 6,
+      "strength": 0.5454545454545454
+    },
+    {
+      "a": "src/components/ConfirmModal.jsx",
+      "b": "src/components/MiniHeader.jsx",
+      "co": 6,
+      "strength": 0.5454545454545454
+    },
+    {
+      "a": "src/components/ShareImageModal.jsx",
+      "b": "src/components/ShortcutsModal.jsx",
+      "co": 6,
+      "strength": 0.5454545454545454
+    },
+    {
+      "a": "src/components/ShortcutsModal.jsx",
+      "b": "src/components/styles.js",
+      "co": 6,
+      "strength": 0.5454545454545454
+    },
+    {
+      "a": "src/components/ResultsModals.jsx",
+      "b": "src/components/ResultsPhase.jsx",
+      "co": 5,
+      "strength": 0.8333333333333334
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "api/fetch-url.js",
+      "co": 5,
+      "strength": 0.8333333333333334
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "api/identify.js",
+      "co": 5,
+      "strength": 0.8333333333333334
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/hooks/useSwipe.js",
+      "co": 5,
+      "strength": 0.8333333333333334
+    },
+    {
+      "a": "src/components/TableView.jsx",
+      "b": "src/hooks/useSwipe.js",
+      "co": 5,
+      "strength": 0.8333333333333334
+    },
+    {
+      "a": "src/components/NotificationBars.jsx",
+      "b": "src/components/ResultsPhase.jsx",
+      "co": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/SyncPill.jsx",
+      "b": "src/components/styles.js",
+      "co": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "api/fetch-url.js",
+      "b": "api/sync.js",
+      "co": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/contexts/ToastContext.jsx",
+      "co": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/styles.js",
+      "b": "src/hooks/useToasts.js",
+      "co": 5,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/ResultsPhase.jsx",
+      "b": "src/hooks/useDndQuotes.js",
+      "co": 4,
+      "strength": 1
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/utils/parsers.js",
+      "co": 4,
+      "strength": 0.8
+    },
+    {
+      "a": "src/components/MobileSheet.jsx",
+      "b": "src/components/ResultsPhase.jsx",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "CLAUDE.md",
+      "b": "api/auto-group.js",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "api/_shared.js",
+      "b": "api/auto-group.js",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "api/sync.js",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "api/identify.js",
+      "b": "supabase/migration.sql",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "src/hooks/useProcessing.js",
+      "b": "supabase/migration.sql",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "src/components/ResultsPhase.jsx",
+      "b": "src/hooks/useLongPress.js",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "api/share.js",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/components/StatsOverlay.jsx",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "src/components/CollectionsSidebar.jsx",
+      "b": "src/hooks/useSwipe.js",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "src/components/App.jsx",
+      "co": 4,
+      "strength": 0.6666666666666666
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useKeyboardShortcuts.js",
+      "co": 4,
+      "strength": 0.5714285714285714
+    },
+    {
+      "a": "CLAUDE.md",
+      "b": "api/share.js",
+      "co": 4,
+      "strength": 0.5
+    },
+    {
+      "a": "api/_shared.js",
+      "b": "api/share.js",
+      "co": 4,
+      "strength": 0.5
+    },
+    {
+      "a": "api/fetch-url.js",
+      "b": "api/share.js",
+      "co": 4,
+      "strength": 0.5
+    },
+    {
+      "a": "api/identify.js",
+      "b": "api/share.js",
+      "co": 4,
+      "strength": 0.5
+    },
+    {
+      "a": "CLAUDE.md",
+      "b": "src/components/__tests__/InputPhase.test.jsx",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/components/InputPhase.jsx",
+      "b": "src/components/__tests__/InputPhase.test.jsx",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/hooks/__tests__/useEditState.test.js",
+      "b": "src/hooks/useEditState.js",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/hooks/__tests__/useSync.test.js",
+      "b": "src/hooks/useProcessing.js",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/utils/storage.js",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/contexts/QuotesContext.jsx",
+      "b": "src/utils/storage.js",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/hooks/useViewPreferences.js",
+      "b": "src/utils/storage.js",
+      "co": 3,
+      "strength": 1
+    },
+    {
+      "a": "src/components/ResultsPhase.jsx",
+      "b": "src/utils/quotes.js",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/hooks/useProcessing.js",
+      "b": "src/utils/quotes.js",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/hooks/useViewPreferences.js",
+      "b": "src/utils/quotes.js",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/ResultsPhase.jsx",
+      "b": "src/utils/smartRestore.js",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/TableView.jsx",
+      "b": "src/hooks/useDndQuotes.js",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/components/SectionErrorBoundary.jsx",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/InputPhase.jsx",
+      "b": "src/components/SectionErrorBoundary.jsx",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/SectionErrorBoundary.jsx",
+      "b": "src/components/styles.js",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/components/SectionErrorBoundary.jsx",
+      "co": 3,
+      "strength": 0.75
+    },
+    {
+      "a": "src/components/HighlightText.jsx",
+      "b": "src/components/InputPhase.jsx",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/components/HighlightText.jsx",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/HighlightText.jsx",
+      "b": "src/components/TableView.jsx",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/HighlightText.jsx",
+      "b": "src/hooks/useEditState.js",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/HeaderBar.jsx",
+      "b": "src/hooks/useScrollLock.js",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/MiniHeader.jsx",
+      "b": "src/hooks/useScrollLock.js",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useScrollLock.js",
+      "co": 3,
+      "strength": 0.6
+    },
+    {
+      "a": "public/favicon.svg",
+      "b": "public/og-image.svg",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/components/ResultsModals.jsx",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/ExportDropdown.jsx",
+      "b": "src/components/ResultsModals.jsx",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/NotificationBars.jsx",
+      "b": "src/components/ResultsModals.jsx",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/MobileSheet.jsx",
+      "b": "src/components/styles.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "src/hooks/useProcessing.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "api/sync.js",
+      "b": "supabase/migration.sql",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/CardItem.jsx",
+      "b": "src/hooks/useLongPress.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "api/auto-group.js",
+      "b": "api/lookup.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/MobileSheet.jsx",
+      "b": "src/components/TableView.jsx",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/StatsOverlay.jsx",
+      "b": "src/components/styles.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "src/hooks/useSwipe.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/InlineEditors.jsx",
+      "b": "src/hooks/useSwipe.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/ResultsPhase.jsx",
+      "b": "src/hooks/useSwipe.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/TableView.jsx",
+      "b": "src/hooks/useLongPress.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/styles.js",
+      "b": "src/hooks/useSwipe.js",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "api/lookup.js",
+      "b": "supabase/migration.sql",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "src/components/App.jsx",
+      "b": "supabase/migration.sql",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "api/identify.js",
+      "b": "public/favicon.svg",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "index.html",
+      "b": "public/favicon.svg",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "package.json",
+      "b": "public/favicon.svg",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "public/favicon.svg",
+      "b": "src/main.jsx",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "public/favicon.svg",
+      "b": "vercel.json",
+      "co": 3,
+      "strength": 0.5
+    },
+    {
+      "a": "public/favicon.svg",
+      "b": "vite.config.js",
+      "co": 3,
+      "strength": 0.5
+    }
+  ],
+  "hotspots": [
+    "src/components/ResultsPhase.jsx",
+    "src/components/TableView.jsx",
+    "src/components/App.jsx",
+    "src/hooks/useProcessing.js",
+    "src/components/CollectionsSidebar.jsx",
+    "src/components/InputPhase.jsx",
+    "src/components/ToolbarSection.jsx",
+    "src/components/CardItem.jsx",
+    "src/hooks/useEditState.js",
+    "src/components/ProcessingPhase.jsx",
+    "src/hooks/useQuoteActions.js",
+    "src/contexts/QuotesContext.jsx",
+    "src/hooks/useViewPreferences.js",
+    "src/stores/quotesStore.js",
+    "src/components/AddMorePanel.jsx",
+    "api/_shared.js",
+    "src/components/EditForm.jsx",
+    "src/hooks/useSync.js",
+    "api/lookup.js",
+    "api/identify.js"
+  ],
+  "busFactor1": [
+    "src/components/CollectionsSidebar.jsx",
+    "src/components/CardItem.jsx",
+    "src/components/HeaderBar.jsx",
+    "src/hooks/useProcessing.js",
+    "src/components/ProcessingPhase.jsx",
+    "src/contexts/QuotesContext.jsx",
+    "src/hooks/useSync.js",
+    "src/hooks/useEditState.js",
+    "src/components/MiniHeader.jsx",
+    "src/hooks/useQuoteActions.js",
+    "src/hooks/useViewPreferences.js",
+    "src/components/InlineEditors.jsx",
+    "api/lookup.js",
+    "src/components/CollectionDupeModal.jsx",
+    "src/utils/export.js",
+    "src/components/EmptyState.jsx",
+    "api/sync.js",
+    "src/components/HowItWorksAnimation.jsx",
+    "src/utils/textFormatting.js",
+    "api/fetch-url.js",
+    "src/components/MobileSheet.jsx",
+    "src/components/OnboardingModal.jsx",
+    "src/components/ShortcutsModal.jsx",
+    "src/contexts/ToastContext.jsx",
+    "src/components/ConfirmModal.jsx",
+    "src/components/Footer.jsx",
+    "src/hooks/useToasts.js",
+    "src/components/StatsOverlay.jsx",
+    "supabase/migration.sql",
+    "src/hooks/useKeyboardShortcuts.js",
+    "src/utils/shareImage.js",
+    "src/hooks/useLongPress.js",
+    "src/components/HighlightText.jsx",
+    "src/hooks/useSwipe.js",
+    "src/hooks/useScrollLock.js",
+    "src/utils/parsers.js"
+  ]
+}

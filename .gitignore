@@ -20,3 +20,6 @@ dist/
 
 # OS
 Thumbs.db
+
+# Repowise index cache (Pothole)
+.repowise/

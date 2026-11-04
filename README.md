@@ -63,7 +63,7 @@ No signup. No account. Free to use.
 | Database | Supabase (PostgreSQL) |
 | AI | Anthropic Claude Haiku, with a 3,700+ quote local database as the first line of lookup |
 | Deployment | Vercel |
-| Testing | Vitest (356 tests), ESLint (flat config, React Compiler rules) |
+| Testing | Vitest, ESLint (flat config, React Compiler rules) |
 
 ### Project Structure
 
@@ -84,8 +84,10 @@ src/
     TableView.jsx             Main results table
     CollectionsSidebar.jsx    Collection management
     styles.js                 All CSS-in-JS styles
+  stores/
+    quotesStore.js             Zustand store: quotes, collections, sync state
   contexts/                   React Context providers
-    QuotesContext.jsx          Global state: quotes, collections, sync
+    QuotesContext.jsx          Side effects only: share links, cloud pull/push
   hooks/                      Custom hooks
     useProcessing.js           AI identification pipeline
     useSync.js                 Cloud sync logic
@@ -105,7 +107,7 @@ src/
 
 #### Prerequisites
 
-- Node.js 18+
+- Node.js 20.19+ or 22.12+ (required by Vite 8; CI uses 22)
 - npm
 
 #### Setup
@@ -130,7 +132,7 @@ SUPABASE_SECRET_KEY=...              # Required for sync
 ```bash
 npm run dev          # Vite dev server on localhost:5173
 vercel dev           # Test serverless functions locally
-npm run test         # Vitest — 356 tests across components, hooks, stores, utils
+npm run test         # Vitest (components, hooks, stores, utils, api)
 npm run lint         # ESLint (src/ + api/)
 ```
 

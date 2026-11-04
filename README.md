@@ -107,7 +107,7 @@ src/
 
 #### Prerequisites
 
-- Node.js 20.19+ or 22.12+ (required by Vite 8; CI uses 22)
+- Node.js 24 (pinned in `.nvmrc` and `engines`; CI and Vercel use the same version)
 - npm
 
 #### Setup

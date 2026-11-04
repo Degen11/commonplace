@@ -1,4 +1,4 @@
-import { withApiHandler, callAnthropic, checkAiDailyCap, normalizeForCache, ANTHROPIC, RATE_LIMITS, ERROR_MESSAGES } from './_shared.js';
+import { withApiHandler, callAnthropic, checkAiDailyCap, normalizeForCache, ANTHROPIC, RATE_LIMITS } from './_shared.js';
 import { identifySchema, parseBody } from './_schemas.js';
 
 // ── Server-side system prompt (never exposed to client) ──
@@ -122,7 +122,7 @@ async function cacheResults(items, results, supabase) {
   }
 }
 
-export default withApiHandler(async (req, res, { supabase }) => {
+export default withApiHandler(async (req, res, { supabase, ip }) => {
   const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
@@ -132,9 +132,8 @@ export default withApiHandler(async (req, res, { supabase }) => {
   }
   const wantsFormatting = body.formatting === true;
 
-  if (!(await checkAiDailyCap(supabase))) {
-    return res.status(429).json({ error: ERROR_MESSAGES.AI_DAILY_LIMIT });
-  }
+  const capError = await checkAiDailyCap(supabase, ip);
+  if (capError) return res.status(429).json({ error: capError });
 
   const safeBody = {
     model: ANTHROPIC.MODEL,

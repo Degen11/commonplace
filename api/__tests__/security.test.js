@@ -6,7 +6,9 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     rpc: (name, args) => {
       db.rpcCalls.push({ name, ...args });
-      return Promise.resolve({ data: db.allow, error: null });
+      // `allow` can be a function of the bucket key, to deny one bucket only
+      const data = typeof db.allow === "function" ? db.allow(args.p_ip) : db.allow;
+      return Promise.resolve({ data, error: null });
     },
     from: () => ({
       select: () => ({
@@ -20,7 +22,7 @@ vi.mock("@supabase/supabase-js", () => ({
   }),
 }));
 
-const { checkRateLimit, RATE_LIMITS } = await import("../_shared.js");
+const { checkRateLimit, checkAiDailyCap, RATE_LIMITS, ERROR_MESSAGES } = await import("../_shared.js");
 const { default: identify } = await import("../identify.js");
 const { checkHost, isPrivateAddress } = await import("../fetch-url.js");
 
@@ -136,6 +138,34 @@ describe("/api/identify", () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
+  it("checks the caller's own daily AI bucket before the global one", async () => {
+    const res = mockRes();
+    await identify(mockReq({ items: [{ text: "Why so serious" }] }), res);
+    expect(res.statusCode).toBe(200);
+    const keys = db.rpcCalls.map(c => c.p_ip);
+    expect(keys.indexOf("ai-daily:203.0.113.7")).toBeGreaterThanOrEqual(0);
+    expect(keys.indexOf("ai-daily:203.0.113.7")).toBeLessThan(keys.indexOf("global:ai-daily"));
+    expect(db.rpcCalls.find(c => c.p_ip === "ai-daily:203.0.113.7").p_window_sec).toBe(86400);
+  });
+
+  it("a client over its own daily share is refused without spending the global cap", async () => {
+    db.allow = (key) => key !== "ai-daily:203.0.113.7";
+    const res = mockRes();
+    await identify(mockReq({ items: [{ text: "Why so serious" }] }), res);
+    expect(res.statusCode).toBe(429);
+    expect(res.body.error).toBe(ERROR_MESSAGES.AI_DAILY_LIMIT_PER_IP);
+    expect(db.rpcCalls.map(c => c.p_ip)).not.toContain("global:ai-daily");
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it("reports the site-wide cap when the global bucket is empty", async () => {
+    db.allow = (key) => key !== "global:ai-daily";
+    const res = mockRes();
+    await identify(mockReq({ items: [{ text: "Why so serious" }] }), res);
+    expect(res.statusCode).toBe(429);
+    expect(res.body.error).toBe(ERROR_MESSAGES.AI_DAILY_LIMIT);
+  });
+
   it("doesn't spend the daily cap on invalid requests (e.g. the pre-warm ping)", async () => {
     const res = mockRes();
     await identify(mockReq({ messages: [] }), res);
@@ -148,6 +178,24 @@ describe("/api/identify", () => {
     await identify(mockReq({ items: [{ text: "x".repeat(9990) }, { text: "y".repeat(100) }] }), res);
     expect(res.statusCode).toBe(400);
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("AI daily caps", () => {
+  afterEach(() => {
+    delete process.env.AI_DAILY_LIMIT;
+    delete process.env.AI_DAILY_LIMIT_PER_IP;
+  });
+
+  it("one IP exhausting its share doesn't lock out other users", async () => {
+    // In-memory buckets (no Supabase); unique IPs keep this test's buckets apart
+    process.env.AI_DAILY_LIMIT_PER_IP = "2";
+    process.env.AI_DAILY_LIMIT = "1000";
+    const heavy = `198.51.100.${Date.now() % 250}`;
+    expect(await checkAiDailyCap(null, heavy)).toBeNull();
+    expect(await checkAiDailyCap(null, heavy)).toBeNull();
+    expect(await checkAiDailyCap(null, heavy)).toBe(ERROR_MESSAGES.AI_DAILY_LIMIT_PER_IP);
+    expect(await checkAiDailyCap(null, `${heavy}-other`)).toBeNull();
   });
 });
 

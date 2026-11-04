@@ -3,6 +3,15 @@ import { CONF_ORDER } from "../data/constants";
 import { SAVED_PULSE_MS } from "../config";
 import { toggleInSet, addAllToSet, pluralize } from "../utils/helpers";
 
+// The one rule for a user-edited source, shared by the full editor (saveEdit)
+// and inline editing: a typed source is trimmed and marked high confidence; a
+// blank one keeps the quote's existing source and confidence rather than
+// saving an empty source as "high".
+export function sourceEditFields(value) {
+  const source = (value || "").trim();
+  return source ? { source, confidence: "high" } : {};
+}
+
 export default function useEditState({ quotes, setQuotes, filtered, visibleFiltered, filterKey, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection }) {
   const [editingId, setEditingId]           = useState(null);
   const [inlineEdit, setInlineEdit]         = useState(null);
@@ -81,7 +90,7 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
 
   const saveEdit = (id, text, source, category) => {
     if (!text || !text.trim()) return;
-    setQuotes(p => p.map(q => q.id === id ? { ...q, text, source, category, confidence: "high", updatedAt: Date.now() } : q));
+    setQuotes(p => p.map(q => q.id === id ? { ...q, text, category, ...sourceEditFields(source), updatedAt: Date.now() } : q));
     setEditingId(null);
     if (reviewQueue.length > 0) {
       const remaining = reviewQueue.filter(rid => rid !== id);
@@ -105,11 +114,8 @@ export default function useEditState({ quotes, setQuotes, filtered, visibleFilte
   const saveInlineField = (id, field, value) => {
     // A blank source (e.g. Enter in an empty "Add source" field) changes nothing
     if (field === "source" && !value.trim()) { setInlineEdit(null); return; }
-    setQuotes(p => p.map(q => {
-      if (q.id !== id) return q;
-      const newVal = field === "source" ? value.trim() : value;
-      return { ...q, [field]: newVal, confidence: "high", updatedAt: Date.now() };
-    }));
+    const fields = field === "source" ? sourceEditFields(value) : { [field]: value, confidence: "high" };
+    setQuotes(p => p.map(q => q.id === id ? { ...q, ...fields, updatedAt: Date.now() } : q));
     setInlineEdit(null);
     setSavedPulse({ id, field });
     setTimeout(() => setSavedPulse(prev => prev?.id === id && prev?.field === field ? null : prev), SAVED_PULSE_MS);

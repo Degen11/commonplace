@@ -1,4 +1,5 @@
 import { nlpFormat } from "./smartRestore";
+import { normalize } from "./normalize";
 
 // Proper noun set — lazy-initialized via initProperNouns() on first processing run.
 let properNouns = null;
@@ -139,15 +140,7 @@ export function smartSplit(text) {
   return text.split("\n").map(l => l.trim()).filter(Boolean);
 }
 
-export function normalize(s) {
-  return (s || "")
-    .normalize("NFKD")
-    .toLowerCase()
-    .replace(/\p{M}/gu, "")
-    .replace(/[^\p{L}\p{N}\s]/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+export { normalize };
 
 function wordSet(normalized) {
   return new Set(

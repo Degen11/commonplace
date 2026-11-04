@@ -127,6 +127,26 @@ describe("useEditState", () => {
       expect(result.current.editingId).toBe(null);
     });
 
+    it("trims the source", () => {
+      const { result } = renderHook(() => useEditState(props));
+      act(() => result.current.saveEdit("q1", "Text", "  Seneca  ", "Book"));
+      expect(props.setQuotes.getCurrent().find((q) => q.id === "q1").source).toBe("Seneca");
+    });
+
+    it("keeps the existing source and confidence when the source is blank", () => {
+      props = createDefaultProps([makeQuote("q1", { source: "Maybe Seneca", confidence: "low" })]);
+      const { result } = renderHook(() => useEditState(props));
+
+      act(() => result.current.saveEdit("q1", "Edited text", "   ", "Phrase"));
+
+      const q1 = props.setQuotes.getCurrent().find((q) => q.id === "q1");
+      expect(q1.text).toBe("Edited text");
+      expect(q1.category).toBe("Phrase");
+      // Not an empty source stamped "high"
+      expect(q1.source).toBe("Maybe Seneca");
+      expect(q1.confidence).toBe("low");
+    });
+
     it("advances review queue after saving", () => {
       const quotes = [
         makeQuote("q1", { confidence: "low" }),

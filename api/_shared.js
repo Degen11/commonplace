@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { normalize } from '../src/utils/normalize.js';
 
 // ── Config ──
 export const SUPABASE_URL = 'https://aoyagemikimsycaupych.supabase.co';
@@ -202,17 +203,9 @@ export const ERROR_MESSAGES = {
 };
 
 // ── Text normalization for cache keys ──
-// Must stay in sync with normalize() in src/utils/textFormatting.js.
-// Uses Unicode property escapes for correct handling of non-Latin scripts.
-export function normalizeForCache(text) {
-  return (text || '')
-    .normalize('NFKD')
-    .toLowerCase()
-    .replace(/\p{M}/gu, '')
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+// The same normalize() the client uses (src/utils/normalize.js), so cache keys
+// written here match what the client looks up.
+export { normalize as normalizeForCache };
 
 // ── API handler middleware ──
 // Wraps a handler with CORS, method validation, origin check, CSRF check,

@@ -174,26 +174,51 @@ export const RATE_LIMITS = {
   SHARE_PAGE: { name: 'share-page', limit: 120 },
 };
 
-// ── Site-wide daily cap on paid AI calls (identify + auto-group combined) ──
-// Per-IP limits alone don't bound spend: anyone rotating IPs can keep calling.
-// This is a single global bucket with a 24h window, so a flood can cost at
-// most this many calls a day. Override with the AI_DAILY_LIMIT env var.
+// ── Daily caps on paid AI calls (identify + auto-group combined) ──
+// Per-minute per-IP limits alone don't bound spend: anyone rotating IPs can
+// keep calling. So there's a global bucket with a 24h window, and a flood can
+// cost at most AI_DAILY_LIMIT calls a day. But a global bucket on its own lets
+// one client drain it in under an hour and lock every user out of AI for the
+// rest of the day, so each IP also gets its own daily share, checked first:
+// one client hits its own limit long before it can exhaust the site-wide cap.
+// Override with the AI_DAILY_LIMIT / AI_DAILY_LIMIT_PER_IP env vars.
 const DEFAULT_AI_DAILY_LIMIT = 2000;
+// Each batch identifies up to 10 entries, so 200 calls is ~2,000 AI-identified
+// entries a day per IP: far above normal use, and 10% of the global cap
+const DEFAULT_AI_DAILY_LIMIT_PER_IP = 200;
+const DAY_SEC = 86400;
+
+function positiveIntEnv(name, fallback) {
+  const n = Number.parseInt(process.env[name], 10);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+}
 export function aiDailyLimit() {
-  const n = Number.parseInt(process.env.AI_DAILY_LIMIT, 10);
-  return Number.isInteger(n) && n > 0 ? n : DEFAULT_AI_DAILY_LIMIT;
+  return positiveIntEnv('AI_DAILY_LIMIT', DEFAULT_AI_DAILY_LIMIT);
+}
+export function aiDailyLimitPerIp() {
+  return positiveIntEnv('AI_DAILY_LIMIT_PER_IP', DEFAULT_AI_DAILY_LIMIT_PER_IP);
 }
 
 // Call after validating the request body, right before calling Anthropic, so
-// invalid requests (e.g. InputPhase's pre-warm ping) don't use up the cap.
-export function checkAiDailyCap(supabase) {
-  return checkRateLimit('global:ai-daily', aiDailyLimit(), supabase, 86400);
+// invalid requests (e.g. InputPhase's pre-warm ping) don't use up the caps.
+// Returns null when the call may go ahead, else the error message for a 429.
+// The per-IP bucket is checked first, so a client over its own share never
+// spends from the global bucket.
+export async function checkAiDailyCap(supabase, ip) {
+  if (!(await checkRateLimit(`ai-daily:${ip}`, aiDailyLimitPerIp(), supabase, DAY_SEC))) {
+    return ERROR_MESSAGES.AI_DAILY_LIMIT_PER_IP;
+  }
+  if (!(await checkRateLimit('global:ai-daily', aiDailyLimit(), supabase, DAY_SEC))) {
+    return ERROR_MESSAGES.AI_DAILY_LIMIT;
+  }
+  return null;
 }
 
 // ── Standardized error messages ──
 export const ERROR_MESSAGES = {
   RATE_LIMITED:        'Too many requests. Please wait a moment and try again.',
   AI_DAILY_LIMIT:      'AI identification is at capacity for today. Please try again tomorrow.',
+  AI_DAILY_LIMIT_PER_IP: "You've reached today's AI identification limit. Please try again tomorrow.",
   FORBIDDEN:           'Forbidden',
   METHOD_NOT_ALLOWED:  'Method not allowed',
   INVALID_CONTENT_TYPE:'Content-Type must be application/json',
@@ -267,13 +292,13 @@ export function withApiHandler(handler, {
       return res.status(500).json({ error: ERROR_MESSAGES.STORAGE_NOT_CONFIGURED });
     }
 
+    const ip = getClientIp(req);
     if (rateLimit) {
-      const ip = getClientIp(req);
       if (!(await checkRateLimit(`${rateLimit.name}:${ip}`, rateLimit.limit, supabase))) {
         return res.status(429).json({ error: ERROR_MESSAGES.RATE_LIMITED });
       }
     }
 
-    return handler(req, res, { supabase });
+    return handler(req, res, { supabase, ip });
   };
 }

@@ -125,6 +125,8 @@ Create a `.env` file:
 ```
 ANTHROPIC_API_KEY=sk-ant-...        # Required — server-side only
 SUPABASE_SECRET_KEY=...              # Required for sync
+AI_DAILY_LIMIT=2000                  # Optional — site-wide daily cap on AI calls
+AI_DAILY_LIMIT_PER_IP=200            # Optional — each IP's daily share of it
 ```
 
 #### Development

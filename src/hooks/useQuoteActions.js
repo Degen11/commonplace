@@ -5,7 +5,8 @@ import { smartSplit } from "../utils/textFormatting";
 import { parseKindleClippings, parseReadwiseCSV, parseCSVLine, parseJSONQuotes, parseMarkdownQuotes, parseNotionCSV } from "../utils/parsers";
 import { generateShareImage } from "../utils/shareImage";
 import { downloadBlob } from "../utils/export";
-import { DELETE_ANIM_MS, COPY_PULSE_MS, API_BATCH_SIZE, MAX_IMPORT_FILE_BYTES } from "../config";
+import { DELETE_ANIM_MS, COPY_PULSE_MS, MAX_IMPORT_FILE_BYTES } from "../config";
+import { identifyInBatches } from "../utils/identifyBatches";
 import { copyWithToast } from "../utils/shareLinks";
 import { describeApiError } from "../utils/apiErrors";
 import { addToSet, removeFromSet, addAllToSet, removeAllFromSet, pluralize } from "../utils/helpers";
@@ -140,6 +141,8 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
         showToast(describeChanges(q, newSource, newCategory), "Undo", () => {
           setQuotes(prev => prev.map(x => x.id === q.id ? snapshot : x));
         });
+      } else {
+        showToast("Couldn't re-identify this quote. Try again in a moment.", null, null, "error");
       }
     } catch (err) {
       if (err.name === "AbortError") return;
@@ -162,67 +165,72 @@ export default function useQuoteActions({ quotes, setQuotes, allCats, showToast,
     });
     setReidentifyingIds(prev => addAllToSet(prev, ids));
 
+    // Only release ids this request still owns — a newer reIdentify of the
+    // same quote (which aborted us) has taken over the rest
     const clearIds = () => {
-      ids.forEach(id => reidentifyAbortRefs.current.delete(id));
-      setReidentifyingIds(prev => removeAllFromSet(prev, ids));
+      const owned = ids.filter(id => reidentifyAbortRefs.current.get(id) === controller);
+      owned.forEach(id => reidentifyAbortRefs.current.delete(id));
+      setReidentifyingIds(prev => removeAllFromSet(prev, owned));
     };
 
+    const snapshot = new Map(qs.map(q => [q.id, { ...q }]));
+    const updated = new Set();
+    const apply = (id, fields) => {
+      updated.add(id);
+      setQuotes(prev => prev.map(x => x.id === id ? { ...x, ...fields, updatedAt: Date.now() } : x));
+    };
+    // Only roll back quotes this run changed
+    const undo = () => setQuotes(prev => prev.map(q => updated.has(q.id) ? snapshot.get(q.id) : q));
+
+    let lastError = null;
     try {
       const { localLookup } = await import("../data/localQuotes");
-      if (controller.signal.aborted) return;
-
-      const needsApi = [];
-      const snapshot = new Map(qs.map(q => [q.id, { ...q }]));
-      let localCount = 0;
+      if (controller.signal.aborted) { clearIds(); return; }
 
       // First pass: try local matches
+      const needsApi = [];
       qs.forEach(q => {
         const local = localLookup(q.text, null, { exactOnly: true });
-        if (local) {
-          setQuotes(prev => prev.map(x => x.id === q.id ? {
-            ...x, source: local.source, category: local.category, confidence: local.confidence, updatedAt: Date.now(),
-          } : x));
-          localCount++;
-        } else {
-          needsApi.push(q);
-        }
+        if (local) apply(q.id, { source: local.source, category: local.category, confidence: local.confidence });
+        else needsApi.push(q);
       });
 
-      // Second pass: batch API for remaining
-      if (needsApi.length > 0 && !controller.signal.aborted) {
-        for (let i = 0; i < needsApi.length; i += API_BATCH_SIZE) {
-          if (controller.signal.aborted) break;
-          const chunk = needsApi.slice(i, i + API_BATCH_SIZE);
-          const items = chunk.map(q => ({ text: q.text, hint: null }));
-          try {
-            const results = await identifyBatch(items, false, controller.signal);
-            if (controller.signal.aborted) break;
-            results.forEach(r => {
-              const q = chunk[r.i];
-              if (!q) return;
-              const newSource = r.source || UNKNOWN_SOURCE;
-              const newCategory = fallbackCategory(r.category, allCats);
-              setQuotes(prev => prev.map(x => x.id === q.id ? {
-                ...x, source: newSource, category: newCategory,
-                confidence: r.confidence || "low", updatedAt: Date.now(),
-              } : x));
+      // Second pass: AI for the rest — same batching, retry and failure
+      // reporting as the processing pipeline
+      const { aborted } = await identifyInBatches(
+        needsApi.map(q => ({ id: q.id, text: q.text, hint: null })),
+        identifyBatch,
+        {
+          signal: controller.signal,
+          onResults: (chunk, results) => results.forEach(r => {
+            const item = chunk[r.i];
+            if (!item) return;
+            apply(item.id, {
+              source: r.source || UNKNOWN_SOURCE,
+              category: fallbackCategory(r.category, allCats),
+              confidence: r.confidence || "low",
             });
-          } catch (err) {
-            if (err.name === "AbortError") break;
-            // Continue with remaining batches
-          }
-        }
-      }
-
+          }),
+          onFailed: (_chunk, err) => { lastError = err; },
+        },
+      );
       clearIds();
-      const total = qs.length;
-      showToast(`Re-identified ${pluralize(total, "quote")}`, "Undo", () => {
-        setQuotes(prev => prev.map(q => snapshot.has(q.id) ? snapshot.get(q.id) : q));
-      }, "success");
+      if (aborted) return;
     } catch (err) {
       clearIds();
       if (err.name === "AbortError") return;
-      showToast(describeApiError(err), null, null, "error");
+      lastError = err;
+    }
+
+    const total = qs.length;
+    const missed = total - updated.size;
+    if (updated.size === 0) {
+      showToast(lastError ? describeApiError(lastError) : `Couldn't re-identify ${pluralize(total, "quote")}`, null, null, "error");
+    } else if (missed > 0) {
+      const reason = lastError ? ` \u2014 ${describeApiError(lastError)}` : "";
+      showToast(`Re-identified ${updated.size} of ${pluralize(total, "quote")}; ${missed} failed${reason}`, "Undo", undo, "error");
+    } else {
+      showToast(`Re-identified ${pluralize(total, "quote")}`, "Undo", undo, "success");
     }
   };
 

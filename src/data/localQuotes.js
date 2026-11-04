@@ -1,5 +1,9 @@
+import { normalize } from "../utils/normalize";
+
 // ===================== LOCAL QUOTE DATABASE =====================
-// Combined curated + imported quotes. Format: { t: "normalized lowercase no punctuation", s: "Source", c: "Category" }
+// Combined curated + imported quotes. Format: { t: "lowercase quote text", s: "Source", c: "Category" }
+// `t` is written lowercase without punctuation, but lookups go through the
+// normalized key `k` built below, so it needn't be exactly normalize()d.
 // Categories: Film, TV, Book, Music, Game, Speech, Person, Phrase
 const LOCAL_DB_RAW = [
   // ── Film ──
@@ -3800,17 +3804,20 @@ const LOCAL_DB_RAW = [
   {t:"out of many one",s:"United States Motto - E Pluribus Unum",c:"Phrase"},
 ];
 
-// Build lookup structures
-const LOCAL_DB = [...LOCAL_DB_RAW];
+// Build lookup structures. Every entry gets a normalized key `k`, built with
+// the same normalize() that lookups apply to user input, so exact matches work
+// for every entry (raw `t` can carry ё/й, curly apostrophes, hyphens…). `t`
+// stays as written for display (EditForm suggestions, proper-noun seeding).
+const LOCAL_DB = LOCAL_DB_RAW.map(q => ({ ...q, k: normalize(q.t) }));
 const LOCAL_MAP = new Map();
-LOCAL_DB.forEach(q => LOCAL_MAP.set(q.t, q));
+LOCAL_DB.forEach(q => LOCAL_MAP.set(q.k, q));
 
 // Precomputed per-entry word sets (words length > 2) — built once at module init
 const ENTRY_WORDSETS = new Map();
 // Inverted word index: word → entries containing that word
 const WORD_INDEX = new Map();
 LOCAL_DB.forEach(entry => {
-  const wordSet = new Set(entry.t.split(" ").filter(w => w.length > 2));
+  const wordSet = new Set(entry.k.split(" ").filter(w => w.length > 2));
   ENTRY_WORDSETS.set(entry, wordSet);
   wordSet.forEach(w => {
     if (!WORD_INDEX.has(w)) WORD_INDEX.set(w, []);
@@ -3818,19 +3825,9 @@ LOCAL_DB.forEach(entry => {
   });
 });
 
-function normalizeForLookup(s) {
-  return (s || "")
-    .normalize("NFKD")
-    .toLowerCase()
-    .replace(/\p{M}/gu, "")
-    .replace(/[^\p{L}\p{N}\s]/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export function localLookup(text, hint, options = {}) {
   const { exactOnly = false } = options;
-  const norm = normalizeForLookup(text);
+  const norm = normalize(text);
   const exact = LOCAL_MAP.get(norm);
   if (exact) return { source: exact.s, category: exact.c, confidence: "high", local: true };
 
@@ -3840,11 +3837,11 @@ export function localLookup(text, hint, options = {}) {
 
     // Substring matching — linear scan with native string ops
     for (const entry of LOCAL_DB) {
-      if (norm.includes(entry.t) && entry.t.length > 15) {
-        if (!bestHigh || entry.t.length > bestHigh.t.length) bestHigh = entry;
+      if (norm.includes(entry.k) && entry.k.length > 15) {
+        if (!bestHigh || entry.k.length > bestHigh.k.length) bestHigh = entry;
       }
-      if (entry.t.includes(norm) && norm.length > 15) {
-        if (!bestMed || entry.t.length < bestMed.t.length) bestMed = entry;
+      if (entry.k.includes(norm) && norm.length > 15) {
+        if (!bestMed || entry.k.length < bestMed.k.length) bestMed = entry;
       }
     }
 

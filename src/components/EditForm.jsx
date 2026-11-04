@@ -33,8 +33,8 @@ function findSuggestion(text, db) {
   // Score every entry by word overlap, ignoring stop words
   let best = null; let bestScore = 0;
   for (const entry of db) {
-    if (entry.t === norm) return null; // exact match — no suggestion needed
-    const wb = new Set(entry.t.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
+    if (entry.k === norm) return null; // exact match — no suggestion needed
+    const wb = new Set(entry.k.split(" ").filter(w => w.length > 2 && !STOP_WORDS.has(w)));
     if (wb.size < 2) continue;
     let overlap = 0;
     wa.forEach(w => { if (wb.has(w)) overlap++; });

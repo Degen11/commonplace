@@ -238,6 +238,70 @@ describe("useQuoteActions", () => {
     });
   });
 
+  // ── batchReIdentify ──
+
+  describe("batchReIdentify", () => {
+    // Texts that aren't in the local DB, so every quote goes to identifyBatch
+    const qs = [
+      makeQuote({ id: "a", text: "zqx unmatched alpha", source: "Old A" }),
+      makeQuote({ id: "b", text: "zqx unmatched beta", source: "Old B" }),
+    ];
+    const answer = (chunk) => Promise.resolve(chunk.map((_, i) => ({ i, source: `New ${i}`, category: "Book", confidence: "high" })));
+    const run = async (identifyBatch) => {
+      const showToast = vi.fn();
+      const { result: { result }, props } = setup({ quotes: [...qs], identifyBatch, showToast });
+      await act(async () => { await result.current.batchReIdentify(new Set(["a", "b"])); });
+      return { showToast, props, result };
+    };
+
+    it("shows a success toast with undo when every quote is re-identified", async () => {
+      const { showToast, result } = await run(vi.fn(answer));
+      expect(showToast).toHaveBeenCalledWith("Re-identified 2 quotes", "Undo", expect.any(Function), "success");
+      expect(result.current.reidentifyingIds.size).toBe(0);
+    });
+
+    it("retries a failed batch once before giving up", async () => {
+      const identifyBatch = vi.fn()
+        .mockRejectedValueOnce(Object.assign(new Error("API returned 500"), { status: 500 }))
+        .mockImplementation(answer);
+      const { showToast } = await run(identifyBatch);
+      expect(identifyBatch).toHaveBeenCalledTimes(2);
+      expect(showToast).toHaveBeenCalledWith("Re-identified 2 quotes", "Undo", expect.any(Function), "success");
+    });
+
+    it("shows an error, not success, when every batch fails", async () => {
+      const identifyBatch = vi.fn().mockRejectedValue(Object.assign(new Error("API returned 503"), { status: 503 }));
+      const { showToast, props, result } = await run(identifyBatch);
+
+      expect(identifyBatch).toHaveBeenCalledTimes(2); // first try + one retry
+      expect(showToast).toHaveBeenCalledTimes(1);
+      const [msg, action, , variant] = showToast.mock.calls[0];
+      expect(variant).toBe("error");
+      expect(action).toBeNull();
+      expect(msg).not.toMatch(/^Re-identified/);
+      expect(props.setQuotes).not.toHaveBeenCalled();
+      expect(result.current.reidentifyingIds.size).toBe(0);
+    });
+
+    it("reports how many failed when only some come back", async () => {
+      // The API answers for the first entry only
+      const identifyBatch = vi.fn(() => Promise.resolve([{ i: 0, source: "New", category: "Book", confidence: "high" }]));
+      const { showToast } = await run(identifyBatch);
+      expect(showToast).toHaveBeenCalledWith("Re-identified 1 of 2 quotes; 1 failed", "Undo", expect.any(Function), "error");
+    });
+  });
+
+  describe("reIdentify", () => {
+    it("shows an error when the API returns no result", async () => {
+      const showToast = vi.fn();
+      const q = makeQuote({ id: "a", text: "zqx unmatched alpha" });
+      const { result: { result }, props } = setup({ quotes: [q], identifyBatch: vi.fn(() => Promise.resolve([])), showToast });
+      await act(async () => { await result.current.reIdentify(q); });
+      expect(showToast).toHaveBeenCalledWith(expect.any(String), null, null, "error");
+      expect(props.setQuotes).not.toHaveBeenCalled();
+    });
+  });
+
   // ── handleFileImport ──
 
   describe("handleFileImport", () => {

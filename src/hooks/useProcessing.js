@@ -11,6 +11,7 @@ import { makeQuote } from "../utils/quotes";
 import { removeFromStorage } from "../utils/storage";
 import { fetchWithTimeout, API_HEADERS } from "../utils/api";
 import { describeApiError } from "../utils/apiErrors";
+import { identifyInBatches } from "../utils/identifyBatches";
 import {
   API_TIMEOUT_MS, AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
   PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD, LS_DRAFT,
@@ -219,76 +220,29 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
   };
 
   // Phase 3: Send remaining entries to Claude for AI identification in batches
-  // Uses prefetching: starts the next batch API call while processing current batch results
+  // (pipelined, each failed batch retried once — see utils/identifyBatches.js)
   const handleApiBatch = async (unique, stillNeedsApi, preAiDone, useFormatting, signal) => {
     const apiResults = new Map();
     let apiFailed = false;
-    const failed = [];
-    const totalBatches = Math.ceil(stillNeedsApi.length / API_BATCH_SIZE);
 
-    // Build all batch chunks upfront
-    const batches = [];
-    for (let i = 0; i < stillNeedsApi.length; i += API_BATCH_SIZE) {
-      batches.push(stillNeedsApi.slice(i, i + API_BATCH_SIZE));
-    }
-
-    // Start first batch
-    let pendingFetch = null;
-    if (batches.length > 0) {
-      dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone, current: `AI identifying batch 1/${totalBatches}…`, phase: "api" } });
-      pendingFetch = identifyBatch(batches[0], useFormatting, signal);
-    }
-
-    for (let b = 0; b < batches.length; b++) {
-      if (signal.aborted) return { apiResults, apiFailed, failed };
-      const chunk = batches[b];
-
-      let results;
-      try {
-        // Await the already-started fetch for this batch
-        results = await pendingFetch;
-        if (signal.aborted) return { apiResults, apiFailed, failed };
-
-        // Prefetch next batch while we process current results
-        if (b + 1 < batches.length) {
-          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}…`, phase: "api" } });
-          pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
-        }
-      } catch (err) {
-        if (err.name === "AbortError") return { apiResults, apiFailed: true, failed };
-
-        // Retry this batch once before marking items as failed
-        let didRetry = false;
-        if (!signal.aborted) {
-          try {
-            results = await identifyBatch(chunk, useFormatting, signal);
-            didRetry = true;
-          } catch (retryErr) {
-            if (retryErr.name === "AbortError") return { apiResults, apiFailed: true, failed };
-            // Both attempts failed — mark only these items as failed, then continue
-            apiFailed = true;
-            chunk.forEach(c => failed.push(c));
-            const n = chunk.length;
-            dispatch({ type: "API_ERROR", error: describeApiError(retryErr) + ` (${pluralize(n, "entry", "entries")} affected)` });
-          }
-        }
-
-        // Start next batch fetch even after retry failure so remaining batches proceed
-        if (b + 1 < batches.length && !signal.aborted) {
-          dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + (b + 1) * API_BATCH_SIZE, current: `AI identifying batch ${b + 2}/${totalBatches}…`, phase: "api" } });
-          pendingFetch = identifyBatch(batches[b + 1], useFormatting, signal);
-        }
-
-        if (!didRetry) continue;
-      }
-
-      // Process current batch results
-      results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
-      dispatch({ type: "FEED_APPEND", items: results.map(r => {
-        const item = chunk[r.i];
-        return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || UNKNOWN_SOURCE, category: fallbackCategory(r.category, allCats) };
-      }) });
-    }
+    const { failed } = await identifyInBatches(stillNeedsApi, identifyBatch, {
+      withFormatting: useFormatting,
+      signal,
+      onBatchStart: (b, total) => {
+        dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + b * API_BATCH_SIZE, current: `AI identifying batch ${b + 1}/${total}…`, phase: "api" } });
+      },
+      onResults: (chunk, results) => {
+        results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
+        dispatch({ type: "FEED_APPEND", items: results.map(r => {
+          const item = chunk[r.i];
+          return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || UNKNOWN_SOURCE, category: fallbackCategory(r.category, allCats) };
+        }) });
+      },
+      onFailed: (chunk, err) => {
+        apiFailed = true;
+        dispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${pluralize(chunk.length, "entry", "entries")} affected)` });
+      },
+    });
 
     return { apiResults, apiFailed, failed };
   };

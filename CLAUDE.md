@@ -162,11 +162,13 @@ src/
 
   data/
     constants.js               Categories, colors, confidence levels, example quotes, sanitization
-    localQuotes.js             3,700+ curated quotes — lazy-loaded via dynamic import. Builds ENTRY_WORDSETS (Map<entry,Set<word>>) and WORD_INDEX (inverted word→entries map) at module init for fast word-overlap lookup
+    localQuotes.js             3,700+ curated quotes — lazy-loaded via dynamic import. Gives each entry a normalized key `k` (via `normalize()`; `t` stays as written, for display) and builds LOCAL_MAP, ENTRY_WORDSETS (Map<entry,Set<word>>) and WORD_INDEX (inverted word→entries map) from `k` at module init. Compare against `k`, never `t`
     faq.js                     Shared FAQ content — renders as a visible section on the landing page AND generates index.html's FAQPage JSON-LD at build time (see vite.config.js), so the two can't drift
 
   utils/
-    textFormatting.js          smartSplit, normalize, similarity + makeSimilarityKey/similarityFromKeys (keyed dupe detection), basicFormat, proper nouns
+    normalize.js               normalize() — the single text normalizer, imported by textFormatting.js, localQuotes.js and api/_shared.js
+    identifyBatches.js         identifyInBatches — the one /api/identify batch loop (pipelined, retry once, report failures), used by useProcessing and batch re-identify
+    textFormatting.js          smartSplit, normalize (re-export), similarity + makeSimilarityKey/similarityFromKeys (keyed dupe detection), basicFormat, proper nouns
     parsers.js                 File parsing — Kindle highlights, Readwise, CSV, JSON, Markdown
     quotes.js                  makeQuote factory, findDuplicateGroups, splitSource (display-only author/work split), isUnknownSource
     export.js                  Export generators — CSV, JSON, Markdown, plain text, Anki flashcards
@@ -181,12 +183,13 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (40 files, 443 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (42 files, 462 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, AttentionNotice, BulkBar, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
     hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
     stores/                    quotesStore
-    utils/                     api, export, helpers, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
+    data/                      localQuotes
+    utils/                     api, export, helpers, identifyBatches, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
 ```
 
 ### App phases
@@ -258,7 +261,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (40 test files, 443 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (42 test files, 462 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -301,7 +304,7 @@ vercel dev        # Test serverless functions locally
 - **No mount guards needed** — React 18+ removed the "setState on unmounted component" warning. Don't add mount-guard refs or safe-dispatch wrappers
 - **React Compiler rules** — the compiler requires code that follows the Rules of React. Key constraints: (1) don't read or write `ref.current` during render — assign refs in `useEffect` or event handlers; (2) don't call `setState` directly inside `useEffect` for derived state — use initializers, direct computation, or the `setState`-during-render pattern (see `useInfiniteScroll.js` for an example); (3) don't create components dynamically during render (e.g., `const Icon = getIcon(name)`) — use `createElement` or pass the component as a prop. Run `npm run lint` to check for compiler bailouts
 - **Immutable Set updates** — use `addToSet`, `removeFromSet`, `toggleInSet`, `addAllToSet`, `removeAllFromSet` from `utils/helpers.js` instead of inline `new Set(prev)` + mutate patterns
-- **Text normalization** — `normalize()` in `textFormatting.js` (client) and `normalizeForCache()` in `api/_shared.js` (server) must stay in sync. Both use Unicode property escapes for correctness
+- **Text normalization** — there is one `normalize()`, in `src/utils/normalize.js`. The client (`textFormatting.js`, `localQuotes.js`) and the server (`api/_shared.js`, exported there as `normalizeForCache`) import it, so cache keys and local lookups can't drift. Keep the file dependency-free, since the serverless functions import it. Don't write another copy
 - **localStorage access** — use `loadFromStorage()` for reads and `saveToStorage()` for writes (both in `utils/storage.js`) instead of raw `localStorage.getItem`/`setItem` with try/catch
 - **Pluralization** — use `pluralize(count, "quote")` from `utils/helpers.js` instead of inline ternaries like `` `${n} ${n === 1 ? "quote" : "quotes"}` ``. When the count is rendered separately (styled number), use `pluralWord(count, "quote needs", "quotes need")` for just the word
 - **Hover vs. touch** — don't change hover styles with `onMouseEnter`/`onMouseLeave` (a tap leaves them stuck on touchscreens); use the `.hov-*` helper classes in `baseCSS` or a new `@media(hover:hover)` rule. Every `:hover` rule in `baseCSS` sits inside `@media(hover:hover)` so taps don't leave rows/cards stuck highlighted or lifted. Wrap new hover rules the same way. Hover-revealed UI (overflow button, edit hints) is shown via `@media(hover:none)`, and 44px touch targets live in `@media(pointer:coarse)` (small visual controls get an invisible `::before` hit area instead of growing)
@@ -330,7 +333,7 @@ Z.TOAST           2000  Toasts
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - No TODO/FIXME comments exist in the codebase currently
 - **React Compiler vs TanStack Virtual** — the two components that call `useWindowVirtualizer()` (`TableView` and `MobileCardList` in `ResultsPhase.jsx`) carry a `"use no memo"` directive. The virtualizer is a stable mutable instance, so compiler-memoized `getVirtualItems()` results went stale when it re-rendered without a compiler-visible dep change (symptom: cards→table view switch left the table empty until a window resize). Don't remove the directives; virtualization itself still windows correctly without compiler memoization. ESLint currently reports **zero errors and zero warnings** (`npm run lint`, covering `src/` and `api/`). The React Compiler rules come from `eslint-plugin-react-hooks`, a regular devDependency, so `npm install` is all the check needs
-- **API batch retry** — `useProcessing.js` retries each failed batch exactly once. On retry failure the batch's items are added to `failedEntries` with a count-specific error message and processing continues to the next batch (no early exit). This is intentional: a single-batch failure should never prevent other batches from completing
+- **API batch retry** — every batched `/api/identify` call goes through `identifyInBatches()` (`utils/identifyBatches.js`), which retries each failed batch exactly once and keeps going to the next batch on a second failure (no early exit): a single-batch failure should never prevent other batches from completing. In `useProcessing` the failed batch's items are added to `failedEntries` with a count-specific error message; bulk re-identify reports how many failed instead of a success toast
 - **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty messages array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`/c/<id>`, formerly `#p=<id>`, which still works) fetch from server. Both are handled in `QuotesContext.jsx` mount effect. `/c/<id>` is rewritten to `api/share-page.js`, which serves the built index.html with that collection's title, description and `og:image=/api/og?id=<id>` (plus `noindex`), so each shared link unfurls as its own card
 - Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof

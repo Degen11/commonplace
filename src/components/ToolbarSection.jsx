@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Menu } from "@base-ui/react/menu";
 import { styles, CP_ACCENT, CLR_AMBER } from "./styles";
+import { toolbarStyles } from "./toolbarSectionStyles";
 import { X, Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { pluralize } from "../utils/helpers";
 import { Z } from "../data/constants";
@@ -118,17 +119,17 @@ export default function ToolbarSection({
           {/* Category pills — scrollable area with fade overlays */}
           <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
             <div className="cat-scroll" ref={catScrollRef} onScroll={updateCatFade}
-              style={{ ...styles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
-              <button className="cat-pill" aria-pressed={catFilter === "All" && !favFilter} onClick={() => setCatFilter("All")} style={{ ...styles.catPill, ...(catFilter === "All" && !favFilter ? styles.catOn : {}) }}>All</button>
+              style={{ ...toolbarStyles.cats, position: "static", top: "auto", zIndex: "auto", borderBottom: "none" }}>
+              <button className="cat-pill" aria-pressed={catFilter === "All" && !favFilter} onClick={() => setCatFilter("All")} style={{ ...toolbarStyles.catPill, ...(catFilter === "All" && !favFilter ? toolbarStyles.catOn : {}) }}>All</button>
               {favCount > 0 && (
-                <button className="cat-pill" aria-pressed={favFilter} onClick={() => setFavFilter(!favFilter)} style={{ ...styles.catPill, ...(favFilter ? { borderColor: "rgba(217,119,6,0.25)", background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
+                <button className="cat-pill" aria-pressed={favFilter} onClick={() => setFavFilter(!favFilter)} style={{ ...toolbarStyles.catPill, ...(favFilter ? { borderColor: "rgba(217,119,6,0.25)", background: "rgba(217,119,6,0.14)", color: CLR_AMBER } : {}) }}>
                   <span style={{ color: "var(--cp-fav-accent)" }}>★</span> Favorites <span style={{ opacity: .5, fontSize: 11, marginLeft: 2 }}><AnimatedNumber value={favCount} /></span>
                 </button>
               )}
               {pinnedCats.map(c => {
                 const col = getCatColor(c, customCats); const on = catFilter === c;
                 const count = cc[c];
-                return <button key={c} className="cat-pill" aria-pressed={on} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...styles.catPill, ...(on ? { borderColor: col.bg, background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
+                return <button key={c} className="cat-pill" aria-pressed={on} onClick={() => { setCatFilter(c); setFavFilter(false); }} style={{ ...toolbarStyles.catPill, ...(on ? { borderColor: col.bg, background: col.bg, color: col.text } : {}), ...(!count ? { opacity: .6 } : {}), position: "relative" }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: col.text, opacity: .6, flexShrink: 0 }} />{c}
                   {count ? <span style={{ opacity: .5, fontSize: 11 }}><AnimatedNumber value={count} /></span> : <span style={{ opacity: .4, fontSize: 10 }}>0</span>}
                   {/* native title (not .ui-tip): inside the .cat-scroll clip container, a custom tooltip would be cut off */}
@@ -143,7 +144,7 @@ export default function ToolbarSection({
                   aria-haspopup="true"
                   aria-expanded={catOverflowOpen}
                   onClick={toggleCatOverflow}
-                  style={{ ...styles.catPill, ...(catOverflowOpen || overflowCats.includes(catFilter) ? { borderColor: CP_ACCENT, color: CP_ACCENT } : {}) }}
+                  style={{ ...toolbarStyles.catPill, ...(catOverflowOpen || overflowCats.includes(catFilter) ? { borderColor: CP_ACCENT, color: CP_ACCENT } : {}) }}
                 >
                   More <span style={{ opacity: .5, fontSize: 11 }}>{overflowCats.length}</span>
                   <ChevronDown size={11} strokeWidth={2} style={{ transform: catOverflowOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
@@ -151,10 +152,10 @@ export default function ToolbarSection({
               )}
               {showNewCat ? (
                 <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
-                  <input style={styles.newCatIn} autoCapitalize="words" enterKeyHint="done" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
-                  <button style={styles.newCatSv} onClick={addCat}>Add</button>
+                  <input style={toolbarStyles.newCatIn} autoCapitalize="words" enterKeyHint="done" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Name" autoFocus onKeyDown={e => { if (e.key === "Enter") addCat(); if (e.key === "Escape") { setShowNewCat(false); setNewCatName(""); } }} />
+                  <button style={toolbarStyles.newCatSv} onClick={addCat}>Add</button>
                 </div>
-              ) : <button className="add-cat-btn ui-tip" data-tip="Add custom category" aria-label="Add custom category" style={styles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
+              ) : <button className="add-cat-btn ui-tip" data-tip="Add custom category" aria-label="Add custom category" style={toolbarStyles.addCatBtn} onClick={() => setShowNewCat(true)}>+</button>}
             </div>
             {/* Fade overlays — scoped to scroll container */}
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 24, background: "linear-gradient(to right, var(--cp-bg), transparent)", pointerEvents: "none", zIndex: Z.CATEGORY_PILLS + 1, opacity: catFade.left ? 1 : 0, transition: "opacity .15s" }} />
@@ -264,7 +265,7 @@ export default function ToolbarSection({
                   <X size={12} strokeWidth={2} />
                 </button>
                 {!search && !isMobile && (
-                  <kbd aria-hidden="true" style={styles.searchKbd}>/</kbd>
+                  <kbd aria-hidden="true" style={toolbarStyles.searchKbd}>/</kbd>
                 )}
                 {search && resultCount != null && (
                   <span style={{
@@ -333,7 +334,7 @@ export default function ToolbarSection({
                 <Menu.Positioner side="bottom" align="end" sideOffset={4} style={{ zIndex: Z.DROPDOWN }}>
                   <Menu.Popup style={{ background: "var(--cp-bg-card)", borderRadius: 6, boxShadow: "var(--cp-shadow-md)", border: "1px solid var(--cp-border)", minWidth: 200, padding: 4, animation: "menuIn .14s ease" }}>
                     {SORT_OPTIONS.map(o => (
-                      <Menu.Item key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? styles.sortOptOn : {}) }}
+                      <Menu.Item key={o.key} className="dd-opt" style={{ ...styles.sortOpt, ...(sortBy === o.key ? toolbarStyles.sortOptOn : {}) }}
                         onClick={() => setSortBy(o.key)}>
                         {o.label}
                       </Menu.Item>

@@ -1,4 +1,4 @@
-import { CP_ACCENT, CP_ACCENT_06, FONT_SANS } from "./styles";
+import { CLR_AMBER, CP_ACCENT, CP_ACCENT_06, FONT_SANS } from "./styles";
 import { Z } from "../data/constants";
 
 // ── Homepage-specific styles ─────────────────────────────────────────────────
@@ -335,3 +335,33 @@ export const reveal = (visible, delay = 0) => ({
   transform: visible ? "translateY(0)" : "translateY(40px)",
   transition: `opacity 0.8s ease ${delay}s, transform 0.8s ease ${delay}s`,
 });
+
+// InputPhase's own styles (moved out of styles.js, which keeps the
+// tokens, baseCSS and styles shared across components).
+export const inputStyles = {
+  inputCard:{width:"100%",maxWidth:800,background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,animation:"fadeUp .45s ease",boxShadow:"var(--cp-shadow-card)",transition:"border-color .15s ease, box-shadow .15s ease"},
+
+  // Input tabs
+  tabRow:{display:"flex",alignItems:"center",gap:22,padding:"0 20px",borderBottom:"1px solid var(--cp-border-light)"},
+  tabBtn:{display:"inline-flex",alignItems:"center",gap:7,padding:"14px 0 12px",marginBottom:-1,border:"none",borderBottom:"2px solid transparent",borderRadius:0,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",background:"transparent",color:"var(--cp-text-muted)",transition:"color .15s, border-color .15s"},
+  tabBtnActive:{color:"var(--cp-text)",borderBottomColor:"var(--cp-text)"},
+  importPane:{padding:20},
+
+  bigTextarea:{display:"block",width:"100%",border:"none",borderRadius:0,padding:"18px 20px",fontSize:14,fontFamily:"inherit",color:"var(--cp-text-secondary)",resize:"vertical",minHeight:240,lineHeight:1.7,background:"var(--cp-bg-card)",transition:"border-color .15s ease, box-shadow .15s ease"},
+
+  inputFooter:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,padding:"12px 20px",borderTop:"1px solid var(--cp-border-light)",background:"var(--cp-bg)",borderRadius:"0 0 6px 6px"},
+
+  inputFooterRow:{display:"flex",alignItems:"center",flexWrap:"wrap",gap:"6px 14px"},
+
+  inputFooterSep:{width:1,height:14,background:"var(--cp-border)"},
+
+  processBtnIdle:{opacity:0.5,cursor:"default"},
+
+  pasteShortcuts:{position:"absolute",left:20,right:20,bottom:18,display:"flex",flexWrap:"wrap",gap:8},
+
+  pasteShortcutBtn:{display:"inline-flex",alignItems:"center",gap:7,padding:"8px 12px",border:"1px solid var(--cp-border)",borderRadius:4,background:"var(--cp-bg)",color:"var(--cp-text-secondary)",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",transition:"background .15s"},
+
+  entryMeta:{fontSize:12,color:"var(--cp-text-muted)"},
+
+  warnBadge:{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,color:CLR_AMBER,background:"rgba(217,119,6,0.12)",padding:"2px 8px",borderRadius:50,fontWeight:500},
+};

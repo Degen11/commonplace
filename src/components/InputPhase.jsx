@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import UrlImportPanel from "./UrlImportPanel";
 import { ThemeToggleButton } from "./ThemeToggleButton";
-import { HP, reveal } from "./inputPhaseStyles";
+import { HP, reveal, inputStyles } from "./inputPhaseStyles";
 import { pluralize } from "../utils/helpers";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
@@ -221,16 +221,16 @@ export default function InputPhase({
             </div>
           )}
 
-          {/* No fade-in here (unlike styles.inputCard elsewhere): the card is part of the
+          {/* No fade-in here (unlike inputStyles.inputCard elsewhere): the card is part of the
               prerendered first paint, and its placeholder text can be the LCP element. */}
-          <div className="input-card" style={{ ...styles.inputCard, maxWidth: "100%", animation: "none" }}>
+          <div className="input-card" style={{ ...inputStyles.inputCard, maxWidth: "100%", animation: "none" }}>
             {/* Tab row */}
-            <div role="tablist" aria-label="Add quotes by" style={styles.tabRow}>
+            <div role="tablist" aria-label="Add quotes by" style={inputStyles.tabRow}>
               <button
                 role="tab"
                 aria-selected={inputTab === "paste"}
                 className="tab-btn"
-                style={{ ...styles.tabBtn, ...(inputTab === "paste" ? styles.tabBtnActive : {}) }}
+                style={{ ...inputStyles.tabBtn, ...(inputTab === "paste" ? inputStyles.tabBtnActive : {}) }}
                 onClick={() => setInputTab("paste")}
               >
                 <Pencil size={14} strokeWidth={1.5} /> Paste
@@ -239,7 +239,7 @@ export default function InputPhase({
                 role="tab"
                 aria-selected={inputTab === "import"}
                 className="tab-btn"
-                style={{ ...styles.tabBtn, ...(inputTab === "import" ? styles.tabBtnActive : {}) }}
+                style={{ ...inputStyles.tabBtn, ...(inputTab === "import" ? inputStyles.tabBtnActive : {}) }}
                 onClick={() => setInputTab("import")}
               >
                 <Upload size={14} strokeWidth={1.5} /> Import file
@@ -251,7 +251,7 @@ export default function InputPhase({
                 <textarea
                   className="paste-area"
                   style={{
-                    ...styles.bigTextarea,
+                    ...inputStyles.bigTextarea,
                     ...(isDragOver ? { boxShadow: `inset 0 0 0 2px ${CP_ACCENT}`, background: "var(--cp-bg-selected)" } : {}),
                   }}
                   value={rawInput}
@@ -271,11 +271,11 @@ export default function InputPhase({
                 />
                 {/* Empty-state shortcuts, sitting where the eye already is */}
                 {!rawInput.trim() && !isDragOver && (
-                  <div className="paste-shortcuts" style={styles.pasteShortcuts}>
-                    <button className="try-btn" style={styles.pasteShortcutBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
+                  <div className="paste-shortcuts" style={inputStyles.pasteShortcuts}>
+                    <button className="try-btn" style={inputStyles.pasteShortcutBtn} onClick={() => setRawInput(EXAMPLE_QUOTES)}>
                       <Sparkles size={13} strokeWidth={2} aria-hidden="true" /> Try sample quotes
                     </button>
-                    <button className="try-btn" style={styles.pasteShortcutBtn} onClick={() => setInputTab("import")}>
+                    <button className="try-btn" style={inputStyles.pasteShortcutBtn} onClick={() => setInputTab("import")}>
                       <Upload size={13} strokeWidth={2} aria-hidden="true" /> Import from Kindle, Readwise, CSV&hellip;
                     </button>
                   </div>
@@ -284,7 +284,7 @@ export default function InputPhase({
             )}
 
             {inputTab === "import" && (
-              <div style={styles.importPane}>
+              <div style={inputStyles.importPane}>
               <div
                 className="drop-zone"
                 style={{ ...styles.dropZone, ...(isDragOver ? styles.dropZoneActive : {}) }}
@@ -324,7 +324,7 @@ export default function InputPhase({
               </div>
             )}
 
-            <div className="input-footer" style={styles.inputFooter}>
+            <div className="input-footer" style={inputStyles.inputFooter}>
               {(() => {
                 const trimmed = rawInput.trim();
                 const count = trimmed ? smartSplit(trimmed).length : 0;
@@ -333,12 +333,12 @@ export default function InputPhase({
                 const hasFancyChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026]/.test(rawInput);
                 return (
                   <div className="input-footer-meta" style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
-                    <div style={styles.inputFooterRow}>
-                      <span style={styles.entryMeta}>
+                    <div style={inputStyles.inputFooterRow}>
+                      <span style={inputStyles.entryMeta}>
                         {pluralize(count, "entry", "entries")}
                         {count > 0 && <span className="input-footer-wordcount" style={{ color: "var(--cp-text-faint)", marginLeft: 8, fontSize: 11 }}>{wordCount.toLocaleString()} words &middot; {charCount.toLocaleString()} chars</span>}
                       </span>
-                      <span aria-hidden="true" style={styles.inputFooterSep} />
+                      <span aria-hidden="true" style={inputStyles.inputFooterSep} />
                       <label
                         className="ui-tip ui-tip-below"
                         data-tip="Normalize quotes, dashes, and whitespace"
@@ -352,7 +352,7 @@ export default function InputPhase({
                       </label>
                     </div>
                     {count > 50 && (
-                      <span style={styles.warnBadge}>
+                      <span style={inputStyles.warnBadge}>
                         <TriangleAlert size={12} strokeWidth={2} /> {count} entries — will process in {Math.ceil(count / 20)} batches, may take a moment
                       </span>
                     )}
@@ -377,7 +377,7 @@ export default function InputPhase({
                   layoutId="phase-action"
                   className="proc-btn ui-tip ui-tip-below"
                   data-tip="⌘/Ctrl + Enter"
-                  style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, ...(!rawInput.trim() ? styles.processBtnIdle : {}), ...(isProcessing ? { opacity: 0.6 } : {}) }}
+                  style={{ ...styles.processBtn, display: "flex", alignItems: "center", gap: 6, ...(!rawInput.trim() ? inputStyles.processBtnIdle : {}), ...(isProcessing ? { opacity: 0.6 } : {}) }}
                   onClick={onProcess}
                   disabled={!rawInput.trim() || isProcessing}
                   transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.9 }}

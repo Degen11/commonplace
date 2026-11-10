@@ -23,6 +23,7 @@ import {
 import InputPhase from "./InputPhase";
 import ProcessingPhase from "./ProcessingPhase";
 import SectionErrorBoundary from "./SectionErrorBoundary";
+import TooltipLayer from "./TooltipLayer";
 
 const ResultsPhase = lazy(() => import("./ResultsPhase"));
 const OnboardingModal = lazy(() => import("./OnboardingModal"));
@@ -184,6 +185,7 @@ export default function Commonplace() {
   return (
     <main>
       <Analytics />
+      <TooltipLayer />
       <SpeedInsights />
 
       <Suspense fallback={null}>

@@ -106,6 +106,7 @@ src/
     CardItem.jsx               Card view — quote first, then source (split into two lines via `splitSource`), then category + actions; mobile hides checkboxes until selection mode (long-press)
     HeaderBar.jsx              Results header — logo, toolbar (sync pill, view toggle, export, solid "Add quotes" primary, overflow menu incl. theme), collection title + counts. On mobile: icon-only export/overflow, the title doubles as the collection switcher, and "Add quotes" is a floating button rendered by ResultsPhase
     HeaderControls.jsx         Shared header building blocks (theme/view toggles, overflow-menu items) composed by HeaderBar and MiniHeader
+    TooltipLayer.jsx           Renders every .ui-tip/data-tip tooltip in one fixed-position portal (mounted in App)
     ThemeToggleButton.jsx      Icon-button theme toggle — split out of HeaderControls so the landing page doesn't load Base UI
     MiniHeader.jsx             Sticky header on scroll
     BulkBar.jsx                Bulk actions — one row of ghost buttons: Category/Collection menus and a Source popover (apply via applyBulk overrides), Favorite/Copy/Re-identify, Delete
@@ -277,7 +278,7 @@ vercel dev        # Test serverless functions locally
 - **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`), inlined into `index.html` by the build-time prerender (and injected by `main.jsx` in dev)
 - **`color-scheme`** — declared in `baseCSS` (`:root` light, `html.dark` + media-query fallback dark) and as a `<meta>` in `index.html`. This is what makes native UI (select popups, scrollbars, autofill, carets) follow the theme — keep it when touching theme CSS
 - **Reduced motion** — two layers: `MotionConfig reducedMotion="user"` in `App.jsx` disables motion/react transforms, and a `@media(prefers-reduced-motion:reduce)` block at the end of `baseCSS` collapses CSS animations/transitions to .01ms (not 0, so `animationend`/`transitionend` listeners still fire). New animations are covered automatically — don't add per-component reduced-motion checks
-- **Tooltips** — use the `.ui-tip` class (hidden automatically while a menu/popover trigger is open, via `[data-popup-open]` / `[aria-haspopup][aria-expanded="true"]`) with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. Icon-only controls also need `aria-label` (the CSS-pseudo-element tooltip is not a reliable accessible name). Exception: inside clip containers where the tooltip would be cut off (e.g. the horizontally scrolling `.cat-scroll`), native `title` + `aria-label` is acceptable. The `.sidebar-rail:has(.ui-tip:hover)` rule lets collapsed-sidebar tooltips escape its `overflow:hidden`
+- **Tooltips** — use the `.ui-tip` class with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. `TooltipLayer.jsx` (mounted once in `App.jsx`) renders the bubble in a `position:fixed` portal on `<body>`, positioned from the trigger and kept on screen, so overflow/clip containers and stacking contexts can't cut it off: don't add per-container overflow or z-index escape hatches. It shows on mouse hover only (not touch), hides on press and while the trigger's menu/popover is open (`[data-popup-open]` / `[aria-haspopup][aria-expanded="true"]`), and follows `data-tip` changes. Icon-only controls also need `aria-label` (the tooltip is `aria-hidden`, not an accessible name)
 - **Native `<select>` styling** — selects spread `SELECT_RESET` (in `styles.js`, also exported as `styles.selectReset`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
 - **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
 - **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle
@@ -324,9 +325,10 @@ Z.CATEGORY_PILLS  50    Category pills
 Z.OVERLAY         59    Overlays
 Z.MINI_HEADER     60    Mini-header (sticky)
 Z.DROPDOWN        100   Dropdowns
-Z.TOOLTIP         200   Tooltips (.ui-tip), SyncPill popover
+Z.TOOLTIP         200   SyncPill popover
 Z.BULK_BAR        500   Bulk action bar
 Z.MODAL           1000  Modals
+Z.TOOLTIP_LAYER   1500  .ui-tip bubbles (TooltipLayer portal): above modals, below toasts
 Z.TOAST           2000  Toasts
 ```
 

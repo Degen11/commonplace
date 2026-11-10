@@ -4,6 +4,7 @@ import Logo from "./Logo";
 import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
+import { headerStyles } from "./headerBarStyles";
 import { pluralize } from "../utils/helpers";
 import { ViewToggle, HeaderOverflowMenu, HeaderOverflowItems } from "./HeaderControls";
 
@@ -39,12 +40,12 @@ export default function HeaderBar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleAddMore = () => { setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); };
-  const addMoreActive = showAddMore ? styles.addMoreBtnActive : {};
+  const addMoreActive = showAddMore ? headerStyles.addMoreBtnActive : {};
 
   return (
-    <div ref={headerRef} style={styles.header}>
-      <div style={styles.headerTop}>
-      <motion.h1 layoutId="app-logo" style={{ ...styles.title, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
+    <div ref={headerRef} style={headerStyles.header}>
+      <div style={headerStyles.headerTop}>
+      <motion.h1 layoutId="app-logo" style={{ ...headerStyles.title, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}>
         <Logo size={22} />
         <Wordmark height={20} color="var(--cp-text-secondary)" />
       </motion.h1>
@@ -68,7 +69,7 @@ export default function HeaderBar({
           open={mobileMenuOpen}
           onOpenChange={setMobileMenuOpen}
           triggerTip="More actions"
-          triggerStyle={isMobile ? styles.hdrIconBtn : styles.hdrGhostBtn}
+          triggerStyle={isMobile ? styles.hdrIconBtn : headerStyles.hdrGhostBtn}
           trigger={<Ellipsis size={isMobile ? 19 : 16} strokeWidth={1.75} />}
         >
           <HeaderOverflowItems
@@ -83,17 +84,17 @@ export default function HeaderBar({
         </HeaderOverflowMenu>
       </div>
       </div>
-      <div style={styles.collectionHead}>
+      <div style={headerStyles.collectionHead}>
         {isMobile && onOpenCollections
           ? (
-            <h2 style={styles.collectionTitle}>
-              <button style={{ ...styles.collectionSwitch, font: "inherit", letterSpacing: "inherit" }} onClick={onOpenCollections} aria-label={`${collectionTitle}, switch collection`}>
+            <h2 style={headerStyles.collectionTitle}>
+              <button style={{ ...headerStyles.collectionSwitch, font: "inherit", letterSpacing: "inherit" }} onClick={onOpenCollections} aria-label={`${collectionTitle}, switch collection`}>
                 {collectionTitle} <ChevronDown size={20} strokeWidth={2} aria-hidden="true" style={{ color: "var(--cp-text-muted)", flexShrink: 0 }} />
               </button>
             </h2>
           )
-          : <h2 style={styles.collectionTitle}>{collectionTitle}</h2>}
-        <span style={styles.collectionMeta}>
+          : <h2 style={headerStyles.collectionTitle}>{collectionTitle}</h2>}
+        <span style={headerStyles.collectionMeta}>
           {pluralize(quoteCount, "quote")}
           {sourceCount > 0 && <> · {pluralize(sourceCount, "source")}</>}
         </span>

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import HeaderBar from "../HeaderBar";
 import { styles } from "../styles";
+import { headerStyles } from "../headerBarStyles";
 
 function renderHeader(props = {}) {
   const setShowAddMore = vi.fn();
@@ -44,15 +45,15 @@ describe("HeaderBar — Add quotes button", () => {
     expect(button.getAttribute("aria-expanded")).toBe("false");
     expect(button.style.background).toBe(css("background", styles.addMoreBtn.background));
     expect(button.style.color).toBe(css("color", styles.addMoreBtn.color));
-    expect(button.style.color).not.toBe(css("color", styles.addMoreBtnActive.color));
+    expect(button.style.color).not.toBe(css("color", headerStyles.addMoreBtnActive.color));
   });
 
-  it("switches to styles.addMoreBtnActive while the add panel is open", () => {
+  it("switches to headerStyles.addMoreBtnActive while the add panel is open", () => {
     const { button } = renderHeader({ showAddMore: true });
     expect(button.getAttribute("aria-expanded")).toBe("true");
-    expect(button.style.background).toBe(css("background", styles.addMoreBtnActive.background));
-    expect(button.style.color).toBe(css("color", styles.addMoreBtnActive.color));
-    expect(button.style.borderColor).toBe(css("borderColor", styles.addMoreBtnActive.borderColor));
+    expect(button.style.background).toBe(css("background", headerStyles.addMoreBtnActive.background));
+    expect(button.style.color).toBe(css("color", headerStyles.addMoreBtnActive.color));
+    expect(button.style.borderColor).toBe(css("borderColor", headerStyles.addMoreBtnActive.borderColor));
     // Guard against jsdom silently dropping var() values (which would make the above vacuous)
     expect(button.style.background).toContain("var(--cp-bg-tab)");
   });

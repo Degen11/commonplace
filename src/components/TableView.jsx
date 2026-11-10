@@ -9,6 +9,7 @@ import { displayText } from "../utils/export";
 import { getCatColor, Z } from "../data/constants";
 import clsx from "clsx";
 import { styles, CLR_EMERALD, CP_ACCENT_40 } from "./styles";
+import { tableStyles } from "./tableViewStyles";
 import { QUOTE_TRUNCATE_CHARS } from "../config";
 import { Pencil, ChevronDown, GripVertical, Check, Star, Copy, Share2, Ellipsis, Plus } from "lucide-react";
 import { splitSource, isUnknownSource } from "../utils/quotes";
@@ -51,7 +52,7 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
   };
 
   return (
-    <div style={styles.rowAct}>
+    <div style={tableStyles.rowAct}>
       <Menu.Root open={isOpen} onOpenChange={(open) => { if (open !== isOpen) { onToggle(); if (open) setLocalCopied(false); } }}>
         <Menu.Trigger
           className="overflow-btn act-btn"
@@ -146,10 +147,10 @@ const TableRow = memo(function TableRow({
             {isEd
               ? <EditForm q={q} allCats={allCats} onSave={saveEdit} onCancel={() => setEditingId(null)} />
               : compact
-                ? <p title={full} style={{ ...styles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} />{q.favorite && <Star aria-label="Favorite" size={compact ? 11 : 12} fill="currentColor" strokeWidth={1.5} style={styles.favMark} />}</p>
-                : <p title={truncatable && !expanded ? full : undefined} style={styles.entryText}>
+                ? <p title={full} style={{ ...tableStyles.entryTextCompact, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><HighlightText text={full} term={searchTerm} />{q.favorite && <Star aria-label="Favorite" size={compact ? 11 : 12} fill="currentColor" strokeWidth={1.5} style={tableStyles.favMark} />}</p>
+                : <p title={truncatable && !expanded ? full : undefined} style={tableStyles.entryText}>
                     <HighlightText text={shown} term={searchTerm} />
-                    {q.favorite && <Star aria-label="Favorite" size={compact ? 11 : 12} fill="currentColor" strokeWidth={1.5} style={styles.favMark} />}
+                    {q.favorite && <Star aria-label="Favorite" size={compact ? 11 : 12} fill="currentColor" strokeWidth={1.5} style={tableStyles.favMark} />}
                     {truncatable && (
                       <button
                         onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
@@ -177,7 +178,7 @@ const TableRow = memo(function TableRow({
                   </button>
                 : compact
                   ? <>
-                      <span className="inline-src" style={{ ...styles.srcText, flex: "0 1 auto", fontSize: 11 }} title={q.source} onClick={startEdit}><HighlightText text={q.source} term={searchTerm} /></span>
+                      <span className="inline-src" style={{ ...tableStyles.srcText, flex: "0 1 auto", fontSize: 11 }} title={q.source} onClick={startEdit}><HighlightText text={q.source} term={searchTerm} /></span>
                       {showConfidence && <ConfidenceTag confidence={q.confidence} />}
                     </>
                   : <>
@@ -222,7 +223,7 @@ const TableRow = memo(function TableRow({
       {...(isMobile || isEd || isInlineEditing ? {} : listeners)}
       {...attributes}
       style={{
-        ...(compact ? styles.rowCompact : styles.row),
+        ...(compact ? tableStyles.rowCompact : tableStyles.row),
         ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
         ...(isDragging ? { opacity: .35, zIndex: 1, transform: "scale(0.98)", filter: "grayscale(0.3)", transition: "opacity .2s, transform .2s, filter .2s" } : {}),
@@ -238,7 +239,7 @@ const TableRow = memo(function TableRow({
       >
         <GripVertical size={14} strokeWidth={1.5} />
       </div>
-      <div className="checkbox" style={{ ...styles.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
+      <div className="checkbox" style={{ ...tableStyles.chkW, ...(isSel ? { opacity: 1 } : {}) }}>
         <div
           className="checkbox-visual"
           style={{ ...styles.check, ...(isSel ? styles.checkOn : {}) }}
@@ -397,9 +398,9 @@ export default function TableView({
     >
     <div style={isMobile ? { minWidth: 560 } : undefined}>
       {filtered.length > 0 && (
-        <div className="thead-row" style={{ ...styles.tHead, ...(isMobile ? { position: "static" } : { top: toolbarHeight }) }}>
+        <div className="thead-row" style={{ ...tableStyles.tHead, ...(isMobile ? { position: "static" } : { top: toolbarHeight }) }}>
           <div style={{ width: 20, flexShrink: 0 }} />
-          <div className="thead-chk ui-tip ui-tip-below" data-tip="Select all" style={styles.chkW}>
+          <div className="thead-chk ui-tip ui-tip-below" data-tip="Select all" style={tableStyles.chkW}>
             <div
               className="checkbox-visual"
               style={{ ...styles.check, ...(allSelected ? styles.checkOn : {}) }}

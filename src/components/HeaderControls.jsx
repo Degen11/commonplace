@@ -10,6 +10,7 @@ import {
   ChartColumn, CircleQuestionMark, Trash2, Gauge,
 } from "lucide-react";
 import { styles } from "./styles";
+import { controlStyles } from "./headerControlsStyles";
 import { Z } from "../data/constants";
 import { ThemeToggleButton, themeIcon } from "./ThemeToggleButton";
 
@@ -22,7 +23,7 @@ export { ThemeToggleButton };
 // Label shows the mode a click switches to (except auto, which shows state)
 export function ThemeMenuItem({ dark, themeMode, toggleTheme }) {
   return (
-    <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={toggleTheme}>
+    <Menu.Item className="hdr-overflow-item" style={controlStyles.hdrOverflowItem} onClick={toggleTheme}>
       {themeIcon(themeMode, dark, 15, "var(--cp-text-muted)")}
       {themeMode === "auto" ? "Auto (system)" : dark ? "Light mode" : "Dark mode"}
     </Menu.Item>
@@ -35,14 +36,14 @@ export function ViewToggle({ view, compact, setView, setCompact, iconSize = 16, 
   const btnClass = withTips ? "ui-tip ui-tip-below view-btn" : "view-btn";
   const change = (apply) => () => { onSwitch?.(); apply(); };
   return (
-    <div style={styles.viewTog}>
-      <button className={btnClass} data-tip={withTips ? "Table view" : undefined} aria-label="Table view" style={{ ...styles.viewBtn, ...(view === "table" && !compact ? styles.viewOn : {}) }} onClick={change(() => { setView("table"); setCompact(false); })}>
+    <div style={controlStyles.viewTog}>
+      <button className={btnClass} data-tip={withTips ? "Table view" : undefined} aria-label="Table view" style={{ ...controlStyles.viewBtn, ...(view === "table" && !compact ? controlStyles.viewOn : {}) }} onClick={change(() => { setView("table"); setCompact(false); })}>
         <List size={iconSize} strokeWidth={1.5} />
       </button>
-      <button className={btnClass} data-tip={withTips ? "Compact view" : undefined} aria-label="Compact view" style={{ ...styles.viewBtn, ...(view === "table" && compact ? styles.viewOn : {}) }} onClick={change(() => { setView("table"); setCompact(true); })}>
+      <button className={btnClass} data-tip={withTips ? "Compact view" : undefined} aria-label="Compact view" style={{ ...controlStyles.viewBtn, ...(view === "table" && compact ? controlStyles.viewOn : {}) }} onClick={change(() => { setView("table"); setCompact(true); })}>
         <AlignJustify size={iconSize} strokeWidth={1.5} />
       </button>
-      <button className={btnClass} data-tip={withTips ? "Card view" : undefined} aria-label="Card view" style={{ ...styles.viewBtn, ...(view === "cards" ? styles.viewOn : {}) }} onClick={change(() => setView("cards"))}>
+      <button className={btnClass} data-tip={withTips ? "Card view" : undefined} aria-label="Card view" style={{ ...controlStyles.viewBtn, ...(view === "cards" ? controlStyles.viewOn : {}) }} onClick={change(() => setView("cards"))}>
         <LayoutGrid size={iconSize} strokeWidth={1.5} />
       </button>
     </div>
@@ -79,11 +80,11 @@ export function HeaderOverflowMenu({ open, onOpenChange, trigger, triggerTip, tr
 
 // ── Overflow menu building blocks ──
 export function OverflowSection({ children }) {
-  return <div style={styles.hdrOverflowSectionLabel}>{children}</div>;
+  return <div style={controlStyles.hdrOverflowSectionLabel}>{children}</div>;
 }
 
 export function OverflowDivider() {
-  return <Menu.Separator style={styles.hdrOverflowDivider} />;
+  return <Menu.Separator style={controlStyles.hdrOverflowDivider} />;
 }
 
 // View items for the mobile "Layout" section (active mode rendered bold)
@@ -96,15 +97,15 @@ export function ViewMenuItems({ view, compact, setView, setCompact, onSwitch }) 
   };
   return (
     <>
-      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && !compact ? active : {}) }} onClick={() => pick("table", false)}>
+      <Menu.Item className="hdr-overflow-item" style={{ ...controlStyles.hdrOverflowItem, ...(view === "table" && !compact ? active : {}) }} onClick={() => pick("table", false)}>
         <List size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
         Table view
       </Menu.Item>
-      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && compact ? active : {}) }} onClick={() => pick("table", true)}>
+      <Menu.Item className="hdr-overflow-item" style={{ ...controlStyles.hdrOverflowItem, ...(view === "table" && compact ? active : {}) }} onClick={() => pick("table", true)}>
         <AlignJustify size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
         Compact view
       </Menu.Item>
-      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "cards" ? active : {}) }} onClick={() => pick("cards")}>
+      <Menu.Item className="hdr-overflow-item" style={{ ...controlStyles.hdrOverflowItem, ...(view === "cards" ? active : {}) }} onClick={() => pick("cards")}>
         <LayoutGrid size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
         Card view
       </Menu.Item>
@@ -114,7 +115,7 @@ export function ViewMenuItems({ view, compact, setView, setCompact, onSwitch }) 
 
 export function StatsMenuItem({ showStats, onClick }) {
   return (
-    <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={onClick}>
+    <Menu.Item className="hdr-overflow-item" style={controlStyles.hdrOverflowItem} onClick={onClick}>
       <ChartColumn size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
       {showStats ? "Hide full stats" : "Full stats"}
     </Menu.Item>
@@ -123,7 +124,7 @@ export function StatsMenuItem({ showStats, onClick }) {
 
 export function ConfidenceMenuItem({ showConfidence, setShowConfidence }) {
   return (
-    <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => setShowConfidence(v => !v)}>
+    <Menu.Item className="hdr-overflow-item" style={controlStyles.hdrOverflowItem} onClick={() => setShowConfidence(v => !v)}>
       <Gauge size={15} strokeWidth={1.5} color={showConfidence ? "var(--cp-conf-medium)" : "var(--cp-text-muted)"} />
       {showConfidence ? "Hide confidence" : "Show confidence"}
     </Menu.Item>
@@ -132,7 +133,7 @@ export function ConfidenceMenuItem({ showConfidence, setShowConfidence }) {
 
 export function ShortcutsMenuItem({ onShowShortcuts }) {
   return (
-    <Menu.Item className="hdr-overflow-item" style={styles.hdrOverflowItem} onClick={() => onShowShortcuts()}>
+    <Menu.Item className="hdr-overflow-item" style={controlStyles.hdrOverflowItem} onClick={() => onShowShortcuts()}>
       <CircleQuestionMark size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
       Keyboard shortcuts
     </Menu.Item>
@@ -141,7 +142,7 @@ export function ShortcutsMenuItem({ onShowShortcuts }) {
 
 export function NewBatchMenuItem({ setConfirmClear }) {
   return (
-    <Menu.Item className="hdr-overflow-destructive" style={styles.hdrOverflowDestructive} onClick={() => setConfirmClear(true)}>
+    <Menu.Item className="hdr-overflow-destructive" style={controlStyles.hdrOverflowDestructive} onClick={() => setConfirmClear(true)}>
       <Trash2 size={15} strokeWidth={1.5} />
       New batch
     </Menu.Item>

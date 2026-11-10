@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_VIOLET } from "./styles";
+import { processingStyles } from "./processingPhaseStyles";
 import { getCatColor } from "../data/constants";
 import { ArrowRight, CircleCheckBig, Database, Globe, Sparkles, TriangleAlert } from "lucide-react";
 import Logo from "./Logo";
@@ -144,19 +145,19 @@ export default function ProcessingPhase({
 
   return (
     <div style={styles.wrap}>
-      <nav style={styles.nav}>
-        <motion.span layoutId="app-logo" style={{ ...styles.navLogo, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}><Logo size={22} /><Wordmark height={18} color="var(--cp-text)" /></motion.span>
-        <div style={styles.navRight}>
+      <nav style={processingStyles.nav}>
+        <motion.span layoutId="app-logo" style={{ ...processingStyles.navLogo, display: "flex", alignItems: "center", gap: 8 }} transition={{ type: "spring", stiffness: 350, damping: 30, mass: 0.8 }}><Logo size={22} /><Wordmark height={18} color="var(--cp-text)" /></motion.span>
+        <div style={processingStyles.navRight}>
           <span style={{ color: "var(--cp-text-muted)", fontSize: 12, fontWeight: 500 }}>Step 2 of 2</span>
         </div>
       </nav>
-      <div style={styles.procWrap}>
+      <div style={processingStyles.procWrap}>
         {isComplete ? (
           <>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <CircleCheckBig size={56} color={CLR_EMERALD} strokeWidth={1.5} style={{ marginBottom: 16, animation: "completePop .4s ease both" }} />
-              <h2 style={{ ...styles.procTitle, color: CLR_EMERALD, fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
-              <p style={{ ...styles.procSub, animation: "fadeUp .25s .25s ease both" }}>
+              <h2 style={{ ...processingStyles.procTitle, color: CLR_EMERALD, fontSize: 28, animation: "fadeUp .25s .15s ease both" }}>All done!</h2>
+              <p style={{ ...processingStyles.procSub, animation: "fadeUp .25s .25s ease both" }}>
                 {stats?.failed > 0
                   ? `${total - stats.failed} of ${pluralize(total, "entry", "entries")} organized`
                   : `${pluralize(total, "entry", "entries")} organized and ready to explore`}
@@ -201,18 +202,18 @@ export default function ProcessingPhase({
                 <ProgressRing pct={pct} isComplete={false} />
               </motion.div>
             )}
-            <h2 style={styles.procTitle}>Organizing your collection…</h2>
-            <p style={styles.procSub} role="status">{phaseSubtitle(progress, doneCount, total)}</p>
+            <h2 style={processingStyles.procTitle}>Organizing your collection…</h2>
+            <p style={processingStyles.procSub} role="status">{phaseSubtitle(progress, doneCount, total)}</p>
           </>
         )}
         {progress && (
-          <div style={styles.procCard}>
-            <div style={styles.procTop}>
+          <div style={processingStyles.procCard}>
+            <div style={processingStyles.procTop}>
               <span style={{ fontWeight: 600 }}><AnimatedNumber value={doneCount} /> of {total}</span>
               <span style={{ color: isComplete ? CLR_EMERALD : "var(--cp-text-muted)" }}><AnimatedNumber value={pct} />%</span>
             </div>
-            <div style={styles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Identification progress"><div style={{ ...styles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
-            {!isComplete && <p style={styles.procCurrent}>{progress.current}</p>}
+            <div style={processingStyles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Identification progress"><div style={{ ...processingStyles.fill, width: `${pct}%`, ...(isComplete ? { background: CLR_EMERALD } : {}) }} /></div>
+            {!isComplete && <p style={processingStyles.procCurrent}>{progress.current}</p>}
             {showTimeRow && (
               <div style={{
                 display: "flex", justifyContent: "space-between", marginTop: 8,
@@ -237,7 +238,7 @@ export default function ProcessingPhase({
         ) : !isComplete && (
           <div style={{ marginTop: 20, borderTop: "1px solid var(--cp-border)", paddingTop: 16, width: "100%", maxWidth: 480, textAlign: "center" }}>
             <button
-              style={{ ...styles.hdrBtn, padding: "8px 20px", fontSize: 13 }}
+              style={{ ...processingStyles.hdrBtn, padding: "8px 20px", fontSize: 13 }}
               onClick={onCancel}
             >
               {doneCount > 0
@@ -247,14 +248,14 @@ export default function ProcessingPhase({
           </div>
         )}
         {identifiedFeed.length > 0 && !isComplete && (
-          <div style={styles.feedWrap}>
+          <div style={processingStyles.feedWrap}>
             {reversedFeed.map((item, i) => {
               const col = getCatColor(item.category, customCats);
               return (
-                <div key={`${reversedFeed.length - 1 - i}`} style={styles.feedItem}>
-                  <span style={{ ...styles.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
-                  <span style={styles.feedItemText}>{item.text}</span>
-                  <span style={styles.feedItemSrc}>{item.source}</span>
+                <div key={`${reversedFeed.length - 1 - i}`} style={processingStyles.feedItem}>
+                  <span style={{ ...processingStyles.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
+                  <span style={processingStyles.feedItemText}>{item.text}</span>
+                  <span style={processingStyles.feedItemSrc}>{item.source}</span>
                 </div>
               );
             })}

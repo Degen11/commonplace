@@ -99,7 +99,8 @@ src/
     NotificationBars.jsx       Status/notification bars (shared view, API errors, processing stats); also exports AttentionNotice, the quiet one-line attention/review notice rendered under the header title
     QuickAddBar.jsx            Inline quote add form with dupe detection
     InputPhase.jsx             Landing page — text input, file import, scroll-reveal, formatting preview
-    inputPhaseStyles.js        Homepage-specific styles (HP object), timeline data, reveal transition helper
+    inputPhaseStyles.js        Homepage-specific styles (HP object, plus inputStyles moved out of styles.js), timeline data, reveal transition helper
+    *Styles.js                 One per component with its own styles: processingPhaseStyles, notificationBarsStyles, headerBarStyles, bulkBarStyles, tableViewStyles, toolbarSectionStyles, headerControlsStyles, collectionsSidebarStyles
     UrlImportPanel.jsx         URL import panel — fetch URL, extraction mode selector, preview modal
     ProcessingPhase.jsx        AI identification progress display (ring, per-phase subtitle, elapsed time + ETA on long jobs)
     TableView.jsx              Main table view with inline editing and drag-to-reorder
@@ -143,7 +144,7 @@ src/
     DeviceLinkModal.jsx        Cloud-sync panel — view/copy this device's code and link another device to the same synced data (opened from SyncPill)
     ToolbarSection.jsx         Reusable toolbar section wrapper (category pills, search, Base UI sort menu)
     UrlPreviewModal.jsx        URL content preview before import
-    styles.js                  All CSS-in-JS style objects + baseCSS (global CSS string)
+    styles.js                  Design tokens (colors, fonts), baseCSS (global CSS string), shared bases (btnSm, btnXs, SELECT_RESET, syncPillStyles, cardStyles) and the `styles` object for styles used by more than one component
 
   hooks/
     useProcessing.js           Core pipeline — local lookup → external lookup → AI batch identification
@@ -186,11 +187,13 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (45 files, 489 tests; api/__tests__ and src/__tests__/boot.test.js included)
-    components/                App, AddMorePanel, AttentionNotice, BulkBar, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
-                               MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
-    hooks/                     identifyBatch, processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
-    stores/                    quotesStore
+  **/__tests__/                Tests colocated with their modules (54 files, 617 tests; api/__tests__ and src/__tests__/boot.test.js included)
+    components/                App, AddMorePanel, AttentionNotice, BulkBar, CardItem, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
+                               MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, TooltipLayer, styles
+    contexts/                  QuotesContext
+    hooks/                     identifyBatch, lookupConfidence, processingDupes, processingErrors, useDndQuotes, useEditState, useLongPress, useProcessing,
+                               useQuoteActions, useSync, useViewPreferences
+    stores/                    quotesStore, quotesStoreCollections
     data/                      localQuotes
     utils/                     api, apiErrors, export, helpers, identifyBatches, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
 ```
@@ -254,7 +257,7 @@ User input → smartSplit() → deduplicate against existing
 - **`QuotesContext.jsx`** — Side-effects-only provider. Decodes share links (hash `#s=` for base64; `/c/<id>` or legacy `#p=<id>` for public), kicks off initial cloud pull, schedules debounced push to Supabase. Provides no context value — it just renders `children`.
 - **`useProcessing.js`** — The identification pipeline. Uses a useReducer state machine. Three extracted sub-functions (`handleLocalLookup`, `handleExternalLookup`, `handleApiBatch`) orchestrated by `runProcessing()`. Handles local lookup → external lookup → AI batching → duplicate detection → auto-transition to results.
 - **`useSync.js`** — TanStack Query-based sync. `pull()` fetches cloud data on mount; `schedulePush()` debounces and pushes via mutation with exponential backoff.
-- **`styles.js`** — All CSS-in-JS. Contains `baseCSS` (global CSS string injected in main.jsx) and style objects for every component. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.). Homepage-specific styles live separately in `inputPhaseStyles.js`.
+- **`styles.js`** — Design tokens, `baseCSS` (global CSS string injected in main.jsx), the shared button/select bases, and the `styles` object for styles more than one component uses. Theme uses CSS custom properties (`--cp-bg`, `--cp-text`, etc.). A component's own styles live next to it in `<component>Styles.js` (e.g. `headerBarStyles.js`, `inputPhaseStyles.js`).
 - **`_schemas.js`** — Zod schemas for all API endpoints. Server-side validation with filter-style arrays (silently drops invalid items).
 - **`_shared.js`** — Supabase client, rate limiting, CORS, origin validation, and `withApiHandler()` middleware that wraps all API endpoints with shared CORS/auth/rate-limit/content-type handling.
 
@@ -264,7 +267,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (45 test files, 489 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (54 test files, 617 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -275,11 +278,11 @@ vercel dev        # Test serverless functions locally
 ## Code conventions
 
 - **No TypeScript** — entire codebase is plain JavaScript with JSX
-- **CSS-in-JS** — all styles are inline style objects in `styles.js`, no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`), inlined into `index.html` by the build-time prerender (and injected by `main.jsx` in dev)
+- **CSS-in-JS** — all styles are inline style objects (shared ones in `styles.js`, a component's own in its `<component>Styles.js`), no CSS files. Theme via CSS custom properties on `:root`. Global CSS is a string (`baseCSS`), inlined into `index.html` by the build-time prerender (and injected by `main.jsx` in dev)
 - **`color-scheme`** — declared in `baseCSS` (`:root` light, `html.dark` + media-query fallback dark) and as a `<meta>` in `index.html`. This is what makes native UI (select popups, scrollbars, autofill, carets) follow the theme — keep it when touching theme CSS
 - **Reduced motion** — two layers: `MotionConfig reducedMotion="user"` in `App.jsx` disables motion/react transforms, and a `@media(prefers-reduced-motion:reduce)` block at the end of `baseCSS` collapses CSS animations/transitions to .01ms (not 0, so `animationend`/`transitionend` listeners still fire). New animations are covered automatically — don't add per-component reduced-motion checks
 - **Tooltips** — use the `.ui-tip` class with `data-tip="..."` (variants: `ui-tip-below`, `ui-tip-left`, `ui-tip-right`), not the native `title` attribute. `TooltipLayer.jsx` (mounted once in `App.jsx`) renders the bubble in a `position:fixed` portal on `<body>`, positioned from the trigger and kept on screen, so overflow/clip containers and stacking contexts can't cut it off: don't add per-container overflow or z-index escape hatches. It shows on mouse hover only (not touch), hides on press and while the trigger's menu/popover is open (`[data-popup-open]` / `[aria-haspopup][aria-expanded="true"]`), and follows `data-tip` changes. Icon-only controls also need `aria-label` (the tooltip is `aria-hidden`, not an accessible name)
-- **Native `<select>` styling** — selects spread `SELECT_RESET` (in `styles.js`, also exported as `styles.selectReset`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
+- **Native `<select>` styling** — selects spread `SELECT_RESET` (exported from `styles.js`): `appearance:none` plus a data-URI chevron as `backgroundImage`. Use `backgroundColor` (never the `background` shorthand, which wipes the chevron) and reserve ≥24px right padding
 - **Scrollbars** — themed globally via the standard `scrollbar-width`/`scrollbar-color` properties only. Don't add `::-webkit-scrollbar` rules — they disable macOS overlay scrollbars
 - **theme-color sync** — `useTheme.js` writes `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` (from `config.js`) into both `theme-color` metas on every theme change so mobile browser chrome follows the in-app toggle
 - **Fonts** — self-hosted under `public/fonts/` and declared via `@font-face` in `baseCSS` (no third-party font origin). `FONT_SANS` is Satoshi (four weights: 300/400/500/700) and is used for all UI text and headings. Playfair Display (700 normal + 400 italic) is used only by the canvas-based share image generator (`utils/shareImage.js`, `ShareImageModal.jsx`) — the "Commonplace" wordmark itself is a traced SVG path (`Wordmark.jsx` / `wordmarkPath.js`, regenerate via `npm run wordmark`), not styled text, so it needs no font loaded at all. Don't introduce new fonts or expand Playfair usage beyond share images (the canvas generator and the OG cards)
@@ -287,7 +290,7 @@ vercel dev        # Test serverless functions locally
 - **Ellipsis** — use the `…` character (or `\u2026`), never three periods, in UI text and placeholders
 - **Letter-spacing** — negative (`-0.02em` to `-0.03em`) on large headings, `0.04em` on uppercase labels, `0.02em` on small tags/pills, `0.01em` on secondary body text. Use `em` units, not `px`
 - **Semantic colors follow the theme** — use `var(--cp-info*)` (blue) and `var(--cp-danger*)` (red) for text, borders and tints, not `CLR_BLUE`/`CLR_RED` or hex literals, which keep their light-mode value in dark mode. Solid fills with white text (e.g. the URL Fetch button) can stay fixed. Lucide icons take the token via `style={{ color }}`, since SVG `stroke` attributes don't resolve `var()`
-- **Buttons** — header/toolbar buttons spread `btnSm` and notification-bar buttons spread `btnXs` (both in `styles.js`); a variant only overrides colors, so buttons in a row share padding, radius (4px), size and weight
+- **Buttons** — header/toolbar buttons spread `btnSm` and notification-bar buttons spread `btnXs` (both exported from `styles.js`); a variant only overrides colors, so buttons in a row share padding, radius (4px), size and weight
 - **Wording** — text is an "entry" while it's raw input being split, reviewed or processed (input page, processing, EntryReviewModal, DupeModal), and a "quote" once it's in the collection (results screen, toasts, exports, stats)
 - **Category pill colors** — desaturated by design (text blended ~25% toward gray, bg at 0.07-0.08 opacity). Don't restore to full Tailwind saturation
 - **File naming**: components are PascalCase `.jsx`, hooks are `use*` camelCase `.js`, utils are camelCase `.js`, API routes are kebab-case `.js`, API private modules prefixed with `_`
@@ -359,7 +362,7 @@ Z.TOAST           2000  Toasts
 - **Lazy-load `compromise` (NLP)** — it's ~354KB (~40% of initial JS if static) and is dynamically imported via `initNlp()` in `smartRestore.js`, called at the start of the processing pipeline and pre-warmed alongside localQuotes in `main.jsx`. Until it resolves, `nlpFormat`/`disambiguateContractions` fall back to regex-only. Don't convert to a static import (it's split into the `nlp` chunk and `globIgnore`d from the precache) — doing so puts it back on the critical path
 - **`serialize-javascript` npm override** — `package.json` has an `overrides` entry pinning `serialize-javascript` to `^7.0.5` to resolve a high-severity vulnerability in the `vite-plugin-pwa → workbox-build → @rollup/plugin-terser` chain. Don't remove it; doing so re-introduces the vulnerability
 - **Node version has one source** — `engines.node` in `package.json` (which overrides the Vercel dashboard setting) and `.nvmrc` (which CI reads via `node-version-file`) both say 24. Change them together; don't hard-code a version in `ci.yml`. There's no `.npmrc`/`legacy-peer-deps`: peer conflicts should fail the install, not be masked
-- **`styles.js` is the primary place for styles** — don't add CSS files or inline styles directly in components. The `baseCSS` string is inlined once by the prerender (or injected by `main.jsx` in dev). The one exception is `inputPhaseStyles.js`, which holds homepage-specific styles (`HP` object, timeline data, `reveal` helper) extracted from `InputPhase.jsx` to keep it manageable
+- **Where styles live** — don't add CSS files or inline style literals in components. Tokens, `baseCSS` and anything used by more than one component go in `styles.js`. A style only one component uses goes in that component's `<component>Styles.js` beside it (create one when a component gains its first few private styles; a lone one-off may stay in `styles.js`). When a private style becomes shared, move it into `styles.js`. The `baseCSS` string is inlined once by the prerender (or injected by `main.jsx` in dev)
 - **API batch size** (`API_BATCH_SIZE = 10` in config.js) — tuned for Claude Haiku's context limits. Increasing it may cause truncated responses
 - **Tombstone TTL** (7 days) — if a device doesn't sync within 7 days, deleted quotes can reappear from the cloud. This is by design
 - **`vercel.json` security headers** — CSP, HSTS, frame-ancestors are set here. Changes affect production immediately on deploy

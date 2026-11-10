@@ -9,6 +9,7 @@ import {
   Quote, Compass, Crown, Gem, Wand2, Loader2, Copy, Download,
 } from "lucide-react";
 import { CP_ACCENT, CP_ACCENT_MUTED, FONT_SANS, styles, CLR_GREEN } from "./styles";
+import { sidebarStyles } from "./collectionsSidebarStyles";
 import AnimatedNumber from "./AnimatedNumber";
 import { pluralize } from "../utils/helpers";
 import { Z } from "../data/constants";
@@ -427,15 +428,15 @@ export default function CollectionsSidebar({
       style={expandedStyle}
     >
       {/* Header — label, new-collection button, collapse */}
-      <div style={styles.sidebarHead}>
-        <span style={styles.sidebarLabel}>Collections</span>
+      <div style={sidebarStyles.sidebarHead}>
+        <span style={sidebarStyles.sidebarLabel}>Collections</span>
         <span style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <button
             className="ui-tip ui-tip-below sidebar-icon-btn"
             data-tip="New collection"
             aria-label="New collection"
             onClick={() => setIsCreating(true)}
-            style={styles.sidebarIconBtn}
+            style={sidebarStyles.sidebarIconBtn}
           >
             <Plus size={14} strokeWidth={2} />
           </button>
@@ -446,7 +447,7 @@ export default function CollectionsSidebar({
             onClick={() => setCollapsed(true)}
             aria-expanded={true}
             aria-label="Collapse sidebar"
-            style={styles.sidebarIconBtn}
+            style={sidebarStyles.sidebarIconBtn}
           >
             <ChevronLeft size={14} strokeWidth={2} />
           </button>
@@ -568,8 +569,8 @@ export default function CollectionsSidebar({
       {/* Tools */}
       {(onAutoGroup || onFindDupes) && (
         <>
-          <div style={styles.sidebarDivider} />
-          <span style={{ ...styles.sidebarLabel, padding: "0 8px 6px" }}>Tools</span>
+          <div style={sidebarStyles.sidebarDivider} />
+          <span style={{ ...sidebarStyles.sidebarLabel, padding: "0 8px 6px" }}>Tools</span>
         {/* Smart Group — AI auto-collection */}
         {onAutoGroup && (
           <div ref={smartWrapRef} style={{ padding: "0 8px 2px 0" }}>
@@ -622,17 +623,17 @@ export default function CollectionsSidebar({
               <button
                 className="sidebar-row"
                 onClick={() => setIsSmartGrouping(true)}
-                style={styles.sidebarToolBtn}
+                style={sidebarStyles.sidebarToolBtn}
               >
-                <Wand2 size={14} strokeWidth={1.75} style={styles.sidebarToolIcon} /> Smart group
+                <Wand2 size={14} strokeWidth={1.75} style={sidebarStyles.sidebarToolIcon} /> Smart group
               </button>
             )}
           </div>
         )}
           {onFindDupes && (
             <div style={{ padding: "0 8px 2px 0" }}>
-              <button className="sidebar-row" style={styles.sidebarToolBtn} onClick={onFindDupes}>
-                <Copy size={14} strokeWidth={1.75} style={styles.sidebarToolIcon} /> Find duplicates
+              <button className="sidebar-row" style={sidebarStyles.sidebarToolBtn} onClick={onFindDupes}>
+                <Copy size={14} strokeWidth={1.75} style={sidebarStyles.sidebarToolIcon} /> Find duplicates
               </button>
             </div>
           )}

@@ -87,19 +87,24 @@ export function OverflowDivider() {
 }
 
 // View items for the mobile "Layout" section (active mode rendered bold)
-export function ViewMenuItems({ view, compact, setView, setCompact }) {
+export function ViewMenuItems({ view, compact, setView, setCompact, onSwitch }) {
   const active = { fontWeight: 600, color: "var(--cp-text)" };
+  const pick = (nextView, nextCompact) => {
+    onSwitch?.();
+    setView(nextView);
+    if (nextCompact !== undefined) setCompact(nextCompact);
+  };
   return (
     <>
-      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && !compact ? active : {}) }} onClick={() => { setView("table"); setCompact(false); }}>
+      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && !compact ? active : {}) }} onClick={() => pick("table", false)}>
         <List size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
         Table view
       </Menu.Item>
-      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && compact ? active : {}) }} onClick={() => { setView("table"); setCompact(true); }}>
+      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "table" && compact ? active : {}) }} onClick={() => pick("table", true)}>
         <AlignJustify size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
         Compact view
       </Menu.Item>
-      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "cards" ? active : {}) }} onClick={() => setView("cards")}>
+      <Menu.Item className="hdr-overflow-item" style={{ ...styles.hdrOverflowItem, ...(view === "cards" ? active : {}) }} onClick={() => pick("cards")}>
         <LayoutGrid size={15} strokeWidth={1.5} color="var(--cp-text-muted)" />
         Card view
       </Menu.Item>
@@ -140,5 +145,66 @@ export function NewBatchMenuItem({ setConfirmClear }) {
       <Trash2 size={15} strokeWidth={1.5} />
       New batch
     </Menu.Item>
+  );
+}
+
+// The overflow menu's contents, shared by HeaderBar and the sticky MiniHeader
+// so the two can't drift apart (they did once: the mobile redesign added a
+// Layout section to HeaderBar only, which left the mini header with no way to
+// switch views on mobile).
+//
+// - mobileExport: on mobile the mini header has no room for the export icon,
+//   so it passes its export menu here to render as an Export section.
+// - themeInline: the bar already shows a theme toggle button, so the menu
+//   skips its desktop theme item.
+// - onLayoutChange: called before a view switch (MiniHeader preserves scroll).
+export function HeaderOverflowItems({
+  isMobile,
+  dark, themeMode, toggleTheme, themeInline = false,
+  view, compact, setView, setCompact, onLayoutChange,
+  showStats, onToggleStats,
+  showConfidence, setShowConfidence,
+  onShowShortcuts,
+  setConfirmClear,
+  mobileExport,
+}) {
+  return (
+    <>
+      {isMobile && (
+        <>
+          <OverflowSection>Actions</OverflowSection>
+          <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
+          <OverflowDivider />
+          <OverflowSection>Layout</OverflowSection>
+          <ViewMenuItems view={view} compact={compact} setView={setView} setCompact={setCompact} onSwitch={onLayoutChange} />
+          <OverflowDivider />
+        </>
+      )}
+      <OverflowSection>View</OverflowSection>
+      <StatsMenuItem showStats={showStats} onClick={onToggleStats} />
+      <ConfidenceMenuItem showConfidence={showConfidence} setShowConfidence={setShowConfidence} />
+      {isMobile && mobileExport && (
+        <>
+          <OverflowDivider />
+          <OverflowSection>Export</OverflowSection>
+          {mobileExport}
+        </>
+      )}
+      {(!isMobile && !themeInline) || onShowShortcuts ? (
+        <>
+          <OverflowDivider />
+          <OverflowSection>Preferences</OverflowSection>
+          {!isMobile && !themeInline && <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />}
+          {onShowShortcuts && <ShortcutsMenuItem onShowShortcuts={onShowShortcuts} />}
+        </>
+      ) : null}
+      {setConfirmClear && (
+        <>
+          <OverflowDivider />
+          <OverflowSection>Data</OverflowSection>
+          <NewBatchMenuItem setConfirmClear={setConfirmClear} />
+        </>
+      )}
+    </>
   );
 }

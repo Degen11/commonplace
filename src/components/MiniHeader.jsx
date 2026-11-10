@@ -4,11 +4,7 @@ import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import { Z } from "../data/constants";
-import {
-  ThemeToggleButton, ThemeMenuItem, ViewToggle,
-  HeaderOverflowMenu, OverflowSection, OverflowDivider,
-  StatsMenuItem, ConfidenceMenuItem, ShortcutsMenuItem, NewBatchMenuItem,
-} from "./HeaderControls";
+import { ThemeToggleButton, ViewToggle, HeaderOverflowMenu, HeaderOverflowItems } from "./HeaderControls";
 
 const pillStyles = syncPillStyles.mini;
 
@@ -56,43 +52,25 @@ export default function MiniHeader({
             <ViewToggle view={view} compact={compact} setView={setView} setCompact={setCompact} iconSize={14} withTips={false} onSwitch={preserveScroll} />
           )}
           {!isMobile && exportDropdownContent}
-          <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: isMobile ? "6px 12px" : "4px 10px", display: "inline-flex", alignItems: "center", gap: 3 }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
+          {/* On mobile, Add is the floating button ResultsPhase renders */}
+          {!isMobile && (
+            <button className="hdr-btn" style={{ ...styles.addMoreBtn, fontSize: 11, padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 3 }} onClick={() => { preserveScroll(); setShowAddMore(!showAddMore); setTimeout(() => addMoreRef.current?.focus(), 100); }}>+ Add</button>
+          )}
           {/* Overflow menu */}
           <HeaderOverflowMenu
             triggerStyle={{ ...styles.statsBtn, fontSize: 11, padding: isMobile ? "6px 8px" : "4px 8px" }}
             trigger={<Ellipsis size={14} strokeWidth={1.5} />}
           >
-            {isMobile && (
-              <>
-                <OverflowSection>Actions</OverflowSection>
-                <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
-                <OverflowDivider />
-              </>
-            )}
-            <OverflowSection>View</OverflowSection>
-            <StatsMenuItem showStats={showStats} onClick={() => { preserveScroll(); setShowStats(s => !s); }} />
-            <ConfidenceMenuItem showConfidence={showConfidence} setShowConfidence={setShowConfidence} />
-            {isMobile && exportDropdownContent && (
-              <>
-                <OverflowDivider />
-                <OverflowSection>Export</OverflowSection>
-                {exportDropdownContent}
-              </>
-            )}
-            {!isMobile && (
-              <>
-                <OverflowDivider />
-                <OverflowSection>Preferences</OverflowSection>
-                <ShortcutsMenuItem onShowShortcuts={onShowShortcuts} />
-              </>
-            )}
-            {setConfirmClear && (
-              <>
-                <OverflowDivider />
-                <OverflowSection>Data</OverflowSection>
-                <NewBatchMenuItem setConfirmClear={setConfirmClear} />
-              </>
-            )}
+            <HeaderOverflowItems
+              isMobile={isMobile}
+              dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} themeInline
+              view={view} compact={compact} setView={setView} setCompact={setCompact} onLayoutChange={preserveScroll}
+              showStats={showStats} onToggleStats={() => { preserveScroll(); setShowStats(s => !s); }}
+              showConfidence={showConfidence} setShowConfidence={setShowConfidence}
+              onShowShortcuts={isMobile ? undefined : onShowShortcuts}
+              setConfirmClear={setConfirmClear}
+              mobileExport={exportDropdownContent}
+            />
           </HeaderOverflowMenu>
         </div>
       </div>

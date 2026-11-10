@@ -165,4 +165,31 @@ describe("MiniHeader", () => {
     expect(screen.getByText("Full stats")).toBeTruthy();
     expect(screen.queryByText("New batch")).toBeNull();
   });
+
+  it("mobile: no Add button (the floating button covers it) and a Layout section that preserves scroll", () => {
+    const calls = [];
+    const props = miniProps({
+      isMobile: true,
+      preserveScroll: () => calls.push("preserveScroll"),
+      setView: (v) => calls.push(`setView:${v}`),
+    });
+    render(<MiniHeader {...props} />);
+    expect(screen.queryByRole("button", { name: /Add/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(screen.getByText("Layout")).toBeTruthy();
+    fireEvent.click(screen.getByText("Card view"));
+    expect(calls).toEqual(["preserveScroll", "setView:cards"]);
+  });
+
+  it("desktop: keeps the Add button, and the inline theme toggle means no theme item in the menu", () => {
+    const props = miniProps();
+    render(<MiniHeader {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: /Add/ }));
+    expect(props.setShowAddMore).toHaveBeenCalledWith(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(screen.queryByText("Layout")).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Dark mode" })).toBeNull();
+  });
 });

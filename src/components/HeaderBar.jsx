@@ -5,11 +5,7 @@ import Wordmark from "./Wordmark";
 import SyncPill from "./SyncPill";
 import { styles, syncPillStyles } from "./styles";
 import { pluralize } from "../utils/helpers";
-import {
-  ThemeMenuItem, ViewToggle, ViewMenuItems,
-  HeaderOverflowMenu, OverflowSection, OverflowDivider,
-  StatsMenuItem, ConfidenceMenuItem, ShortcutsMenuItem, NewBatchMenuItem,
-} from "./HeaderControls";
+import { ViewToggle, HeaderOverflowMenu, HeaderOverflowItems } from "./HeaderControls";
 
 import { Ellipsis, Plus, ChevronDown } from "lucide-react";
 
@@ -75,27 +71,15 @@ export default function HeaderBar({
           triggerStyle={isMobile ? styles.hdrIconBtn : styles.hdrGhostBtn}
           trigger={<Ellipsis size={isMobile ? 19 : 16} strokeWidth={1.75} />}
         >
-          {/* Mobile-only: theme + view grouped here */}
-          {isMobile && (
-            <>
-              <OverflowSection>Actions</OverflowSection>
-              <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />
-              <OverflowDivider />
-              <OverflowSection>Layout</OverflowSection>
-              <ViewMenuItems view={view} compact={compact} setView={setView} setCompact={setCompact} />
-              <OverflowDivider />
-            </>
-          )}
-          <OverflowSection>View</OverflowSection>
-          <StatsMenuItem showStats={showStats} onClick={() => setShowStats(s => !s)} />
-          <ConfidenceMenuItem showConfidence={showConfidence} setShowConfidence={setShowConfidence} />
-          <OverflowDivider />
-          <OverflowSection>Preferences</OverflowSection>
-          {!isMobile && <ThemeMenuItem dark={dark} themeMode={themeMode} toggleTheme={toggleTheme} />}
-          <ShortcutsMenuItem onShowShortcuts={onShowShortcuts} />
-          <OverflowDivider />
-          <OverflowSection>Data</OverflowSection>
-          <NewBatchMenuItem setConfirmClear={setConfirmClear} />
+          <HeaderOverflowItems
+            isMobile={isMobile}
+            dark={dark} themeMode={themeMode} toggleTheme={toggleTheme}
+            view={view} compact={compact} setView={setView} setCompact={setCompact}
+            showStats={showStats} onToggleStats={() => setShowStats(s => !s)}
+            showConfidence={showConfidence} setShowConfidence={setShowConfidence}
+            onShowShortcuts={onShowShortcuts}
+            setConfirmClear={setConfirmClear}
+          />
         </HeaderOverflowMenu>
       </div>
       </div>

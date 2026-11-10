@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 
 // ── Browser API stubs ─────────────────────────────────────────────────────────
 
@@ -36,8 +36,14 @@ vi.mock("@vercel/speed-insights/react", () => ({ SpeedInsights: () => null }));
 
 // Heavy lazy-loaded phase components
 vi.mock("../ResultsPhase", () => ({
-  default: function MockResultsPhase() {
-    return React.createElement("div", { "data-testid": "results-phase" }, "Results Phase");
+  default: function MockResultsPhase({ processEntries, onClearReset }) {
+    return React.createElement("div", { "data-testid": "results-phase" },
+      "Results Phase",
+      // Mirrors ResultsPhase's AddMorePanel submit: processEntries(text, appendMode=true, formatting)
+      React.createElement("button", { onClick: () => processEntries("One more quote", true, false) }, "Add more"),
+      // Mirrors ResultsPhase's confirmed "Start fresh"
+      React.createElement("button", { onClick: onClearReset }, "Start fresh"),
+    );
   },
 }));
 vi.mock("../OnboardingModal", () => ({
@@ -106,31 +112,48 @@ vi.mock("../../stores/quotesStore", () => ({
 
 // ── Hook mocks ────────────────────────────────────────────────────────────────
 
-vi.mock("../../hooks/useProcessing", () => ({
-  default: vi.fn(() => ({
-    isProcessing: false,
-    processingDone: false,
-    progress: null,
-    identifiedFeed: [],
-    apiError: null,
-    failedEntries: [],
-    stats: null,
-    pendingDupes: [],
-    dupeDecisions: {},
-    formattingEnabled: false,
-    setDupeDecision: vi.fn(),
-    setFormattingEnabled: vi.fn(),
-    processEntries: vi.fn(),
-    handleDupesContinue: vi.fn(),
-    retryFailed: vi.fn(),
-    identifyBatch: vi.fn(),
-    autoGroup: vi.fn(),
-    cancelProcessing: vi.fn(),
-    resetProcessingState: vi.fn(),
-    dismissApiError: vi.fn(),
-    dismissStats: vi.fn(),
-  })),
+// The real hook moves phases by calling the goPhase it's given (App passes
+// setPhase). The mock captures it so tests can drive the same transitions:
+// processEntries → "processing" (as the real one does once dupes are cleared),
+// and goPhase("results") stands in for the real auto-transition timer.
+const processingMock = vi.hoisted(() => ({
+  goPhase: null,
+  processEntries: null,
+  resetProcessingState: null,
 }));
+
+vi.mock("../../hooks/useProcessing", () => {
+  processingMock.processEntries = vi.fn(() => processingMock.goPhase("processing"));
+  processingMock.resetProcessingState = vi.fn();
+  return {
+    default: vi.fn(({ goPhase }) => {
+      processingMock.goPhase = goPhase;
+      return {
+        isProcessing: false,
+        processingDone: false,
+        progress: null,
+        identifiedFeed: [],
+        apiError: null,
+        failedEntries: [],
+        stats: null,
+        pendingDupes: [],
+        dupeDecisions: {},
+        formattingEnabled: false,
+        setDupeDecision: vi.fn(),
+        setFormattingEnabled: vi.fn(),
+        processEntries: processingMock.processEntries,
+        handleDupesContinue: vi.fn(),
+        retryFailed: vi.fn(),
+        identifyBatch: vi.fn(),
+        autoGroup: vi.fn(),
+        cancelProcessing: vi.fn(),
+        resetProcessingState: processingMock.resetProcessingState,
+        dismissApiError: vi.fn(),
+        dismissStats: vi.fn(),
+      };
+    }),
+  };
+});
 
 vi.mock("../../hooks/useQuoteActions", () => ({
   default: vi.fn(() => ({
@@ -167,6 +190,7 @@ vi.mock("../../contexts/QuotesContext", () => ({
 // ── Import App under test (after mocks) ──────────────────────────────────────
 
 import App from "../App";
+import { LS_DRAFT, LS_SKIP_REVIEW, REVIEW_MIN_ENTRIES } from "../../config";
 
 // ── Test wrapper providing required contexts ──────────────────────────────────
 
@@ -295,5 +319,131 @@ describe("App — review modal", () => {
     renderApp();
     await act(async () => {});
     expect(screen.queryByTestId("review-modal")).toBeNull();
+  });
+});
+
+describe("App — phase transitions", () => {
+  const shortDraft = "First quote — Author A\nSecond quote — Author B";
+  const longDraft = Array.from({ length: REVIEW_MIN_ENTRIES + 1 }, (_, i) => `Quote number ${i + 1}`).join("\n");
+
+  beforeEach(() => {
+    storeState.quotes = [];
+    localStorage.clear();
+    processingMock.processEntries.mockClear();
+    processingMock.resetProcessingState.mockClear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  async function renderWithDraft(draft) {
+    localStorage.setItem(LS_DRAFT, draft);
+    renderApp();
+    await act(async () => {});
+  }
+
+  it("a short paste skips review and goes straight to processing, then results", async () => {
+    await renderWithDraft(shortDraft);
+
+    fireEvent.click(screen.getByTestId("process-btn"));
+    await act(async () => {});
+
+    expect(screen.queryByTestId("review-modal")).toBeNull();
+    expect(processingMock.processEntries).toHaveBeenCalledWith(
+      shortDraft, false, false, ["First quote — Author A", "Second quote — Author B"],
+    );
+    expect(screen.getByTestId("processing-phase")).toBeDefined();
+    expect(screen.queryByTestId("input-phase")).toBeNull();
+
+    // Processing finishes → the hook's auto-transition moves to results
+    await act(async () => { processingMock.goPhase("results"); });
+    expect(screen.getByTestId("results-phase")).toBeDefined();
+    expect(screen.queryByTestId("processing-phase")).toBeNull();
+  });
+
+  it("a long paste opens the review modal and stays on input until confirmed", async () => {
+    await renderWithDraft(longDraft);
+
+    fireEvent.click(screen.getByTestId("process-btn"));
+    await act(async () => {});
+
+    expect(screen.getByTestId("review-modal")).toBeDefined();
+    expect(screen.getByTestId("input-phase")).toBeDefined();
+    expect(processingMock.processEntries).not.toHaveBeenCalled();
+  });
+
+  it("confirming the review modal processes the reviewed lines", async () => {
+    await renderWithDraft(longDraft);
+    fireEvent.click(screen.getByTestId("process-btn"));
+    await act(async () => {});
+
+    fireEvent.click(screen.getByText("Confirm"));
+    await act(async () => {});
+
+    expect(screen.queryByTestId("review-modal")).toBeNull();
+    expect(processingMock.processEntries).toHaveBeenCalledTimes(1);
+    const [raw, append, , lines] = processingMock.processEntries.mock.calls[0];
+    expect(raw).toBe(longDraft);
+    expect(append).toBe(false);
+    expect(lines).toHaveLength(REVIEW_MIN_ENTRIES + 1);
+    expect(screen.getByTestId("processing-phase")).toBeDefined();
+  });
+
+  it("cancelling the review modal stays on the input phase without processing", async () => {
+    await renderWithDraft(longDraft);
+    fireEvent.click(screen.getByTestId("process-btn"));
+    await act(async () => {});
+
+    fireEvent.click(screen.getByText("Cancel"));
+    await act(async () => {});
+
+    expect(screen.queryByTestId("review-modal")).toBeNull();
+    expect(screen.getByTestId("input-phase")).toBeDefined();
+    expect(screen.queryByTestId("processing-phase")).toBeNull();
+    expect(processingMock.processEntries).not.toHaveBeenCalled();
+  });
+
+  it("skips the review modal for a long paste when the user opted out", async () => {
+    localStorage.setItem(LS_SKIP_REVIEW, "1");
+    await renderWithDraft(longDraft);
+
+    fireEvent.click(screen.getByTestId("process-btn"));
+    await act(async () => {});
+
+    expect(screen.queryByTestId("review-modal")).toBeNull();
+    expect(processingMock.processEntries).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("processing-phase")).toBeDefined();
+  });
+
+  it("adding more from results runs in append mode: results → processing → results", async () => {
+    storeState.quotes = [{ id: "1", text: "existing", source: "Author", category: "Book", confidence: "high" }];
+    renderApp();
+    await act(async () => {});
+    expect(screen.getByTestId("results-phase")).toBeDefined();
+
+    fireEvent.click(screen.getByText("Add more"));
+    await act(async () => {});
+
+    expect(processingMock.processEntries).toHaveBeenCalledWith("One more quote", true, false);
+    expect(screen.getByTestId("processing-phase")).toBeDefined();
+
+    await act(async () => { processingMock.goPhase("results"); });
+    expect(screen.getByTestId("results-phase")).toBeDefined();
+  });
+
+  it("'Start fresh' from results returns to an empty input phase and resets processing", async () => {
+    storeState.quotes = [{ id: "1", text: "existing", source: "Author", category: "Book", confidence: "high" }];
+    renderApp();
+    await act(async () => {});
+
+    fireEvent.click(screen.getByText("Start fresh"));
+    await act(async () => {});
+
+    expect(screen.getByTestId("input-phase")).toBeDefined();
+    expect(screen.queryByTestId("results-phase")).toBeNull();
+    expect(processingMock.resetProcessingState).toHaveBeenCalledTimes(1);
+    // rawInput was cleared, so the (mocked) process button is disabled
+    expect(screen.getByTestId("process-btn").disabled).toBe(true);
   });
 });

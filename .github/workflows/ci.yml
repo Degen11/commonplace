@@ -63,9 +63,11 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
 
+  # Merges Dependabot PRs once every CI job above has passed. Each job a PR
+  # must pass goes in `needs`, so a job added later must be added here too.
   dependabot-auto-merge:
     name: Dependabot auto-merge
-    needs: build
+    needs: [build, migrations]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' }}
     permissions:
@@ -82,6 +84,6 @@ jobs:
       # so this is a belt-and-suspenders guard (e.g. for security-update majors).
       - name: Merge non-major updates
         if: ${{ steps.meta.outputs.update-type != 'version-update:semver-major' }}
-        run: gh pr merge --merge "${{ github.event.pull_request.html_url }}"
+        run: gh pr merge --squash "${{ github.event.pull_request.html_url }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

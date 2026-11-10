@@ -6,6 +6,11 @@ import { pluralize } from "../utils/helpers";
 /**
  * Encapsulates all drag-and-drop state and handlers for quote reordering
  * and drag-to-collection. Used by ResultsPhase.
+ *
+ * Deliberately holds no per-frame state. Which item the pointer is over is
+ * read by each item from its own useSortable() (`isOver`), so a drag only
+ * re-renders the sortable items dnd-kit updates, never ResultsPhase and the
+ * whole list. activeDragId changes twice per drag (start and end).
  */
 export default function useDndQuotes({ selected, collections, addToCollection, removeFromCollection, showToast, setQuotes }) {
   const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
@@ -13,7 +18,6 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
   const sensors = useSensors(pointerSensor, keyboardSensor);
 
   const [activeDragId, setActiveDragId] = useState(null);
-  const [overDragId, setOverDragId] = useState(null);
   const dndReorderRef = useRef(false);
 
   const collisionDetection = (args) => {
@@ -34,13 +38,8 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
     return { ...transform, x: transform.x + offsetX - 20, y: transform.y + offsetY - 16 };
   };
 
-  const handleDndOver = ({ over }) => {
-    setOverDragId(over?.id ?? null);
-  };
-
   const handleDndEnd = ({ active, over }) => {
     setActiveDragId(null);
-    setOverDragId(null);
     if (!over || active.id === over.id) return;
 
     // Drop onto a collection
@@ -76,10 +75,8 @@ export default function useDndQuotes({ selected, collections, addToCollection, r
   return {
     sensors,
     activeDragId,
-    overDragId,
     collisionDetection,
     handleDndStart,
-    handleDndOver,
     handleDndEnd,
     anchorToCursor,
     dndReorderRef,

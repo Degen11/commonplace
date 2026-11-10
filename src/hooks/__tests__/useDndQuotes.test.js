@@ -102,14 +102,17 @@ describe("useDndQuotes — handleDndEnd, reorder", () => {
     expect(useQuotesStore.getState().quotes).toBe(before);
   });
 
-  it("clears the active and over drag ids", () => {
+  it("clears the active drag id on drop", () => {
     const { result } = setup();
     act(() => result.current.handleDndStart({ active: { id: "q1" } }));
-    act(() => result.current.handleDndOver({ over: { id: "q2" } }));
     expect(result.current.activeDragId).toBe("q1");
-    expect(result.current.overDragId).toBe("q2");
     end(result, "q1", "q2");
     expect(result.current.activeDragId).toBeNull();
-    expect(result.current.overDragId).toBeNull();
+  });
+
+  it("keeps no per-frame drag-over state (each item reads isOver from useSortable)", () => {
+    const { result } = setup();
+    expect(result.current).not.toHaveProperty("overDragId");
+    expect(result.current).not.toHaveProperty("handleDndOver");
   });
 });

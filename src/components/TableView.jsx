@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, memo } from "react";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import useWindowVirtualRows from "../hooks/useWindowVirtualRows";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { Menu } from "@base-ui/react/menu";
 import EditForm from "./EditForm";
 import { InlineSourceInput, InlineCategorySelect } from "./InlineEditors";
@@ -100,10 +99,12 @@ function RowActions({ q, actionProps, isOpen, onToggle }) {
   );
 }
 
-// React.memo is required here — the compiler's internal caching does NOT prevent
-// useSortable from being called, which returns new transform/transition values for
-// every row during drag. Without memo, all ~15-30 visible rows re-render per drag
-// frame, causing virtualizer measurement churn and visible table jank.
+// React.memo stays on purpose. TableView re-renders on every scroll step (the
+// virtualizer hands it new rows), and the React Compiler can't memoize per
+// item inside a .map(), so without memo every visible row re-renders as you
+// scroll (measured: ~1,800 row renders over a short scroll, vs 0 with memo).
+// It doesn't help during a drag: dnd-kit re-renders each useSortable() row
+// through its own context either way.
 const TableRow = memo(function TableRow({
   q, isSel, isEd, needsAtt, sortBy, isMobile,
   isInlineEditing, inlineEditField,
@@ -119,16 +120,8 @@ const TableRow = memo(function TableRow({
     attributes,
     listeners,
     setNodeRef,
-    transform,
     isDragging,
   } = useSortable({ id: q.id, transition: null });
-
-  // Only apply transform to the dragged row itself. Non-dragged rows get shift
-  // transforms from verticalListSortingStrategy that conflict with the
-  // virtualizer's padding-based layout, causing visible table shake.
-  const sortableStyle = isDragging
-    ? { transform: CSS.Transform.toString(transform) }
-    : undefined;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -229,7 +222,6 @@ const TableRow = memo(function TableRow({
       {...(isMobile || isEd || isInlineEditing ? {} : listeners)}
       {...attributes}
       style={{
-        ...sortableStyle,
         ...(compact ? styles.rowCompact : styles.row),
         ...(isSel ? { background: "var(--cp-bg-selected)" } : {}),
         ...(needsAtt && sortBy === "confidence" ? { background: "var(--cp-bg-attention)" } : {}),
@@ -273,20 +265,11 @@ const TableRow = memo(function TableRow({
   );
 });
 
-// React.memo is required — during drag, onDragOver fires continuously and
-// updates overDragId state in ResultsPhase. TableView doesn't use overDragId
-// but without memo it re-renders on every cursor move, causing the virtualizer
-// to recalculate and measureElement refs to re-fire, producing visible shake.
-const TableView = memo(function TableView({
+export default function TableView({
   filtered,
   toolbarHeight = 44,
   dndReorderRef,
 }) {
-  // Opt out of React Compiler memoization: the TanStack virtualizer is a
-  // stable mutable instance, so compiler-cached getVirtualItems() results go
-  // stale when the virtualizer re-renders without a compiler-visible dep
-  // change (e.g. cards→table view switch left the table empty until resize).
-  "use no memo";
   const {
     selected, toggleSel, selAll,
     editingId, setEditingId,
@@ -387,22 +370,14 @@ const TableView = memo(function TableView({
   }, []);
 
   // ── Window-based virtualizer — only renders rows near the viewport ──
-  // Uses padding divs (not absolute positioning) so items stay in normal
-  // document flow. This keeps dnd-kit's sortable transforms working correctly.
-  const virtualizer = useWindowVirtualizer({
+  // Rows stay in normal document flow between two spacer divs. The
+  // compiler opt-out the virtualizer needs lives inside the hook.
+  const { virtualItems, topPad, bottomPad, measureElement } = useWindowVirtualRows({
     count: filtered.length,
     estimateSize: () => compact ? ROW_HEIGHT_COMPACT_ESTIMATE : ROW_HEIGHT_ESTIMATE,
     overscan: VIRTUALIZER_OVERSCAN,
     scrollMargin,
   });
-
-  const virtualItems = virtualizer.getVirtualItems();
-  const topPad = virtualItems.length > 0
-    ? virtualItems[0].start - (virtualizer.options.scrollMargin ?? 0)
-    : 0;
-  const bottomPad = virtualItems.length > 0
-    ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
-    : 0;
 
   const allSelected = filtered.length > 0 && filtered.every(q => selected.has(q.id));
 
@@ -476,7 +451,7 @@ const TableView = memo(function TableView({
           const savedPulseField = isSavedPulse ? savedPulse.field : null;
           const isMenuOpen = openMenuId === q.id;
           return (
-            <div key={q.id} data-index={virtualRow.index} ref={virtualizer.measureElement}>
+            <div key={q.id} data-index={virtualRow.index} ref={measureElement}>
               <TableRow
                 q={q}
                 isSel={isSel}
@@ -513,6 +488,4 @@ const TableView = memo(function TableView({
     </div>
     </div>
   );
-});
-
-export default TableView;
+}

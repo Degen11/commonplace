@@ -66,7 +66,7 @@ scripts/
 api/                          Vercel serverless functions (Node.js)
   _shared.js                  Supabase client, CORS, rate limiting, origin validation, withApiHandler middleware
   _schemas.js                 Zod schemas for all API endpoints
-  identify.js                 POST — proxy to Claude Haiku (claude-haiku-4-5-20251001) for quote identification; builds the prompt from structured items and writes the quote cache itself
+  identify.js                 POST — Claude Haiku (claude-haiku-4-5-20251001) quote identification; builds the prompt from structured `items`, returns its own `{ results }` (never the Anthropic envelope), and writes model answers to the quote cache only as medium-confidence leads
   sync.js                     GET/POST — device-based cloud sync via Supabase
   _shareData.js               Shared-collection lookup + featured-quote helpers (used by share, share-page, og)
   _fonts/                     TTF copies of the brand fonts (with fixed family names) for satori/resvg
@@ -183,13 +183,13 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (43 files, 474 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (45 files, 489 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, AttentionNotice, BulkBar, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, styles
-    hooks/                     processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
+    hooks/                     identifyBatch, processingErrors, useEditState, useLongPress, useProcessing, useQuoteActions, useSync, useViewPreferences
     stores/                    quotesStore
     data/                      localQuotes
-    utils/                     api, export, helpers, identifyBatches, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
+    utils/                     api, apiErrors, export, helpers, identifyBatches, parsers, quotes, shareLinks, smartRestore, storage, sync, textFormatting, uuid
 ```
 
 ### App phases
@@ -210,7 +210,7 @@ User input → smartSplit() → deduplicate against existing
     → matched: added immediately
     → unmatched: POST /api/lookup (Wikiquote, Open Library, server cache)
       → still unmatched: POST /api/identify in batches of 10 (API_BATCH_SIZE)
-        → /api/identify caches its own results in Supabase (never overwrites a high-confidence row)
+        → /api/identify caches its own results in Supabase as "medium" leads only (never overwrites a high-confidence row)
   → duplicate detection (similarity > 0.55 threshold) → DupeModal
   → quotes added to store → localStorage persist (300ms debounce) → Supabase sync (2s debounce)
 ```
@@ -261,7 +261,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (43 test files, 474 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (45 test files, 489 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path
@@ -333,8 +333,8 @@ Z.TOAST           2000  Toasts
 - `ResultsPhase.jsx` has been broken up: DnD logic extracted to `useDndQuotes`, modals to `ResultsModals`, notification bars to `NotificationBars`. Still the largest component but more manageable
 - No TODO/FIXME comments exist in the codebase currently
 - **React Compiler vs TanStack Virtual** — the two components that call `useWindowVirtualizer()` (`TableView` and `MobileCardList` in `ResultsPhase.jsx`) carry a `"use no memo"` directive. The virtualizer is a stable mutable instance, so compiler-memoized `getVirtualItems()` results went stale when it re-rendered without a compiler-visible dep change (symptom: cards→table view switch left the table empty until a window resize). Don't remove the directives; virtualization itself still windows correctly without compiler memoization. ESLint currently reports **zero errors and zero warnings** (`npm run lint`, covering `src/` and `api/`). The React Compiler rules come from `eslint-plugin-react-hooks`, a regular devDependency, so `npm install` is all the check needs
-- **API batch retry** — every batched `/api/identify` call goes through `identifyInBatches()` (`utils/identifyBatches.js`), which retries each failed batch exactly once and keeps going to the next batch on a second failure (no early exit): a single-batch failure should never prevent other batches from completing. In `useProcessing` the failed batch's items are added to `failedEntries` with a count-specific error message; bulk re-identify reports how many failed instead of a success toast
-- **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty messages array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
+- **API batch retry** — every batched `/api/identify` call goes through `identifyInBatches()` (`utils/identifyBatches.js`), which retries each failed batch exactly once (a 4xx refusal such as the daily AI cap isn't retried) and keeps going to the next batch on a second failure (no early exit): a single-batch failure should never prevent other batches from completing. In `useProcessing` the failed batch's items are added to `failedEntries` with a count-specific error message; bulk re-identify reports how many failed instead of a success toast
+- **Pre-warm `/api/identify`** — `InputPhase.jsx` fires a minimal POST to `/api/identify` on first non-empty keystroke via `requestIdleCallback` (falls back to `setTimeout(cb, 200)`). This warms the serverless cold-start before the user clicks "Organize". The request is expected to fail validation (empty `items` array) — that's fine, the goal is only to initialize the function runtime. The `prewarmedRef` ref ensures this fires at most once per mount
 - Share links come in two formats: hash links (`#s=<base64>`) decode client-side, public links (`/c/<id>`, formerly `#p=<id>`, which still works) fetch from server. Both are handled in `QuotesContext.jsx` mount effect. `/c/<id>` is rewritten to `api/share-page.js`, which serves the built index.html with that collection's title, description and `og:image=/api/og?id=<id>` (plus `noindex`), so each shared link unfurls as its own card
 - Rate limiting falls back to per-instance in-memory tracking when Supabase is unavailable. In serverless environments each invocation can get a fresh map, making this weaker than persistent rate limiting. The in-memory fallback is better than no enforcement but not bulletproof
 
@@ -347,7 +347,7 @@ Z.TOAST           2000  Toasts
 - **App icons are generated** — `public/favicon.ico`, `apple-touch-icon.png`, and `icon-*.png` come from `npm run icons` (renders `favicon.svg`). Don't hand-edit the PNGs; if the SVG artwork changes, re-run the script (it depends on favicon.svg's structure — 32×32 viewBox, background `<rect>` first)
 - **OG images** — `public/og-image.png` (from `npm run og-image`, rendering `public/og-image.svg`) is the default `og:image`/`twitter:image` for the homepage and legal pages. `/api/og?id=<shareId>` renders per-collection cards for `/c/:id` pages; it only accepts a share ID (no `text`/`source` params), so it can't be used to mint branded cards with made-up quotes — keep it that way. Both use the TTFs in `api/_fonts/` (satori and resvg can't read `.woff2`; the shipped Satoshi `.woff2` files also report their family as "false", which the copies fix) and the traced wordmark path, never styled text. `vercel.json` `functions.includeFiles` bundles the fonts with `og.js`. In `og.js`, the `h()` helper must give childless nodes `children: undefined`, not `[]`, or satori throws requiring an explicit `display` style on every such node
 - **Theme color triple** — `THEME_COLOR_LIGHT`/`THEME_COLOR_DARK` in `config.js`, the `theme-color` metas in `index.html`, and `theme_color`/`background_color` in the `vite.config.js` PWA manifest must all stay in sync (currently `#FAF8F4` / `#1A1A1A`, matching `--cp-bg`)
-- **API calls go through `apiRequest()`** (`utils/api.js`), not raw `fetch()`: it adds the shared headers, applies `API_TIMEOUT_MS` (a timeout throws an error named `TimeoutError`; a caller-cancelled `signal` still throws `AbortError`), and throws the server's `error` message with `.status` attached. The InputPhase pre-warm ping and `useProcessing`'s lookup/identify calls are the exceptions (fire-and-forget, or tied to the processing cancel signal)
+- **API calls go through `apiRequest()`** (`utils/api.js`), not raw `fetch()`: it adds the shared headers, applies `API_TIMEOUT_MS` (a timeout throws an error named `TimeoutError`; a caller-cancelled `signal` still throws `AbortError`), and throws the server's `error` message with `.status` attached. The InputPhase pre-warm ping and `useProcessing`'s `/api/lookup` call are the exceptions (fire-and-forget, or a lookup failure that's deliberately non-fatal). `describeApiError` (`utils/apiErrors.js`) shows a server-supplied 429 message as-is, so the daily AI cap reads as "try again tomorrow", not a generic rate limit
 - **Clipboard copies go through `copyWithToast()`** (`utils/shareLinks.js`) so every copy shows the same success toast or an error toast, never failing silently. Inline "Copied" feedback on a button lasts `COPY_PULSE_MS`
 - **Don't remove the `X-Requested-With` header** from client-side API calls — all serverless functions validate it as CSRF protection. It's not authentication, though: scripts can send any header, which is why the paid AI endpoints also have a global daily cap
 - **Sync device ID goes in the `X-Device-Id` header**, not the URL — it's the only credential for a device's data and URLs end up in request logs. `api/sync.js` still accepts `?device_id=` for clients on an old cached build

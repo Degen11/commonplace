@@ -9,11 +9,11 @@ import {
 import { initNlp } from "../utils/smartRestore";
 import { makeQuote } from "../utils/quotes";
 import { removeFromStorage } from "../utils/storage";
-import { fetchWithTimeout, API_HEADERS } from "../utils/api";
+import { apiRequest, API_HEADERS } from "../utils/api";
 import { describeApiError } from "../utils/apiErrors";
 import { identifyInBatches } from "../utils/identifyBatches";
 import {
-  API_TIMEOUT_MS, AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
+  AUTO_GROUP_TIMEOUT_MS, API_BATCH_SIZE,
   PROCESSING_DONE_MS, DUPE_SIMILARITY_THRESHOLD, LS_DRAFT,
 } from "../config";
 
@@ -122,23 +122,14 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
         : null,
     }));
 
-    const r = await fetchWithTimeout("/api/identify", {
-      method: "POST",
-      headers: API_HEADERS,
-      body: JSON.stringify({ formatting: withFormatting, items: payload }),
-    }, API_TIMEOUT_MS, externalSignal);
-
-    if (!r.ok) throw new Error(`API returned ${r.status}`);
-    const d = await r.json();
-    if (d.error) throw new Error(d.error.message || "API error");
-    if (!d.content || !Array.isArray(d.content)) throw new Error("Invalid API response structure");
-    const t = d.content.map(x => x.text || "").join("");
-    const raw = t.replace(/```json|```/g, "").trim();
-    if (!raw) return [];
-    const jsonStr = raw.startsWith("[") ? raw : "[" + raw;
-    let parsed;
-    try { parsed = JSON.parse(jsonStr); } catch { throw new Error("API returned malformed JSON"); }
-    return Array.isArray(parsed) ? parsed : [];
+    // apiRequest throws the server's own error message (e.g. the daily AI
+    // cap) with .status attached, so describeApiError can show it.
+    const d = await apiRequest("/api/identify", {
+      body: { formatting: withFormatting, items: payload },
+      signal: externalSignal,
+    });
+    if (!Array.isArray(d?.results)) throw new Error("Invalid API response structure");
+    return d.results;
   };
 
   // ── Processing pipeline — sub-functions ──
@@ -459,18 +450,12 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     if (!theme || quotesList.length === 0) return [];
 
     const quoteTexts = quotesList.map(q => q.text);
-    const r = await fetchWithTimeout("/api/auto-group", {
-      method: "POST",
-      headers: API_HEADERS,
-      body: JSON.stringify({ theme, quotes: quoteTexts }),
-    }, AUTO_GROUP_TIMEOUT_MS, externalSignal);
-
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({}));
-      throw new Error(err.error || `API returned ${r.status}`);
-    }
-
-    const { indices } = await r.json();
+    const { indices } = await apiRequest("/api/auto-group", {
+      body: { theme, quotes: quoteTexts },
+      timeoutMs: AUTO_GROUP_TIMEOUT_MS,
+      signal: externalSignal,
+    });
+    if (!Array.isArray(indices)) throw new Error("Invalid API response structure");
     return indices.map(i => quotesList[i]?.id).filter(Boolean);
   };
 

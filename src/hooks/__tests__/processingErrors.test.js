@@ -24,20 +24,15 @@ import { DEFAULT_CATEGORIES } from "../../data/constants";
 function makeApiOk(items) {
   return {
     ok: true,
+    status: 200,
     json: () =>
       Promise.resolve({
-        content: [
-          {
-            text: JSON.stringify(
-              items.map((_, i) => ({
-                i,
-                source: "Test Author",
-                category: "Book",
-                confidence: "high",
-              })),
-            ),
-          },
-        ],
+        results: items.map((_, i) => ({
+          i,
+          source: "Test Author",
+          category: "Book",
+          confidence: "high",
+        })),
       }),
   };
 }

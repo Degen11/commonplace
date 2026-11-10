@@ -25,17 +25,9 @@ const identifyItem = z.object({
 });
 
 export const identifySchema = z.object({
-  items: z.array(identifyItem).min(1).max(10).optional(),
-  // Legacy shape, still sent by clients running a cached older build until
-  // their service worker updates. Results from it are never cached.
-  messages: z.array(
-    z.object({
-      role: z.literal('user'),
-      content: z.string().min(1).max(10000, 'Input too large. Send fewer quotes per batch.'),
-    }),
-  ).min(1).max(1).optional(),
+  items: z.array(identifyItem).min(1).max(10),
   formatting: z.boolean().optional(),
-}).refine(b => b.items || b.messages, { message: 'Missing items' });
+});
 
 // ── /api/sync POST ──
 

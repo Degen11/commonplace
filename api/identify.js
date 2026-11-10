@@ -76,26 +76,42 @@ function buildPrompt(items) {
 }
 
 // Parse the model's JSON array (the response continues the '[' prefill).
+// Returns null when the text isn't a JSON array, so the caller can report a
+// bad response instead of silently returning no results.
 function parseResults(data) {
   const raw = data.content.map(x => x.text || '').join('').replace(/```json|```/g, '').trim();
+  if (!raw) return [];
   try {
     const parsed = JSON.parse(raw.startsWith('[') ? raw : '[' + raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
-// Cache identified sources so the same quote never costs tokens twice. Written
-// here from the model's own answer rather than accepted from the browser, so
-// clients can't plant arbitrary attributions for every other user. Existing
-// high-confidence rows are never overwritten.
+// Cache identified sources as leads for the next request of the same quote.
+//
+// Everything in the prompt comes from the caller: the quote text, the hint,
+// the candidate, and the other items in the batch. Any of those can steer the
+// model's answer for a given item (an instruction hidden in item 3 can
+// rewrite the answer for item 0), so a model answer is never trustworthy
+// enough to serve to other users as fact. So rows written here are always
+// stored as "medium": /api/lookup hands a medium row back as a candidate, and
+// the client sends it through identification again for the model to confirm
+// or correct. Only server-verified sources (Wikiquote overlap checks in
+// lookup.js) are stored as "high" and trusted outright.
+//
+// Items that carried a hint or candidate are skipped entirely, since those
+// are explicit steering. Existing high rows are never overwritten.
+const CACHED_AI_CONFIDENCE = 'medium';
+
 async function cacheResults(items, results, supabase) {
   if (!supabase) return;
   const rows = new Map();
   for (const r of results) {
     const item = Number.isInteger(r?.i) ? items[r.i] : null;
-    if (!item || typeof r.source !== 'string' || !r.source || r.source === UNKNOWN_SOURCE) continue;
+    if (!item || item.hint || item.candidate) continue;
+    if (typeof r.source !== 'string' || !r.source || r.source === UNKNOWN_SOURCE) continue;
     if (r.confidence !== 'high' && r.confidence !== 'medium') continue;
     const normalized = normalizeForCache(item.text);
     if (normalized.length <= 5) continue;
@@ -103,7 +119,7 @@ async function cacheResults(items, results, supabase) {
       normalized_text: normalized,
       source: r.source.slice(0, 500),
       category: (typeof r.category === 'string' && r.category ? r.category : 'Reflection').slice(0, 100),
-      confidence: r.confidence,
+      confidence: CACHED_AI_CONFIDENCE,
       updated_at: new Date().toISOString(),
     });
   }
@@ -126,7 +142,7 @@ export default withApiHandler(async (req, res, { supabase, ip }) => {
   const { ok, data: body, error: validationError } = parseBody(identifySchema, req.body);
   if (!ok) return res.status(400).json({ error: validationError });
 
-  const content = body.items ? buildPrompt(body.items) : body.messages[0].content;
+  const content = buildPrompt(body.items);
   if (content.length > MAX_CONTENT_CHARS) {
     return res.status(400).json({ error: 'Input too large. Send fewer quotes per batch.' });
   }
@@ -151,16 +167,17 @@ export default withApiHandler(async (req, res, { supabase, ip }) => {
   if (!result.ok) return res.status(result.status).json({ error: result.error });
 
   const data = result.data;
-
-  // Validate response structure before proxying to client
-  if (!data.content || !Array.isArray(data.content) || !data.content[0]?.text) {
+  const results = Array.isArray(data?.content) ? parseResults(data) : null;
+  if (!results) {
     console.error('Anthropic returned unexpected structure:', JSON.stringify(data).slice(0, 200));
     return res.status(502).json({ error: 'AI returned an unexpected response format. Please try again.' });
   }
 
-  if (body.items) await cacheResults(body.items, parseResults(data), supabase);
+  await cacheResults(body.items, results, supabase);
 
-  return res.status(200).json(data);
+  // Our own shape, like every other endpoint: the parsed array, never the
+  // provider's message envelope.
+  return res.status(200).json({ results });
 }, {
   rateLimit: RATE_LIMITS.IDENTIFY,
   requireAnthropicKey: true,

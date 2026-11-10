@@ -61,6 +61,7 @@ scripts/
   generate-icons.mjs          Renders favicon.svg → PNG/ICO app icons (uses @resvg/resvg-js)
   generate-og-image.mjs       Renders og-image.svg → og-image.png in the brand fonts from api/_fonts/ (uses @resvg/resvg-js)
   prerender.mjs               Post-build step of `npm run build`: renders the landing page into dist/index.html
+  check-migrations.sh         Applies supabase/migrations/*.sql twice to $DATABASE_URL and checks the end state (RLS on, no policies); run by the CI `migrations` job
   generate-wordmark.mjs       Traces "Commonplace" from Playfair Display Bold → wordmarkPath.js (uses opentype.js)
 
 api/                          Vercel serverless functions (Node.js)
@@ -237,7 +238,7 @@ User input → smartSplit() → deduplicate against existing
 ## Data persistence
 
 - **localStorage** is the primary store — offline-first. Keys are defined in `config.js` (`LS_QUOTES`, `LS_CATS`, etc.)
-- **Supabase** (PostgreSQL) is the cloud backup — sync is explicit, not real-time. Schema is in `supabase/migration.sql`
+- **Supabase** (PostgreSQL) is the cloud backup — sync is explicit, not real-time. Schema is in `supabase/migrations/` (timestamped, replayable files; CI applies them twice to a fresh Postgres via `scripts/check-migrations.sh`). See `supabase/README.md` for the rules and how to apply them to production. Never edit an applied migration; add a new file
 - **Sync model**: device-based UUID (no user accounts). Each browser gets a UUID stored in `commonplace_device_id`. `useSync` manages pull (on mount) and push (2s debounce after changes) via TanStack Query mutations with exponential backoff retry
 - **Deletion tombstones**: deleted quote IDs are tracked for 7 days (`TOMBSTONE_TTL_MS`) to prevent re-sync of deleted items
 - **Cross-tab sync**: the Zustand store listens to `window.storage` events to pick up changes from other tabs. `useTheme` also listens to sync dark/light mode across tabs

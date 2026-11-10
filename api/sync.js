@@ -42,22 +42,11 @@ export default withApiHandler(async (req, res, { supabase }) => {
     if (!ok) return res.status(400).json({ error: 'Invalid device_id' });
 
     try {
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('device_data')
         .select('quotes, custom_categories, collections, updated_at')
         .eq('device_id', deviceId)
         .maybeSingle();
-
-      // collections column may not exist yet — retry without it
-      if (error && error.message?.includes('collections')) {
-        const retry = await supabase
-          .from('device_data')
-          .select('quotes, custom_categories, updated_at')
-          .eq('device_id', deviceId)
-          .maybeSingle();
-        data = retry.data;
-        error = retry.error;
-      }
 
       if (error) throw error;
       if (!data) return res.status(200).json({ quotes: [], customCategories: [], collections: [], updatedAt: null });
@@ -97,16 +86,8 @@ export default withApiHandler(async (req, res, { supabase }) => {
         return res.status(400).json({ error: 'Too many quotes after merge' });
       }
 
-      // Try with collections column; fall back without it if column doesn't exist yet
       const row = { device_id, quotes: merged, custom_categories: cats, collections: validCollections };
-      let { error } = await supabase.from('device_data').upsert(row, { onConflict: 'device_id' });
-
-      if (error && error.message?.includes('collections')) {
-        // collections column not yet added to table — save without it
-        const { collections: _, ...rowWithout } = row;
-        const retry = await supabase.from('device_data').upsert(rowWithout, { onConflict: 'device_id' });
-        error = retry.error;
-      }
+      const { error } = await supabase.from('device_data').upsert(row, { onConflict: 'device_id' });
 
       if (error) throw error;
 

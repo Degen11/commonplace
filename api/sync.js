@@ -2,7 +2,7 @@ import { withApiHandler, RATE_LIMITS } from './_shared.js';
 import { syncPostSchema, uuidV4, parseBody } from './_schemas.js';
 
 // ── Merge quotes by ID: union both sets, keep newer for conflicts ──
-function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
+export function mergeQuotes(clientQuotes, cloudQuotes, deletedIds) {
   const merged = new Map();
 
   for (const q of cloudQuotes) {

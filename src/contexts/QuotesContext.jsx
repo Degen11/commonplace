@@ -22,7 +22,7 @@ import { loadString, removeFromStorage } from "../utils/storage";
 import { getPublicShareId } from "../utils/shareLinks";
 import { pluralize } from "../utils/helpers";
 
-function validateShareQuote(raw) {
+export function validateShareQuote(raw) {
   if (!Array.isArray(raw) || raw.length < 3) return null;
   const [text, source, category, fav] = raw;
   if (typeof text !== "string" || typeof source !== "string" || typeof category !== "string") return null;

@@ -278,36 +278,17 @@ export const baseCSS = `
   @media(hover:hover){
     .how-card:hover{background:var(--cp-bg-card);transform:translateY(-2px)}
   }
-  /* General-purpose UI tooltip (extends conf-tooltip pattern) */
+  /* UI tooltips: triggers carry .ui-tip + data-tip; TooltipLayer.jsx renders
+     the bubble in a fixed-position portal on <body>, so clipping containers
+     and stacking contexts can't cut it off. Above modals, below toasts. */
   .ui-tip{position:relative}
-  .ui-tip::after{
-    content:attr(data-tip);
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  .ui-tip-layer{
+    position:fixed;top:0;left:0;z-index:${Z.TOOLTIP_LAYER};
     background:var(--cp-toast-bg);color:#fff;padding:4px 10px;border-radius:4px;
-    font-size:11px;font-weight:400;white-space:nowrap;
-    opacity:0;pointer-events:none;z-index:${Z.TOOLTIP};
-    transition:opacity .12s ease .2s;
+    font-size:11px;font-weight:400;line-height:1.4;white-space:nowrap;
+    pointer-events:none;animation:uiTipIn .12s ease both;
   }
-  @media(hover:hover){
-    .ui-tip:hover::after{opacity:1}
-  }
-  .ui-tip:active::after{opacity:0;transition:none}
-  /* A trigger's tooltip would sit on top of the menu it just opened */
-  .ui-tip[data-popup-open]::after,.ui-tip[aria-haspopup][aria-expanded="true"]::after{opacity:0 !important;transition:none}
-  .ui-tip-below::after{bottom:auto;top:calc(100% + 6px)}
-  .ui-tip-left::after{left:auto;right:0;transform:none}
-  .ui-tip-right::after{left:calc(100% + 6px);right:auto;bottom:auto;top:50%;transform:translateY(-50%)}
-  /* Collapsed sidebar rail clips during its width animation; let tooltips escape while hovered */
-  @media(hover:hover){
-    .sidebar-rail:has(.ui-tip:hover){overflow:visible!important}
-    /* Allow tooltip pseudo-elements to escape overflow:hidden animation wrappers */
-    .notif-bar-wrapper:has(.ui-tip:hover){overflow:visible!important}
-  }
-  /* Fade-out is instant (base = after-change on mouse-leave) to avoid overflow:hidden clipping artifact */
-  .notif-bar-wrapper .ui-tip::after{transition:opacity 0s}
-  @media(hover:hover){
-    .notif-bar-wrapper .ui-tip:hover::after{transition:opacity .12s ease .15s}
-  }
+  @keyframes uiTipIn{from{opacity:0}to{opacity:1}}
 
   /* Drag insertion indicator — glowing line with spread */
   .drag-insert-above{box-shadow:inset 0 2px 0 var(--cp-drag-insert), 0 -4px 12px rgba(60,87,117,0.1) !important}
@@ -439,11 +420,6 @@ export const baseCSS = `
   .qcard{transition:border-color .15s ease, box-shadow .15s ease, transform .2s ease !important}
   @media(hover:hover){
     .qcard:hover{transform:translateY(-2px) !important;box-shadow:var(--cp-shadow-card),0 4px 12px rgba(0,0,0,0.06) !important}
-  }
-  /* Lift the hovered card-grid wrapper above sibling cards AND sticky category bar (z-index:50) so the tooltip escapes cleanly */
-  .qcard-wrap{position:relative}
-  @media(hover:hover){
-    .qcard-wrap:has(.qcard:hover){z-index:${Z.DROPDOWN}}
   }
 
   /* Disabled cursor + smooth opacity transition */
@@ -623,7 +599,6 @@ export const baseCSS = `
   @media(hover:none){
     .overflow-btn{opacity:1 !important}
     .edit-hint{opacity:0.4 !important}
-    .ui-tip::after{display:none !important}
     .qcard .ca{opacity:1 !important}
   }
 

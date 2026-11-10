@@ -131,7 +131,7 @@ export default function InputPhase({
       fetch("/api/identify", {
         method: "POST",
         headers: API_HEADERS,
-        body: JSON.stringify({ messages: [], formatting: false }),
+        body: JSON.stringify({ items: [] }),
       }).catch(() => {});
     });
   }, [rawInput]);

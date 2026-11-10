@@ -8,7 +8,9 @@ import { API_BATCH_SIZE } from "../config";
 //   results are handled.
 // - Each failed chunk is retried once. A chunk that fails twice is reported via
 //   `onFailed` and its items are returned in `failed`; the remaining chunks
-//   still run (one bad batch never blocks the rest).
+//   still run (one bad batch never blocks the rest). A 4xx refusal (bad input,
+//   rate limit, daily AI cap) isn't retried, since sending it again can't
+//   succeed and only spends more of the caller's limit.
 // - An AbortError (or an aborted `signal`) stops the loop and returns
 //   `aborted: true`.
 //
@@ -25,6 +27,7 @@ export async function identifyInBatches(items, identifyBatch, {
 
   const failed = [];
   const isAbort = (err) => err?.name === "AbortError" || signal?.aborted;
+  const isClientRefusal = (err) => Number.isInteger(err?.status) && err.status >= 400 && err.status < 500;
   const start = (b) => {
     onBatchStart?.(b, batches.length);
     return identifyBatch(batches[b], withFormatting, signal);
@@ -41,13 +44,18 @@ export async function identifyInBatches(items, identifyBatch, {
       results = await pending;
     } catch (err) {
       if (isAbort(err)) return { failed, aborted: true };
-      // Retry this chunk once before reporting it as failed
-      try {
-        results = await identifyBatch(chunk, withFormatting, signal);
-      } catch (retryErr) {
-        if (isAbort(retryErr)) return { failed, aborted: true };
+      if (isClientRefusal(err)) {
         failed.push(...chunk);
-        onFailed?.(chunk, retryErr);
+        onFailed?.(chunk, err);
+      } else {
+        // Retry this chunk once before reporting it as failed
+        try {
+          results = await identifyBatch(chunk, withFormatting, signal);
+        } catch (retryErr) {
+          if (isAbort(retryErr)) return { failed, aborted: true };
+          failed.push(...chunk);
+          onFailed?.(chunk, retryErr);
+        }
       }
     }
     if (signal?.aborted) return { failed, aborted: true };

@@ -24,7 +24,8 @@ import { DEFAULT_CATEGORIES } from "../../data/constants";
 function makeIdentifyOk(results) {
   return {
     ok: true,
-    json: () => Promise.resolve({ content: [{ text: JSON.stringify(results) }] }),
+    status: 200,
+    json: () => Promise.resolve({ results }),
   };
 }
 

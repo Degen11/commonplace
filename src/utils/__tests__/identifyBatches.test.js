@@ -69,6 +69,25 @@ describe("identifyInBatches", () => {
     expect(out.failed).toEqual(all);
   });
 
+  it("doesn't retry a batch the server refused with a 4xx (e.g. the daily AI cap)", async () => {
+    const refusal = Object.assign(new Error("Daily AI limit reached"), { status: 429 });
+    const identifyBatch = vi.fn().mockRejectedValueOnce(refusal).mockImplementation(ok);
+    const onFailed = vi.fn();
+    const out = await identifyInBatches(items(3), identifyBatch, { batchSize: 2, onFailed });
+    // First batch: one call, no retry. Second batch still runs.
+    expect(identifyBatch).toHaveBeenCalledTimes(2);
+    expect(out.failed).toHaveLength(2);
+    expect(onFailed).toHaveBeenCalledWith(expect.any(Array), refusal);
+  });
+
+  it("still retries a 5xx failure once", async () => {
+    const serverErr = Object.assign(new Error("AI service temporarily unavailable"), { status: 502 });
+    const identifyBatch = vi.fn().mockRejectedValueOnce(serverErr).mockImplementation(ok);
+    const out = await identifyInBatches(items(1), identifyBatch);
+    expect(identifyBatch).toHaveBeenCalledTimes(2);
+    expect(out.failed).toEqual([]);
+  });
+
   it("stops without retrying on AbortError", async () => {
     const identifyBatch = vi.fn().mockRejectedValue(abortError());
     const onFailed = vi.fn();

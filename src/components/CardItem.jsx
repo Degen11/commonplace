@@ -15,9 +15,11 @@ import { Pencil, ChevronDown, Trash2, Heart, Check, Plus } from "lucide-react";
 import HighlightText from "./HighlightText";
 import ConfidenceTag from "./ConfidenceTag";
 
-// React.memo is required — same reason as TableRow. During drag, overDragId
-// changes re-render every visible card. Without memo, each calls useSortable()
-// which returns new values during an active drag, causing unnecessary work.
+// React.memo stays on purpose, for the same reason as TableRow: the mobile
+// card list is virtualized and re-renders as you scroll, and the compiler
+// can't memoize items inside a .map(). The drop-target highlight comes from
+// this card's own useSortable() (isOver), so no per-frame drag state is
+// passed down from ResultsPhase.
 const CardItem = memo(function CardItem({
   q, col, isSel, isEd, needsAtt, showConfidence, sortBy, isMobile,
   isInlineEditing, inlineEditField,
@@ -27,7 +29,6 @@ const CardItem = memo(function CardItem({
   saveEdit, saveInlineField, setInlineEdit, setEditingId,
   isDeleting,
   searchTerm,
-  isOverTarget,
   isNewQuote,
 }) {
   const {
@@ -35,7 +36,11 @@ const CardItem = memo(function CardItem({
     listeners,
     setNodeRef,
     isDragging,
+    isOver,
+    active,
   } = useSortable({ id: q.id, transition: null });
+  // Drop-target highlight: this card is under the pointer while another is dragged
+  const isOverTarget = isOver && !!active && active.id !== q.id;
 
   const longPress = useLongPress(
     () => toggleSel(q.id),

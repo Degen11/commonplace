@@ -103,9 +103,8 @@ describe("TableView — drag stability", () => {
     for (const el of container.querySelectorAll(".qrow")) expect(el.style.transform).toBe("");
   });
 
-  it("TableView is wrapped in React.memo", () => {
-    // memo (see the comment in TableView.jsx) keeps ResultsPhase's per-frame
-    // drag updates from re-rendering the whole table
-    expect(String(TableView.$$typeof)).toContain("memo");
+  it("renders every row the virtual rows hook hands back", () => {
+    const { container } = renderTable();
+    expect([...container.querySelectorAll(".qrow")].map(el => el.dataset.id)).toEqual(["a", "b", "c"]);
   });
 });

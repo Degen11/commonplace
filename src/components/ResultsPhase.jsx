@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import useWindowVirtualRows from "../hooks/useWindowVirtualRows";
 import { AnimatePresence, motion } from "motion/react";
 import useViewPreferences from "../hooks/useViewPreferences";
 import useEditState from "../hooks/useEditState";
@@ -53,11 +53,7 @@ const CARD_HEIGHT_ESTIMATE = 160;
 const CARD_VIRTUALIZER_OVERSCAN = 8;
 
 // Virtualized card list for mobile — single column, window-scrolled
-function MobileCardList({ visible, overDragId, activeDragId }) {
-  // Opt out of React Compiler memoization — same reason as TableView: the
-  // TanStack virtualizer is a stable mutable instance and compiler-cached
-  // getVirtualItems() results go stale on remount-after-view-switch.
-  "use no memo";
+function MobileCardList({ visible }) {
   const {
     selected, editingId, inlineEdit, deletingId, savedPulse,
     showConfidence, sortBy, allCats, customCats,
@@ -102,20 +98,13 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  const virtualizer = useWindowVirtualizer({
+  // The virtualizer's compiler opt-out lives inside this hook (see there)
+  const { virtualItems, topPad, bottomPad, measureElement } = useWindowVirtualRows({
     count: visible.length,
     estimateSize: () => CARD_HEIGHT_ESTIMATE,
     overscan: CARD_VIRTUALIZER_OVERSCAN,
     scrollMargin,
   });
-
-  const virtualItems = virtualizer.getVirtualItems();
-  const topPad = virtualItems.length > 0
-    ? virtualItems[0].start - (virtualizer.options.scrollMargin ?? 0)
-    : 0;
-  const bottomPad = virtualItems.length > 0
-    ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
-    : 0;
 
   return (
     <div ref={outerRef} className={clsx("cards-mobile", { "has-sel": selected.size > 0 })} style={{ paddingTop: 8 }}>
@@ -132,9 +121,8 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
         const isDeleting = deletingId === q.id;
         const isSavedPulse = savedPulse?.id === q.id;
         const savedPulseField = isSavedPulse ? savedPulse.field : null;
-        const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
         return (
-          <div key={q.id} data-index={virtualRow.index} ref={virtualizer.measureElement} style={{ paddingBottom: 12 }}>
+          <div key={q.id} data-index={virtualRow.index} ref={measureElement} style={{ paddingBottom: 12 }}>
             <CardItem
               q={q}
               col={col}
@@ -160,7 +148,6 @@ function MobileCardList({ visible, overDragId, activeDragId }) {
               setEditingId={setEditingId}
               isDeleting={isDeleting}
               searchTerm={searchTerm}
-              isOverTarget={isOverTarget}
               isNewQuote={newQuoteHighlight === q.id}
             />
           </div>
@@ -250,8 +237,8 @@ export default function ResultsPhase({
   } = useEditState({ quotes, setQuotes, filtered, visibleFiltered: collectionFiltered, filterKey: paginationKey, showToast, trackDeletion, untrackDeletion, cleanCollectionRefs, collections, addToCollection });
 
   const {
-    sensors, activeDragId, overDragId,
-    collisionDetection, handleDndStart, handleDndOver, handleDndEnd, anchorToCursor,
+    sensors, activeDragId,
+    collisionDetection, handleDndStart, handleDndEnd, anchorToCursor,
     dndReorderRef,
   } = useDndQuotes({ selected, collections, addToCollection, removeFromCollection, showToast, setQuotes });
 
@@ -924,7 +911,7 @@ export default function ResultsPhase({
 
 
           {/* Main content area with optional sidebar */}
-          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragOver={handleDndOver} onDragEnd={handleDndEnd}>
+          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>
           <div style={{ display: "flex", gap: 0 }}>
             {!isMobile ? (
             <CollectionsSidebar
@@ -1035,11 +1022,7 @@ export default function ResultsPhase({
             <SectionErrorBoundary name="Card view">
               <SortableContext items={visible.map(q => q.id)} strategy={rectSortingStrategy}>
               {isMobile ? (
-                <MobileCardList
-                  visible={visible}
-                  overDragId={overDragId}
-                  activeDragId={activeDragId}
-                />
+                <MobileCardList visible={visible} />
               ) : (
               <div style={{ columns: "280px auto", columnGap: 12, paddingTop: 8 }}>
                 {visible.map((q, i) => {
@@ -1052,7 +1035,6 @@ export default function ResultsPhase({
                   const isDeleting = deletingId === q.id;
                   const isSavedPulse = savedPulse?.id === q.id;
                   const savedPulseField = isSavedPulse ? savedPulse.field : null;
-                  const isOverTarget = overDragId === q.id && activeDragId && activeDragId !== q.id;
                   return (
                     <motion.div key={q.id} className="qcard-wrap" style={{ breakInside: "avoid", marginBottom: 12 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.6) }}>
                     <CardItem
@@ -1080,7 +1062,6 @@ export default function ResultsPhase({
                       setEditingId={setEditingId}
                       isDeleting={isDeleting}
                       searchTerm={search}
-                      isOverTarget={isOverTarget}
                       isNewQuote={newQuoteHighlight === q.id}
                     />
                     </motion.div>

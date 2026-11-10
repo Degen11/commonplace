@@ -1,5 +1,10 @@
--- Commonplace: device-based cloud storage
--- Run this in the Supabase SQL Editor (Dashboard → SQL Editor → New query)
+-- Commonplace baseline schema: the production schema as of this migration.
+-- Every statement is guarded (IF NOT EXISTS / OR REPLACE / DROP ... IF EXISTS)
+-- so the file replays cleanly against an empty database AND an existing one.
+-- CI applies the migrations twice to prove it (scripts/check-migrations.sh).
+-- See supabase/README.md for how to apply migrations to production.
+
+-- ── Device sync ──
 
 -- One row per device. Quotes and categories stored as JSONB arrays.
 -- This avoids per-quote row management and makes sync trivially simple:
@@ -20,6 +25,10 @@ ALTER TABLE device_data ENABLE ROW LEVEL SECURITY;
 --   CREATE POLICY "users can access own data" ON device_data
 --     FOR ALL USING (auth.uid()::text = device_id::text);
 
+-- Synced collections list (added after the table was first created, so it's
+-- an ADD COLUMN rather than part of the CREATE TABLE above)
+ALTER TABLE device_data ADD COLUMN IF NOT EXISTS collections JSONB DEFAULT '[]'::jsonb;
+
 -- Index on updated_at for potential future cleanup queries
 CREATE INDEX IF NOT EXISTS idx_device_data_updated_at ON device_data(updated_at);
 
@@ -32,6 +41,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS device_data_updated_at ON device_data;
 CREATE TRIGGER device_data_updated_at
   BEFORE UPDATE ON device_data
   FOR EACH ROW
@@ -92,9 +102,6 @@ CREATE TABLE IF NOT EXISTS quote_cache (
 ALTER TABLE quote_cache ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_quote_cache_updated_at ON quote_cache(updated_at);
-
--- Synced collections list (added after the table was first created)
-ALTER TABLE device_data ADD COLUMN IF NOT EXISTS collections JSONB DEFAULT '[]'::jsonb;
 
 -- rate_limits is only touched by the server (secret key), so RLS with no
 -- policies keeps the publishable key out of it.

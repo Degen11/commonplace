@@ -43,10 +43,8 @@ describe("identifyInBatches", () => {
 
   it("reports a batch that fails twice and still runs the remaining batches", async () => {
     const err = new Error("API returned 503");
-    const identifyBatch = vi.fn()
-      .mockRejectedValueOnce(err)   // batch 0
-      .mockRejectedValueOnce(err)   // batch 0 retry
-      .mockImplementation(ok);      // batch 1
+    // Batch 0 fails on both attempts; batch 1 (already in flight) succeeds
+    const identifyBatch = vi.fn((chunk) => chunk[0].text === "entry 0" ? Promise.reject(err) : ok(chunk));
     const onResults = vi.fn();
     const onFailed = vi.fn();
     const all = items(4);
@@ -93,7 +91,8 @@ describe("identifyInBatches", () => {
     const onFailed = vi.fn();
     const out = await identifyInBatches(items(4), identifyBatch, { batchSize: 2, onFailed });
     expect(out.aborted).toBe(true);
-    expect(identifyBatch).toHaveBeenCalledTimes(1);
+    // Both batches were already in flight; neither is retried
+    expect(identifyBatch).toHaveBeenCalledTimes(2);
     expect(onFailed).not.toHaveBeenCalled();
   });
 
@@ -101,5 +100,43 @@ describe("identifyInBatches", () => {
     const identifyBatch = vi.fn();
     expect(await identifyInBatches([], identifyBatch)).toEqual({ failed: [], aborted: false });
     expect(identifyBatch).not.toHaveBeenCalled();
+  });
+
+  it("keeps up to `concurrency` batches in flight at once", async () => {
+    let active = 0, peak = 0;
+    const identifyBatch = vi.fn(async (chunk) => {
+      active++; peak = Math.max(peak, active);
+      await new Promise(r => setTimeout(r, 5));
+      active--;
+      return chunk.map((_, i) => ({ i }));
+    });
+    await identifyInBatches(items(10), identifyBatch, { batchSize: 1, concurrency: 3 });
+    expect(identifyBatch).toHaveBeenCalledTimes(10);
+    expect(peak).toBe(3);
+  });
+
+  it("hands results back in batch order even when a later batch finishes first", async () => {
+    const delays = [30, 5, 15];
+    const identifyBatch = vi.fn(async (chunk) => {
+      const n = Number(chunk[0].text.split(" ")[1]);
+      await new Promise(r => setTimeout(r, delays[n]));
+      return [{ i: 0 }];
+    });
+    const onResults = vi.fn();
+    const all = items(3);
+    await identifyInBatches(all, identifyBatch, { batchSize: 1, onResults });
+    expect(onResults.mock.calls.map(([chunk]) => chunk[0])).toEqual(all);
+  });
+
+  it("runs one batch at a time with concurrency 1", async () => {
+    let active = 0, peak = 0;
+    const identifyBatch = vi.fn(async (chunk) => {
+      active++; peak = Math.max(peak, active);
+      await Promise.resolve();
+      active--;
+      return chunk.map((_, i) => ({ i }));
+    });
+    await identifyInBatches(items(4), identifyBatch, { batchSize: 1, concurrency: 1 });
+    expect(peak).toBe(1);
   });
 });

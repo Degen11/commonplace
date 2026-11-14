@@ -160,9 +160,10 @@ describe("API timeout / network failure — batch retry", () => {
       vi.runAllTimers();
     });
 
-    // batch 1 attempt + batch 1 retry + batch 2 — no early exit, no extra calls
+    // batch 1 attempt + batch 1 retry + batch 2 — no early exit, no extra calls.
+    // Batch 2 runs alongside batch 1, so it starts before batch 1's retry.
     expect(identifyCallCount).toBe(3);
-    expect(batchSizes).toEqual([10, 10, 2]);
+    expect(batchSizes).toEqual([10, 2, 10]);
     // Exactly batch 1's 10 entries are reported as failed
     expect(result.current.failedEntries).toHaveLength(10);
     expect(result.current.failedEntries.map(e => e.text)).toEqual(

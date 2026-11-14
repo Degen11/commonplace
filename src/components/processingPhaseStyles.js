@@ -19,8 +19,10 @@ export const processingStyles = {
   procCurrent:{fontSize:13,color:"var(--cp-text-muted)",marginTop:8,fontStyle:"italic",animation:"pulse 1.5s infinite"},
 
   // Live feed
-  feedWrap:{marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflowY:"auto",display:"flex",flexDirection:"column",gap:6},
-  feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,fontSize:12,animation:"fadeUp .25s ease"},
+  // A ticker, not a scroll list: the newest few items, older ones fading out at the bottom
+  feedWrap:{position:"relative",marginTop:20,width:"100%",maxWidth:480,maxHeight:240,overflow:"hidden",display:"flex",flexDirection:"column",gap:6,
+    maskImage:"linear-gradient(to bottom, #000 55%, transparent)",WebkitMaskImage:"linear-gradient(to bottom, #000 55%, transparent)"},
+  feedItem:{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"var(--cp-bg-card)",border:"1px solid var(--cp-border)",borderRadius:6,fontSize:12,flexShrink:0},
   feedItemTag:{padding:"1px 7px",borderRadius:4,fontWeight:600,fontSize:11,letterSpacing:"0.02em",flexShrink:0},
   feedItemText:{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"var(--cp-text-secondary)"},
   feedItemSrc:{color:"var(--cp-text-muted)",flexShrink:0,maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},

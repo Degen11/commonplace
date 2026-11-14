@@ -57,9 +57,15 @@ export default function useSync({ onCloudData, onSyncError }) {
   const lastErrorNotified = useRef(0);
   const consecutiveFailures = useRef(0);
 
-  // Refs for latest data — schedulePush updates these, mutation reads them.
-  // TanStack Query handles retries, but the mutation function needs current data.
-  const latestPayload = useRef(null);
+  // Latest store data — schedulePush updates it, the push timer reads it.
+  const latestData = useRef(null);
+  // What the cloud already has from this device, so a routine push can send
+  // only the quotes that changed instead of the whole collection. Quotes are
+  // never mutated in place (every edit spreads a new object), so a reference
+  // check is an exact "changed since last push" test. The server merges by ID,
+  // so a partial list is safe; deletions travel separately as tombstones.
+  const pushedQuotes = useRef(new Map());
+  const pushedMeta = useRef(null);
 
   const markReady = useCallback(() => {
     initialLoadDone.current = true;
@@ -91,7 +97,7 @@ export default function useSync({ onCloudData, onSyncError }) {
 
   // ── Push: TanStack Query mutation with exponential backoff ──
   const pushMutation = useMutation({
-    mutationFn: pushSyncData,
+    mutationFn: ({ payload }) => pushSyncData(payload),
     retry: SYNC_MAX_RETRIES,
     retryDelay: (attempt) => SYNC_INITIAL_DELAY_MS * Math.pow(2, attempt),
     onMutate: () => {
@@ -99,9 +105,11 @@ export default function useSync({ onCloudData, onSyncError }) {
       setSyncStatus("synced");
       setLastSynced(new Date());
     },
-    onSuccess: () => {
+    onSuccess: (_data, { sent, meta }) => {
       // Confirm the optimistic update
       consecutiveFailures.current = 0;
+      for (const q of sent) pushedQuotes.current.set(q.id, q);
+      pushedMeta.current = meta;
     },
     onError: () => {
       setSyncStatus("error");
@@ -134,37 +142,53 @@ export default function useSync({ onCloudData, onSyncError }) {
   // destructure it so the callbacks below can list it as a dep without churning
   const { mutate: pushMutate } = pushMutation;
 
-  // ── Debounced push — same API as before ──
-  const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
-    // Always capture latest data
+  // Build a push from the latest data. `full` sends every quote (manual sync,
+  // reconnects); otherwise only quotes the cloud hasn't seen this version of.
+  // Returns null when there's nothing to send.
+  const buildPush = useCallback((full) => {
+    const d = latestData.current;
+    if (!d) return null;
+    const { quotes, customCats, deletedIds, collections } = d;
+    // Never push an empty collection: it would wipe the cloud copy
+    if (quotes.length === 0 && !deletedIds?.length) return null;
+
+    const sent = full ? quotes : quotes.filter(q => pushedQuotes.current.get(q.id) !== q);
+    const meta = { customCats, collections, deletedIds };
+    const prev = pushedMeta.current;
+    const metaChanged = !prev || prev.customCats !== customCats
+      || prev.collections !== collections || prev.deletedIds !== deletedIds;
+    if (!full && sent.length === 0 && !metaChanged) return null;
+
     const payload = {
-      quotes,
+      quotes: sent,
       customCategories: customCats,
       collections: collections || [],
     };
-    if (deletedIds?.length > 0) {
-      payload.deletedIds = deletedIds;
-    }
-    latestPayload.current = payload;
+    if (deletedIds?.length > 0) payload.deletedIds = deletedIds;
+    return { payload, sent, meta };
+  }, []);
+
+  // ── Debounced push — same API as before ──
+  const schedulePush = useCallback((quotes, customCats, deletedIds, collections) => {
+    latestData.current = { quotes, customCats, deletedIds, collections };
 
     // Debounce: clear pending push, schedule new one
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(() => {
       if (!initialLoadDone.current) return;
       if (!deviceId) return;
-      const p = latestPayload.current;
-      if (!p || (p.quotes.length === 0 && !p.deletedIds?.length)) return;
-      pushMutate(p);
+      const push = buildPush(false);
+      if (push) pushMutate(push);
     }, SYNC_DEBOUNCE_MS);
-  }, [pushMutate]);
+  }, [pushMutate, buildPush]);
 
-  // Manual sync — push immediately with fresh retries
+  // Manual sync — push everything immediately with fresh retries
   const manualPush = useCallback(() => {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     consecutiveFailures.current = 0;
-    const p = latestPayload.current;
-    if (p) pushMutate(p);
-  }, [pushMutate]);
+    const push = buildPush(true);
+    if (push) pushMutate(push);
+  }, [pushMutate, buildPush]);
 
   // Register manualPush in Zustand store so components can access it directly
   const setManualPush = useQuotesStore(s => s.setManualPush);
@@ -172,14 +196,15 @@ export default function useSync({ onCloudData, onSyncError }) {
 
   // Sync when coming back online
   useEffect(() => {
+    // Full push: anything that failed while offline goes up in one go
     const handleOnline = () => {
-      if (latestPayload.current && initialLoadDone.current) {
-        pushMutate(latestPayload.current);
-      }
+      if (!initialLoadDone.current) return;
+      const push = buildPush(true);
+      if (push) pushMutate(push);
     };
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, [pushMutate]);
+  }, [pushMutate, buildPush]);
 
   // Cleanup timers on unmount
   useEffect(() => {

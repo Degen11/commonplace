@@ -300,3 +300,80 @@ describe("useSync — push failures", () => {
     expect(pushCalls()[1][1].body.quotes).toEqual([q("a")]);
   });
 });
+
+describe("useSync — delta push", () => {
+  async function pushOnce(result, ...args) {
+    act(() => { result.current.schedulePush(...args); });
+    await advance(SYNC_DEBOUNCE_MS);
+  }
+
+  it("sends only quotes that changed since the last successful push", async () => {
+    apiRequest.mockResolvedValue({ ok: true });
+    const { result } = setup();
+    await ready(result);
+    const a = q("a"), b = q("b");
+    const cats = [], cols = [];
+
+    await pushOnce(result, [a, b], cats, [], cols);
+    expect(pushCalls()[0][1].body.quotes).toEqual([a, b]);
+
+    const b2 = { ...b, favorite: true };
+    const c = q("c");
+    await pushOnce(result, [a, b2, c], cats, [], cols);
+    expect(pushCalls()).toHaveLength(2);
+    expect(pushCalls()[1][1].body.quotes).toEqual([b2, c]);
+  });
+
+  it("skips the push entirely when nothing changed", async () => {
+    apiRequest.mockResolvedValue({ ok: true });
+    const { result } = setup();
+    await ready(result);
+    const quotes = [q("a")], cats = [], dels = [], cols = [];
+
+    await pushOnce(result, quotes, cats, dels, cols);
+    await pushOnce(result, [...quotes], cats, dels, cols);
+    expect(pushCalls()).toHaveLength(1);
+  });
+
+  it("still pushes when only categories, collections or deletions changed", async () => {
+    apiRequest.mockResolvedValue({ ok: true });
+    const { result } = setup();
+    await ready(result);
+    const a = q("a"), cols = [];
+
+    await pushOnce(result, [a], [], [], cols);
+    await pushOnce(result, [a], ["Mine"], [], cols);
+    expect(pushCalls()).toHaveLength(2);
+    expect(pushCalls()[1][1].body).toMatchObject({ quotes: [], customCategories: ["Mine"] });
+  });
+
+  it("re-sends quotes from a failed push on the next one", async () => {
+    const { result } = setup();
+    await ready(result);
+    const a = q("a"), cats = [], cols = [];
+
+    apiRequest.mockRejectedValue(new Error("Server down"));
+    await pushOnce(result, [a], cats, [], cols);
+    await advance(ALL_RETRIES_MS);
+
+    apiRequest.mockReset();
+    apiRequest.mockResolvedValue({ ok: true });
+    const b = q("b");
+    await pushOnce(result, [a, b], cats, [], cols);
+    expect(pushCalls()).toHaveLength(1);
+    expect(pushCalls()[0][1].body.quotes).toEqual([a, b]);
+  });
+
+  it("manualPush always sends the full collection", async () => {
+    apiRequest.mockResolvedValue({ ok: true });
+    const { result } = setup();
+    await ready(result);
+    const quotes = [q("a"), q("b")];
+
+    await pushOnce(result, quotes, [], [], []);
+    await act(async () => { result.current.manualPush(); });
+    await advance(0);
+    expect(pushCalls()).toHaveLength(2);
+    expect(pushCalls()[1][1].body.quotes).toEqual(quotes);
+  });
+});

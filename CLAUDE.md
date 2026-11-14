@@ -171,7 +171,7 @@ src/
 
   utils/
     normalize.js               normalize() — the single text normalizer, imported by textFormatting.js, localQuotes.js and api/_shared.js
-    identifyBatches.js         identifyInBatches — the one /api/identify batch loop (pipelined, retry once, report failures), used by useProcessing and batch re-identify
+    identifyBatches.js         identifyInBatches — the one /api/identify batch loop (up to `API_BATCH_CONCURRENCY` = 3 batches in flight, results delivered in order, retry once, report failures), used by useProcessing and batch re-identify
     textFormatting.js          smartSplit, normalize (re-export), similarity + makeSimilarityKey/similarityFromKeys (keyed dupe detection), basicFormat, proper nouns
     parsers.js                 File parsing — Kindle highlights, Readwise, CSV, JSON, Markdown
     quotes.js                  makeQuote factory, findDuplicateGroups, splitSource (display-only author/work split), isUnknownSource
@@ -187,7 +187,7 @@ src/
     smartRestore.js            Smart session restore logic
     shareLinks.js              Public share URL helpers — getPublicShareId (/c/<id> or legacy #p=<id>), publicShareUrl; canNativeShare/nativeShare (Web Share API on touch devices); copyWithToast (every clipboard copy, success or error toast)
 
-  **/__tests__/                Tests colocated with their modules (54 files, 617 tests; api/__tests__ and src/__tests__/boot.test.js included)
+  **/__tests__/                Tests colocated with their modules (54 files, 625 tests; api/__tests__ and src/__tests__/boot.test.js included)
     components/                App, AddMorePanel, AttentionNotice, BulkBar, CardItem, CollectionDupeModal, DeviceLinkModal, HeaderBar, HeaderControls, InputPhase,
                                MobileSheet, ProcessingPhase, ResultsPhase, ShareImageModal, SyncPill, TableView, TooltipLayer, styles
     contexts/                  QuotesContext
@@ -244,7 +244,7 @@ User input → smartSplit() → deduplicate against existing
 
 - **localStorage** is the primary store — offline-first. Keys are defined in `config.js` (`LS_QUOTES`, `LS_CATS`, etc.)
 - **Supabase** (PostgreSQL) is the cloud backup — sync is explicit, not real-time. Schema is in `supabase/migrations/` (timestamped, replayable files; CI applies them twice to a fresh Postgres via `scripts/check-migrations.sh`). See `supabase/README.md` for the rules and how to apply them to production. Never edit an applied migration; add a new file
-- **Sync model**: device-based UUID (no user accounts). Each browser gets a UUID stored in `commonplace_device_id`. `useSync` manages pull (on mount) and push (2s debounce after changes) via TanStack Query mutations with exponential backoff retry
+- **Sync model**: device-based UUID (no user accounts). Each browser gets a UUID stored in `commonplace_device_id`. `useSync` manages pull (on mount) and push (2s debounce after changes) via TanStack Query mutations with exponential backoff retry. Routine pushes are deltas: only quotes whose object reference changed since the last successful push are sent (the server merges by ID); manual sync and coming back online send everything
 - **Deletion tombstones**: deleted quote IDs are tracked for 7 days (`TOMBSTONE_TTL_MS`) to prevent re-sync of deleted items
 - **Cross-tab sync**: the Zustand store listens to `window.storage` events to pick up changes from other tabs. `useTheme` also listens to sync dark/light mode across tabs
 - **Persistence**: Zustand store subscribes to its own state changes and debounces writes to localStorage (300ms)
@@ -267,7 +267,7 @@ User input → smartSplit() → deduplicate against existing
 npm run dev       # Vite dev server (localhost:5173)
 npm run build     # Production build to dist/, then prerender the landing page into dist/index.html
 npm run preview   # Preview production build
-npm run test      # vitest run (54 test files, 617 tests across components, hooks, stores, utils, api)
+npm run test      # vitest run (54 test files, 625 tests across components, hooks, stores, utils, api)
 npm run icons     # Regenerate public/ app icons (PNG/ICO) from favicon.svg
 npm run og-image  # Regenerate public/og-image.png from public/og-image.svg
 npm run wordmark  # Regenerate the traced "Commonplace" wordmark SVG path

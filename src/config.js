@@ -11,6 +11,7 @@ export const SYNC_ERROR_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes between user-f
 export const API_TIMEOUT_MS         = 30_000;
 export const AUTO_GROUP_TIMEOUT_MS  = 45_000;
 export const API_BATCH_SIZE         = 10;
+export const API_BATCH_CONCURRENCY  = 3;      // /api/identify batches in flight at once
 
 // UI animations — three standard tiers for consistency
 export const ANIM_FAST_MS           = 150;   // micro-interactions: delete, phase exit, dismiss

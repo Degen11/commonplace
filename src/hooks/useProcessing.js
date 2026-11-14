@@ -216,21 +216,34 @@ export default function useProcessing({ quotes, setQuotes, allCats, goPhase }) {
     const apiResults = new Map();
     let apiFailed = false;
 
+    // Several batches run at once (see API_BATCH_CONCURRENCY), so progress
+    // counts batches as they finish rather than as they start
+    const totalBatches = Math.ceil(stillNeedsApi.length / API_BATCH_SIZE);
+    let finishedBatches = 0, finishedItems = 0;
+    const reportProgress = () => {
+      dispatch({ type: "PROGRESS", progress: {
+        total: unique.length, done: preAiDone + finishedItems,
+        current: totalBatches > 1 ? `AI identifying… ${finishedBatches}/${totalBatches} batches done` : "AI identifying…",
+        phase: "api",
+      } });
+    };
+    const finishBatch = (chunk) => { finishedBatches++; finishedItems += chunk.length; reportProgress(); };
+    reportProgress();
+
     const { failed } = await identifyInBatches(stillNeedsApi, identifyBatch, {
       withFormatting: useFormatting,
       signal,
-      onBatchStart: (b, total) => {
-        dispatch({ type: "PROGRESS", progress: { total: unique.length, done: preAiDone + b * API_BATCH_SIZE, current: `AI identifying batch ${b + 1}/${total}…`, phase: "api" } });
-      },
       onResults: (chunk, results) => {
         results.forEach(r => { const item = chunk[r.i]; if (item) apiResults.set(item.idx, r); });
         dispatch({ type: "FEED_APPEND", items: results.map(r => {
           const item = chunk[r.i];
           return { text: (useFormatting && r.cleanText) ? stripOuterBold(r.cleanText) : (item?.text || ""), source: r.source || UNKNOWN_SOURCE, category: fallbackCategory(r.category, allCats) };
         }) });
+        finishBatch(chunk);
       },
       onFailed: (chunk, err) => {
         apiFailed = true;
+        finishBatch(chunk);
         dispatch({ type: "API_ERROR", error: describeApiError(err) + ` (${pluralize(chunk.length, "entry", "entries")} affected)` });
       },
     });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { styles, FONT_SANS, CP_ACCENT, CLR_AMBER, CLR_EMERALD, CLR_VIOLET } from "./styles";
 import { processingStyles } from "./processingPhaseStyles";
 import { getCatColor } from "../data/constants";
@@ -8,8 +8,12 @@ import Logo from "./Logo";
 import Wordmark from "./Wordmark";
 import { pluralize } from "../utils/helpers";
 import AnimatedNumber from "./AnimatedNumber";
+import { ANIM_FAST_MS } from "../config";
 
 const RING_SIZE = 88;
+const FEED_VISIBLE = 6;
+const FEED_STAGGER_S = 0.035;
+const FEED_SPRING = { type: "spring", stiffness: 400, damping: 28, mass: 0.8 };
 const RING_STROKE = 5;
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -115,7 +119,12 @@ export default function ProcessingPhase({
   const total = progress?.total || 0;
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const isComplete = processingDone || progress?.phase === "complete";
-  const reversedFeed = [...identifiedFeed].reverse().slice(0, 8);
+  // Newest first. Keys are each item's index in the whole feed, so an item
+  // keeps its key as newer ones push it down and only new arrivals animate in.
+  const feedStart = Math.max(0, identifiedFeed.length - FEED_VISIBLE);
+  const visibleFeed = identifiedFeed.slice(feedStart)
+    .map((item, k) => ({ item, key: feedStart + k }))
+    .reverse();
 
   // ── Elapsed / ETA tracking ──
   // startTime: captured at mount (processing start). now: ticks every second
@@ -249,16 +258,42 @@ export default function ProcessingPhase({
         )}
         {identifiedFeed.length > 0 && !isComplete && (
           <div style={processingStyles.feedWrap}>
-            {reversedFeed.map((item, i) => {
-              const col = getCatColor(item.category, customCats);
-              return (
-                <div key={`${reversedFeed.length - 1 - i}`} style={processingStyles.feedItem}>
-                  <span style={{ ...processingStyles.feedItemTag, background: col.bg, color: col.text }}>{item.category}</span>
-                  <span style={processingStyles.feedItemText}>{item.text}</span>
-                  <span style={processingStyles.feedItemSrc}>{item.source}</span>
-                </div>
-              );
-            })}
+            <AnimatePresence mode="popLayout">
+              {visibleFeed.map(({ item, key }, i) => {
+                const col = getCatColor(item.category, customCats);
+                // A batch lands several items at once: cascade them top-down
+                const delay = i * FEED_STAGGER_S;
+                return (
+                  <motion.div
+                    key={key}
+                    layout
+                    style={processingStyles.feedItem}
+                    initial={{ opacity: 0, y: -14, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96, transition: { duration: ANIM_FAST_MS / 1000 } }}
+                    transition={{ default: { ...FEED_SPRING, delay }, layout: FEED_SPRING }}
+                  >
+                    <motion.span
+                      style={{ ...processingStyles.feedItemTag, background: col.bg, color: col.text }}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ ...FEED_SPRING, delay: delay + 0.06 }}
+                    >
+                      {item.category}
+                    </motion.span>
+                    <span style={processingStyles.feedItemText}>{item.text}</span>
+                    <motion.span
+                      style={processingStyles.feedItemSrc}
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: ANIM_FAST_MS / 1000, delay: delay + 0.12, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      {item.source}
+                    </motion.span>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
         )}
       </div>
